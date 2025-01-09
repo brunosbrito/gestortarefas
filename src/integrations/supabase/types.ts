@@ -404,6 +404,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          function: string | null
+          id: string
+          name: string | null
+          permission: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          function?: string | null
+          id: string
+          name?: string | null
+          permission?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          function?: string | null
+          id?: string
+          name?: string | null
+          permission?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       programacao: {
         Row: {
           atividade: string | null
