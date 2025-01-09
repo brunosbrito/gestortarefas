@@ -12,9 +12,20 @@ const Login = () => {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/");
+      }
+      
+      if (event === "PASSWORD_RECOVERY") {
+        setError("");
+      }
+
+      if (event === "USER_UPDATED") {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          setError(getErrorMessage(error));
+        }
       }
       
       // Clear error when user signs out
@@ -32,6 +43,8 @@ const Login = () => {
         return "Email ou senha inválidos. Por favor, verifique suas credenciais.";
       case "Email not confirmed":
         return "Por favor, confirme seu email antes de fazer login.";
+      case "Invalid email or password":
+        return "Email ou senha inválidos. Por favor, verifique suas credenciais.";
       default:
         return error.message;
     }
