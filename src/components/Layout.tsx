@@ -26,18 +26,32 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         if (authError) throw authError;
         
         if (user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
+          // Primeiro busca o usuário na tabela users usando o user_ref
+          const { data: userData, error: userError } = await supabase
+            .from('users')
             .select('name')
-            .eq('id', user.id)
+            .eq('user_ref', user.id)
             .maybeSingle();
           
-          if (profileError) throw profileError;
+          if (userError) throw userError;
           
-          if (profile?.name) {
-            setUserName(profile.name);
+          if (userData?.name) {
+            setUserName(userData.name);
           } else {
-            setUserName("Usuário");
+            // Se não encontrar na tabela users, tenta buscar na tabela profiles como fallback
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', user.id)
+              .maybeSingle();
+            
+            if (profileError) throw profileError;
+            
+            if (profile?.name) {
+              setUserName(profile.name);
+            } else {
+              setUserName("Usuário");
+            }
           }
         }
       } catch (error) {
@@ -58,7 +72,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex h-screen bg-construction-50">
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-construction-200">
         <div className="p-4 border-b border-construction-200">
-          <h1 className="text-2xl font-bold text-primary">ConstructTask</h1>
+          <h1 className="text-2xl font-bold text-primary">Gestor de Tarefas</h1>
         </div>
 
         <div className="p-4 border-b border-construction-200">
