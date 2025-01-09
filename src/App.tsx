@@ -5,6 +5,7 @@ import { supabase } from "./integrations/supabase/client";
 import Dashboard from "./pages/Index";
 import Users from "./pages/Users";
 import Login from "./pages/Login";
+import { Toaster } from "@/components/ui/toaster";
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -43,6 +44,7 @@ function App() {
           element={session ? <Users /> : <Navigate to="/login" />}
         />
       </Routes>
+      <Toaster />
     </Router>
   );
 }

@@ -1,20 +1,24 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UserForm } from "@/components/users/UserForm";
 import { UserList } from "@/components/users/UserList";
+import { Plus } from "lucide-react";
 
 const Users = () => {
   return (
     <Layout>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+          <h1 className="text-3xl font-bold">Usuários</h1>
           <Dialog>
             <DialogTrigger asChild>
-              <Button>Novo Usuário</Button>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Usuário
+              </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Criar Novo Usuário</DialogTitle>
               </DialogHeader>
@@ -23,9 +27,7 @@ const Users = () => {
           </Dialog>
         </div>
 
-        <div className="rounded-lg border bg-card">
-          <UserList />
-        </div>
+        <UserList />
       </div>
     </Layout>
   );
