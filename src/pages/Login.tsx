@@ -28,7 +28,6 @@ const Login = () => {
         }
       }
       
-      // Clear error when user signs out
       if (event === "SIGNED_OUT") {
         setError("");
       }
