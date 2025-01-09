@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, Building2, ClipboardList, Activity, UserCircle2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -15,25 +16,43 @@ const navItems = [
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [userName, setUserName] = React.useState("Carregando...");
+  const { toast } = useToast();
 
   React.useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single();
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
         
-        if (profile?.name) {
-          setUserName(profile.name);
+        if (authError) throw authError;
+        
+        if (user) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (profileError) throw profileError;
+          
+          if (profile?.name) {
+            setUserName(profile.name);
+          } else {
+            setUserName("Usuário");
+          }
         }
+      } catch (error) {
+        console.error('Erro ao buscar usuário:', error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar perfil",
+          description: "Não foi possível carregar as informações do usuário."
+        });
+        setUserName("Usuário");
       }
     };
 
     getUser();
-  }, []);
+  }, [toast]);
 
   return (
     <div className="flex h-screen bg-construction-50">
