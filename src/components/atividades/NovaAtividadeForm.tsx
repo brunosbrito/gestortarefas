@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { FileUploadField } from "./FileUploadField";
+import { ColaboradorHorasField } from "./ColaboradorHorasField";
+import { EquipeField } from "./EquipeField";
 
 const formSchema = z.object({
   tarefaMacro: z.string().min(1, "Tarefa macro é obrigatória"),
@@ -31,8 +32,6 @@ const formSchema = z.object({
   })).optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 const tarefasMacroMock = [
   { id: 1, nome: "Fundação" },
   { id: 2, nome: "Estrutura" },
@@ -50,6 +49,8 @@ const colaboradoresMock = [
   { id: 2, nome: "Maria Santos" },
   { id: 3, nome: "Pedro Oliveira" },
 ];
+
+type FormValues = z.infer<typeof formSchema>;
 
 export function NovaAtividadeForm({ editMode = false, atividadeInicial = null }) {
   const { toast } = useToast();
@@ -167,32 +168,11 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial = null })
           )}
         />
 
-        {showHorasColaboradores && (
-          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-medium">Horas trabalhadas por colaborador</h4>
-            {form.watch("equipe")?.map((colaborador, index) => (
-              <FormField
-                key={index}
-                control={form.control}
-                name={`horasColaboradores.${index}.horas`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{colaborador}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Horas trabalhadas"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
-          </div>
-        )}
+        <ColaboradorHorasField 
+          form={form} 
+          colaboradores={form.watch("equipe")} 
+          showHorasColaboradores={showHorasColaboradores}
+        />
 
         <FormField
           control={form.control}
@@ -283,52 +263,7 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial = null })
           <p className="text-sm font-medium">Tempo Previsto: {tempoPrevisto}</p>
         </div>
 
-        <FormField
-          control={form.control}
-          name="equipe"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipe</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  const currentValues = field.value || [];
-                  if (!currentValues.includes(value)) {
-                    field.onChange([...currentValues, value]);
-                  }
-                }}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione os colaboradores" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {colaboradoresMock.map((colaborador) => (
-                    <SelectItem key={colaborador.id} value={colaborador.nome}>
-                      {colaborador.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {form.watch("equipe")?.map((membro, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="cursor-pointer"
-                    onClick={() => {
-                      const newEquipe = form.watch("equipe").filter((_, i) => i !== index);
-                      form.setValue("equipe", newEquipe);
-                    }}
-                  >
-                    {membro} ×
-                  </Badge>
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <EquipeField form={form} colaboradoresMock={colaboradoresMock} />
 
         <FormField
           control={form.control}
@@ -359,72 +294,8 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial = null })
         />
 
         <div className="space-y-4">
-          <div>
-            <FormLabel>Upload de Imagem (opcional)</FormLabel>
-            <div className="mt-2 space-y-2">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => form.setValue("imagem", e.target.files?.[0])}
-                className="hidden"
-                id="imagem"
-              />
-              <label
-                htmlFor="imagem"
-                className="flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none"
-              >
-                <span className="flex items-center space-x-2">
-                  <Upload className="w-6 h-6 text-gray-600" />
-                  <span className="text-sm text-gray-600">Clique para fazer upload de imagem</span>
-                </span>
-              </label>
-              <FormField
-                control={form.control}
-                name="imagemDescricao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input placeholder="Descrição da imagem (opcional)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          <div>
-            <FormLabel>Upload de Arquivo (opcional)</FormLabel>
-            <div className="mt-2 space-y-2">
-              <Input
-                type="file"
-                onChange={(e) => form.setValue("arquivo", e.target.files?.[0])}
-                className="hidden"
-                id="arquivo"
-              />
-              <label
-                htmlFor="arquivo"
-                className="flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none"
-              >
-                <span className="flex items-center space-x-2">
-                  <Upload className="w-6 h-6 text-gray-600" />
-                  <span className="text-sm text-gray-600">Clique para fazer upload de arquivo</span>
-                </span>
-              </label>
-              <FormField
-                control={form.control}
-                name="arquivoDescricao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input placeholder="Descrição do arquivo (opcional)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+          <FileUploadField form={form} fileType="imagem" accept="image/*" />
+          <FileUploadField form={form} fileType="arquivo" />
         </div>
 
         <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
