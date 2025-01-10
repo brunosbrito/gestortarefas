@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Building2, ClipboardList, Activity, Users, Check, X, Edit, Eye, Timer, Calendar } from "lucide-react";
+import { Building2, ClipboardList, Activity, Users, Check, X, Edit, Eye, Timer, Calendar, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ const stats = [
 
 interface ObraDetalhes {
   nome: string;
-  status: "em_andamento" | "finalizada";
+  status: "em_andamento" | "finalizado" | "interrompido";
   dataInicio: string;
   dataFim?: string;
   horasTrabalhadas: number;
@@ -61,7 +61,7 @@ const obrasExemplo: ObraDetalhes[] = [
   },
   {
     nome: "Edifício Comercial Centro",
-    status: "em_andamento",
+    status: "interrompido",
     dataInicio: "2024-02-01",
     horasTrabalhadas: 320,
     atividades: [
@@ -71,7 +71,8 @@ const obrasExemplo: ObraDetalhes[] = [
     historico: [
       "01/02/2024 - Início da obra",
       "10/02/2024 - Terraplanagem iniciada",
-      "25/02/2024 - Terraplanagem concluída"
+      "25/02/2024 - Terraplanagem concluída",
+      "01/03/2024 - Obra interrompida"
     ]
   }
 ];
@@ -79,6 +80,34 @@ const obrasExemplo: ObraDetalhes[] = [
 const Dashboard = () => {
   const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhes | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
+
+  const getStatusBadge = (status: ObraDetalhes["status"]) => {
+    switch (status) {
+      case "em_andamento":
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <Check className="w-3 h-3 mr-1" />
+            Em Andamento
+          </Badge>
+        );
+      case "finalizado":
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Check className="w-3 h-3 mr-1" />
+            Finalizado
+          </Badge>
+        );
+      case "interrompido":
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+            <Pause className="w-3 h-3 mr-1" />
+            Interrompido
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -108,17 +137,7 @@ const Dashboard = () => {
               <div key={obra.nome} className="flex items-center justify-between p-4 bg-construction-50 rounded-lg border border-construction-100">
                 <div className="flex items-center space-x-3">
                   <span className="font-medium text-construction-700">{obra.nome}</span>
-                  {obra.status === "em_andamento" ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      <Check className="w-3 h-3 mr-1" />
-                      Ativo
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                      <X className="w-3 h-3 mr-1" />
-                      Finalizado
-                    </Badge>
-                  )}
+                  {getStatusBadge(obra.status)}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
