@@ -1,9 +1,9 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Calendar, Building2, ClipboardList } from "lucide-react";
 import { useState } from "react";
 
 interface OrdemServico {
@@ -55,7 +55,7 @@ const OrdensServico = () => {
           <h1 className="text-3xl font-bold text-construction-800">Ordens de Serviço</h1>
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova OS
               </Button>
@@ -69,35 +69,40 @@ const OrdensServico = () => {
           </Dialog>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Obra</TableHead>
-              <TableHead>Data Início</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ordensServico.map((os) => (
-              <TableRow key={os.id}>
-                <TableCell className="font-medium">{os.numero}</TableCell>
-                <TableCell>{os.descricao}</TableCell>
-                <TableCell>{os.obra}</TableCell>
-                <TableCell>{os.dataInicio}</TableCell>
-                <TableCell>{getStatusBadge(os.status)}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {ordensServico.map((os) => (
+            <Card key={os.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl">{os.numero}</CardTitle>
+                  {getStatusBadge(os.status)}
+                </div>
+                <CardDescription>{os.descricao}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm">
+                  <Building2 className="w-4 h-4 text-gray-500" />
+                  <span>{os.obra}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span>Início: {new Date(os.dataInicio).toLocaleDateString('pt-BR')}</span>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  variant="outline" 
+                  className="w-full hover:bg-[#FF7F0E]/10"
+                  onClick={() => {
+                    console.log(`Ver detalhes da OS ${os.id}`);
+                  }}
+                >
+                  Ver Detalhes
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
     </Layout>
   );

@@ -1,9 +1,8 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit } from "lucide-react";
+import { Plus, GripHorizontal } from "lucide-react";
 import { useState } from "react";
 
 interface Atividade {
@@ -13,6 +12,7 @@ interface Atividade {
   obra: string;
   responsavel: string;
   prazo: string;
+  tarefaMacro: string;
   status: "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA";
 }
 
@@ -24,6 +24,7 @@ const atividadesIniciais: Atividade[] = [
     obra: "Residencial Vista Mar",
     responsavel: "João Silva",
     prazo: "2024-03-01",
+    tarefaMacro: "Fundação",
     status: "EM_ANDAMENTO"
   },
   {
@@ -33,6 +34,17 @@ const atividadesIniciais: Atividade[] = [
     obra: "Residencial Vista Mar",
     responsavel: "Maria Santos",
     prazo: "2024-03-05",
+    tarefaMacro: "Fundação",
+    status: "PENDENTE"
+  },
+  {
+    id: 3,
+    descricao: "Concretagem pilares",
+    os: "OS-001",
+    obra: "Residencial Vista Mar",
+    responsavel: "Pedro Costa",
+    prazo: "2024-03-10",
+    tarefaMacro: "Estrutura",
     status: "PENDENTE"
   }
 ];
@@ -40,69 +52,52 @@ const atividadesIniciais: Atividade[] = [
 const Atividades = () => {
   const [atividades] = useState<Atividade[]>(atividadesIniciais);
 
-  const getStatusBadge = (status: Atividade["status"]) => {
-    const statusConfig = {
-      PENDENTE: { label: "Pendente", variant: "outline" as const },
-      EM_ANDAMENTO: { label: "Em Andamento", variant: "default" as const },
-      CONCLUIDA: { label: "Concluída", variant: "secondary" as const }
-    };
-
-    const config = statusConfig[status];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
+  const tarefasMacro = Array.from(new Set(atividades.map(a => a.tarefaMacro)));
 
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-construction-800">Atividades</h1>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Atividade
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Nova Atividade</DialogTitle>
-              </DialogHeader>
-              {/* Formulário será implementado posteriormente */}
-            </DialogContent>
-          </Dialog>
+          <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Atividade
+          </Button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Descrição</TableHead>
-              <TableHead>OS</TableHead>
-              <TableHead>Obra</TableHead>
-              <TableHead>Responsável</TableHead>
-              <TableHead>Prazo</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {atividades.map((atividade) => (
-              <TableRow key={atividade.id}>
-                <TableCell className="font-medium">{atividade.descricao}</TableCell>
-                <TableCell>{atividade.os}</TableCell>
-                <TableCell>{atividade.obra}</TableCell>
-                <TableCell>{atividade.responsavel}</TableCell>
-                <TableCell>{atividade.prazo}</TableCell>
-                <TableCell>{getStatusBadge(atividade.status)}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="flex gap-6 overflow-x-auto pb-4">
+          {tarefasMacro.map((tarefaMacro) => (
+            <div key={tarefaMacro} className="flex-none w-80">
+              <div className="bg-gray-100 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-lg">{tarefaMacro}</h3>
+                  <Badge variant="outline">{atividades.filter(a => a.tarefaMacro === tarefaMacro).length}</Badge>
+                </div>
+                <div className="space-y-3">
+                  {atividades
+                    .filter(atividade => atividade.tarefaMacro === tarefaMacro)
+                    .map((atividade) => (
+                      <Card key={atividade.id} className="bg-white cursor-move hover:shadow-md transition-shadow">
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-sm font-medium">
+                            {atividade.descricao}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 text-sm text-gray-500">
+                          <div className="flex items-center justify-between mb-2">
+                            <span>{atividade.os}</span>
+                            <GripHorizontal className="w-4 h-4" />
+                          </div>
+                          <div>Responsável: {atividade.responsavel}</div>
+                          <div>Prazo: {new Date(atividade.prazo).toLocaleDateString('pt-BR')}</div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </Layout>
   );
