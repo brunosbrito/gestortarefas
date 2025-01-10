@@ -228,20 +228,6 @@ const Atividades = () => {
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button variant="outline" size="sm">
-                                  <Clock className="w-4 h-4 mr-1" />
-                                  Horas
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                  <DialogTitle>Atualizar Horas Trabalhadas</DialogTitle>
-                                </DialogHeader>
-                                <AtualizarHorasForm atividade={atividade} />
-                              </DialogContent>
-                            </Dialog>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="outline" size="sm">
                                   <Edit2 className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
