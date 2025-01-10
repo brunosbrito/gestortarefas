@@ -1,5 +1,8 @@
 import { Card } from "@/components/ui/card";
-import { Building2, ClipboardList, Activity, Users } from "lucide-react";
+import { Building2, ClipboardList, Activity, Users, Check, X, Edit, Eye, Timer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 
 const stats = [
   {
@@ -28,7 +31,54 @@ const stats = [
   },
 ];
 
+interface ObraDetalhes {
+  nome: string;
+  status: "em_andamento" | "finalizada";
+  dataInicio: string;
+  dataFim?: string;
+  horasTrabalhadas: number;
+  atividades: string[];
+  historico: string[];
+}
+
+const obrasExemplo: ObraDetalhes[] = [
+  {
+    nome: "Residencial Vista Mar",
+    status: "em_andamento",
+    dataInicio: "2024-01-15",
+    horasTrabalhadas: 450,
+    atividades: [
+      "Fundação concluída",
+      "Alvenaria em andamento",
+      "Instalações elétricas iniciadas"
+    ],
+    historico: [
+      "15/01/2024 - Início da obra",
+      "20/01/2024 - Fundação iniciada",
+      "15/02/2024 - Fundação concluída"
+    ]
+  },
+  {
+    nome: "Edifício Comercial Centro",
+    status: "em_andamento",
+    dataInicio: "2024-02-01",
+    horasTrabalhadas: 320,
+    atividades: [
+      "Terraplanagem concluída",
+      "Fundação em andamento"
+    ],
+    historico: [
+      "01/02/2024 - Início da obra",
+      "10/02/2024 - Terraplanagem iniciada",
+      "25/02/2024 - Terraplanagem concluída"
+    ]
+  }
+];
+
 const Dashboard = () => {
+  const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhes | null>(null);
+  const [dialogAberto, setDialogAberto] = useState(false);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-construction-800">Dashboard</h1>
@@ -53,10 +103,116 @@ const Dashboard = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Obras em Andamento</h3>
           <div className="space-y-4">
-            {["Residencial Vista Mar", "Edifício Comercial Centro", "Condomínio Park"].map((obra) => (
-              <div key={obra} className="flex items-center justify-between p-3 bg-construction-50 rounded-lg">
-                <span className="font-medium text-construction-700">{obra}</span>
-                <span className="text-sm text-construction-500">Em progresso</span>
+            {obrasExemplo.map((obra) => (
+              <div key={obra.nome} className="flex items-center justify-between p-4 bg-construction-50 rounded-lg border border-construction-100">
+                <div className="flex items-center space-x-3">
+                  <span className="font-medium text-construction-700">{obra.nome}</span>
+                  {obra.status === "em_andamento" ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Check className="w-3 h-3 mr-1" />
+                      Ativo
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                      <X className="w-3 h-3 mr-1" />
+                      Finalizado
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => setObraSelecionada(obra)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        Ver
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Detalhes da Obra</DialogTitle>
+                      </DialogHeader>
+                      {obraSelecionada && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-semibold">{obraSelecionada.nome}</h2>
+                            {obraSelecionada.status === "em_andamento" ? (
+                              <Badge variant="outline" className="bg-green-50 text-green-700">Ativo</Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-red-50 text-red-700">Finalizado</Badge>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h3 className="font-semibold mb-2 flex items-center">
+                                <Calendar className="w-4 h-4 mr-2" />
+                                Datas
+                              </h3>
+                              <p>Início: {new Date(obraSelecionada.dataInicio).toLocaleDateString('pt-BR')}</p>
+                              {obraSelecionada.dataFim && (
+                                <p>Término: {new Date(obraSelecionada.dataFim).toLocaleDateString('pt-BR')}</p>
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold mb-2 flex items-center">
+                                <Timer className="w-4 h-4 mr-2" />
+                                Horas Trabalhadas
+                              </h3>
+                              <p>{obraSelecionada.horasTrabalhadas}h</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="font-semibold mb-2">Atividades Recentes</h3>
+                            <ul className="space-y-2">
+                              {obraSelecionada.atividades.map((atividade, index) => (
+                                <li key={index} className="flex items-center">
+                                  <Activity className="w-4 h-4 mr-2 text-construction-500" />
+                                  {atividade}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div>
+                            <h3 className="font-semibold mb-2">Histórico</h3>
+                            <ul className="space-y-2">
+                              {obraSelecionada.historico.map((evento, index) => (
+                                <li key={index} className="flex items-center">
+                                  <ClipboardList className="w-4 h-4 mr-2 text-construction-500" />
+                                  {evento}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Editar
+                  </Button>
+                  {obra.status === "em_andamento" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Finalizar
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
