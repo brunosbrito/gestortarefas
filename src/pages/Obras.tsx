@@ -74,7 +74,7 @@ const Obras = () => {
       address: data.address,
       startDate: data.startDate,
       observation: data.observation,
-      status : 'Em andamento',
+      status : 'em_andamento',
     };
   
     // Aqui você pode passar obraData para seu serviço de cadastro
