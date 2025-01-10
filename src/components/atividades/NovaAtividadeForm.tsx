@@ -26,10 +26,6 @@ const formSchema = z.object({
   imagemDescricao: z.string().optional(),
   arquivo: z.any().optional(),
   arquivoDescricao: z.string().optional(),
-  horasColaboradores: z.array(z.object({
-    colaborador: z.string(),
-    horas: z.number(),
-  })).optional(),
 });
 
 const tarefasMacroMock = [
@@ -60,18 +56,13 @@ interface NovaAtividadeFormProps {
 export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>("");
-  const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
 
   const defaultValues = editMode && atividadeInicial ? {
     ...atividadeInicial,
-    horasColaboradores: atividadeInicial.equipe?.map((col: string) => ({
-      colaborador: col,
-      horas: 0
-    })) || []
+    equipe: atividadeInicial.equipe || []
   } : {
     unidadeTempo: "horas",
     equipe: [],
-    horasColaboradores: []
   };
 
   const form = useForm<FormValues>({

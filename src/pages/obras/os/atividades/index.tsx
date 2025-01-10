@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Calendar, Building2, Upload, Edit2, Eye, GripHorizontal } from "lucide-react";
+import { Plus, Calendar, Building2, Upload, Edit2, Eye, GripHorizontal, Clock } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { NovaAtividadeForm } from "@/components/atividades/NovaAtividadeForm";
+import { AtualizarHorasForm } from "@/components/atividades/AtualizarHorasForm";
 
 interface Atividade {
   id: number;
@@ -224,18 +225,20 @@ const Atividades = () => {
                             </DialogContent>
                           </Dialog>
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                toast({
-                                  title: "Upload de imagem",
-                                  description: "Funcionalidade será implementada em breve",
-                                });
-                              }}
-                            >
-                              <Upload className="w-4 h-4" />
-                            </Button>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  Horas
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Atualizar Horas Trabalhadas</DialogTitle>
+                                </DialogHeader>
+                                <AtualizarHorasForm atividade={atividade} />
+                              </DialogContent>
+                            </Dialog>
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button variant="outline" size="sm">
@@ -249,6 +252,18 @@ const Atividades = () => {
                                 <NovaAtividadeForm editMode={true} atividadeInicial={atividade} />
                               </DialogContent>
                             </Dialog>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                toast({
+                                  title: "Upload de imagem",
+                                  description: "Funcionalidade será implementada em breve",
+                                });
+                              }}
+                            >
+                              <Upload className="w-4 h-4" />
+                            </Button>
                           </div>
                         </CardFooter>
                       </Card>
