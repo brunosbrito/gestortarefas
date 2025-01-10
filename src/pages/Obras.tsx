@@ -6,82 +6,93 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Building2, Plus, MapPin, Calendar, Users, ClipboardList } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/components/ui/use-toast";
+import { Obra } from "@/interfaces/ObrasInterface";
+import ObrasService from "@/services/ObrasService";
 
 const formSchema = z.object({
-  nome: z.string().min(1, "Nome da obra é obrigatório"),
-  id_grupo: z.string().min(1, "Número do grupo é obrigatório"),
-  cliente: z.string().min(1, "Cliente é obrigatório"),
-  endereco: z.string().min(1, "Endereço é obrigatório"),
-  data_inicio: z.string().min(1, "Data de início é obrigatória"),
-  obs: z.string().optional(),
+  name: z.string().min(1, "Nome da obra é obrigatório"), // O nome é obrigatório
+  groupNumber: z.string().min(1, "Número do grupo é obrigatório"), // Número do grupo é obrigatório
+  client: z.string().min(1, "Cliente é obrigatório"), // Cliente é obrigatório
+  address: z.string().min(1, "Endereço é obrigatório"), // Endereço é obrigatório
+  startDate: z.string().min(1, "Data de início é obrigatória"), // A data de início é obrigatória
+  endDate: z.string().optional(), // O campo 'endDate' é opcional
+  observation: z.string().optional(), // O campo 'observation' é opcional
+  id: z.number().optional(), // O campo 'id' também é opcional
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface Obra {
-  id: number;
-  nome: string;
-  id_grupo: string;
-  cliente: string;
-  endereco: string;
-  data_inicio: string;
-  obs?: string;
-  status: "EM_ANDAMENTO" | "CONCLUIDA" | "PAUSADA";
-}
-
-const obrasIniciais: Obra[] = [
-  {
-    id: 1,
-    nome: "Residencial Vista Mar",
-    id_grupo: "G001",
-    cliente: "Construtora ABC",
-    endereco: "Av. Beira Mar, 1000",
-    data_inicio: "2024-01-15",
-    status: "EM_ANDAMENTO",
-    obs: "Projeto residencial de alto padrão"
-  },
-  {
-    id: 2,
-    nome: "Edifício Comercial Centro",
-    id_grupo: "G002",
-    cliente: "Incorporadora XYZ",
-    endereco: "Rua Principal, 500",
-    data_inicio: "2024-02-01",
-    status: "PAUSADA",
-    obs: "Centro empresarial com 15 andares"
-  }
-];
-
 const Obras = () => {
-  const [obras] = useState<Obra[]>(obrasIniciais);
-  const [open, setOpen] = useState(false);
+  const [obras, setObras] = useState<Obra[]>([]); // Inicializa com uma lista vazia
+  const [open, setOpen] = useState(false); // Controle de modal ou visualização
   const { toast } = useToast();
+
+  const fetchObras = async () => {
+    try {
+      const obrasData = await ObrasService.getAllObras();
+      setObras(obrasData || []);  // Atualiza o estado com os dados recebidos
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao carregar obras',
+        description: 'Não foi possível carregar a lista de obras.',
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchObras();
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: "",
-      id_grupo: "",
-      cliente: "",
-      endereco: "",
-      data_inicio: "",
-      obs: "",
+      name: "",
+      groupNumber: "",
+      client: "",
+      address: "",
+      startDate: "",
+      endDate: "",
+      observation: "",
+      id: 0,
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    toast({
-      title: "Obra cadastrada com sucesso!",
-      description: `A obra ${data.nome} foi cadastrada.`,
-    });
-    setOpen(false);
-    form.reset();
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    // Aqui, 'data' já será validado pelo zod com base no seu esquema
+  
+    // Mapeando o objeto data para o tipo Obra
+    const obraData: Obra = {
+      name: data.name,
+      groupNumber: data.groupNumber,
+      client: data.client,
+      address: data.address,
+      startDate: data.startDate,
+      observation: data.observation,
+      status : 'Em andamento',
+    };
+  
+    // Aqui você pode passar obraData para seu serviço de cadastro
+    try {
+      await ObrasService.createObra(obraData);
+      toast({
+        title: "Obra cadastrada com sucesso!",
+        description: `A obra ${data.name} foi cadastrada.`,
+      });
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Erro ao cadastrar obra",
+        description: "Não foi possível cadastrar a obra. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -104,7 +115,7 @@ const Obras = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="nome"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nome da Obra</FormLabel>
@@ -117,7 +128,7 @@ const Obras = () => {
                   />
                   <FormField
                     control={form.control}
-                    name="id_grupo"
+                    name="groupNumber"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Número do Grupo</FormLabel>
@@ -130,7 +141,7 @@ const Obras = () => {
                   />
                   <FormField
                     control={form.control}
-                    name="cliente"
+                    name="client"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Cliente</FormLabel>
@@ -143,7 +154,7 @@ const Obras = () => {
                   />
                   <FormField
                     control={form.control}
-                    name="endereco"
+                    name="address"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Endereço</FormLabel>
@@ -156,7 +167,7 @@ const Obras = () => {
                   />
                   <FormField
                     control={form.control}
-                    name="data_inicio"
+                    name="startDate"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Data de Início</FormLabel>
@@ -169,7 +180,7 @@ const Obras = () => {
                   />
                   <FormField
                     control={form.control}
-                    name="obs"
+                    name="observation"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Observações</FormLabel>
@@ -198,26 +209,26 @@ const Obras = () => {
               <CardHeader>
                 <div className="flex items-center space-x-2">
                   <Building2 className="w-5 h-5 text-[#FF7F0E]" />
-                  <CardTitle className="text-xl">{obra.nome}</CardTitle>
+                  <CardTitle className="text-xl">{obra.name}</CardTitle>
                 </div>
                 <CardDescription className="flex items-center space-x-2">
                   <Users className="w-4 h-4" />
-                  <span>{obra.cliente}</span>
+                  <span>{obra.client}</span>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center space-x-2 text-sm">
                   <MapPin className="w-4 h-4 text-gray-500" />
-                  <span>{obra.endereco}</span>
+                  <span>{obra.address}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Calendar className="w-4 h-4 text-gray-500" />
-                  <span>Início: {new Date(obra.data_inicio).toLocaleDateString('pt-BR')}</span>
+                  <span>Início: {new Date(obra.startDate).toLocaleDateString('pt-BR')}</span>
                 </div>
-                {obra.obs && (
+                {obra.observation && (
                   <div className="flex items-center space-x-2 text-sm">
                     <ClipboardList className="w-4 h-4 text-gray-500" />
-                    <span>{obra.obs}</span>
+                    <span>{obra.observation}</span>
                   </div>
                 )}
               </CardContent>

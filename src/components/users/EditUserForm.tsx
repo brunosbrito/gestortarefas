@@ -8,7 +8,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/interfaces/UserInterface";
-import UserService from "@/services/auth/UserService";
+import UserService from "@/services/UserService";
 
 const editUserFormSchema = z.object({
   username: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),

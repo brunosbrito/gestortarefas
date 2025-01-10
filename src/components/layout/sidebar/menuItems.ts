@@ -14,8 +14,8 @@ export const navItems: MenuItem[] = [
   { 
     icon: Building2, 
     label: "Obras",
-    path: "/obras",
     subItems: [
+      { icon: Building2, label: "Lista Obras", path: "/obras" },
       { icon: FolderTree, label: "Ordens de Serviço", path: "/obras/os" },
       { icon: ListChecks, label: "Atividades", path: "/obras/os/atividades" },
     ]
