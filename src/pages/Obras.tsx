@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, Plus, MapPin, Calendar, Users, ClipboardList } from "lucide-react";
+import { Building2, Plus, MapPin, Calendar, Users, ClipboardList, Check, X, Edit, Eye, Timer, Pause, Activity } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,35 +13,87 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/components/ui/use-toast";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Nome da obra é obrigatório"), // O nome é obrigatório
-  groupNumber: z.string().min(1, "Número do grupo é obrigatório"), // Número do grupo é obrigatório
-  client: z.string().min(1, "Cliente é obrigatório"), // Cliente é obrigatório
-  address: z.string().min(1, "Endereço é obrigatório"), // Endereço é obrigatório
-  startDate: z.string().min(1, "Data de início é obrigatória"), // A data de início é obrigatória
-  endDate: z.string().optional(), // O campo 'endDate' é opcional
-  observation: z.string().optional(), // O campo 'observation' é opcional
-  id: z.number().optional(), // O campo 'id' também é opcional
+  name: z.string().min(1, "Nome da obra é obrigatório"),
+  groupNumber: z.string().min(1, "Número do grupo é obrigatório"),
+  client: z.string().min(1, "Cliente é obrigatório"),
+  address: z.string().min(1, "Endereço é obrigatório"),
+  startDate: z.string().min(1, "Data de início é obrigatória"),
+  endDate: z.string().optional(),
+  observation: z.string().optional(),
+  id: z.number().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
+interface ObraDetalhada extends Obra {
+  horasTrabalhadas?: number;
+  atividades?: string[];
+  historico?: string[];
+}
+
 const Obras = () => {
-  const [obras, setObras] = useState<Obra[]>([]); // Inicializa com uma lista vazia
-  const [open, setOpen] = useState(false); // Controle de modal ou visualização
+  const [obras, setObras] = useState<ObraDetalhada[]>([]);
+  const [open, setOpen] = useState(false);
+  const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhada | null>(null);
+  const [dialogDetalhesAberto, setDialogDetalhesAberto] = useState(false);
   const { toast } = useToast();
 
   const fetchObras = async () => {
     try {
       const obrasData = await ObrasService.getAllObras();
-      setObras(obrasData || []);  // Atualiza o estado com os dados recebidos
+      // Simulando dados adicionais que viriam do backend
+      const obrasComDetalhes = obrasData?.map(obra => ({
+        ...obra,
+        horasTrabalhadas: Math.floor(Math.random() * 1000),
+        atividades: [
+          "Fundação iniciada",
+          "Alvenaria em andamento",
+          "Instalações elétricas"
+        ],
+        historico: [
+          `${new Date(obra.startDate).toLocaleDateString('pt-BR')} - Início da obra`,
+          "15/02/2024 - Fundação concluída",
+          "01/03/2024 - Alvenaria iniciada"
+        ]
+      }));
+      setObras(obrasComDetalhes || []);
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erro ao carregar obras',
         description: 'Não foi possível carregar a lista de obras.',
       });
+    }
+  };
+
+  const getStatusBadge = (status: Obra["status"]) => {
+    switch (status) {
+      case "em_andamento":
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <Check className="w-3 h-3 mr-1" />
+            Em Andamento
+          </Badge>
+        );
+      case "finalizado":
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Check className="w-3 h-3 mr-1" />
+            Finalizado
+          </Badge>
+        );
+      case "interrompido":
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+            <Pause className="w-3 h-3 mr-1" />
+            Interrompido
+          </Badge>
+        );
+      default:
+        return null;
     }
   };
 
@@ -64,9 +116,6 @@ const Obras = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    // Aqui, 'data' já será validado pelo zod com base no seu esquema
-  
-    // Mapeando o objeto data para o tipo Obra
     const obraData: Obra = {
       name: data.name,
       groupNumber: data.groupNumber,
@@ -74,10 +123,9 @@ const Obras = () => {
       address: data.address,
       startDate: data.startDate,
       observation: data.observation,
-      status : 'em_andamento',
+      status: "em_andamento",
     };
   
-    // Aqui você pode passar obraData para seu serviço de cadastro
     try {
       await ObrasService.createObra(obraData);
       toast({
@@ -86,6 +134,7 @@ const Obras = () => {
       });
       setOpen(false);
       form.reset();
+      fetchObras();
     } catch (error) {
       toast({
         title: "Erro ao cadastrar obra",
@@ -207,9 +256,12 @@ const Obras = () => {
           {obras.map((obra) => (
             <Card key={obra.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <Building2 className="w-5 h-5 text-[#FF7F0E]" />
-                  <CardTitle className="text-xl">{obra.name}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Building2 className="w-5 h-5 text-[#FF7F0E]" />
+                    <CardTitle className="text-xl">{obra.name}</CardTitle>
+                  </div>
+                  {getStatusBadge(obra.status)}
                 </div>
                 <CardDescription className="flex items-center space-x-2">
                   <Users className="w-4 h-4" />
@@ -232,17 +284,102 @@ const Obras = () => {
                   </div>
                 )}
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex gap-2">
+                <Dialog open={dialogDetalhesAberto && obraSelecionada?.id === obra.id} 
+                       onOpenChange={(open) => {
+                         setDialogDetalhesAberto(open);
+                         if (!open) setObraSelecionada(null);
+                       }}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => setObraSelecionada(obra)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Detalhes
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Detalhes da Obra</DialogTitle>
+                    </DialogHeader>
+                    {obraSelecionada && (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h2 className="text-xl font-semibold">{obraSelecionada.name}</h2>
+                          {getStatusBadge(obraSelecionada.status)}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <h3 className="font-semibold mb-2 flex items-center">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              Datas
+                            </h3>
+                            <p>Início: {new Date(obraSelecionada.startDate).toLocaleDateString('pt-BR')}</p>
+                            {obraSelecionada.endDate && (
+                              <p>Término: {new Date(obraSelecionada.endDate).toLocaleDateString('pt-BR')}</p>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold mb-2 flex items-center">
+                              <Timer className="w-4 h-4 mr-2" />
+                              Horas Trabalhadas
+                            </h3>
+                            <p>{obraSelecionada.horasTrabalhadas}h</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-2">Atividades Recentes</h3>
+                          <ul className="space-y-2">
+                            {obraSelecionada.atividades?.map((atividade, index) => (
+                              <li key={index} className="flex items-center">
+                                <Activity className="w-4 h-4 mr-2 text-construction-500" />
+                                {atividade}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h3 className="font-semibold mb-2">Histórico</h3>
+                          <ul className="space-y-2">
+                            {obraSelecionada.historico?.map((evento, index) => (
+                              <li key={index} className="flex items-center">
+                                <ClipboardList className="w-4 h-4 mr-2 text-construction-500" />
+                                {evento}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
                 <Button 
-                  variant="outline" 
-                  className="w-full hover:bg-[#FF7F0E]/10"
+                  variant="ghost"
+                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
                   onClick={() => {
-                    // Implementar navegação para detalhes da obra
-                    console.log(`Ver detalhes da obra ${obra.id}`);
+                    console.log('Editar obra:', obra.id);
                   }}
                 >
-                  Ver Detalhes
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
                 </Button>
+                {obra.status === "em_andamento" && (
+                  <Button 
+                    variant="ghost"
+                    className="text-green-600 hover:text-green-700"
+                    onClick={() => {
+                      console.log('Finalizar obra:', obra.id);
+                    }}
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Finalizar
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}
