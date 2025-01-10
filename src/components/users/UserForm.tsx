@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 const userFormSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -37,21 +38,13 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
   const onSubmit = async (data: UserFormValues) => {
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Substitui a chamada do Supabase por uma chamada à API local
+      await axios.post('http://localhost:3000/auth/register', {
         email: data.email,
         password: data.password,
-      });
-
-      if (signUpError) throw signUpError;
-
-      const { error: insertError } = await supabase.from('users').insert({
         name: data.name,
-        permission: data.role,
-        cpf: null, // opcional
-        whatsapp: null, // opcional
+        role: data.role,
       });
-
-      if (insertError) throw insertError;
 
       toast({
         title: "Usuário criado com sucesso!",
