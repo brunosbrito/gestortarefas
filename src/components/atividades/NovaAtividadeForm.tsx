@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Upload } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   tarefaMacro: z.string().min(1, "Tarefa macro é obrigatória"),
