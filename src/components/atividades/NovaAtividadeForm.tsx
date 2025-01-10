@@ -52,24 +52,31 @@ const colaboradoresMock = [
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function NovaAtividadeForm({ editMode = false, atividadeInicial = null }) {
+interface NovaAtividadeFormProps {
+  editMode?: boolean;
+  atividadeInicial?: any;
+}
+
+export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>("");
   const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
 
+  const defaultValues = editMode && atividadeInicial ? {
+    ...atividadeInicial,
+    horasColaboradores: atividadeInicial.equipe?.map((col: string) => ({
+      colaborador: col,
+      horas: 0
+    })) || []
+  } : {
+    unidadeTempo: "horas",
+    equipe: [],
+    horasColaboradores: []
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: editMode && atividadeInicial ? {
-      ...atividadeInicial,
-      horasColaboradores: atividadeInicial.equipe.map(col => ({
-        colaborador: col,
-        horas: 0
-      }))
-    } : {
-      unidadeTempo: "horas",
-      equipe: [],
-      horasColaboradores: []
-    },
+    defaultValues
   });
 
   const calcularTempoPrevisto = (unidade: number, tempoPorUnidade: number, unidadeTempo: "minutos" | "horas") => {
@@ -170,7 +177,7 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial = null })
 
         <ColaboradorHorasField 
           form={form} 
-          colaboradores={form.watch("equipe")} 
+          colaboradores={form.watch("equipe") || []} 
           showHorasColaboradores={showHorasColaboradores}
         />
 
