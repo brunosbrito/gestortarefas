@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Calendar, Building2, Upload, Edit2, Eye, GripHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { NovaAtividadeForm } from "@/components/atividades/NovaAtividadeForm";
 
 interface Atividade {
   id: number;
@@ -67,6 +68,7 @@ const statusListas = ["Planejadas", "Em Execução", "Concluídas", "Paralizadas
 
 const Atividades = () => {
   const [atividades, setAtividades] = useState<Atividade[]>(atividadesIniciais);
+  const [openNovaAtividade, setOpenNovaAtividade] = useState(false);
   const { toast } = useToast();
 
   const handleDragStart = (e: React.DragEvent, atividadeId: number) => {
@@ -107,31 +109,25 @@ const Atividades = () => {
     }));
   };
 
-  const handleUploadImagem = (atividadeId: number) => {
-    // Implementação futura do upload de imagem
-    toast({
-      title: "Upload de imagem",
-      description: "Funcionalidade será implementada em breve",
-    });
-  };
-
-  const handleEditar = (atividadeId: number) => {
-    // Implementação futura da edição
-    toast({
-      title: "Editar atividade",
-      description: "Funcionalidade será implementada em breve",
-    });
-  };
-
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-construction-800">Atividades</h1>
-          <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Atividade
-          </Button>
+          <Dialog open={openNovaAtividade} onOpenChange={setOpenNovaAtividade}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Atividade
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Nova Atividade</DialogTitle>
+              </DialogHeader>
+              <NovaAtividadeForm />
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="flex gap-6 overflow-x-auto pb-4">
@@ -222,14 +218,26 @@ const Atividades = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleUploadImagem(atividade.id)}
+                              onClick={() => {
+                                // Implementação futura do upload de imagem
+                                toast({
+                                  title: "Upload de imagem",
+                                  description: "Funcionalidade será implementada em breve",
+                                });
+                              }}
                             >
                               <Upload className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleEditar(atividade.id)}
+                              onClick={() => {
+                                // Implementação futura da edição
+                                toast({
+                                  title: "Editar atividade",
+                                  description: "Funcionalidade será implementada em breve",
+                                });
+                              }}
                             >
                               <Edit2 className="w-4 h-4" />
                             </Button>
