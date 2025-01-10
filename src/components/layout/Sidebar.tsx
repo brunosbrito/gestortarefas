@@ -7,7 +7,9 @@ import {
   Activity,
   ChevronDown,
   ChevronRight,
-  Clock
+  Clock,
+  FolderTree,
+  ListChecks
 } from "lucide-react";
 import { useState } from "react";
 
@@ -32,15 +34,8 @@ const navItems: MenuItem[] = [
     label: "Obras", 
     subItems: [
       { icon: Building2, label: "Lista de Obras", path: "/obras" },
-      { icon: Activity, label: "Atividades", path: "/obras/atividades" },
-    ]
-  },
-  { 
-    icon: ClipboardList, 
-    label: "Ordens de Serviço",
-    subItems: [
-      { icon: ClipboardList, label: "Lista de OS", path: "/os" },
-      { icon: Activity, label: "Atividades OS", path: "/os/atividades" },
+      { icon: FolderTree, label: "Ordens de Serviço", path: "/obras/os" },
+      { icon: ListChecks, label: "Atividades", path: "/obras/os/atividades" },
     ]
   },
   { icon: Clock, label: "Registro de Ponto", path: "/ponto" },
