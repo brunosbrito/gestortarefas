@@ -2,10 +2,10 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/auth/login';
 
-export const login = async (username, password) => {
+export const login = async (email: string, password: string) => {
   try {
     const response = await axios.post(API_URL, {
-      username,
+      email,
       password,
     });
     const { token } = response.data;
@@ -13,7 +13,7 @@ export const login = async (username, password) => {
     localStorage.setItem('authToken', token);
     return token;
   } catch (error) {
-    console.error('Erro ao fazer login:', error.response ? error.response.data : error.message);
+    console.error('Erro ao fazer login:', error);
     throw error;
   }
 };

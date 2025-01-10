@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { AuthError } from "@supabase/supabase-js";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { login } from "@/services/auth/AuthService";
 
 const Login = () => {
@@ -22,32 +23,55 @@ const Login = () => {
     }
   };
 
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-construction-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-construction-800">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="space-y-2">
           <CardTitle className="text-2xl font-bold text-center text-primary">
-            Gestor de Tarefas
+            Sistema de Gestão
           </CardTitle>
+          <p className="text-construction-500 text-center">
+            Faça login para acessar o sistema
+          </p>
         </CardHeader>
         <CardContent>
-        <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Entrar</button>
-      </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Digite seu email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Digite sua senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full"
+                required
+              />
+            </div>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <Button 
+              type="submit" 
+              className="w-full bg-secondary hover:bg-secondary/90 text-white"
+            >
+              Entrar
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
