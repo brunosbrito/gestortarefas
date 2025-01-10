@@ -37,8 +37,8 @@ const Obras = () => {
   const getStatusBadge = (status: Obra["status"]) => {
     const statusConfig = {
       EM_ANDAMENTO: { label: "Em Andamento", variant: "default" as const },
-      CONCLUIDA: { label: "Concluída", variant: "success" as const },
-      PAUSADA: { label: "Pausada", variant: "warning" as const }
+      CONCLUIDA: { label: "Concluída", variant: "secondary" as const },
+      PAUSADA: { label: "Pausada", variant: "outline" as const }
     };
 
     const config = statusConfig[status];

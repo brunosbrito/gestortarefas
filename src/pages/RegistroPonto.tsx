@@ -90,7 +90,7 @@ const RegistroPonto = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={funcionario.status === "PRESENTE" ? "success" : "destructive"}>
+                  <Badge variant={funcionario.status === "PRESENTE" ? "default" : "destructive"}>
                     {funcionario.status}
                   </Badge>
                 </TableCell>
