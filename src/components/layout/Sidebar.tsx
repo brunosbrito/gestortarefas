@@ -2,14 +2,12 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Users, 
-  Building2, 
-  ClipboardList, 
-  Activity,
-  ChevronDown,
-  ChevronRight,
+  Building2,
   Clock,
   FolderTree,
-  ListChecks
+  ListChecks,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { useState } from "react";
 
@@ -31,9 +29,9 @@ const navItems: MenuItem[] = [
   { icon: Users, label: "Usuários", path: "/users" },
   { 
     icon: Building2, 
-    label: "Obras", 
+    label: "Obras",
+    path: "/obras",
     subItems: [
-      { icon: Building2, label: "Lista de Obras", path: "/obras" },
       { icon: FolderTree, label: "Ordens de Serviço", path: "/obras/os" },
       { icon: ListChecks, label: "Atividades", path: "/obras/os/atividades" },
     ]
@@ -60,14 +58,22 @@ export const Sidebar = () => {
     if (hasSubItems) {
       return (
         <div key={item.label} className="space-y-1">
-          <button
-            onClick={() => toggleExpand(item.label)}
-            className="flex items-center w-full space-x-3 px-4 py-3 rounded-lg text-construction-600 hover:bg-construction-100"
+          <Link
+            to={item.path || "#"}
+            onClick={(e) => {
+              if (hasSubItems) {
+                e.preventDefault();
+                toggleExpand(item.label);
+              }
+            }}
+            className={`flex items-center w-full space-x-3 px-4 py-3 rounded-lg text-construction-600 hover:bg-construction-100 ${
+              location.pathname === item.path ? "bg-primary text-white" : ""
+            }`}
           >
             <item.icon size={20} />
             <span className="flex-1">{item.label}</span>
-            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          </button>
+            {hasSubItems && (isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+          </Link>
           
           {isExpanded && (
             <div className="pl-4 space-y-1">
