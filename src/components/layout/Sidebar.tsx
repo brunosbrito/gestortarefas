@@ -43,7 +43,6 @@ export const Sidebar = () => {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-  // Efeito para manter o menu de Obras aberto quando estiver em suas subpáginas
   useEffect(() => {
     const shouldExpandObras = location.pathname.includes('/obras');
     if (shouldExpandObras && !expandedItems.includes('Obras')) {
