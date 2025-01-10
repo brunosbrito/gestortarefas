@@ -9,7 +9,7 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface SubMenuItem {
   icon: any;
@@ -42,6 +42,14 @@ const navItems: MenuItem[] = [
 export const Sidebar = () => {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Efeito para manter o menu de Obras aberto quando estiver em suas subpáginas
+  useEffect(() => {
+    const shouldExpandObras = location.pathname.includes('/obras');
+    if (shouldExpandObras && !expandedItems.includes('Obras')) {
+      setExpandedItems(prev => [...prev, 'Obras']);
+    }
+  }, [location.pathname]);
 
   const toggleExpand = (label: string) => {
     setExpandedItems(prev => 
