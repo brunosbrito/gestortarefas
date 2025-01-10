@@ -56,6 +56,7 @@ interface NovaAtividadeFormProps {
 export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>("");
+  const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
 
   const defaultValues = editMode && atividadeInicial ? {
     ...atividadeInicial,
