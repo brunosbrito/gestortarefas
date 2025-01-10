@@ -22,7 +22,13 @@ const formSchema = z.object({
   dataInicio: z.string().min(1, "Data de início é obrigatória"),
   observacao: z.string().optional(),
   imagem: z.any().optional(),
+  imagemDescricao: z.string().optional(),
   arquivo: z.any().optional(),
+  arquivoDescricao: z.string().optional(),
+  horasColaboradores: z.array(z.object({
+    colaborador: z.string(),
+    horas: z.number(),
+  })).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,15 +51,23 @@ const colaboradoresMock = [
   { id: 3, nome: "Pedro Oliveira" },
 ];
 
-export function NovaAtividadeForm() {
+export function NovaAtividadeForm({ editMode = false, atividadeInicial = null }) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>("");
+  const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: editMode && atividadeInicial ? {
+      ...atividadeInicial,
+      horasColaboradores: atividadeInicial.equipe.map(col => ({
+        colaborador: col,
+        horas: 0
+      }))
+    } : {
       unidadeTempo: "horas",
       equipe: [],
+      horasColaboradores: []
     },
   });
 
@@ -78,11 +92,25 @@ export function NovaAtividadeForm() {
     }
   };
 
+  const handleTarefaMacroChange = (value: string) => {
+    if (editMode) {
+      setShowHorasColaboradores(true);
+    }
+    form.setValue("tarefaMacro", value);
+  };
+
+  const handleProcessoChange = (value: string) => {
+    if (editMode) {
+      setShowHorasColaboradores(true);
+    }
+    form.setValue("processo", value);
+  };
+
   const onSubmit = (data: FormValues) => {
     console.log(data);
     toast({
-      title: "Atividade criada com sucesso!",
-      description: "A atividade foi adicionada ao quadro.",
+      title: editMode ? "Atividade atualizada com sucesso!" : "Atividade criada com sucesso!",
+      description: editMode ? "As alterações foram salvas." : "A atividade foi adicionada ao quadro.",
     });
   };
 
@@ -95,7 +123,7 @@ export function NovaAtividadeForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tarefa Macro</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={handleTarefaMacroChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a tarefa macro" />
@@ -120,7 +148,7 @@ export function NovaAtividadeForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Processo</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={handleProcessoChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o processo" />
@@ -138,6 +166,33 @@ export function NovaAtividadeForm() {
             </FormItem>
           )}
         />
+
+        {showHorasColaboradores && (
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-medium">Horas trabalhadas por colaborador</h4>
+            {form.watch("equipe")?.map((colaborador, index) => (
+              <FormField
+                key={index}
+                control={form.control}
+                name={`horasColaboradores.${index}.horas`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{colaborador}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Horas trabalhadas"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
+        )}
 
         <FormField
           control={form.control}
@@ -306,7 +361,7 @@ export function NovaAtividadeForm() {
         <div className="space-y-4">
           <div>
             <FormLabel>Upload de Imagem (opcional)</FormLabel>
-            <div className="mt-2">
+            <div className="mt-2 space-y-2">
               <Input
                 type="file"
                 accept="image/*"
@@ -323,12 +378,24 @@ export function NovaAtividadeForm() {
                   <span className="text-sm text-gray-600">Clique para fazer upload de imagem</span>
                 </span>
               </label>
+              <FormField
+                control={form.control}
+                name="imagemDescricao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="Descrição da imagem (opcional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 
           <div>
             <FormLabel>Upload de Arquivo (opcional)</FormLabel>
-            <div className="mt-2">
+            <div className="mt-2 space-y-2">
               <Input
                 type="file"
                 onChange={(e) => form.setValue("arquivo", e.target.files?.[0])}
@@ -344,12 +411,24 @@ export function NovaAtividadeForm() {
                   <span className="text-sm text-gray-600">Clique para fazer upload de arquivo</span>
                 </span>
               </label>
+              <FormField
+                control={form.control}
+                name="arquivoDescricao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="Descrição do arquivo (opcional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
         </div>
 
         <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-          Criar Atividade
+          {editMode ? "Salvar Alterações" : "Criar Atividade"}
         </Button>
       </form>
     </Form>

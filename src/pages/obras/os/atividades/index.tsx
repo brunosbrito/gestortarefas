@@ -16,6 +16,7 @@ interface Atividade {
   responsavel: string;
   prazo: string;
   tarefaMacro: string;
+  processo: string;
   status: "Planejadas" | "Em Execução" | "Concluídas" | "Paralizadas";
   horasTrabalhadas?: {
     colaborador: string;
@@ -39,6 +40,7 @@ const atividadesIniciais: Atividade[] = [
     responsavel: "João Silva",
     prazo: "2024-03-01",
     tarefaMacro: "Fundação",
+    processo: "Escavação",
     status: "Em Execução",
     horasTrabalhadas: [
       { colaborador: "João Silva", horas: 8, tarefaMacro: "Fundação", processo: "Escavação" }
@@ -56,6 +58,7 @@ const atividadesIniciais: Atividade[] = [
     responsavel: "Maria Santos",
     prazo: "2024-03-05",
     tarefaMacro: "Fundação",
+    processo: "Montagem",
     status: "Planejadas",
     horasTrabalhadas: [],
     historico: [
@@ -156,10 +159,16 @@ const Atividades = () => {
                         onDragStart={(e) => handleDragStart(e, atividade.id)}
                       >
                         <CardHeader className="p-4">
-                          <CardTitle className="text-sm font-medium flex items-center justify-between">
-                            {atividade.descricao}
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium">
+                              {atividade.descricao}
+                            </CardTitle>
                             <GripHorizontal className="w-4 h-4 text-gray-400" />
-                          </CardTitle>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Badge variant="secondary">{atividade.tarefaMacro}</Badge>
+                            <Badge variant="outline">{atividade.processo}</Badge>
+                          </div>
                         </CardHeader>
                         <CardContent className="p-4 pt-0 text-sm text-gray-500">
                           <div className="space-y-2">
@@ -219,7 +228,6 @@ const Atividades = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                // Implementação futura do upload de imagem
                                 toast({
                                   title: "Upload de imagem",
                                   description: "Funcionalidade será implementada em breve",
@@ -228,19 +236,19 @@ const Atividades = () => {
                             >
                               <Upload className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                // Implementação futura da edição
-                                toast({
-                                  title: "Editar atividade",
-                                  description: "Funcionalidade será implementada em breve",
-                                });
-                              }}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Editar Atividade</DialogTitle>
+                                </DialogHeader>
+                                <NovaAtividadeForm editMode={true} atividadeInicial={atividade} />
+                              </DialogContent>
+                            </Dialog>
                           </div>
                         </CardFooter>
                       </Card>
