@@ -25,7 +25,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-construction-800">
-      <Card className="w-full max-w-md shadow-xl">
+      <Card className="w-full max-w-md shadow-xl card-gradient">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl font-bold text-center text-primary">
             Sistema de Gestão
@@ -67,7 +67,7 @@ const Login = () => {
             )}
             <Button 
               type="submit" 
-              className="w-full bg-secondary hover:bg-secondary/90 text-white"
+              className="w-full btn-secondary"
             >
               Entrar
             </Button>
