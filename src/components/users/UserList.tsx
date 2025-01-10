@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface User {
@@ -18,12 +17,8 @@ export const UserList = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*');
-
-      if (error) throw error;
-      setUsers(data || []);
+      
+      setUsers([]);
     } catch (error) {
       toast({
         variant: "destructive",

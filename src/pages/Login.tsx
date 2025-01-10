@@ -1,100 +1,53 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { AuthError } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { login } from "@/services/auth/AuthService";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState<string>("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        navigate("/");
-      }
-      
-      if (event === "PASSWORD_RECOVERY") {
-        setError("");
-      }
-
-      if (event === "USER_UPDATED") {
-        const { error } = await supabase.auth.getSession();
-        if (error) {
-          setError(getErrorMessage(error));
-        }
-      }
-      
-      if (event === "SIGNED_OUT") {
-        setError("");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const getErrorMessage = (error: AuthError) => {
-    switch (error.message) {
-      case "Invalid login credentials":
-        return "Email ou senha inválidos. Por favor, verifique suas credenciais.";
-      case "Email not confirmed":
-        return "Por favor, confirme seu email antes de fazer login.";
-      case "Invalid email or password":
-        return "Email ou senha inválidos. Por favor, verifique suas credenciais.";
-      default:
-        return error.message;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      setError('Falha no login. Verifique suas credenciais.');
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-construction-50">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center text-primary">
-            GML Automações
+            Gestor de Tarefas
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <Auth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#2563eb',
-                    brandAccent: '#1d4ed8',
-                  },
-                },
-              },
-            }}
-            localization={{
-              variables: {
-                sign_in: {
-                  email_label: 'Email',
-                  password_label: 'Senha',
-                  button_label: 'Entrar',
-                  loading_button_label: 'Entrando...',
-                },
-                sign_up: {
-                  email_label: 'Email',
-                  password_label: 'Senha',
-                  button_label: 'Cadastrar',
-                  loading_button_label: 'Cadastrando...',
-                },
-              },
-            }}
-            providers={[]}
-            redirectTo={window.location.origin}
-          />
+        <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="E-mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="submit">Entrar</button>
+      </form>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
         </CardContent>
       </Card>
     </div>
