@@ -946,25 +946,6 @@ export type Database = {
               kpi_atividades_vs_total: string
             }[]
           }
-        | {
-            Args: {
-              p_data_inicio: string
-              p_data_fim: string
-              p_id_obra: number
-              t_macro: string
-              p_colaborador_nome: string
-            }
-            Returns: {
-              tarefa_macro: string
-              tempo_trabalho_total: string
-              tempo_previsto_total: string
-              diferenca_tempo: string
-              qtd_atividades: number
-              kpi_tempo_trabalho_vs_previsto: string
-              kpi_tempo_trabalho_vs_total: string
-              kpi_atividades_vs_total: string
-            }[]
-          }
       calcular_kpis_tarefa_macro: {
         Args: {
           p_data_inicio: string
