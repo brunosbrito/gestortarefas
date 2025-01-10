@@ -8,9 +8,10 @@ export const login = async (email: string, password: string) => {
       email,
       password,
     });
-    const { token } = response.data;
+
+    const { token } = response.data.access_token;
     
-    localStorage.setItem('authToken', token);
+    localStorage.setItem('authToken', response.data.access_token);
     return token;
   } catch (error) {
     console.error('Erro ao fazer login:', error);

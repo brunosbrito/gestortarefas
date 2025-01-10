@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
+const token = localStorage.getItem('authToken');
+
 const userFormSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email inválido"),
@@ -38,12 +40,16 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
   const onSubmit = async (data: UserFormValues) => {
     try {
-      // Substitui a chamada do Supabase por uma chamada à API local
       await axios.post('http://localhost:3000/auth/register', {
         email: data.email,
         password: data.password,
-        name: data.name,
+        username: data.name,
         role: data.role,
+      },{
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       toast({

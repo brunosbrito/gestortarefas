@@ -3,13 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import UserService from "@/services/auth/UserService";
+import { User } from "@/interfaces/UserInterface";
 
-interface User {
-  id: number;
-  name: string | null;
-  permission: string | null;
-  cpf: string | null;
-}
 
 export const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -18,7 +14,9 @@ export const UserList = () => {
   const fetchUsers = async () => {
     try {
       
-      setUsers([]);
+      const usersData = await UserService.getAllUsers();
+      setUsers(usersData || []);
+
     } catch (error) {
       toast({
         variant: "destructive",
@@ -37,21 +35,21 @@ export const UserList = () => {
       <TableHeader>
         <TableRow>
           <TableHead>Nome</TableHead>
-          <TableHead>CPF</TableHead>
-          <TableHead>Função</TableHead>
+          <TableHead>Permissão</TableHead>
+          <TableHead>Status</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {users.map((user) => (
           <TableRow key={user.id}>
-            <TableCell className="font-medium">{user.name}</TableCell>
-            <TableCell>{user.cpf}</TableCell>
+            <TableCell className="font-medium">{user.username}</TableCell>
             <TableCell>
-              <Badge variant={user.permission === 'admin' ? 'default' : 'secondary'}>
-                {user.permission === 'admin' ? 'Administrador' : 'Básico'}
+              <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                {user.role === 'admin' ? 'Administrador' : 'Básico'}
               </Badge>
             </TableCell>
+            <TableCell className="font-medium">{user.isActive}</TableCell>
             <TableCell className="text-right">
               <Button variant="ghost" size="sm">
                 Editar
