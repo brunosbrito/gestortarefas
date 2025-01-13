@@ -4,7 +4,6 @@ import {
   Building2,
   Clock,
   FolderTree,
-  ListChecks,
 } from "lucide-react";
 import { MenuItem } from "./types";
 
@@ -17,7 +16,6 @@ export const navItems: MenuItem[] = [
     subItems: [
       { icon: Building2, label: "Lista Obras", path: "/obras" },
       { icon: FolderTree, label: "Ordens de Serviço", path: "/obras/os" },
-      { icon: ListChecks, label: "Atividades", path: "/obras/os/atividades" },
     ]
   },
   { icon: Clock, label: "Registro de Ponto", path: "/ponto" },

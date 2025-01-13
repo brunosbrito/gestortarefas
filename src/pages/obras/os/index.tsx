@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Building2, ClipboardList } from "lucide-react";
+import { Plus, Calendar, Building2, ClipboardList, Activity } from "lucide-react";
 import { useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface OrdemServico {
   id: number;
@@ -40,6 +41,7 @@ const OrdensServico = () => {
   const [ordensServico, setOrdensServico] = useState<OrdemServico[]>(ordensServicoIniciais);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleNovaOS = (data: any) => {
     const novaOS = {
@@ -107,7 +109,7 @@ const OrdensServico = () => {
                   <span>Início: {new Date(os.dataInicio).toLocaleDateString('pt-BR')}</span>
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex gap-2">
                 <Button 
                   variant="outline" 
                   className="w-full hover:bg-[#FF7F0E]/10"
@@ -116,6 +118,14 @@ const OrdensServico = () => {
                   }}
                 >
                   Ver Detalhes
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full hover:bg-[#FF7F0E]/10"
+                  onClick={() => navigate(`/obras/os/atividades?os=${os.id}`)}
+                >
+                  <Activity className="w-4 h-4 mr-2" />
+                  Atividades
                 </Button>
               </CardFooter>
             </Card>
