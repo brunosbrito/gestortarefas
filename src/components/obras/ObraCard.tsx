@@ -175,7 +175,9 @@ export const ObraCard = ({ obra, onEdit, onFinalizar }: ObraCardProps) => {
                   Tem certeza que deseja finalizar esta obra? Esta ação não pode ser desfeita.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <FinalizarObraForm onSubmit={(data) => onFinalizar(obra.id!, data)} />
+              <FinalizarObraForm 
+                onSubmit={(data) => onFinalizar(obra.id!, { endDate: data.endDate })} 
+              />
             </AlertDialogContent>
           </AlertDialog>
         )}

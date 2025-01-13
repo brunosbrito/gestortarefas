@@ -10,7 +10,9 @@ const formSchema = z.object({
   endDate: z.string().min(1, "Data de finalização é obrigatória"),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = {
+  endDate: string;
+};
 
 interface FinalizarObraFormProps {
   onSubmit: (data: FormValues) => void;
@@ -19,6 +21,9 @@ interface FinalizarObraFormProps {
 export const FinalizarObraForm = ({ onSubmit }: FinalizarObraFormProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      endDate: new Date().toISOString().split('T')[0], // Define um valor padrão como a data atual
+    },
   });
 
   return (
