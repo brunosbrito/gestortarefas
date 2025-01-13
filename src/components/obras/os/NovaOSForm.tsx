@@ -18,14 +18,15 @@ import { format } from "date-fns";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
 import { useToast } from "@/hooks/use-toast";
+import { createServiceOrder } from "@/services/ServiceOrderService";
 
 const formSchema = z.object({
-  numero: z.string().min(1, "Número da OS é obrigatório"),
-  descricao: z.string().min(1, "Descrição é obrigatória"),
-  obra: z.string().min(1, "Obra é obrigatória"),
-  dataInicio: z.string().min(1, "Data de início é obrigatória"),
-  status: z.enum(["EM_ANDAMENTO", "CONCLUIDA", "PAUSADA"]),
-  observacoes: z.string().optional(),
+  description: z.string().min(1, "Descrição é obrigatória"),
+  projectId: z.number().min(1, "Obra é obrigatória"),
+  createdAt: z.string().min(1, "Data de início é obrigatória"),
+  status: z.enum(["em_andamento", "concluida", "pausada"]),
+  notes: z.string().optional(),
+  assignedUser: z.number().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -34,6 +35,13 @@ interface NovaOSFormProps {
   onSubmit: (data: FormValues) => void;
 }
 
+function getUserIdFromLocalStorage(): number {
+  const userId = localStorage.getItem("userId");
+  return userId ? parseInt(userId) : null;
+}
+
+const userId = getUserIdFromLocalStorage();
+
 export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
   const { toast } = useToast();
@@ -41,7 +49,7 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      status: "EM_ANDAMENTO",
+      status: "em_andamento",
     },
   });
 
@@ -62,30 +70,41 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
     fetchObras();
   }, [toast]);
 
-  const formatDate = (date: string) => {
-    return format(new Date(date), "dd/MM/yyyy");
+  const handleSubmit = async (data: FormValues) => {
+
+    const userId = getUserIdFromLocalStorage();
+    if (userId) {
+      data.assignedUser = userId;
+    }
+
+    try {
+      await createServiceOrder(data);
+      
+      // Exibe mensagem de sucesso
+      toast({
+        variant: "default",
+        title: "Ordem de Serviço criada",
+        description: "A nova ordem de serviço foi criada com sucesso.",
+      });
+
+      // Chamando a função onSubmit passada como props
+      onSubmit(data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar Ordem de Serviço",
+        description: "Não foi possível criar a ordem de serviço.",
+      });
+    }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        
         <FormField
           control={form.control}
-          name="numero"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Número da OS</FormLabel>
-              <FormControl>
-                <Input placeholder="OS-001" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="descricao"
+          name="description"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Descrição</FormLabel>
@@ -99,11 +118,11 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
 
         <FormField
           control={form.control}
-          name="obra"
+          name="projectId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Obra</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={String(field.value)} onValueChange={(value) => field.onChange(Number(value))}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a obra" />
@@ -124,17 +143,17 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
 
         <FormField
           control={form.control}
-          name="dataInicio"
+          name="createdAt"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Data de Início</FormLabel>
               <FormControl>
-                <Input 
-                  type="date" 
-                  {...field} 
+                <Input
+                  type="date"
+                  {...field}
                   onChange={(e) => {
                     const date = new Date(e.target.value);
-                    field.onChange(format(date, "yyyy-MM-dd"));
+                    field.onChange(format(date, "yyyy-MM-dd")); // Mantém o formato YYYY-MM-DD para o input
                   }}
                   value={field.value ? format(new Date(field.value), "yyyy-MM-dd") : ""}
                 />
@@ -150,16 +169,16 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
-                  <SelectItem value="CONCLUIDA">Concluída</SelectItem>
-                  <SelectItem value="PAUSADA">Pausada</SelectItem>
+                  <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
+                  <SelectItem value="pausada">Pausada</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -169,7 +188,7 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
 
         <FormField
           control={form.control}
-          name="observacoes"
+          name="notes"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Observações</FormLabel>

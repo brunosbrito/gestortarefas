@@ -1,15 +1,19 @@
 import React from "react";
 import { Header } from "./layout/Header";
 import { Sidebar } from "./layout/Sidebar";
-import { useUserName } from "./layout/useUserName";
+import { useUser } from "./layout/useUser";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
-  const userName = useUserName();
+  const user = useUser();
+
+  if (!user) {
+    return <div>Carregando...</div>;  // Ou algum fallback enquanto o usuário carrega
+  }
 
   return (
     <div className="flex h-screen bg-construction-50">
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-construction-200">
-        <Header userName={userName} />
+        <Header user={user} />  {/* Passando o usuário corretamente */}
         <Sidebar />
       </aside>
 
