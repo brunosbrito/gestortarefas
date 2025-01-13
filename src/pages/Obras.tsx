@@ -117,7 +117,14 @@ const Obras = () => {
     try {
       if (obraSelecionada?.id) {
         await ObrasService.updateObra(obraSelecionada.id, {
-          ...data,
+          id: obraSelecionada.id,
+          name: data.name,
+          groupNumber: data.groupNumber,
+          client: data.client,
+          address: data.address,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          observation: data.observation,
           status: obraSelecionada.status,
         });
         toast({
