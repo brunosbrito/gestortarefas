@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Building2, ClipboardList } from "lucide-react";
 import { useState } from "react";
+import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
+import { useToast } from "@/components/ui/use-toast";
 
 interface OrdemServico {
   id: number;
@@ -35,7 +37,23 @@ const ordensServicoIniciais: OrdemServico[] = [
 ];
 
 const OrdensServico = () => {
-  const [ordensServico] = useState<OrdemServico[]>(ordensServicoIniciais);
+  const [ordensServico, setOrdensServico] = useState<OrdemServico[]>(ordensServicoIniciais);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleNovaOS = (data: any) => {
+    const novaOS = {
+      id: ordensServico.length + 1,
+      ...data,
+    };
+    
+    setOrdensServico([...ordensServico, novaOS]);
+    setDialogOpen(false);
+    toast({
+      title: "Ordem de Serviço criada",
+      description: "A OS foi criada com sucesso!",
+    });
+  };
 
   const getStatusBadge = (status: OrdemServico["status"]) => {
     const statusConfig = {
@@ -53,7 +71,7 @@ const OrdensServico = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-construction-800">Ordens de Serviço</h1>
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
                 <Plus className="w-4 h-4 mr-2" />
@@ -62,9 +80,9 @@ const OrdensServico = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Criar Nova Ordem de Serviço</DialogTitle>
+                <DialogTitle>Nova Ordem de Serviço</DialogTitle>
               </DialogHeader>
-              {/* Formulário será implementado posteriormente */}
+              <NovaOSForm onSubmit={handleNovaOS} />
             </DialogContent>
           </Dialog>
         </div>
