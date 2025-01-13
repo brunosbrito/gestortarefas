@@ -33,6 +33,7 @@ const Obras = () => {
   const [open, setOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [finalizarDialogOpen, setFinalizarDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
   const { toast } = useToast();
 
@@ -126,6 +127,11 @@ const Obras = () => {
         });
       }
     }
+  };
+
+  const handleViewClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setViewDialogOpen(true);
   };
 
   const getStatusBadge = (status: Obra["status"]) => {
@@ -299,6 +305,14 @@ const Obras = () => {
               <CardFooter className="flex gap-2">
                 <Button 
                   variant="ghost"
+                  className="text-blue-600 hover:text-blue-700"
+                  onClick={() => handleViewClick(obra)}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Visualizar
+                </Button>
+                <Button 
+                  variant="ghost"
                   className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
                   onClick={() => handleEditClick(obra)}
                 >
@@ -343,6 +357,56 @@ const Obras = () => {
               <DialogTitle>Finalizar Obra</DialogTitle>
             </DialogHeader>
             <FinalizarObraForm onSubmit={handleFinalizarSubmit} />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Detalhes da Obra</DialogTitle>
+            </DialogHeader>
+            {selectedObra && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold">Nome da Obra</h3>
+                  <p>{selectedObra.name}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Número do Grupo</h3>
+                  <p>{selectedObra.groupNumber}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Cliente</h3>
+                  <p>{selectedObra.client}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Endereço</h3>
+                  <p>{selectedObra.address}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Data de Início</h3>
+                  <p>{new Date(selectedObra.startDate).toLocaleDateString('pt-BR')}</p>
+                </div>
+                {selectedObra.endDate && (
+                  <div>
+                    <h3 className="font-semibold">Data de Finalização</h3>
+                    <p>{new Date(selectedObra.endDate).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                )}
+                {selectedObra.observation && (
+                  <div>
+                    <h3 className="font-semibold">Observações</h3>
+                    <p>{selectedObra.observation}</p>
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold">Status</h3>
+                  <div className="mt-1">
+                    {getStatusBadge(selectedObra.status)}
+                  </div>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

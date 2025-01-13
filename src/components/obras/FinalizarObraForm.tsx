@@ -13,7 +13,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface FinalizarObraFormProps {
-  onSubmit: (data: { endDate: string }) => void;
+  onSubmit: (data: FormValues) => void;
 }
 
 export const FinalizarObraForm = ({ onSubmit }: FinalizarObraFormProps) => {
