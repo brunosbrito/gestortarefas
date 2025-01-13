@@ -141,8 +141,14 @@ const Obras = () => {
       if (obraSelecionada?.id) {
         await ObrasService.updateObra(obraSelecionada.id, {
           ...obraSelecionada,
-          status: "finalizado",
+          status: "finalizado" as const,
           endDate: data.endDate,
+          // Garantindo que todos os campos obrigatórios estejam presentes
+          name: obraSelecionada.name,
+          groupNumber: obraSelecionada.groupNumber,
+          client: obraSelecionada.client,
+          address: obraSelecionada.address,
+          startDate: obraSelecionada.startDate
         });
         toast({
           title: "Obra finalizada com sucesso!",
