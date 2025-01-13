@@ -10,10 +10,12 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
 import { Badge } from "@/components/ui/badge";
+import { EditObraForm } from "@/components/obras/EditObraForm";
+import { FinalizarObraForm } from "@/components/obras/FinalizarObraForm";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome da obra é obrigatório"),
@@ -21,51 +23,108 @@ const formSchema = z.object({
   client: z.string().min(1, "Cliente é obrigatório"),
   address: z.string().min(1, "Endereço é obrigatório"),
   startDate: z.string().min(1, "Data de início é obrigatória"),
-  endDate: z.string().optional(),
   observation: z.string().optional(),
-  id: z.number().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface ObraDetalhada extends Obra {
-  horasTrabalhadas?: number;
-  atividades?: string[];
-  historico?: string[];
-}
-
 const Obras = () => {
-  const [obras, setObras] = useState<ObraDetalhada[]>([]);
+  const [obras, setObras] = useState<Obra[]>([]);
   const [open, setOpen] = useState(false);
-  const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhada | null>(null);
-  const [dialogDetalhesAberto, setDialogDetalhesAberto] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [finalizarDialogOpen, setFinalizarDialogOpen] = useState(false);
+  const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
   const { toast } = useToast();
 
   const fetchObras = async () => {
     try {
       const obrasData = await ObrasService.getAllObras();
-      // Simulando dados adicionais que viriam do backend
-      const obrasComDetalhes = obrasData?.map(obra => ({
-        ...obra,
-        horasTrabalhadas: Math.floor(Math.random() * 1000),
-        atividades: [
-          "Fundação iniciada",
-          "Alvenaria em andamento",
-          "Instalações elétricas"
-        ],
-        historico: [
-          `${new Date(obra.startDate).toLocaleDateString('pt-BR')} - Início da obra`,
-          "15/02/2024 - Fundação concluída",
-          "01/03/2024 - Alvenaria iniciada"
-        ]
-      }));
-      setObras(obrasComDetalhes || []);
+      setObras(obrasData || []);
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erro ao carregar obras',
         description: 'Não foi possível carregar a lista de obras.',
       });
+    }
+  };
+
+  useEffect(() => {
+    fetchObras();
+  }, []);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      groupNumber: "",
+      client: "",
+      address: "",
+      startDate: "",
+      observation: "",
+    },
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    const obraData: Obra = {
+      name: data.name,
+      groupNumber: data.groupNumber,
+      client: data.client,
+      address: data.address,
+      startDate: data.startDate,
+      observation: data.observation,
+      status: "em_andamento",
+    };
+  
+    try {
+      await ObrasService.createObra(obraData);
+      toast({
+        title: "Obra cadastrada com sucesso!",
+        description: `A obra ${data.name} foi cadastrada.`,
+      });
+      setOpen(false);
+      form.reset();
+      fetchObras();
+    } catch (error) {
+      toast({
+        title: "Erro ao cadastrar obra",
+        description: "Não foi possível cadastrar a obra. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setEditDialogOpen(true);
+  };
+
+  const handleFinalizarClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setFinalizarDialogOpen(true);
+  };
+
+  const handleFinalizarSubmit = async (data: { endDate: string }) => {
+    if (selectedObra?.id) {
+      try {
+        await ObrasService.updateObra(selectedObra.id, {
+          ...selectedObra,
+          endDate: data.endDate,
+          status: "finalizado",
+        });
+        toast({
+          title: "Obra finalizada",
+          description: "A obra foi finalizada com sucesso.",
+        });
+        setFinalizarDialogOpen(false);
+        fetchObras();
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao finalizar obra",
+          description: "Não foi possível finalizar a obra.",
+        });
+      }
     }
   };
 
@@ -94,53 +153,6 @@ const Obras = () => {
         );
       default:
         return null;
-    }
-  };
-
-  useEffect(() => {
-    fetchObras();
-  }, []);
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      groupNumber: "",
-      client: "",
-      address: "",
-      startDate: "",
-      endDate: "",
-      observation: "",
-      id: 0,
-    },
-  });
-
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    const obraData: Obra = {
-      name: data.name,
-      groupNumber: data.groupNumber,
-      client: data.client,
-      address: data.address,
-      startDate: data.startDate,
-      observation: data.observation,
-      status: "em_andamento",
-    };
-  
-    try {
-      await ObrasService.createObra(obraData);
-      toast({
-        title: "Obra cadastrada com sucesso!",
-        description: `A obra ${data.name} foi cadastrada.`,
-      });
-      setOpen(false);
-      form.reset();
-      fetchObras();
-    } catch (error) {
-      toast({
-        title: "Erro ao cadastrar obra",
-        description: "Não foi possível cadastrar a obra. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -285,85 +297,10 @@ const Obras = () => {
                 )}
               </CardContent>
               <CardFooter className="flex gap-2">
-                <Dialog open={dialogDetalhesAberto && obraSelecionada?.id === obra.id} 
-                       onOpenChange={(open) => {
-                         setDialogDetalhesAberto(open);
-                         if (!open) setObraSelecionada(null);
-                       }}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => setObraSelecionada(obra)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver Detalhes
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Detalhes da Obra</DialogTitle>
-                    </DialogHeader>
-                    {obraSelecionada && (
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <h2 className="text-xl font-semibold">{obraSelecionada.name}</h2>
-                          {getStatusBadge(obraSelecionada.status)}
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <h3 className="font-semibold mb-2 flex items-center">
-                              <Calendar className="w-4 h-4 mr-2" />
-                              Datas
-                            </h3>
-                            <p>Início: {new Date(obraSelecionada.startDate).toLocaleDateString('pt-BR')}</p>
-                            {obraSelecionada.endDate && (
-                              <p>Término: {new Date(obraSelecionada.endDate).toLocaleDateString('pt-BR')}</p>
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold mb-2 flex items-center">
-                              <Timer className="w-4 h-4 mr-2" />
-                              Horas Trabalhadas
-                            </h3>
-                            <p>{obraSelecionada.horasTrabalhadas}h</p>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="font-semibold mb-2">Atividades Recentes</h3>
-                          <ul className="space-y-2">
-                            {obraSelecionada.atividades?.map((atividade, index) => (
-                              <li key={index} className="flex items-center">
-                                <Activity className="w-4 h-4 mr-2 text-construction-500" />
-                                {atividade}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div>
-                          <h3 className="font-semibold mb-2">Histórico</h3>
-                          <ul className="space-y-2">
-                            {obraSelecionada.historico?.map((evento, index) => (
-                              <li key={index} className="flex items-center">
-                                <ClipboardList className="w-4 h-4 mr-2 text-construction-500" />
-                                {evento}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </DialogContent>
-                </Dialog>
                 <Button 
                   variant="ghost"
                   className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
-                  onClick={() => {
-                    console.log('Editar obra:', obra.id);
-                  }}
+                  onClick={() => handleEditClick(obra)}
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
@@ -372,9 +309,7 @@ const Obras = () => {
                   <Button 
                     variant="ghost"
                     className="text-green-600 hover:text-green-700"
-                    onClick={() => {
-                      console.log('Finalizar obra:', obra.id);
-                    }}
+                    onClick={() => handleFinalizarClick(obra)}
                   >
                     <Check className="w-4 h-4 mr-2" />
                     Finalizar
@@ -384,6 +319,32 @@ const Obras = () => {
             </Card>
           ))}
         </div>
+
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Editar Obra</DialogTitle>
+            </DialogHeader>
+            {selectedObra && (
+              <EditObraForm 
+                obra={selectedObra} 
+                onSuccess={() => {
+                  setEditDialogOpen(false);
+                  fetchObras();
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={finalizarDialogOpen} onOpenChange={setFinalizarDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Finalizar Obra</DialogTitle>
+            </DialogHeader>
+            <FinalizarObraForm onSubmit={handleFinalizarSubmit} />
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
