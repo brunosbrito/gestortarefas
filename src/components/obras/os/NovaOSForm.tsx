@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,6 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import { Obra } from "@/interfaces/ObrasInterface";
+import ObrasService from "@/services/ObrasService";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   numero: z.string().min(1, "Número da OS é obrigatório"),
@@ -31,12 +35,36 @@ interface NovaOSFormProps {
 }
 
 export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
+  const [obras, setObras] = useState<Obra[]>([]);
+  const { toast } = useToast();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       status: "EM_ANDAMENTO",
     },
   });
+
+  useEffect(() => {
+    const fetchObras = async () => {
+      try {
+        const obrasData = await ObrasService.getAllObras();
+        setObras(obrasData || []);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar obras",
+          description: "Não foi possível carregar a lista de obras.",
+        });
+      }
+    };
+
+    fetchObras();
+  }, [toast]);
+
+  const formatDate = (date: string) => {
+    return format(new Date(date), "dd/MM/yyyy");
+  };
 
   return (
     <Form {...form}>
@@ -75,9 +103,20 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Obra</FormLabel>
-              <FormControl>
-                <Input placeholder="Nome da Obra" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a obra" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {obras.map((obra) => (
+                    <SelectItem key={obra.id} value={String(obra.id)}>
+                      {obra.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -90,7 +129,15 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
             <FormItem>
               <FormLabel>Data de Início</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input 
+                  type="date" 
+                  {...field} 
+                  onChange={(e) => {
+                    const date = new Date(e.target.value);
+                    field.onChange(format(date, "yyyy-MM-dd"));
+                  }}
+                  value={field.value ? format(new Date(field.value), "yyyy-MM-dd") : ""}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
