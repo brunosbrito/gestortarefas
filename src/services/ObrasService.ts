@@ -1,7 +1,7 @@
 import { Obra } from '@/interfaces/ObrasInterface';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/projects';
+const API_URL = 'http://localhost:3000/projects/';
 
 class ObraService {
   // Criar uma nova obra
@@ -29,7 +29,7 @@ class ObraService {
   // Buscar obra por ID
   async getObraById(id: number) {
     try {
-      const response = await axios.get(`${API_URL}${id}`);
+      const response = await axios.get(`${API_URL}:${id}`);
       return response.data; // Retorna a obra com o ID especificado
     } catch (error) {
       console.error('Erro ao buscar obra:', error);
