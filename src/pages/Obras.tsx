@@ -37,7 +37,7 @@ const Obras = () => {
     }
   };
 
-  const handleCreateObra = async (data: any) => {
+  const handleCreateObra = async (data: Omit<ObraDetalhada, 'id' | 'status'>) => {
     try {
       await ObrasService.createObra({
         ...data,
@@ -57,7 +57,7 @@ const Obras = () => {
     }
   };
 
-  const handleEdit = async (obraId: number, data: any) => {
+  const handleEdit = async (obraId: number, data: Partial<ObraDetalhada>) => {
     try {
       const obraAtual = obras.find(o => o.id === obraId);
       if (obraAtual) {
