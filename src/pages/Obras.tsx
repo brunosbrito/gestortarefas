@@ -150,7 +150,6 @@ const Obras = () => {
           ...obraSelecionada,
           status: "finalizado" as const,
           endDate: data.endDate,
-          // Garantindo que todos os campos obrigatórios estejam presentes
           name: obraSelecionada.name,
           groupNumber: obraSelecionada.groupNumber,
           client: obraSelecionada.client,
@@ -314,11 +313,7 @@ const Obras = () => {
                 )}
               </CardContent>
               <CardFooter className="flex gap-2">
-                <Dialog open={dialogDetalhesAberto && obraSelecionada?.id === obra.id} 
-                       onOpenChange={(open) => {
-                         setDialogDetalhesAberto(open);
-                         if (!open) setObraSelecionada(null);
-                       }}>
+                <Dialog>
                   <DialogTrigger asChild>
                     <Button 
                       variant="outline" 
@@ -387,14 +382,8 @@ const Obras = () => {
                     )}
                   </DialogContent>
                 </Dialog>
-                <Dialog open={editModalOpen && obraSelecionada?.id === obra.id}
-                       onOpenChange={(open) => {
-                         setEditModalOpen(open);
-                         if (!open) setObraSelecionada(null);
-                         else {
-                           editForm.reset(obra);
-                         }
-                       }}>
+
+                <Dialog>
                   <DialogTrigger asChild>
                     <Button 
                       variant="ghost"
@@ -501,11 +490,7 @@ const Obras = () => {
                 </Dialog>
 
                 {obra.status === "em_andamento" && (
-                  <AlertDialog open={finalizarModalOpen && obraSelecionada?.id === obra.id}
-                             onOpenChange={(open) => {
-                               setFinalizarModalOpen(open);
-                               if (!open) setObraSelecionada(null);
-                             }}>
+                  <AlertDialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
