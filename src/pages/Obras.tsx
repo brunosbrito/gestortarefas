@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome da obra é obrigatório"),
@@ -39,12 +40,23 @@ const Obras = () => {
   const [open, setOpen] = useState(false);
   const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhada | null>(null);
   const [dialogDetalhesAberto, setDialogDetalhesAberto] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
   const { toast } = useToast();
+
+  const editForm = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+  });
+
+  const finalizarForm = useForm({
+    resolver: zodResolver(z.object({
+      endDate: z.string().min(1, "Data de finalização é obrigatória"),
+    })),
+  });
 
   const fetchObras = async () => {
     try {
       const obrasData = await ObrasService.getAllObras();
-      // Simulando dados adicionais que viriam do backend
       const obrasComDetalhes = obrasData?.map(obra => ({
         ...obra,
         horasTrabalhadas: Math.floor(Math.random() * 1000),
@@ -101,44 +113,48 @@ const Obras = () => {
     fetchObras();
   }, []);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      groupNumber: "",
-      client: "",
-      address: "",
-      startDate: "",
-      endDate: "",
-      observation: "",
-      id: 0,
-    },
-  });
-
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    const obraData: Obra = {
-      name: data.name,
-      groupNumber: data.groupNumber,
-      client: data.client,
-      address: data.address,
-      startDate: data.startDate,
-      observation: data.observation,
-      status: "em_andamento",
-    };
-  
+  const handleEdit = async (data: FormValues) => {
     try {
-      await ObrasService.createObra(obraData);
-      toast({
-        title: "Obra cadastrada com sucesso!",
-        description: `A obra ${data.name} foi cadastrada.`,
-      });
-      setOpen(false);
-      form.reset();
-      fetchObras();
+      if (obraSelecionada?.id) {
+        await ObrasService.updateObra(obraSelecionada.id, {
+          ...data,
+          status: obraSelecionada.status,
+        });
+        toast({
+          title: "Obra atualizada com sucesso!",
+          description: `A obra ${data.name} foi atualizada.`,
+        });
+        setEditModalOpen(false);
+        fetchObras();
+      }
     } catch (error) {
       toast({
-        title: "Erro ao cadastrar obra",
-        description: "Não foi possível cadastrar a obra. Tente novamente mais tarde.",
+        title: "Erro ao atualizar obra",
+        description: "Não foi possível atualizar a obra. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFinalizar = async (data: { endDate: string }) => {
+    try {
+      if (obraSelecionada?.id) {
+        await ObrasService.updateObra(obraSelecionada.id, {
+          ...obraSelecionada,
+          status: "finalizado",
+          endDate: data.endDate,
+        });
+        toast({
+          title: "Obra finalizada com sucesso!",
+          description: `A obra ${obraSelecionada.name} foi finalizada.`,
+        });
+        setFinalizarModalOpen(false);
+        fetchObras();
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao finalizar obra",
+        description: "Não foi possível finalizar a obra. Tente novamente mais tarde.",
         variant: "destructive",
       });
     }
@@ -160,10 +176,10 @@ const Obras = () => {
               <DialogHeader>
                 <DialogTitle>Cadastrar Nova Obra</DialogTitle>
               </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <Form {...editForm}>
+                <form onSubmit={editForm.handleSubmit(handleEdit)} className="space-y-4">
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
@@ -176,7 +192,7 @@ const Obras = () => {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="groupNumber"
                     render={({ field }) => (
                       <FormItem>
@@ -189,7 +205,7 @@ const Obras = () => {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="client"
                     render={({ field }) => (
                       <FormItem>
@@ -202,7 +218,7 @@ const Obras = () => {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="address"
                     render={({ field }) => (
                       <FormItem>
@@ -215,7 +231,7 @@ const Obras = () => {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="startDate"
                     render={({ field }) => (
                       <FormItem>
@@ -228,7 +244,7 @@ const Obras = () => {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="observation"
                     render={({ field }) => (
                       <FormItem>
@@ -358,27 +374,167 @@ const Obras = () => {
                     )}
                   </DialogContent>
                 </Dialog>
-                <Button 
-                  variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
-                  onClick={() => {
-                    console.log('Editar obra:', obra.id);
-                  }}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Editar
-                </Button>
+                <Dialog open={editModalOpen && obraSelecionada?.id === obra.id}
+                       onOpenChange={(open) => {
+                         setEditModalOpen(open);
+                         if (!open) setObraSelecionada(null);
+                         else {
+                           editForm.reset(obra);
+                         }
+                       }}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost"
+                      className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
+                      onClick={() => setObraSelecionada(obra)}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Editar Obra</DialogTitle>
+                    </DialogHeader>
+                    <Form {...editForm}>
+                      <form onSubmit={editForm.handleSubmit(handleEdit)} className="space-y-4">
+                        <FormField
+                          control={editForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome da Obra</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Digite o nome da obra" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={editForm.control}
+                          name="groupNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Número do Grupo</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Digite o número do grupo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={editForm.control}
+                          name="client"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cliente</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Digite o nome do cliente" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={editForm.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Endereço</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Digite o endereço completo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={editForm.control}
+                          name="startDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de Início</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={editForm.control}
+                          name="observation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Observações</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Digite observações adicionais sobre a obra"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+                          Salvar Alterações
+                        </Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+
                 {obra.status === "em_andamento" && (
-                  <Button 
-                    variant="ghost"
-                    className="text-green-600 hover:text-green-700"
-                    onClick={() => {
-                      console.log('Finalizar obra:', obra.id);
-                    }}
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Finalizar
-                  </Button>
+                  <AlertDialog open={finalizarModalOpen && obraSelecionada?.id === obra.id}
+                             onOpenChange={(open) => {
+                               setFinalizarModalOpen(open);
+                               if (!open) setObraSelecionada(null);
+                             }}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="text-green-600 hover:text-green-700"
+                        onClick={() => setObraSelecionada(obra)}
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Finalizar
+                      </Button>
+                    </DialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Finalizar Obra</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja finalizar esta obra? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <Form {...finalizarForm}>
+                        <form onSubmit={finalizarForm.handleSubmit(handleFinalizar)} className="space-y-4">
+                          <FormField
+                            control={finalizarForm.control}
+                            name="endDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Data de Finalização</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction type="submit" className="bg-green-600 hover:bg-green-700">
+                              Confirmar Finalização
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </form>
+                      </Form>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </CardFooter>
             </Card>
