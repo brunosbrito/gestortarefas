@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { CreateServiceOrder, ServiceOrder } from "@/interfaces/ServiceOrderInterface";
+import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 import { getAllServiceOrders } from "@/services/ServiceOrderService";
 
 
