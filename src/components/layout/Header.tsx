@@ -1,12 +1,11 @@
 import { UserCircle2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User } from "@/interfaces/UserInterface";
 
 interface HeaderProps {
-  user:  User;
+  userName: string;
 }
 
-export const Header = ({ user }: HeaderProps ) => {
+export const Header = ({ userName }: HeaderProps) => {
   return (
     <>
       <div className="p-4 border-b border-construction-200">
@@ -21,8 +20,8 @@ export const Header = ({ user }: HeaderProps ) => {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-medium text-gray-900">{user.username}</p>
-            <p className="text-xs text-gray-500">{user.role == "admin" ? "Administrador" : ""}</p>
+            <p className="text-sm font-medium text-gray-900">{userName}</p>
+            <p className="text-xs text-gray-500">Administrador</p>
           </div>
         </div>
       </div>

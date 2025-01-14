@@ -2,20 +2,40 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Building2, ClipboardList, Activity, User } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Building2, Plus, MapPin, Calendar, Users, ClipboardList, Check, X, Edit, Eye, Timer, Pause, Activity } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
+import { Badge } from "@/components/ui/badge";
+import { EditObraForm } from "@/components/obras/EditObraForm";
+import { FinalizarObraForm } from "@/components/obras/FinalizarObraForm";
+
+const formSchema = z.object({
+  name: z.string().min(1, "Nome da obra é obrigatório"),
+  groupNumber: z.string().min(1, "Número do grupo é obrigatório"),
+  client: z.string().min(1, "Cliente é obrigatório"),
+  address: z.string().min(1, "Endereço é obrigatório"),
+  startDate: z.string().min(1, "Data de início é obrigatória"),
+  observation: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const Obras = () => {
   const [obras, setObras] = useState<Obra[]>([]);
   const [open, setOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [finalizarDialogOpen, setFinalizarDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const fetchObras = async () => {
     try {
@@ -33,6 +53,86 @@ const Obras = () => {
   useEffect(() => {
     fetchObras();
   }, []);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      groupNumber: "",
+      client: "",
+      address: "",
+      startDate: "",
+      observation: "",
+    },
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    const obraData: Obra = {
+      name: data.name,
+      groupNumber: data.groupNumber,
+      client: data.client,
+      address: data.address,
+      startDate: data.startDate,
+      observation: data.observation,
+      status: "em_andamento",
+    };
+  
+    try {
+      await ObrasService.createObra(obraData);
+      toast({
+        title: "Obra cadastrada com sucesso!",
+        description: `A obra ${data.name} foi cadastrada.`,
+      });
+      setOpen(false);
+      form.reset();
+      fetchObras();
+    } catch (error) {
+      toast({
+        title: "Erro ao cadastrar obra",
+        description: "Não foi possível cadastrar a obra. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setEditDialogOpen(true);
+  };
+
+  const handleFinalizarClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setFinalizarDialogOpen(true);
+  };
+
+  const handleFinalizarSubmit = async (data: { endDate: string }) => {
+    if (selectedObra?.id) {
+      try {
+        await ObrasService.updateObra(selectedObra.id, {
+          ...selectedObra,
+          endDate: data.endDate,
+          status: "finalizado",
+        });
+        toast({
+          title: "Obra finalizada",
+          description: "A obra foi finalizada com sucesso.",
+        });
+        setFinalizarDialogOpen(false);
+        fetchObras();
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao finalizar obra",
+          description: "Não foi possível finalizar a obra.",
+        });
+      }
+    }
+  };
+
+  const handleViewClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setViewDialogOpen(true);
+  };
 
   const getStatusBadge = (status: Obra["status"]) => {
     switch (status) {
@@ -78,7 +178,94 @@ const Obras = () => {
               <DialogHeader>
                 <DialogTitle>Cadastrar Nova Obra</DialogTitle>
               </DialogHeader>
-              <NovaOSForm onSubmit={handleNovaOS} />
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome da Obra</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite o nome da obra" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="groupNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número do Grupo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite o número do grupo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="client"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cliente</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite o nome do cliente" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Endereço</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite o endereço completo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Início</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="observation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Observações</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Digite observações adicionais sobre a obra"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+                    Cadastrar Obra
+                  </Button>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
         </div>
@@ -131,14 +318,6 @@ const Obras = () => {
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
-                </Button>
-                <Button 
-                  variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
-                  onClick={() => navigate(`/obras/os?obra=${obra.id}`)}
-                >
-                  <ClipboardList className="w-4 h-4 mr-2" />
-                  Ordens de Serviço
                 </Button>
                 {obra.status === "em_andamento" && (
                   <Button 

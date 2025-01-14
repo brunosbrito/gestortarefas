@@ -1,9 +1,9 @@
-import { CreateServiceOrder, ServiceOrder } from '@/interfaces/ServiceOrderInterface';
+import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/service-orders';
 
-export const createServiceOrder = async (data: Partial<CreateServiceOrder>) => {
+export const createServiceOrder = async (data: Partial<ServiceOrder>) => {
   try {
     const response = await axios.post(API_URL, data);
     return response.data;
@@ -33,7 +33,7 @@ export const getServiceOrderById = async (id: string) => {
   }
 };
 
-export const updateServiceOrder = async (id: string, data: Partial<CreateServiceOrder>) => {
+export const updateServiceOrder = async (id: string, data: Partial<ServiceOrder>) => {
   try {
     const response = await axios.put(`${API_URL}/${id}`, data);
     return response.data;
