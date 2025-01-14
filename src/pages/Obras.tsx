@@ -124,6 +124,22 @@ const Obras = () => {
                   <ClipboardList className="w-4 h-4 mr-2" />
                   OS
                 </Button>
+                <Button
+                  variant="ghost"
+                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
+                  onClick={() => navigate(`/obras/${obra.id}`)}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Visualizar
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
+                  onClick={() => navigate(`/obras/${obra.id}/edit`)}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
+                </Button>
               </CardFooter>
             </Card>
           ))}
