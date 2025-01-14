@@ -3,10 +3,18 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User } from "@/interfaces/UserInterface";
 
 interface HeaderProps {
-  user:  User;
+  user: User;
 }
 
-export const Header = ({ user }: HeaderProps ) => {
+export const Header = ({ user }: HeaderProps) => {
+  if (!user) {
+    return (
+      <div className="p-4 border-b border-construction-200">
+        <h1 className="text-2xl font-bold text-primary">Gestor de Tarefas</h1>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="p-4 border-b border-construction-200">
@@ -22,7 +30,7 @@ export const Header = ({ user }: HeaderProps ) => {
           </Avatar>
           <div>
             <p className="text-sm font-medium text-gray-900">{user.username}</p>
-            <p className="text-xs text-gray-500">{user.role == "admin" ? "Administrador" : ""}</p>
+            <p className="text-xs text-gray-500">{user.role === "admin" ? "Administrador" : ""}</p>
           </div>
         </div>
       </div>
