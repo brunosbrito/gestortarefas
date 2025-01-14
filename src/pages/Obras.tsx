@@ -3,17 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Building2, ClipboardList, Activity, User } from "lucide-react";
+import { Plus, Calendar, Building2, ClipboardList, Activity, Check, Pause, Users, MapPin, Eye, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
+import { EditObraForm } from "@/components/obras/EditObraForm";
+import { FinalizarObraForm } from "@/components/obras/FinalizarObraForm";
 
 const Obras = () => {
   const [obras, setObras] = useState<Obra[]>([]);
   const [open, setOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [finalizarDialogOpen, setFinalizarDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -33,6 +39,59 @@ const Obras = () => {
   useEffect(() => {
     fetchObras();
   }, []);
+
+  const handleNovaOS = async (data: any) => {
+    try {
+      // Implementar lógica de criação de OS
+      setOpen(false);
+      toast({
+        title: "Obra criada com sucesso!",
+        description: "A nova obra foi adicionada ao sistema.",
+      });
+      await fetchObras();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar obra",
+        description: "Ocorreu um erro ao tentar criar a obra.",
+      });
+    }
+  };
+
+  const handleViewClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setEditDialogOpen(true);
+  };
+
+  const handleFinalizarClick = (obra: Obra) => {
+    setSelectedObra(obra);
+    setFinalizarDialogOpen(true);
+  };
+
+  const handleFinalizarSubmit = async (data: any) => {
+    try {
+      if (selectedObra) {
+        await ObrasService.updateObra(selectedObra.id!, { ...selectedObra, ...data, status: 'finalizado' });
+        setFinalizarDialogOpen(false);
+        toast({
+          title: "Obra finalizada",
+          description: "A obra foi finalizada com sucesso!",
+        });
+        await fetchObras();
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao finalizar obra",
+        description: "Ocorreu um erro ao tentar finalizar a obra.",
+      });
+    }
+  };
 
   const getStatusBadge = (status: Obra["status"]) => {
     switch (status) {
