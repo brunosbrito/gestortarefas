@@ -1,9 +1,11 @@
 import { Card } from "@/components/ui/card";
-import { Building2, ClipboardList, Activity, Users, Check, X, Edit, Eye, Timer, Calendar, Pause } from "lucide-react";
+import { Building2, ClipboardList, Activity, Users, Check, Edit, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { StatsCard } from "./dashboard/StatsCard";
+import { getStatusBadge } from "./dashboard/ObraStatusBadge";
+import { ObraDetalhesDialog } from "./dashboard/ObraDetalhesDialog";
+import { AtividadesRecentes } from "./dashboard/AtividadesRecentes";
 
 const stats = [
   {
@@ -32,7 +34,7 @@ const stats = [
   },
 ];
 
-interface ObraDetalhes {
+export interface ObraDetalhes {
   nome: string;
   status: "em_andamento" | "finalizado" | "interrompido";
   dataInicio: string;
@@ -77,37 +79,24 @@ const obrasExemplo: ObraDetalhes[] = [
   }
 ];
 
+const atividadesRecentes = [
+  {
+    descricao: "Fundação concluída - Residencial Vista Mar",
+    data: "Hoje"
+  },
+  {
+    descricao: "Nova OS criada - Edifício Comercial Centro",
+    data: "Hoje"
+  },
+  {
+    descricao: "Usuário adicionado - João Silva",
+    data: "Hoje"
+  }
+];
+
 const Dashboard = () => {
   const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhes | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
-
-  const getStatusBadge = (status: ObraDetalhes["status"]) => {
-    switch (status) {
-      case "em_andamento":
-        return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <Check className="w-3 h-3 mr-1" />
-            Em Andamento
-          </Badge>
-        );
-      case "finalizado":
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            <Check className="w-3 h-3 mr-1" />
-            Finalizado
-          </Badge>
-        );
-      case "interrompido":
-        return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            <Pause className="w-3 h-3 mr-1" />
-            Interrompido
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -115,17 +104,7 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <Card key={stat.title} className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className={`p-3 rounded-full ${stat.color}`}>
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-construction-500">{stat.title}</p>
-                <h2 className="text-2xl font-bold text-construction-900">{stat.value}</h2>
-              </div>
-            </div>
-          </Card>
+          <StatsCard key={stat.title} {...stat} />
         ))}
       </div>
 
@@ -140,80 +119,18 @@ const Dashboard = () => {
                   {getStatusBadge(obra.status)}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600 hover:text-blue-700"
-                        onClick={() => setObraSelecionada(obra)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Detalhes da Obra</DialogTitle>
-                      </DialogHeader>
-                      {obraSelecionada && (
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold">{obraSelecionada.nome}</h2>
-                            {obraSelecionada.status === "em_andamento" ? (
-                              <Badge variant="outline" className="bg-green-50 text-green-700">Ativo</Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-red-50 text-red-700">Finalizado</Badge>
-                            )}
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <h3 className="font-semibold mb-2 flex items-center">
-                                <Calendar className="w-4 h-4 mr-2" />
-                                Datas
-                              </h3>
-                              <p>Início: {new Date(obraSelecionada.dataInicio).toLocaleDateString('pt-BR')}</p>
-                              {obraSelecionada.dataFim && (
-                                <p>Término: {new Date(obraSelecionada.dataFim).toLocaleDateString('pt-BR')}</p>
-                              )}
-                            </div>
-                            <div>
-                              <h3 className="font-semibold mb-2 flex items-center">
-                                <Timer className="w-4 h-4 mr-2" />
-                                Horas Trabalhadas
-                              </h3>
-                              <p>{obraSelecionada.horasTrabalhadas}h</p>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h3 className="font-semibold mb-2">Atividades Recentes</h3>
-                            <ul className="space-y-2">
-                              {obraSelecionada.atividades.map((atividade, index) => (
-                                <li key={index} className="flex items-center">
-                                  <Activity className="w-4 h-4 mr-2 text-construction-500" />
-                                  {atividade}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <div>
-                            <h3 className="font-semibold mb-2">Histórico</h3>
-                            <ul className="space-y-2">
-                              {obraSelecionada.historico.map((evento, index) => (
-                                <li key={index} className="flex items-center">
-                                  <ClipboardList className="w-4 h-4 mr-2 text-construction-500" />
-                                  {evento}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      )}
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-700"
+                    onClick={() => {
+                      setObraSelecionada(obra);
+                      setDialogAberto(true);
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    Ver
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -238,22 +155,14 @@ const Dashboard = () => {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Atividades Recentes</h3>
-          <div className="space-y-4">
-            {[
-              "Fundação concluída - Residencial Vista Mar",
-              "Nova OS criada - Edifício Comercial Centro",
-              "Usuário adicionado - João Silva",
-            ].map((atividade) => (
-              <div key={atividade} className="flex items-center justify-between p-3 bg-construction-50 rounded-lg">
-                <span className="font-medium text-construction-700">{atividade}</span>
-                <span className="text-sm text-construction-500">Hoje</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <AtividadesRecentes atividades={atividadesRecentes} />
       </div>
+
+      <ObraDetalhesDialog
+        obra={obraSelecionada}
+        open={dialogAberto}
+        onOpenChange={setDialogAberto}
+      />
     </div>
   );
 };
