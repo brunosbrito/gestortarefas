@@ -83,7 +83,7 @@ const Obras = () => {
           <h1 className="text-3xl font-bold text-construction-800">Obras</h1>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90 border border-[#FF7F0E]">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Obra
               </Button>
@@ -132,7 +132,7 @@ const Obras = () => {
               <CardFooter className="flex gap-2">
                 <Button 
                   variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
+                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90 border border-[#FF7F0E]"
                   onClick={() => navigate(`/obras/os?obra=${obra.id}`)}
                 >
                   <ClipboardList className="w-4 h-4 mr-2" />
@@ -140,7 +140,7 @@ const Obras = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
+                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90 border border-[#FF7F0E]"
                   onClick={() => {
                     setObraSelecionada(obra);
                     setDialogVisualizarAberto(true);
@@ -149,17 +149,19 @@ const Obras = () => {
                   <Eye className="w-4 h-4 mr-2" />
                   Visualizar
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
-                  onClick={() => {
-                    setObraSelecionada(obra);
-                    setDialogEditarAberto(true);
-                  }}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Editar
-                </Button>
+                {obra.status !== "finalizado" && (
+                  <Button
+                    variant="ghost"
+                    className="text-[#FF7F0E] hover:text-[#FF7F0E]/90 border border-[#FF7F0E]"
+                    onClick={() => {
+                      setObraSelecionada(obra);
+                      setDialogEditarAberto(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}
@@ -172,9 +174,9 @@ const Obras = () => {
             status: obraSelecionada.status,
             dataInicio: obraSelecionada.startDate,
             dataFim: obraSelecionada.endDate,
-            horasTrabalhadas: 0, // Você precisará adicionar este campo ao seu modelo de dados
-            atividades: [], // Você precisará adicionar este campo ao seu modelo de dados
-            historico: [] // Você precisará adicionar este campo ao seu modelo de dados
+            horasTrabalhadas: 0,
+            atividades: [],
+            historico: []
           } : null}
           open={dialogVisualizarAberto}
           onOpenChange={setDialogVisualizarAberto}
