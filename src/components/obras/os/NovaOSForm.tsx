@@ -19,6 +19,7 @@ import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
 import { useToast } from "@/hooks/use-toast";
 import { createServiceOrder } from "@/services/ServiceOrderService";
+import { CreateServiceOrder } from "@/interfaces/ServiceOrderInterface";
 
 const formSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
@@ -32,15 +33,13 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface NovaOSFormProps {
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: CreateServiceOrder) => void;
 }
 
 function getUserIdFromLocalStorage(): number {
   const userId = localStorage.getItem("userId");
   return userId ? parseInt(userId) : null;
 }
-
-const userId = getUserIdFromLocalStorage();
 
 export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
@@ -71,24 +70,26 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
   }, [toast]);
 
   const handleSubmit = async (data: FormValues) => {
-
     const userId = getUserIdFromLocalStorage();
-    if (userId) {
-      data.assignedUser = userId;
-    }
+    
+    const serviceOrderData: CreateServiceOrder = {
+      description: data.description,
+      projectId: data.projectId,
+      status: data.status,
+      notes: data.notes,
+      assignedUser: userId || undefined
+    };
 
     try {
-      await createServiceOrder(data);
+      await createServiceOrder(serviceOrderData);
       
-      // Exibe mensagem de sucesso
       toast({
         variant: "default",
         title: "Ordem de Serviço criada",
         description: "A nova ordem de serviço foi criada com sucesso.",
       });
 
-      // Chamando a função onSubmit passada como props
-      onSubmit(data);
+      onSubmit(serviceOrderData);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -208,4 +209,4 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
       </form>
     </Form>
   );
-};
+});

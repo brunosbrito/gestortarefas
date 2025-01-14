@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
+import { ServiceOrder, CreateServiceOrder } from "@/interfaces/ServiceOrderInterface";
 import { getAllServiceOrders } from "@/services/ServiceOrderService";
 
 const OrdensServico = () => {
@@ -17,7 +17,7 @@ const OrdensServico = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleNovaOS = (data: ServiceOrder) => {
+  const handleNovaOS = (data: CreateServiceOrder) => {
     const novaOS = {
       ...data,
     };
