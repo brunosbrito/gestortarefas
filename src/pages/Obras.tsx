@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Building2, ClipboardList, Activity, User } from "lucide-react";
+import { Plus, Calendar, Building2, ClipboardList, Activity, User, Check, MapPin, Eye, Edit, Pause } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
@@ -78,7 +78,7 @@ const Obras = () => {
               <DialogHeader>
                 <DialogTitle>Cadastrar Nova Obra</DialogTitle>
               </DialogHeader>
-              <NovaOSForm onSubmit={handleNovaOS} />
+              <NovaOSForm onSubmit={() => setOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>
@@ -95,7 +95,7 @@ const Obras = () => {
                   {getStatusBadge(obra.status)}
                 </div>
                 <CardDescription className="flex items-center space-x-2">
-                  <Users className="w-4 h-4" />
+                  <User className="w-4 h-4" />
                   <span>{obra.client}</span>
                 </CardDescription>
               </CardHeader>
@@ -118,118 +118,16 @@ const Obras = () => {
               <CardFooter className="flex gap-2">
                 <Button 
                   variant="ghost"
-                  className="text-blue-600 hover:text-blue-700"
-                  onClick={() => handleViewClick(obra)}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Visualizar
-                </Button>
-                <Button 
-                  variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
-                  onClick={() => handleEditClick(obra)}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Editar
-                </Button>
-                <Button 
-                  variant="ghost"
                   className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
                   onClick={() => navigate(`/obras/os?obra=${obra.id}`)}
                 >
                   <ClipboardList className="w-4 h-4 mr-2" />
-                  Ordens de Serviço
+                  OS
                 </Button>
-                {obra.status === "em_andamento" && (
-                  <Button 
-                    variant="ghost"
-                    className="text-green-600 hover:text-green-700"
-                    onClick={() => handleFinalizarClick(obra)}
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Finalizar
-                  </Button>
-                )}
               </CardFooter>
             </Card>
           ))}
         </div>
-
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Editar Obra</DialogTitle>
-            </DialogHeader>
-            {selectedObra && (
-              <EditObraForm 
-                obra={selectedObra} 
-                onSuccess={() => {
-                  setEditDialogOpen(false);
-                  fetchObras();
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={finalizarDialogOpen} onOpenChange={setFinalizarDialogOpen}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Finalizar Obra</DialogTitle>
-            </DialogHeader>
-            <FinalizarObraForm onSubmit={handleFinalizarSubmit} />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Detalhes da Obra</DialogTitle>
-            </DialogHeader>
-            {selectedObra && (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold">Nome da Obra</h3>
-                  <p>{selectedObra.name}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Número do Grupo</h3>
-                  <p>{selectedObra.groupNumber}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Cliente</h3>
-                  <p>{selectedObra.client}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Endereço</h3>
-                  <p>{selectedObra.address}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Data de Início</h3>
-                  <p>{new Date(selectedObra.startDate).toLocaleDateString('pt-BR')}</p>
-                </div>
-                {selectedObra.endDate && (
-                  <div>
-                    <h3 className="font-semibold">Data de Finalização</h3>
-                    <p>{new Date(selectedObra.endDate).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                )}
-                {selectedObra.observation && (
-                  <div>
-                    <h3 className="font-semibold">Observações</h3>
-                    <p>{selectedObra.observation}</p>
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-semibold">Status</h3>
-                  <div className="mt-1">
-                    {getStatusBadge(selectedObra.status)}
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
     </Layout>
   );
