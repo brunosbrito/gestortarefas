@@ -7,22 +7,27 @@ import Atividades from "./pages/obras/os/atividades";
 import RegistroPonto from "./pages/RegistroPonto";
 import { Toaster } from "@/components/ui/toaster";
 import Login from "./pages/Login";
+import Colaboradores from "./pages/gerenciamento/colaboradores";
+import TarefasMacro from "./pages/gerenciamento/tarefas-macro";
+import Processos from "./pages/gerenciamento/processos";
 
 function App() {
   return (
-<Router>
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/users" element={<Users />} />
-      <Route path="/obras" element={<Obras />} />
-      <Route path="/obras/os" element={<OrdensServico />} />
-      <Route path="/obras/os/atividades" element={<Atividades />} />
-      <Route path="/ponto" element={<RegistroPonto />} />
-    </Routes>
-    <Toaster />
-  </Router>
-    
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/obras" element={<Obras />} />
+        <Route path="/obras/os" element={<OrdensServico />} />
+        <Route path="/obras/os/atividades" element={<Atividades />} />
+        <Route path="/ponto" element={<RegistroPonto />} />
+        <Route path="/gerenciamento/colaboradores" element={<Colaboradores />} />
+        <Route path="/gerenciamento/tarefas-macro" element={<TarefasMacro />} />
+        <Route path="/gerenciamento/processos" element={<Processos />} />
+      </Routes>
+      <Toaster />
+    </Router>
   );
 }
 

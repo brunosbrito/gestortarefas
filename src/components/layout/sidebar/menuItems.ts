@@ -13,7 +13,7 @@ export const navItems: MenuItem[] = [
   { 
     icon: LayoutDashboard, 
     label: "Dashboard", 
-    path: "/" 
+    path: "/dashboard" 
   },
   { 
     icon: Users, 
