@@ -8,9 +8,8 @@ import { useEffect, useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
+import { ServiceOrder, CreateServiceOrder } from "@/interfaces/ServiceOrderInterface";
 import { getAllServiceOrders } from "@/services/ServiceOrderService";
-
 
 const OrdensServico = () => {
   const [ordensServico, setOrdensServico] = useState<ServiceOrder[]>([]);
@@ -18,24 +17,29 @@ const OrdensServico = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleNovaOS = (data: ServiceOrder) => {
-    const novaOS = {
-      ...data,
-    };
-    setOrdensServico([...ordensServico, novaOS]);
-    setDialogOpen(false);
-    toast({
-      title: "Ordem de Serviço criada",
-      description: "A OS foi criada com sucesso!",
-    });
+  const handleNovaOS = async (data: CreateServiceOrder) => {
+    try {
+      // Atualiza a lista após criar uma nova OS
+      const serviceOrders = await getAllServiceOrders();
+      setOrdensServico(serviceOrders || []);
+      setDialogOpen(false);
+      
+      toast({
+        title: "Ordem de Serviço criada",
+        description: "A OS foi criada com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar Ordem de Serviço",
+        description: "Não foi possível criar a ordem de serviço.",
+      });
+    }
   };
 
-  const getServiceOrders = async () => { 
-
+  const getServiceOrders = async () => {
     const serviceOrders = await getAllServiceOrders();
-
     setOrdensServico(serviceOrders || []);
-
   };
 
   useEffect(() => {
