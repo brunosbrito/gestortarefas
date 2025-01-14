@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/service-orders';
 
-export const createServiceOrder = async (data: CreateServiceOrder) => {
+export const createServiceOrder = async (data: Partial<CreateServiceOrder>) => {
   try {
     const response = await axios.post(API_URL, data);
     return response.data;
