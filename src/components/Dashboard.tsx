@@ -6,6 +6,8 @@ import { StatsCard } from "./dashboard/StatsCard";
 import { getStatusBadge } from "./dashboard/ObraStatusBadge";
 import { ObraDetalhesDialog } from "./dashboard/ObraDetalhesDialog";
 import { AtividadesRecentes } from "./dashboard/AtividadesRecentes";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { EditObraForm } from "./obras/EditObraForm";
 
 const stats = [
   {
@@ -97,6 +99,12 @@ const atividadesRecentes = [
 const Dashboard = () => {
   const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhes | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
+  const [editDialogAberto, setEditDialogAberto] = useState(false);
+
+  const handleEditSuccess = () => {
+    setEditDialogAberto(false);
+    // Aqui você pode adicionar lógica para atualizar a lista de obras
+  };
 
   return (
     <div className="space-y-6">
@@ -135,6 +143,10 @@ const Dashboard = () => {
                     variant="ghost"
                     size="sm"
                     className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
+                    onClick={() => {
+                      setObraSelecionada(obra);
+                      setEditDialogAberto(true);
+                    }}
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Editar
@@ -158,11 +170,36 @@ const Dashboard = () => {
         <AtividadesRecentes atividades={atividadesRecentes} />
       </div>
 
+      {/* Modal de Visualização */}
       <ObraDetalhesDialog
         obra={obraSelecionada}
         open={dialogAberto}
         onOpenChange={setDialogAberto}
       />
+
+      {/* Modal de Edição */}
+      <Dialog open={editDialogAberto} onOpenChange={setEditDialogAberto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Obra</DialogTitle>
+          </DialogHeader>
+          {obraSelecionada && (
+            <EditObraForm 
+              obra={{
+                id: 1, // Você precisará ajustar isso com o ID real da obra
+                name: obraSelecionada.nome,
+                groupNumber: "1", // Ajuste conforme necessário
+                client: "Cliente", // Ajuste conforme necessário
+                address: "Endereço", // Ajuste conforme necessário
+                startDate: obraSelecionada.dataInicio,
+                status: obraSelecionada.status,
+                observation: "" // Ajuste conforme necessário
+              }}
+              onSuccess={handleEditSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
