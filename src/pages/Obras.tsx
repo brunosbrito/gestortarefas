@@ -83,7 +83,7 @@ const Obras = () => {
           <h1 className="text-3xl font-bold text-construction-800">Obras</h1>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90 border border-[#FF7F0E]">
+              <Button className="btn-secondary">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Obra
               </Button>
@@ -131,16 +131,16 @@ const Obras = () => {
               </CardContent>
               <CardFooter className="flex gap-2">
                 <Button 
-                  variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90 border border-[#FF7F0E]"
+                  variant="outline"
+                  className="hover:bg-secondary/20"
                   onClick={() => navigate(`/obras/os?obra=${obra.id}`)}
                 >
                   <ClipboardList className="w-4 h-4 mr-2" />
-                  OS
+                  Ordens
                 </Button>
                 <Button
-                  variant="ghost"
-                  className="text-[#FF7F0E] hover:text-[#FF7F0E]/90 border border-[#FF7F0E]"
+                  variant="outline"
+                  className="hover:bg-secondary/20"
                   onClick={() => {
                     setObraSelecionada(obra);
                     setDialogVisualizarAberto(true);
@@ -151,8 +151,8 @@ const Obras = () => {
                 </Button>
                 {obra.status !== "finalizado" && (
                   <Button
-                    variant="ghost"
-                    className="text-[#FF7F0E] hover:text-[#FF7F0E]/90 border border-[#FF7F0E]"
+                    variant="outline"
+                    className="hover:bg-secondary/20"
                     onClick={() => {
                       setObraSelecionada(obra);
                       setDialogEditarAberto(true);
