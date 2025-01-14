@@ -10,10 +10,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
+import { EditObraForm } from "@/components/obras/EditObraForm";
+import { ObraDetalhesDialog } from "@/components/dashboard/ObraDetalhesDialog";
 
 const Obras = () => {
   const [obras, setObras] = useState<Obra[]>([]);
   const [open, setOpen] = useState(false);
+  const [obraSelecionada, setObraSelecionada] = useState<Obra | null>(null);
+  const [dialogVisualizarAberto, setDialogVisualizarAberto] = useState(false);
+  const [dialogEditarAberto, setDialogEditarAberto] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -60,6 +65,15 @@ const Obras = () => {
       default:
         return null;
     }
+  };
+
+  const handleEditSuccess = () => {
+    setDialogEditarAberto(false);
+    fetchObras();
+    toast({
+      title: "Obra atualizada",
+      description: "As informações da obra foram atualizadas com sucesso.",
+    });
   };
 
   return (
@@ -127,7 +141,10 @@ const Obras = () => {
                 <Button
                   variant="ghost"
                   className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
-                  onClick={() => navigate(`/obras/${obra.id}`)}
+                  onClick={() => {
+                    setObraSelecionada(obra);
+                    setDialogVisualizarAberto(true);
+                  }}
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Visualizar
@@ -135,7 +152,10 @@ const Obras = () => {
                 <Button
                   variant="ghost"
                   className="text-[#FF7F0E] hover:text-[#FF7F0E]/90"
-                  onClick={() => navigate(`/obras/${obra.id}/edit`)}
+                  onClick={() => {
+                    setObraSelecionada(obra);
+                    setDialogEditarAberto(true);
+                  }}
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
@@ -144,6 +164,36 @@ const Obras = () => {
             </Card>
           ))}
         </div>
+
+        {/* Modal de Visualização */}
+        <ObraDetalhesDialog
+          obra={obraSelecionada ? {
+            nome: obraSelecionada.name,
+            status: obraSelecionada.status,
+            dataInicio: obraSelecionada.startDate,
+            dataFim: obraSelecionada.endDate,
+            horasTrabalhadas: 0, // Você precisará adicionar este campo ao seu modelo de dados
+            atividades: [], // Você precisará adicionar este campo ao seu modelo de dados
+            historico: [] // Você precisará adicionar este campo ao seu modelo de dados
+          } : null}
+          open={dialogVisualizarAberto}
+          onOpenChange={setDialogVisualizarAberto}
+        />
+
+        {/* Modal de Edição */}
+        <Dialog open={dialogEditarAberto} onOpenChange={setDialogEditarAberto}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Editar Obra</DialogTitle>
+            </DialogHeader>
+            {obraSelecionada && (
+              <EditObraForm 
+                obra={obraSelecionada}
+                onSuccess={handleEditSuccess}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
