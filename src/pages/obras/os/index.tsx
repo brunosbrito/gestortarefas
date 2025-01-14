@@ -3,14 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Building2, ClipboardList, Activity, User } from "lucide-react";
+import { Plus, Calendar, Building2, Activity, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 import { getAllServiceOrders } from "@/services/ServiceOrderService";
-
 
 const OrdensServico = () => {
   const [ordensServico, setOrdensServico] = useState<ServiceOrder[]>([]);
@@ -30,12 +29,9 @@ const OrdensServico = () => {
     });
   };
 
-  const getServiceOrders = async () => { 
-
+  const getServiceOrders = async () => {
     const serviceOrders = await getAllServiceOrders();
-
     setOrdensServico(serviceOrders || []);
-
   };
 
   useEffect(() => {
@@ -95,7 +91,7 @@ const OrdensServico = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="w-4 h-4 text-gray-500" />
-                  <span>Usuario: {os.assignedUser?.username || ""} </span>
+                  <span>Usuário: {os.assignedUser?.username || "Não atribuído"}</span>
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2">
