@@ -23,7 +23,7 @@ export const navItems: MenuItem[] = [
   {
     icon: Building2,
     label: 'Obras',
-    path: '/obras/:obraId',
+    path: '/obras',
   },
   {
     icon: Settings,
@@ -54,11 +54,11 @@ export const navItems: MenuItem[] = [
   {
     icon: Building2,
     label: 'Ordens de Serviço',
-    path: '/obras/:obraId/os',
+    path: '/obras/os',
   },
   {
     icon: Clock,
     label: 'Atividades',
-    path: '/obras/:obraId/os/:osId/atividades',
+    path: '/obras/os/atividades',
   },
 ];
