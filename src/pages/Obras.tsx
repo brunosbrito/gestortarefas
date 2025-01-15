@@ -134,7 +134,7 @@ const Obras = () => {
                 <Button 
                   variant="outline"
                   className="hover:bg-secondary/20"
-                  onClick={() => navigate(`/obras/${obra.id}/os`)}
+                  onClick={() => navigate('/obras/os')}
                 >
                   <ClipboardList className="w-4 h-4 mr-2" />
                   Ordens
