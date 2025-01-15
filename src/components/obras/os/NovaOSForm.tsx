@@ -19,7 +19,7 @@ import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
 import { useToast } from "@/hooks/use-toast";
 import { createServiceOrder } from "@/services/ServiceOrderService";
-import { CreateServiceOrder } from "@/interfaces/ServiceOrderInterface";
+import { CreateServiceOrder, ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 
 const formSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
@@ -34,6 +34,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface NovaOSFormProps {
   onSubmit: (data: CreateServiceOrder) => void;
+  initialData?: ServiceOrder;
 }
 
 function getUserIdFromLocalStorage(): number | null {
@@ -41,14 +42,19 @@ function getUserIdFromLocalStorage(): number | null {
   return userId ? parseInt(userId) : null;
 }
 
-export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
+export const NovaOSForm = ({ onSubmit, initialData }: NovaOSFormProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      status: "em_andamento",
+      status: initialData?.status || "em_andamento",
+      description: initialData?.description || "",
+      projectId: initialData?.projectId?.id || undefined,
+      createdAt: initialData?.createdAt || "",
+      notes: initialData?.notes || "",
+      assignedUser: initialData?.assignedUser?.id || undefined,
     },
   });
 
@@ -103,7 +109,6 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        
         <FormField
           control={form.control}
           name="description"
@@ -205,8 +210,9 @@ export const NovaOSForm = ({ onSubmit }: NovaOSFormProps) => {
             </FormItem>
           )}
         />
-
-        <Button type="submit" className="w-full">Criar OS</Button>
+        <Button type="submit" className="w-full">
+          {initialData ? "Atualizar OS" : "Criar OS"}
+        </Button>
       </form>
     </Form>
   );
