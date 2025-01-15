@@ -19,9 +19,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
         <Route path="/obras" element={<Obras />} />
-        <Route path="/obras/:obraId/os" element={<OrdensServico />} />
+        <Route path="/obras/:projectId/os" element={<OrdensServico />} />
         <Route
-          path="/obras/:obraId/os/:osId/atividades"
+          path="/obras/:projectId/os/:serviceOrderId/atividades"
           element={<Atividades />}
         />
         <Route path="/ponto" element={<RegistroPonto />} />

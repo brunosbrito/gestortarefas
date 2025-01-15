@@ -5,6 +5,7 @@ import { Building2, Calendar, Edit2, Eye, GripHorizontal, Upload } from "lucide-
 import { NovaAtividadeForm } from "./NovaAtividadeForm";
 import { useToast } from "@/hooks/use-toast";
 import { AtividadeStatus } from "@/interfaces/AtividadeStatus";
+import { useParams } from "react-router-dom";
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -12,6 +13,7 @@ interface AtividadeCardProps {
 
 export const AtividadeCard = ({ atividade }: AtividadeCardProps) => {
   const { toast } = useToast();
+  const { projectId, serviceOrderId } = useParams();
 
   return (
     <Card className="bg-white cursor-move hover:shadow-md transition-shadow">
@@ -60,8 +62,8 @@ export const AtividadeCard = ({ atividade }: AtividadeCardProps) => {
               </DialogHeader>
               <NovaAtividadeForm 
                 editMode={true}
-                projectId={1}
-                orderServiceId={1}
+                projectId={Number(projectId)}
+                orderServiceId={Number(serviceOrderId)}
               />
             </DialogContent>
           </Dialog>

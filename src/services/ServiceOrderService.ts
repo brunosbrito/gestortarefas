@@ -13,9 +13,10 @@ export const createServiceOrder = async (data: Partial<CreateServiceOrder>) => {
   }
 };
 
-export const getAllServiceOrders = async () => {
+export const getAllServiceOrders = async (projectId?: number) => {
   try {
-    const response = await axios.get(API_URL);
+    const url = projectId ? `${API_URL}?projectId=${projectId}` : API_URL;
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar ordens de serviço:', error);
@@ -23,9 +24,9 @@ export const getAllServiceOrders = async () => {
   }
 };
 
-export const getServiceOrderById = async (id: string) => {
+export const getServiceOrderById = async (serviceOrderId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/${id}`);
+    const response = await axios.get(`${API_URL}/${serviceOrderId}`);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar ordem de serviço:', error);
@@ -33,9 +34,9 @@ export const getServiceOrderById = async (id: string) => {
   }
 };
 
-export const updateServiceOrder = async (id: string, data: Partial<CreateServiceOrder>) => {
+export const updateServiceOrder = async (serviceOrderId: string, data: Partial<CreateServiceOrder>) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, data);
+    const response = await axios.put(`${API_URL}/${serviceOrderId}`, data);
     return response.data;
   } catch (error) {
     console.error('Erro ao atualizar ordem de serviço:', error);
@@ -43,9 +44,9 @@ export const updateServiceOrder = async (id: string, data: Partial<CreateService
   }
 };
 
-export const deleteServiceOrder = async (id: string) => {
+export const deleteServiceOrder = async (serviceOrderId: string) => {
   try {
-    await axios.delete(`${API_URL}/${id}`);
+    await axios.delete(`${API_URL}/${serviceOrderId}`);
   } catch (error) {
     console.error('Erro ao excluir ordem de serviço:', error);
     throw error;
