@@ -7,10 +7,11 @@ import { Plus, Calendar, Building2, Upload, Edit2, Eye, GripHorizontal } from "l
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { NovaAtividadeForm } from "@/components/atividades/NovaAtividadeForm";
+import { Activity } from "@/interfaces/AtividadeInterface";
 
-interface Atividade {
+interface AtividadeStatus {
   id: number;
-  descricao: string;
+  description: string;
   os: string;
   obra: string;
   responsavel: string;
@@ -20,10 +21,10 @@ interface Atividade {
   status: "Planejadas" | "Em Execução" | "Concluídas" | "Paralizadas";
 }
 
-const atividadesIniciais: Atividade[] = [
+const atividadesIniciais: AtividadeStatus[] = [
   {
     id: 1,
-    descricao: "Escavação para fundação",
+    description: "Escavação para fundação",
     os: "OS-001",
     obra: "Residencial Vista Mar",
     responsavel: "João Silva",
@@ -34,7 +35,7 @@ const atividadesIniciais: Atividade[] = [
   },
   {
     id: 2,
-    descricao: "Montagem de formas",
+    description: "Montagem de formas",
     os: "OS-001",
     obra: "Residencial Vista Mar",
     responsavel: "Maria Santos",
@@ -48,7 +49,7 @@ const atividadesIniciais: Atividade[] = [
 const statusListas = ["Planejadas", "Em Execução", "Concluídas", "Paralizadas"] as const;
 
 const Atividades = () => {
-  const [atividades, setAtividades] = useState<Atividade[]>(atividadesIniciais);
+  const [atividades, setAtividades] = useState<AtividadeStatus[]>(atividadesIniciais);
   const [openNovaAtividade, setOpenNovaAtividade] = useState(false);
   const { toast } = useToast();
 
@@ -69,8 +70,8 @@ const Atividades = () => {
                 <DialogTitle>Nova Atividade</DialogTitle>
               </DialogHeader>
               <NovaAtividadeForm 
-                projectId={Number(1)} 
-                orderServiceId={Number(1)}
+                projectId={1} 
+                orderServiceId={1}
               />
             </DialogContent>
           </Dialog>
@@ -94,7 +95,7 @@ const Atividades = () => {
                         <CardHeader className="p-4">
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">
-                              {atividade.descricao}
+                              {atividade.description}
                             </CardTitle>
                             <GripHorizontal className="w-4 h-4 text-gray-400" />
                           </div>
@@ -134,7 +135,11 @@ const Atividades = () => {
                                 <DialogHeader>
                                   <DialogTitle>Editar Atividade</DialogTitle>
                                 </DialogHeader>
-                                <NovaAtividadeForm editMode={true} atividadeInicial={atividade} projectId={1} orderServiceId={1} />
+                                <NovaAtividadeForm 
+                                  editMode={true} 
+                                  projectId={1}
+                                  orderServiceId={1}
+                                />
                               </DialogContent>
                             </Dialog>
                             <Button
