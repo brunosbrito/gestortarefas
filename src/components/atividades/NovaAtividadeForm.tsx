@@ -28,6 +28,7 @@ import TarefaMacroService from '@/services/TarefaMacroService';
 import { Processo } from '@/interfaces/ProcessoInterface';
 import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
+import { Activity } from '@/interfaces/AtividadeInterface';
 
 const formSchema = z.object({
   macroTask: z.string().min(1, 'Tarefa macro é obrigatória'),
@@ -52,10 +53,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface NovaAtividadeFormProps {
   editMode?: boolean;
+  atividadeInicial?: Activity;
 }
 
 export function NovaAtividadeForm({
   editMode = false,
+  atividadeInicial,
 }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>('');
@@ -65,20 +68,20 @@ export function NovaAtividadeForm({
   const [colaboradores, setColaboradores] = useState([]);
 
   const defaultValues: FormValues = {
-    macroTask: '',
-    process: '',
-    description: '',
-    quantity: 0,
-    timePerUnit: 0,
+    macroTask: atividadeInicial?.macroTask || '',
+    process: atividadeInicial?.process || '',
+    description: atividadeInicial?.description || '',
+    quantity: atividadeInicial?.quantity || 0,
+    timePerUnit: atividadeInicial?.timePerUnit || 0,
     unidadeTempo: 'minutos',
-    collaborators: [],
-    startDate: '',
-    observation: '',
-    imageUrl: null,
-    imageDescription: '',
-    fileUrl: null,
-    fileDescription: '',
-    estimatedTime: '',
+    collaborators: atividadeInicial?.collaborators || [],
+    startDate: atividadeInicial?.startDate || '',
+    observation: atividadeInicial?.observation || '',
+    imageUrl: atividadeInicial?.imageUrl || null,
+    imageDescription: atividadeInicial?.imageDescription || '',
+    fileUrl: atividadeInicial?.fileUrl || null,
+    fileDescription: atividadeInicial?.fileDescription || '',
+    estimatedTime: atividadeInicial?.estimatedTime || '',
   };
 
   const getTarefasMacro = async () => {
@@ -451,3 +454,4 @@ export function NovaAtividadeForm({
     </Form>
   );
 }
+
