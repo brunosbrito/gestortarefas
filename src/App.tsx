@@ -18,9 +18,9 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
-        <Route path="/obras" element={<Obras />} />
-        <Route path="/obras/os" element={<OrdensServico />} />
-        <Route path="/obras/os/atividades" element={<Atividades />} />
+        <Route path="/obras/:obraId" element={<Obras />} />
+        <Route path="/obras/:obraId/os" element={<OrdensServico />} />
+        <Route path="/obras/:obraId/os/:osId/atividades" element={<Atividades />} />
         <Route path="/ponto" element={<RegistroPonto />} />
         <Route
           path="/gerenciamento/colaboradores"
