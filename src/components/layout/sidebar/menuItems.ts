@@ -50,15 +50,5 @@ export const navItems: MenuItem[] = [
     icon: Clock,
     label: 'Registro de Ponto',
     path: '/ponto',
-  },
-  {
-    icon: Building2,
-    label: 'Ordens de Serviço',
-    path: '/obras/os',
-  },
-  {
-    icon: Clock,
-    label: 'Atividades',
-    path: '/obras/os/atividades',
-  },
+  }
 ];
