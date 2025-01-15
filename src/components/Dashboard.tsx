@@ -2,7 +2,6 @@ import { Card } from "@/components/ui/card";
 import { Building2, ClipboardList, Activity, Users, Check, Edit, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Adicionando a importação do useNavigate
 import { StatsCard } from "./dashboard/StatsCard";
 import { getStatusBadge } from "./dashboard/ObraStatusBadge";
 import { ObraDetalhesDialog } from "./dashboard/ObraDetalhesDialog";
@@ -98,7 +97,6 @@ const atividadesRecentes = [
 ];
 
 const Dashboard = () => {
-  const navigate = useNavigate(); // Inicializando o hook
   const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhes | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [editDialogAberto, setEditDialogAberto] = useState(false);
@@ -122,7 +120,7 @@ const Dashboard = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Obras em Andamento</h3>
           <div className="space-y-4">
-            {obrasExemplo.map((obra, index) => (
+            {obrasExemplo.map((obra) => (
               <div key={obra.nome} className="flex items-center justify-between p-4 bg-construction-50 rounded-lg border border-construction-100">
                 <div className="flex items-center space-x-3">
                   <span className="font-medium text-construction-700">{obra.nome}</span>
@@ -158,7 +156,6 @@ const Dashboard = () => {
                       variant="ghost"
                       size="sm"
                       className="text-green-600 hover:text-green-700"
-                      onClick={() => navigate(`/obras/${index + 1}`)}
                     >
                       <Check className="w-4 h-4 mr-1" />
                       Finalizar
