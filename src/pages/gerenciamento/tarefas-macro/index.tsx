@@ -4,8 +4,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { NovaTarefaMacroForm } from "@/components/gerenciamento/tarefas-macro/NovaTarefaMacroForm";
 import { TarefasMacroList } from "@/components/gerenciamento/tarefas-macro/TarefasMacroList";
+import { useState } from "react";
 
 const TarefasMacro = () => {
+
+  const [reload, setReload] = useState(false)
+
+  const getTarefasMacro = () => {
+    setReload(prev => !prev)
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -22,12 +30,12 @@ const TarefasMacro = () => {
               <DialogHeader>
                 <DialogTitle>Adicionar Nova Tarefa Macro</DialogTitle>
               </DialogHeader>
-              <NovaTarefaMacroForm />
+              <NovaTarefaMacroForm  onTarefaCreated={getTarefasMacro}/>
             </DialogContent>
           </Dialog>
         </div>
 
-        <TarefasMacroList />
+        <TarefasMacroList reload={reload}/>
       </div>
     </Layout>
   );

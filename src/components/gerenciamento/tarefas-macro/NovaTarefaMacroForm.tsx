@@ -13,101 +13,61 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CreateTarefaMacro } from "@/interfaces/TarefaMacroInterface"
+import TarefaMacroService from "@/services/TarefaMacroService"
+import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
-  nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-  descricao: z.string().min(10, "Descrição deve ter no mínimo 10 caracteres"),
-  prazoEstimado: z.coerce.number().min(1, "Prazo deve ser maior que 0"),
-  status: z.enum(["ativa", "inativa"])
+  name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
 })
 
-export function NovaTarefaMacroForm() {
+interface NovaTarefaMacroFormProps {
+  onTarefaCreated: () => void
+}
+
+export function NovaTarefaMacroForm({ onTarefaCreated }: NovaTarefaMacroFormProps) {
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: "",
-      descricao: "",
-      prazoEstimado: 1,
-      status: "ativa"
+      name: "",
     },
   })
 
-  function onSubmit(values: CreateTarefaMacro) {
-    console.log(values)
+  async function onSubmit(values: CreateTarefaMacro) {
+    try {
+      const response = await TarefaMacroService.create(values);
+      toast({
+        title: "Tarefa Macro criada",
+        description: "Tarefa Macro criada com sucesso.",
+      });
+
+      onTarefaCreated();
+      form.reset();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar Tarefa Macro",
+        description: "Não foi possível criar a tarefa macro. Por favor, tente novamente.",
+      });
+  
+      console.error('Erro ao criar a tarefa macro:', error);
+    }
   }
+  
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="nome"
+          name="name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome da Tarefa</FormLabel>
               <FormControl>
                 <Input placeholder="Digite o nome da tarefa" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="descricao"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descrição</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite a descrição da tarefa" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="prazoEstimado"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prazo Estimado (dias)</FormLabel>
-              <FormControl>
-                <Input type="number" min={1} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="ativa" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Ativa</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="inativa" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Inativa</FormLabel>
-                  </FormItem>
-                </RadioGroup>
               </FormControl>
               <FormMessage />
             </FormItem>

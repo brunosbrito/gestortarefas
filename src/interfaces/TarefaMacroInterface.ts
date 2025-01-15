@@ -1,14 +1,10 @@
 export interface TarefaMacro {
   id: number;
-  nome: string;
-  descricao: string;
-  prazoEstimado: number;
-  status: "ativa" | "inativa";
+  name: string;
+  createdAt: Date;
 }
 
 export interface CreateTarefaMacro {
-  nome: string;
-  descricao: string;
-  prazoEstimado: number;
-  status: "ativa" | "inativa";
+  name: string;
+  
 }
