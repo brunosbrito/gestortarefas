@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { TarefaMacro } from "@/interfaces/TarefaMacroInterface"
+import { TarefaMacro, CreateTarefaMacro } from "@/interfaces/TarefaMacroInterface"
 import TarefaMacroService from "@/services/TarefaMacroService"
 import { useToast } from "@/hooks/use-toast"
 
@@ -29,14 +29,14 @@ interface EditTarefaMacroFormProps {
 export function EditTarefaMacroForm({ tarefa, onSuccess }: EditTarefaMacroFormProps) {
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<CreateTarefaMacro>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: tarefa.name,
     },
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: CreateTarefaMacro) {
     try {
       await TarefaMacroService.update(String(tarefa.id), values);
       toast({

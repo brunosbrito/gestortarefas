@@ -6,5 +6,4 @@ export interface TarefaMacro {
 
 export interface CreateTarefaMacro {
   name: string;
-  
 }
