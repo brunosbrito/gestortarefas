@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -11,31 +11,46 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CreateProcesso } from "@/interfaces/ProcessoInterface"
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { toast, useToast } from '@/hooks/use-toast';
+import { CreateProcesso } from '@/interfaces/ProcessoInterface';
+import ProcessService from '@/services/ProcessService';
+
+interface NovoProcessoFormProps {
+  onProcessCreated: () => void;
+}
 
 const formSchema = z.object({
-  nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-  descricao: z.string().min(10, "Descrição deve ter no mínimo 10 caracteres"),
-  etapas: z.array(z.string()).min(1, "Adicione pelo menos uma etapa"),
-  status: z.enum(["ativo", "inativo"])
-})
+  name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+});
 
-export function NovoProcessoForm() {
+export function NovoProcessoForm({ onProcessCreated }: NovoProcessoFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: "",
-      descricao: "",
-      etapas: [],
-      status: "ativo"
+      name: '',
     },
-  })
+  });
 
-  function onSubmit(values: CreateProcesso) {
-    console.log(values)
+  async function onSubmit(values: CreateProcesso) {
+    try {
+      await ProcessService.create(values);
+      toast({
+        title: 'Processo criada',
+        description: 'Processo criada com sucesso.',
+      });
+      onProcessCreated();
+      form.reset();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao criar Processo',
+        description:
+          'Não foi possível criar o Processo. Por favor, tente novamente.',
+      });
+      console.error('Erro ao criar o processo:', error);
+    }
   }
 
   return (
@@ -43,7 +58,7 @@ export function NovoProcessoForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="nome"
+          name="name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome do Processo</FormLabel>
@@ -55,53 +70,10 @@ export function NovoProcessoForm() {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="descricao"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descrição</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite a descrição do processo" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="ativo" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Ativo</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="inativo" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Inativo</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="w-full">Criar Processo</Button>
+        <Button type="submit" className="w-full">
+          Criar Processo
+        </Button>
       </form>
     </Form>
-  )
+  );
 }

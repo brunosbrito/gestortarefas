@@ -4,8 +4,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { NovoProcessoForm } from "@/components/gerenciamento/processos/NovoProcessoForm";
 import { ProcessosList } from "@/components/gerenciamento/processos/ProcessosList";
+import { useState } from "react";
 
 const Processos = () => {
+
+   const [reload, setReload] = useState(false)
+  
+    const getProcessos = () => {
+      setReload(prev => !prev)
+    }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -22,12 +30,12 @@ const Processos = () => {
               <DialogHeader>
                 <DialogTitle>Adicionar Novo Processo</DialogTitle>
               </DialogHeader>
-              <NovoProcessoForm />
+              <NovoProcessoForm onProcessCreated={getProcessos} />
             </DialogContent>
           </Dialog>
         </div>
 
-        <ProcessosList />
+        <ProcessosList reload={reload} />
       </div>
     </Layout>
   );

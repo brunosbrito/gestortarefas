@@ -1,14 +1,8 @@
 export interface Processo {
   id: number;
-  nome: string;
-  descricao: string;
-  etapas: string[];
-  status: "ativo" | "inativo";
+  name: string;
 }
 
 export interface CreateProcesso {
-  nome: string;
-  descricao: string;
-  etapas: string[];
-  status: "ativo" | "inativo";
+  name: string;
 }

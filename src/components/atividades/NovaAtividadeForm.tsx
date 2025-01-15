@@ -1,79 +1,126 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { FileUploadField } from "./FileUploadField";
-import { ColaboradorHorasField } from "./ColaboradorHorasField";
-import { EquipeField } from "./EquipeField";
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { createActivity } from '@/services/ActivityService';
+import { FileUploadField } from './FileUploadField';
+import { Badge } from '../ui/badge';
+import TarefaMacroService from '@/services/TarefaMacroService';
+import { Processo } from '@/interfaces/ProcessoInterface';
+import ProcessService from '@/services/ProcessService';
+import ColaboradorService from '@/services/ColaboradorService';
 
 const formSchema = z.object({
-  tarefaMacro: z.string().min(1, "Tarefa macro é obrigatória"),
-  processo: z.string().min(1, "Processo é obrigatório"),
-  atividade: z.string().min(1, "Atividade é obrigatória"),
-  unidade: z.number().min(1, "Unidade é obrigatória"),
-  tempoPorUnidade: z.number().min(1, "Tempo por unidade é obrigatório"),
-  unidadeTempo: z.enum(["minutos", "horas"]),
-  equipe: z.array(z.string()).min(1, "Selecione pelo menos um colaborador"),
-  dataInicio: z.string().min(1, "Data de início é obrigatória"),
-  observacao: z.string().optional(),
-  imagem: z.any().optional(),
-  imagemDescricao: z.string().optional(),
-  arquivo: z.any().optional(),
-  arquivoDescricao: z.string().optional(),
+  macroTask: z.string().min(1, 'Tarefa macro é obrigatória'),
+  process: z.string().min(1, 'Processo é obrigatório'),
+  description: z.string().min(1, 'Atividade é obrigatória'),
+  quantity: z.number().min(1, 'Unidade é obrigatória'),
+  timePerUnit: z.number().min(1, 'Tempo por unidade é obrigatório'),
+  unidadeTempo: z.enum(['minutos', 'horas']),
+  collaborators: z
+    .array(z.number())
+    .min(1, 'Selecione pelo menos um colaborador'),
+  startDate: z.string().min(1, 'Data de início é obrigatória'),
+  observation: z.string().optional(),
+  imageUrl: z.any().optional(),
+  imageDescription: z.string().optional(),
+  fileUrl: z.any().optional(),
+  fileDescription: z.string().optional(),
+  estimatedTime: z.string().optional(),
 });
-
-const tarefasMacroMock = [
-  { id: 1, nome: "Fundação" },
-  { id: 2, nome: "Estrutura" },
-  { id: 3, nome: "Acabamento" },
-];
-
-const processosMock = [
-  { id: 1, nome: "Escavação" },
-  { id: 2, nome: "Concretagem" },
-  { id: 3, nome: "Alvenaria" },
-];
-
-const colaboradoresMock = [
-  { id: 1, nome: "João Silva" },
-  { id: 2, nome: "Maria Santos" },
-  { id: 3, nome: "Pedro Oliveira" },
-];
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface NovaAtividadeFormProps {
   editMode?: boolean;
-  atividadeInicial?: any;
 }
 
-export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAtividadeFormProps) {
+export function NovaAtividadeForm({
+  editMode = false,
+}: NovaAtividadeFormProps) {
   const { toast } = useToast();
-  const [tempoPrevisto, setTempoPrevisto] = useState<string>("");
+  const [tempoPrevisto, setTempoPrevisto] = useState<string>('');
   const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
+  const [tarefasMacro, setTarefasMacro] = useState([]);
+  const [processos, setProcessos] = useState([]);
+  const [colaboradores, setColaboradores] = useState([]);
 
-  const defaultValues = editMode && atividadeInicial ? {
-    ...atividadeInicial,
-    equipe: atividadeInicial.equipe || []
-  } : {
-    unidadeTempo: "horas",
-    equipe: [],
+  const defaultValues: FormValues = {
+    macroTask: '',
+    process: '',
+    description: '',
+    quantity: 0,
+    timePerUnit: 0,
+    unidadeTempo: 'minutos',
+    collaborators: [],
+    startDate: '',
+    observation: '',
+    imageUrl: null,
+    imageDescription: '',
+    fileUrl: null,
+    fileDescription: '',
+    estimatedTime: '',
+  };
+
+  const getTarefasMacro = async () => {
+    try {
+      const tarefasMacro = await TarefaMacroService.getAll();
+      setTarefasMacro(tarefasMacro.data);
+    } catch (error) {
+      console.error('Error fetching tarefas macro', error);
+    }
+  };
+
+  const getProcessos = async () => {
+    try {
+      const processos = await ProcessService.getAll();
+      setProcessos(processos.data);
+    } catch (error) {
+      console.error('Error fetching processos', error);
+    }
+  };
+
+  const getColaboradores = async () => {
+    try {
+      const colaboradores = await ColaboradorService.getAllColaboradores();
+      setColaboradores(colaboradores.data);
+      console.log(colaboradores.data);
+    } catch (error) {
+      console.error('Error fetching colaboradores', error);
+    }
   };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues
+    defaultValues,
   });
 
-  const calcularTempoPrevisto = (unidade: number, tempoPorUnidade: number, unidadeTempo: "minutos" | "horas") => {
+  const calcularTempoPrevisto = (
+    unidade: number,
+    tempoPorUnidade: number,
+    unidadeTempo: 'minutos' | 'horas'
+  ) => {
     const tempoTotal = unidade * tempoPorUnidade;
-    if (unidadeTempo === "minutos") {
+    if (unidadeTempo === 'minutos') {
       const horas = Math.floor(tempoTotal / 60);
       const minutos = tempoTotal % 60;
       return `${horas}h${minutos}min`;
@@ -82,12 +129,16 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
   };
 
   const handleCalculoTempo = () => {
-    const unidade = form.watch("unidade");
-    const tempoPorUnidade = form.watch("tempoPorUnidade");
-    const unidadeTempo = form.watch("unidadeTempo");
+    const unidade = form.watch('quantity');
+    const tempoPorUnidade = form.watch('timePerUnit');
+    const unidadeTempo = form.watch('unidadeTempo');
 
     if (unidade && tempoPorUnidade && unidadeTempo) {
-      const tempo = calcularTempoPrevisto(unidade, tempoPorUnidade, unidadeTempo);
+      const tempo = calcularTempoPrevisto(
+        unidade,
+        tempoPorUnidade,
+        unidadeTempo
+      );
       setTempoPrevisto(tempo);
     }
   };
@@ -96,43 +147,66 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
     if (editMode) {
       setShowHorasColaboradores(true);
     }
-    form.setValue("tarefaMacro", value);
+    form.setValue('macroTask', value);
   };
 
   const handleProcessoChange = (value: string) => {
     if (editMode) {
       setShowHorasColaboradores(true);
     }
-    form.setValue("processo", value);
+    form.setValue('process', value);
   };
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    toast({
-      title: editMode ? "Atividade atualizada com sucesso!" : "Atividade criada com sucesso!",
-      description: editMode ? "As alterações foram salvas." : "A atividade foi adicionada ao quadro.",
-    });
+  const onSubmit = async (data: FormValues) => {
+    const dataD = {
+      ...data,
+      estimatedTime: tempoPrevisto,
+    };
+
+    try {
+      await createActivity(dataD);
+      toast({
+        title: 'Atividade criada',
+        description: 'A atividade foi criada com sucesso.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao criar atividade',
+        description:
+          'Ocorreu um erro ao criar a atividade. Tente novamente mais tarde.',
+      });
+    }
   };
+
+  useEffect(() => {
+    getTarefasMacro();
+    getProcessos();
+    getColaboradores();
+  }, []);
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="tarefaMacro"
+          name="macroTask"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tarefa Macro</FormLabel>
-              <Select onValueChange={handleTarefaMacroChange} defaultValue={field.value}>
+              <Select
+                onValueChange={handleTarefaMacroChange}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a tarefa macro" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {tarefasMacroMock.map((tarefa) => (
-                    <SelectItem key={tarefa.id} value={tarefa.nome}>
-                      {tarefa.nome}
+                  {tarefasMacro.map((tarefa) => (
+                    <SelectItem key={tarefa.id} value={tarefa.name}>
+                      {tarefa.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -144,20 +218,23 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
 
         <FormField
           control={form.control}
-          name="processo"
+          name="process"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Processo</FormLabel>
-              <Select onValueChange={handleProcessoChange} defaultValue={field.value}>
+              <Select
+                onValueChange={handleProcessoChange}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o processo" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {processosMock.map((processo) => (
-                    <SelectItem key={processo.id} value={processo.nome}>
-                      {processo.nome}
+                  {processos.map((processo) => (
+                    <SelectItem key={processo.id} value={processo.name}>
+                      {processo.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -167,15 +244,9 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
           )}
         />
 
-        <ColaboradorHorasField 
-          form={form} 
-          colaboradores={form.watch("equipe") || []} 
-          showHorasColaboradores={showHorasColaboradores}
-        />
-
         <FormField
           control={form.control}
-          name="atividade"
+          name="description"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Atividade</FormLabel>
@@ -190,14 +261,14 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="unidade"
+            name="quantity"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Unidade/Peça</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
+                  <Input
+                    type="number"
+                    {...field}
                     onChange={(e) => {
                       field.onChange(Number(e.target.value));
                       handleCalculoTempo();
@@ -212,14 +283,14 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
           <div className="grid grid-cols-2 gap-2">
             <FormField
               control={form.control}
-              name="tempoPorUnidade"
+              name="timePerUnit"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tempo por Unidade</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field} 
+                    <Input
+                      type="number"
+                      {...field}
                       onChange={(e) => {
                         field.onChange(Number(e.target.value));
                         handleCalculoTempo();
@@ -237,10 +308,13 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Unidade</FormLabel>
-                  <Select onValueChange={(value: "minutos" | "horas") => {
-                    field.onChange(value);
-                    handleCalculoTempo();
-                  }} defaultValue={field.value}>
+                  <Select
+                    onValueChange={(value: 'minutos' | 'horas') => {
+                      field.onChange(value);
+                      handleCalculoTempo();
+                    }}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue />
@@ -262,11 +336,78 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
           <p className="text-sm font-medium">Tempo Previsto: {tempoPrevisto}</p>
         </div>
 
-        <EquipeField form={form} colaboradoresMock={colaboradoresMock} />
+        <FormField
+          control={form.control}
+          name="collaborators"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Equipe</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  const numericValue = Number(value); // Converter o valor para número
+                  const currentValues = field.value || [];
+                  if (!currentValues.includes(numericValue)) {
+                    field.onChange([...currentValues, numericValue]);
+                  }
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue>
+                      {field.value?.length
+                        ? field.value
+                            .map((id: number) => {
+                              const colaborador = colaboradores.find(
+                                (col) => col.id === id
+                              );
+                              return colaborador?.name || '';
+                            })
+                            .join(', ')
+                        : 'Selecione os colaboradores'}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {colaboradores.map((colaborador) => (
+                    <SelectItem
+                      key={colaborador.id}
+                      value={String(colaborador.id)}
+                    >
+                      {colaborador.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {field.value?.map((colaboradorId: number) => {
+                  const colaborador = colaboradores.find(
+                    (col) => col.id === colaboradorId
+                  );
+                  return (
+                    <Badge
+                      key={colaboradorId}
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() => {
+                        const newEquipe = field.value.filter(
+                          (id: number) => id !== colaboradorId
+                        );
+                        field.onChange(newEquipe);
+                      }}
+                    >
+                      {colaborador?.name}
+                    </Badge>
+                  );
+                })}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
-          name="dataInicio"
+          name="startDate"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Data de Início</FormLabel>
@@ -280,12 +421,15 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
 
         <FormField
           control={form.control}
-          name="observacao"
+          name="observation"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Observação</FormLabel>
               <FormControl>
-                <Textarea placeholder="Digite uma observação (opcional)" {...field} />
+                <Textarea
+                  placeholder="Digite uma observação (opcional)"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -297,8 +441,11 @@ export function NovaAtividadeForm({ editMode = false, atividadeInicial }: NovaAt
           <FileUploadField form={form} fileType="arquivo" />
         </div>
 
-        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-          {editMode ? "Salvar Alterações" : "Criar Atividade"}
+        <Button
+          type="submit"
+          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+        >
+          {editMode ? 'Salvar Alterações' : 'Criar Atividade'}
         </Button>
       </form>
     </Form>

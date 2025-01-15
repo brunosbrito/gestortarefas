@@ -1,4 +1,4 @@
-import { Processo } from "@/interfaces/ProcessoInterface"
+import { Processo } from '@/interfaces/ProcessoInterface';
 import {
   Table,
   TableBody,
@@ -6,11 +6,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Edit2, Trash2 } from "lucide-react"
-import { useState } from "react"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Edit2, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,74 +20,84 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { EditProcessoForm } from "./EditProcessoForm"
-
-const mockProcessos: Processo[] = [
-  {
-    id: 1,
-    nome: "Processo de Construção",
-    descricao: "Processo padrão de construção",
-    etapas: ["Planejamento", "Execução", "Finalização"],
-    status: "ativo"
-  }
-]
+} from '@/components/ui/dialog';
+import { EditProcessoForm } from './EditProcessoForm';
+import ProcessService from '@/services/ProcessService';
 
 interface ProcessosListProps {
   reload?: boolean;
 }
 
 export function ProcessosList({ reload }: ProcessosListProps) {
-  const [selectedProcesso, setSelectedProcesso] = useState<Processo | null>(null)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const { toast } = useToast()
+  const [selectedProcesso, setSelectedProcesso] = useState<Processo | null>(
+    null
+  );
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [listProcessos, setListProcessos] = useState<Processo[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleDeleteClick = (processo: Processo) => {
-    setSelectedProcesso(processo)
-    setIsDeleteDialogOpen(true)
-  }
+    setSelectedProcesso(processo);
+    setIsDeleteDialogOpen(true);
+  };
 
   const handleEditClick = (processo: Processo) => {
-    setSelectedProcesso(processo)
-    setIsEditDialogOpen(true)
-  }
+    setSelectedProcesso(processo);
+    setIsEditDialogOpen(true);
+  };
 
   const handleDelete = async () => {
-    if (!selectedProcesso) return
+    if (!selectedProcesso) return;
 
     try {
-      // Aqui você implementará a chamada para deletar o processo
-      // await ProcessoService.delete(selectedProcesso.id)
       toast({
-        title: "Processo excluído",
-        description: "O processo foi excluído com sucesso.",
-      })
-      // Aqui você implementará a atualização da lista
+        title: 'Processo excluído',
+        description: 'O processo foi excluído com sucesso.',
+      });
+      getProcessos();
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Erro ao excluir processo",
-        description: "Não foi possível excluir o processo. Tente novamente.",
-      })
-      console.error("Erro ao excluir o processo:", error)
+        variant: 'destructive',
+        title: 'Erro ao excluir processo',
+        description: 'Não foi possível excluir o processo. Tente novamente.',
+      });
+      console.error('Erro ao excluir o processo:', error);
     } finally {
-      setIsDeleteDialogOpen(false)
-      setSelectedProcesso(null)
+      setIsDeleteDialogOpen(false);
+      setSelectedProcesso(null);
     }
-  }
+  };
 
   const handleEditSuccess = () => {
-    setIsEditDialogOpen(false)
-    setSelectedProcesso(null)
-    // Aqui você implementará a atualização da lista
-  }
+    setIsEditDialogOpen(false);
+    setSelectedProcesso(null);
+    getProcessos();
+  };
+
+  const getProcessos = async () => {
+    try {
+      const response = await ProcessService.getAll();
+      setListProcessos(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Erro ao buscar os processos:', err);
+      setError(
+        'Não foi possível carregar os processos. Tente novamente mais tarde.'
+      );
+    }
+  };
+
+  useEffect(() => {
+    getProcessos();
+  }, [reload]);
 
   return (
     <>
@@ -96,31 +106,27 @@ export function ProcessosList({ reload }: ProcessosListProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockProcessos.map((processo) => (
+            {listProcessos.map((processo) => (
               <TableRow key={processo.id}>
-                <TableCell>{processo.nome}</TableCell>
-                <TableCell>{processo.descricao}</TableCell>
-                <TableCell>{processo.status}</TableCell>
+                <TableCell>{processo.name}</TableCell>
                 <TableCell className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="icon"
                     onClick={() => handleEditClick(processo)}
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="icon"
                     onClick={() => handleDeleteClick(processo)}
                   >
-                    <Trash2 className="h-4 w-4" color="red"/>
+                    <Trash2 className="h-4 w-4" color="red" />
                   </Button>
                 </TableCell>
               </TableRow>
@@ -129,13 +135,16 @@ export function ProcessosList({ reload }: ProcessosListProps) {
         </Table>
       </div>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o processo "{selectedProcesso?.nome}"?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o processo "
+              {selectedProcesso?.name}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -161,5 +170,5 @@ export function ProcessosList({ reload }: ProcessosListProps) {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
