@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Building2, ClipboardList, Activity, Users, Check, Edit, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Adicionando a importação do useNavigate
 import { StatsCard } from "./dashboard/StatsCard";
 import { getStatusBadge } from "./dashboard/ObraStatusBadge";
 import { ObraDetalhesDialog } from "./dashboard/ObraDetalhesDialog";
@@ -97,6 +98,7 @@ const atividadesRecentes = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate(); // Inicializando o hook
   const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhes | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [editDialogAberto, setEditDialogAberto] = useState(false);
