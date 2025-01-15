@@ -133,7 +133,7 @@ const Obras = () => {
               <CardFooter className="flex gap-2">
                 <Button 
                   variant="outline"
-                  className="hover:bg-secondary/20"
+                  className="w-full hover:bg-[#FF7F0E]/10"
                   onClick={() => navigate(`/obras/${obra.id}/os`)}
                 >
                   <ClipboardList className="w-4 h-4 mr-2" />
