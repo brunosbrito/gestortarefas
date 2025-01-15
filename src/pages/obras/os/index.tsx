@@ -103,19 +103,10 @@ const OrdensServico = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full hover:bg-[#FF7F0E]/10"
-                  onClick={() => {
-                    console.log(`Ver detalhes da OS ${os.id}`);
-                  }}
-                >
-                  Ver Detalhes
-                </Button>
                 <Button
                   variant="outline"
                   className="w-full hover:bg-[#FF7F0E]/10"
-                  onClick={() => navigate(`/obras/os/atividades?os=${os.id}`)}
+                  onClick={() => navigate(`/obras/${os.projectId.id}/os/${os.id}/atividades`)}
                 >
                   <Activity className="w-4 h-4 mr-2" />
                   Atividades
