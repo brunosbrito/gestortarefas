@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { CreateServiceOrder, ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 
 export const formSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
