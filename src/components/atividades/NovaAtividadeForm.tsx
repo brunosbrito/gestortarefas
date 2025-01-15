@@ -25,7 +25,6 @@ import { createActivity } from '@/services/ActivityService';
 import { FileUploadField } from './FileUploadField';
 import { Badge } from '../ui/badge';
 import TarefaMacroService from '@/services/TarefaMacroService';
-import { Processo } from '@/interfaces/ProcessoInterface';
 import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Activity } from '@/interfaces/AtividadeInterface';
@@ -47,6 +46,8 @@ const formSchema = z.object({
   fileUrl: z.any().optional(),
   fileDescription: z.string().optional(),
   estimatedTime: z.string().optional(),
+  projectId: z.number(),
+  orderServiceId: z.number(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -54,11 +55,15 @@ type FormValues = z.infer<typeof formSchema>;
 interface NovaAtividadeFormProps {
   editMode?: boolean;
   atividadeInicial?: Activity;
+  projectId: number;
+  orderServiceId: number;
 }
 
 export function NovaAtividadeForm({
   editMode = false,
   atividadeInicial,
+  projectId,
+  orderServiceId,
 }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>('');
@@ -82,6 +87,8 @@ export function NovaAtividadeForm({
     fileUrl: atividadeInicial?.fileUrl || null,
     fileDescription: atividadeInicial?.fileDescription || '',
     estimatedTime: atividadeInicial?.estimatedTime || '',
+    projectId: projectId,
+    orderServiceId: orderServiceId,
   };
 
   const getTarefasMacro = async () => {
@@ -164,6 +171,8 @@ export function NovaAtividadeForm({
     const dataD = {
       ...data,
       estimatedTime: tempoPrevisto,
+      projectId: projectId,
+      orderServiceId: orderServiceId,
     };
 
     try {
@@ -454,4 +463,3 @@ export function NovaAtividadeForm({
     </Form>
   );
 }
-

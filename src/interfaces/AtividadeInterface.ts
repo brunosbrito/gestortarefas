@@ -1,4 +1,3 @@
-// src/types/activity.ts
 export interface Activity {
   id: number;
   description: string;
@@ -12,11 +11,13 @@ export interface Activity {
   process?: string;
   timePerUnit?: number;
   quantity?: number;
-  estimatedTime?: number;
+  estimatedTime?: string;
   actualTime?: number;
   startDate?: string;
   pauseDate?: string;
   createdAt: string;
   updatedAt: string;
   collaborators: number[];
+  projectId: number;
+  orderServiceId: number;
 }
