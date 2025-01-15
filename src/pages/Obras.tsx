@@ -7,7 +7,7 @@ import { Plus, Calendar, Building2, ClipboardList, Activity, User, Check, MapPin
 import { useEffect, useState } from "react";
 import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
 import { EditObraForm } from "@/components/obras/EditObraForm";
@@ -21,6 +21,7 @@ const Obras = () => {
   const [dialogEditarAberto, setDialogEditarAberto] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { obraId } = useParams();
 
   const fetchObras = async () => {
     try {
@@ -133,7 +134,7 @@ const Obras = () => {
                 <Button 
                   variant="outline"
                   className="hover:bg-secondary/20"
-                  onClick={() => navigate(`/obras/os?obra=${obra.id}`)}
+                  onClick={() => navigate(`/obras/${obra.id}/os`)}
                 >
                   <ClipboardList className="w-4 h-4 mr-2" />
                   Ordens
