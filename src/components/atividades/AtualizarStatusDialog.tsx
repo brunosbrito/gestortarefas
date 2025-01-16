@@ -24,14 +24,17 @@ import { updateActivity } from '@/services/ActivityService';
 
 const emExecucaoSchema = z.object({
   startDate: z.string().min(1, 'Data de início é obrigatória'),
+  startTime: z.string().min(1, 'Hora de início é obrigatória'),
 });
 
 const concluidaSchema = z.object({
   endDate: z.string().min(1, 'Data de conclusão é obrigatória'),
+  endTime: z.string().min(1, 'Hora de conclusão é obrigatória'),
 });
 
 const paralizadaSchema = z.object({
   pauseDate: z.string().min(1, 'Data de paralização é obrigatória'),
+  pauseTime: z.string().min(1, 'Hora de paralização é obrigatória'),
   reason: z.string().min(1, 'Motivo é obrigatório'),
 });
 
@@ -64,8 +67,22 @@ export function AtualizarStatusDialog({
 
   const onSubmit = async (data: any) => {
     try {
+      const formattedData = { ...data };
+
+      // Combinar data e hora em um único campo ISO
+      if (novoStatus === 'Em execução') {
+        formattedData.startDate = new Date(`${data.startDate}T${data.startTime}`).toISOString();
+        delete formattedData.startTime;
+      } else if (novoStatus === 'Concluídas') {
+        formattedData.endDate = new Date(`${data.endDate}T${data.endTime}`).toISOString();
+        delete formattedData.endTime;
+      } else if (novoStatus === 'Paralizadas') {
+        formattedData.pauseDate = new Date(`${data.pauseDate}T${data.pauseTime}`).toISOString();
+        delete formattedData.pauseTime;
+      }
+
       await updateActivity(atividade.id, {
-        ...data,
+        ...formattedData,
         status: novoStatus,
       });
 
@@ -99,29 +116,13 @@ export function AtualizarStatusDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {novoStatus === 'Em execução' && (
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data de Início</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {novoStatus === 'Concluídas' && (
-              <>
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="endDate"
+                  name="startDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data de Conclusão</FormLabel>
+                      <FormLabel>Data de Início</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
@@ -129,6 +130,52 @@ export function AtualizarStatusDialog({
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="startTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hora de Início</FormLabel>
+                      <FormControl>
+                        <Input type="time" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {novoStatus === 'Concluídas' && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Conclusão</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hora de Conclusão</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-4">Horas Trabalhadas</h4>
                   <AtualizarHorasForm atividade={atividade} />
@@ -138,19 +185,34 @@ export function AtualizarStatusDialog({
 
             {novoStatus === 'Paralizadas' && (
               <>
-                <FormField
-                  control={form.control}
-                  name="pauseDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Paralização</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="pauseDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Paralização</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pauseTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hora de Paralização</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="reason"
