@@ -1,4 +1,7 @@
-import { CreateServiceOrder, ServiceOrder } from '@/interfaces/ServiceOrderInterface';
+import {
+  CreateServiceOrder,
+  ServiceOrder,
+} from '@/interfaces/ServiceOrderInterface';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/service-orders';
@@ -34,7 +37,20 @@ export const getServiceOrderById = async (serviceOrderId: string) => {
   }
 };
 
-export const updateServiceOrder = async (serviceOrderId: string, data: Partial<CreateServiceOrder>) => {
+export const getServiceOrderByProjectId = async (projectId: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/project/${projectId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar ordem de serviço:', error);
+    throw error;
+  }
+};
+
+export const updateServiceOrder = async (
+  serviceOrderId: string,
+  data: Partial<CreateServiceOrder>
+) => {
   try {
     const response = await axios.put(`${API_URL}/${serviceOrderId}`, data);
     return response.data;

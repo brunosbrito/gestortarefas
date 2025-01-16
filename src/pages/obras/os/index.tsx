@@ -33,7 +33,10 @@ import {
   ServiceOrder,
   CreateServiceOrder,
 } from '@/interfaces/ServiceOrderInterface';
-import { getAllServiceOrders } from '@/services/ServiceOrderService';
+import {
+  getAllServiceOrders,
+  getServiceOrderByProjectId,
+} from '@/services/ServiceOrderService';
 import { VisualizarOSDialog } from '@/components/obras/os/VisualizarOSDialog';
 import { EditarOSDialog } from '@/components/obras/os/EditarOSDialog';
 import ObrasService from '@/services/ObrasService';
@@ -70,26 +73,13 @@ const OrdensServico = () => {
   };
 
   const getServiceOrders = async () => {
-    const serviceOrders = await getAllServiceOrders();
+    const serviceOrders = await getServiceOrderByProjectId(projectId);
+    setObra(serviceOrders.projectId);
     setOrdensServico(serviceOrders || []);
   };
 
   useEffect(() => {
     getServiceOrders();
-    
-    // Buscar informações da obra
-    const fetchObra = async () => {
-      if (projectId) {
-        try {
-          const obraData = await ObrasService.getObraById(Number(projectId));
-          setObra(obraData);
-        } catch (error) {
-          console.error('Erro ao buscar obra:', error);
-        }
-      }
-    };
-    
-    fetchObra();
   }, [projectId]);
 
   const getStatusBadge = (status: ServiceOrder['status']) => {
@@ -110,7 +100,7 @@ const OrdensServico = () => {
           <h1 className="text-3xl font-bold text-construction-800">
             Ordens de Serviço
           </h1>
-          {obra?.status !== 'finalizado' && (
+          {obra?.status != 'finalizado' && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
