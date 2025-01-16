@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Building2, ClipboardList, Activity, Users, Check, Edit, Eye } from "lucide-react";
+import { Building2, ClipboardList, Activity, Users, Check, Edit, Eye, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { StatsCard } from "./dashboard/StatsCard";
@@ -8,6 +8,7 @@ import { ObraDetalhesDialog } from "./dashboard/ObraDetalhesDialog";
 import { AtividadesRecentes } from "./dashboard/AtividadesRecentes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { EditObraForm } from "./obras/EditObraForm";
+import { NovaObraForm } from "./obras/NovaObraForm";
 
 const stats = [
   {
@@ -100,15 +101,32 @@ const Dashboard = () => {
   const [obraSelecionada, setObraSelecionada] = useState<ObraDetalhes | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [editDialogAberto, setEditDialogAberto] = useState(false);
+  const [novaObraDialogAberto, setNovaObraDialogAberto] = useState(false);
+  const [obras, setObras] = useState<ObraDetalhes[]>(obrasExemplo);
 
   const handleEditSuccess = () => {
     setEditDialogAberto(false);
     // Aqui você pode adicionar lógica para atualizar a lista de obras
   };
 
+  const handleNovaObraSuccess = () => {
+    setNovaObraDialogAberto(false);
+    // Atualizar a lista de obras
+    // Você pode adicionar aqui a lógica para buscar as obras atualizadas
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-construction-800">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-construction-800">Dashboard</h1>
+        <Button 
+          onClick={() => setNovaObraDialogAberto(true)}
+          className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nova Obra
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
@@ -170,6 +188,16 @@ const Dashboard = () => {
         <AtividadesRecentes atividades={atividadesRecentes} />
       </div>
 
+      {/* Modal de Nova Obra */}
+      <Dialog open={novaObraDialogAberto} onOpenChange={setNovaObraDialogAberto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Nova Obra</DialogTitle>
+          </DialogHeader>
+          <NovaObraForm onSuccess={handleNovaObraSuccess} />
+        </DialogContent>
+      </Dialog>
+
       {/* Modal de Visualização */}
       <ObraDetalhesDialog
         obra={obraSelecionada}
@@ -186,14 +214,14 @@ const Dashboard = () => {
           {obraSelecionada && (
             <EditObraForm 
               obra={{
-                id: 1, // Você precisará ajustar isso com o ID real da obra
+                id: 1,
                 name: obraSelecionada.nome,
-                groupNumber: "1", // Ajuste conforme necessário
-                client: "Cliente", // Ajuste conforme necessário
-                address: "Endereço", // Ajuste conforme necessário
+                groupNumber: "1",
+                client: "Cliente",
+                address: "Endereço",
                 startDate: obraSelecionada.dataInicio,
                 status: obraSelecionada.status,
-                observation: "" // Ajuste conforme necessário
+                observation: ""
               }}
               onSuccess={handleEditSuccess}
             />
