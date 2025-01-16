@@ -58,6 +58,7 @@ interface NovaAtividadeFormProps {
   atividadeInicial?: Activity;
   projectId: number;
   orderServiceId: number;
+  onSuccess?: () => void;
 }
 
 export function NovaAtividadeForm({
@@ -65,6 +66,7 @@ export function NovaAtividadeForm({
   atividadeInicial,
   projectId,
   orderServiceId,
+  onSuccess,
 }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>('');
@@ -183,6 +185,9 @@ export function NovaAtividadeForm({
         title: 'Atividade criada',
         description: 'A atividade foi criada com sucesso.',
       });
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       toast({
         variant: 'destructive',

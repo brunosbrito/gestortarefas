@@ -56,7 +56,6 @@ const Atividades = () => {
 
     const { source, destination, draggableId } = result;
 
-    // Se a lista de destino for diferente da lista de origem
     if (source.droppableId !== destination.droppableId) {
       const atividade = atividades.find((a) => a.id === Number(draggableId));
 
@@ -68,6 +67,11 @@ const Atividades = () => {
         });
       }
     }
+  };
+
+  const handleSuccess = () => {
+    setOpenNovaAtividade(false);
+    getByServiceOrderId();
   };
 
   return (
@@ -91,6 +95,7 @@ const Atividades = () => {
               <NovaAtividadeForm
                 projectId={Number(projectId)}
                 orderServiceId={Number(serviceOrderId)}
+                onSuccess={handleSuccess}
               />
             </DialogContent>
           </Dialog>
