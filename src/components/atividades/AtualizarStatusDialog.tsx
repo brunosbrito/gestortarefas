@@ -137,7 +137,7 @@ export function AtualizarStatusDialog({
                     <FormItem>
                       <FormLabel>Hora de Início</FormLabel>
                       <FormControl>
-                        <Input type="time" {...field} />
+                        <Input type="time" step="1" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -169,7 +169,7 @@ export function AtualizarStatusDialog({
                       <FormItem>
                         <FormLabel>Hora de Conclusão</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <Input type="time" step="1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -206,7 +206,7 @@ export function AtualizarStatusDialog({
                       <FormItem>
                         <FormLabel>Hora de Paralização</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <Input type="time" step="1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
