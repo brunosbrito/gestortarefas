@@ -21,6 +21,9 @@ import {
 import { AtualizarHorasForm } from './AtualizarHorasForm';
 import { useToast } from '@/hooks/use-toast';
 import { updateActivity } from '@/services/ActivityService';
+import { User } from 'lucide-react';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import { useEffect, useState } from 'react';
 
 const emExecucaoSchema = z.object({
   startDate: z.string().min(1, 'Data de início é obrigatória'),
@@ -54,6 +57,7 @@ export function AtualizarStatusDialog({
   onSuccess,
 }: AtualizarStatusDialogProps) {
   const { toast } = useToast();
+  const [isFormValid, setIsFormValid] = useState(false);
   const schema =
     novoStatus === 'Em execução'
       ? emExecucaoSchema
@@ -65,11 +69,54 @@ export function AtualizarStatusDialog({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (data: any) => {
+  const validateWorkedHours = () => {
+    const inputs = document.querySelectorAll('input[name="workedHours"]');
+    let isValid = true;
+
+    inputs.forEach((input) => {
+      const value = (input as HTMLInputElement).value;
+      if (!value || isNaN(Number(value)) || Number(value) <= 0) {
+        isValid = false;
+      }
+    });
+
+    setIsFormValid(isValid);
+  };
+
+  useEffect(() => {
+    validateWorkedHours();
+  }, [atividade]);
+
+  const onSubmit = async (data: any, event: React.FormEvent) => {
+    event.preventDefault();
+    const formData = new FormData(event.target as HTMLFormElement);
+    let allHoursFilled = true;
+    const workedHours: { id: string; hours: number }[] = [];
+    const inputs = document.querySelectorAll('input[name="workedHours"]');
+
+    inputs.forEach((input) => {
+      const id = (input as HTMLInputElement).dataset.id;
+      const hours = Number((input as HTMLInputElement).value);
+
+      if (id && !isNaN(hours)) {
+        workedHours.push({ id, hours });
+      } else {
+        allHoursFilled = false;
+      }
+    });
+
+    if (!allHoursFilled) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description:
+          'Por favor, preencha as horas de trabalho para todos os colaboradores.',
+      });
+      return;
+    }
     try {
       const formattedData = { ...data };
 
-      // Combinar data e hora em um único campo ISO
       if (novoStatus === 'Em execução') {
         formattedData.startDate = new Date(
           `${data.startDate}T${data.startTime}`
@@ -80,6 +127,7 @@ export function AtualizarStatusDialog({
           `${data.endDate}T${data.endTime}`
         ).toISOString();
         delete formattedData.endTime;
+        formattedData.users = workedHours;
       } else if (novoStatus === 'Paralizadas') {
         formattedData.pauseDate = new Date(
           `${data.pauseDate}T${data.pauseTime}`
@@ -195,9 +243,28 @@ export function AtualizarStatusDialog({
                     )}
                   />
                 </div>
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-4">Horas Trabalhadas</h4>
-                  <AtualizarHorasForm atividade={atividade} />
+                <div className="space-y-4">
+                  {atividade?.collaborators?.map((colaborador: any) => (
+                    <div
+                      key={colaborador.id}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <User /> {/* Ícone do usuário */}
+                        <FormLabel>{colaborador.name}</FormLabel>
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          name="workedHours" // Nome fixo
+                          placeholder="Horas"
+                          min="0"
+                          data-id={colaborador.id}
+                          onChange={validateWorkedHours}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </>
             )}
