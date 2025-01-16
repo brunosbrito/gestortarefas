@@ -1,12 +1,31 @@
 import { HistoricoAtividade } from '@/interfaces/HistoricoAtividade';
+import { getActivityHistoryById } from '@/services/ActivityHistoryService';
 import { format } from 'date-fns';
 import { User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface AtividadeHistoricoListProps {
-  historico: HistoricoAtividade[];
+  activityId: number;
 }
 
-export const AtividadeHistoricoList = ({ historico }: AtividadeHistoricoListProps) => {
+export const AtividadeHistoricoList = ({
+  activityId,
+}: AtividadeHistoricoListProps) => {
+  const [historico, setHistorico] = useState<HistoricoAtividade[]>([]);
+
+  useEffect(() => {
+    const fetchHistorico = async () => {
+      try {
+        const response = await getActivityHistoryById(activityId);
+        setHistorico(response); // Armazena o histórico no estado
+      } catch (error) {
+        console.error('Erro ao buscar histórico:', error);
+      }
+    };
+
+    fetchHistorico();
+  }, [activityId]);
+
   return (
     <div className="space-y-3">
       {historico.map((item) => (
@@ -24,7 +43,22 @@ export const AtividadeHistoricoList = ({ historico }: AtividadeHistoricoListProp
                 {format(new Date(item.timestamp), 'dd/MM/yyyy HH:mm')}
               </span>
             </div>
-            <p className="text-construction-700 mt-1">{item.description}</p>
+            <p className="text-construction-700 mt-1">
+              {(() => {
+                switch (item.description) {
+                  case 'Planejadas':
+                    return 'Atividade Criada';
+                  case 'Em execução':
+                    return 'Atividade Iniciada';
+                  case 'Concluídas':
+                    return 'Atividade Concluída';
+                  case 'Pausada':
+                    return 'Atividade Pausada';
+                  default:
+                    return item.description;
+                }
+              })()}
+            </p>
           </div>
         </div>
       ))}
