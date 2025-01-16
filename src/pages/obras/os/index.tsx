@@ -28,7 +28,7 @@ import {
 import { useEffect, useState } from 'react';
 import { NovaOSForm } from '@/components/obras/os/NovaOSForm';
 import { useToast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   ServiceOrder,
   CreateServiceOrder,
@@ -36,6 +36,8 @@ import {
 import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import { VisualizarOSDialog } from '@/components/obras/os/VisualizarOSDialog';
 import { EditarOSDialog } from '@/components/obras/os/EditarOSDialog';
+import ObrasService from '@/services/ObrasService';
+import { Obra } from '@/interfaces/ObrasInterface';
 
 const OrdensServico = () => {
   const [ordensServico, setOrdensServico] = useState<ServiceOrder[]>([]);
@@ -43,8 +45,10 @@ const OrdensServico = () => {
   const [selectedOS, setSelectedOS] = useState<ServiceOrder | null>(null);
   const [visualizarDialogOpen, setVisualizarDialogOpen] = useState(false);
   const [editarDialogOpen, setEditarDialogOpen] = useState(false);
+  const [obra, setObra] = useState<Obra | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { projectId } = useParams();
 
   const handleNovaOS = async (data: CreateServiceOrder) => {
     try {
@@ -72,7 +76,21 @@ const OrdensServico = () => {
 
   useEffect(() => {
     getServiceOrders();
-  }, []);
+    
+    // Buscar informações da obra
+    const fetchObra = async () => {
+      if (projectId) {
+        try {
+          const obraData = await ObrasService.getObraById(Number(projectId));
+          setObra(obraData);
+        } catch (error) {
+          console.error('Erro ao buscar obra:', error);
+        }
+      }
+    };
+    
+    fetchObra();
+  }, [projectId]);
 
   const getStatusBadge = (status: ServiceOrder['status']) => {
     const statusConfig = {
@@ -92,20 +110,22 @@ const OrdensServico = () => {
           <h1 className="text-3xl font-bold text-construction-800">
             Ordens de Serviço
           </h1>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-                <Plus className="w-4 h-4 mr-2" />
-                Nova OS
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nova Ordem de Serviço</DialogTitle>
-              </DialogHeader>
-              <NovaOSForm onSubmit={handleNovaOS} />
-            </DialogContent>
-          </Dialog>
+          {obra?.status !== 'finalizado' && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova OS
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Nova Ordem de Serviço</DialogTitle>
+                </DialogHeader>
+                <NovaOSForm onSubmit={handleNovaOS} />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
