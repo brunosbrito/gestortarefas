@@ -23,5 +23,5 @@ export interface AtividadeStatus {
     status: string;
   };
   createdBy: User;
-  status: 'Planejadas' | 'Em Execução' | 'Concluídas' | 'Paralizadas';
+  status: 'Planejadas' | 'Em execução' | 'Concluídas' | 'Paralizadas';
 }

@@ -74,13 +74,13 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
               {atividade.status !== 'Planejadas' && (
                 <div className="flex items-center mb-2">
                   <Clock className="w-4 h-4 mr-2" />
-                  {atividade.status === 'Em Execução'
+                  {atividade.status === 'Em execução'
                     ? `Em execução (${new Date(
                         atividade.startDate
                       ).toLocaleDateString('pt-BR')})`
-                    : `Concluída (${new Date(atividade.startDate).toLocaleDateString(
-                        'pt-BR'
-                      )})`}
+                    : `Concluída (${new Date(
+                        atividade.startDate
+                      ).toLocaleDateString('pt-BR')})`}
                 </div>
               )}
               <div className="flex items-center mb-2">

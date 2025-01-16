@@ -19,7 +19,7 @@ import { AtualizarStatusDialog } from '@/components/atividades/AtualizarStatusDi
 
 const statusListas = [
   'Planejadas',
-  'Em Execução',
+  'Em execução',
   'Concluídas',
   'Paralizadas',
 ] as const;

@@ -1,26 +1,38 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { AtualizarHorasForm } from "./AtualizarHorasForm";
-import { useToast } from "@/hooks/use-toast";
-import { updateActivity } from "@/services/ActivityService";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { AtualizarHorasForm } from './AtualizarHorasForm';
+import { useToast } from '@/hooks/use-toast';
+import { updateActivity } from '@/services/ActivityService';
 
 const emExecucaoSchema = z.object({
-  startDate: z.string().min(1, "Data de início é obrigatória"),
+  startDate: z.string().min(1, 'Data de início é obrigatória'),
 });
 
 const concluidaSchema = z.object({
-  endDate: z.string().min(1, "Data de conclusão é obrigatória"),
+  endDate: z.string().min(1, 'Data de conclusão é obrigatória'),
 });
 
 const paralizadaSchema = z.object({
-  pauseDate: z.string().min(1, "Data de paralização é obrigatória"),
-  reason: z.string().min(1, "Motivo é obrigatório"),
+  pauseDate: z.string().min(1, 'Data de paralização é obrigatória'),
+  reason: z.string().min(1, 'Motivo é obrigatório'),
 });
 
 interface AtualizarStatusDialogProps {
@@ -31,18 +43,19 @@ interface AtualizarStatusDialogProps {
   onSuccess: () => void;
 }
 
-export function AtualizarStatusDialog({ 
-  open, 
-  onOpenChange, 
-  atividade, 
+export function AtualizarStatusDialog({
+  open,
+  onOpenChange,
+  atividade,
   novoStatus,
-  onSuccess 
+  onSuccess,
 }: AtualizarStatusDialogProps) {
   const { toast } = useToast();
-  const schema = novoStatus === 'Em Execução' 
-    ? emExecucaoSchema 
-    : novoStatus === 'Concluídas' 
-      ? concluidaSchema 
+  const schema =
+    novoStatus === 'Em execução'
+      ? emExecucaoSchema
+      : novoStatus === 'Concluídas'
+      ? concluidaSchema
       : paralizadaSchema;
 
   const form = useForm({
@@ -55,19 +68,19 @@ export function AtualizarStatusDialog({
         ...data,
         status: novoStatus,
       });
-      
+
       toast({
-        title: "Status atualizado",
-        description: "O status da atividade foi atualizado com sucesso.",
+        title: 'Status atualizado',
+        description: 'O status da atividade foi atualizado com sucesso.',
       });
-      
+
       onSuccess();
       onOpenChange(false);
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Erro ao atualizar status",
-        description: "Ocorreu um erro ao atualizar o status da atividade.",
+        variant: 'destructive',
+        title: 'Erro ao atualizar status',
+        description: 'Ocorreu um erro ao atualizar o status da atividade.',
       });
     }
   };
@@ -77,7 +90,7 @@ export function AtualizarStatusDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {novoStatus === 'Em Execução' && 'Iniciar Atividade'}
+            {novoStatus === 'Em execução' && 'Iniciar Atividade'}
             {novoStatus === 'Concluídas' && 'Concluir Atividade'}
             {novoStatus === 'Paralizadas' && 'Paralizar Atividade'}
           </DialogTitle>
@@ -85,7 +98,7 @@ export function AtualizarStatusDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {novoStatus === 'Em Execução' && (
+            {novoStatus === 'Em execução' && (
               <FormField
                 control={form.control}
                 name="startDate"
@@ -154,7 +167,10 @@ export function AtualizarStatusDialog({
               </>
             )}
 
-            <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            <Button
+              type="submit"
+              className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+            >
               Confirmar
             </Button>
           </form>
