@@ -32,6 +32,7 @@ import { useParams } from 'react-router-dom';
 import { Draggable } from 'react-beautiful-dnd';
 import { AtividadeHistoricoList } from './AtividadeHistoricoList';
 import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -131,47 +132,86 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                     Detalhes
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Detalhes da Atividade</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold text-construction-800">
+                      Detalhes da Atividade
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-6">
+                  
+                  <div className="space-y-6 py-4">
+                    {/* Seção de Informações Básicas */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Informações</h3>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <h3 className="text-lg font-semibold text-construction-700">
+                        Informações Gerais
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4 bg-construction-50 p-4 rounded-lg">
                         <div>
-                          <p className="font-medium">Descrição</p>
-                          <p className="text-gray-600">{atividade.description}</p>
+                          <p className="font-medium text-construction-600">Descrição</p>
+                          <p className="text-construction-800">{atividade.description}</p>
                         </div>
                         <div>
-                          <p className="font-medium">Status</p>
-                          <p className="text-gray-600">{atividade.status}</p>
+                          <p className="font-medium text-construction-600">Status</p>
+                          <p className="text-construction-800">{atividade.status}</p>
                         </div>
                         <div>
-                          <p className="font-medium">Macro Tarefa</p>
-                          <p className="text-gray-600">{atividade.macroTask}</p>
+                          <p className="font-medium text-construction-600">Macro Tarefa</p>
+                          <p className="text-construction-800">{atividade.macroTask}</p>
                         </div>
                         <div>
-                          <p className="font-medium">Processo</p>
-                          <p className="text-gray-600">{atividade.process}</p>
+                          <p className="font-medium text-construction-600">Processo</p>
+                          <p className="text-construction-800">{atividade.process}</p>
                         </div>
                         <div>
-                          <p className="font-medium">Data de Início</p>
-                          <p className="text-gray-600">
+                          <p className="font-medium text-construction-600">Data de Início</p>
+                          <p className="text-construction-800">
                             {format(new Date(atividade.startDate), 'dd/MM/yyyy')}
                           </p>
                         </div>
                         {atividade.endDate && (
                           <div>
-                            <p className="font-medium">Data de Conclusão</p>
-                            <p className="text-gray-600">
+                            <p className="font-medium text-construction-600">Data de Conclusão</p>
+                            <p className="text-construction-800">
                               {format(new Date(atividade.endDate), 'dd/MM/yyyy')}
                             </p>
                           </div>
                         )}
                       </div>
                     </div>
-                    <AtividadeHistoricoList historico={historicoExemplo} />
+
+                    <Separator className="my-4" />
+
+                    {/* Seção da Equipe */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-construction-700">
+                        Equipe Responsável
+                      </h3>
+                      <div className="bg-construction-50 p-4 rounded-lg">
+                        <div className="grid grid-cols-2 gap-4">
+                          {atividade.collaborators?.map((collaborator) => (
+                            <div key={collaborator.id} className="flex items-center space-x-2 bg-white p-3 rounded-md shadow-sm">
+                              <User className="w-5 h-5 text-construction-600" />
+                              <div>
+                                <p className="font-medium text-construction-800">{collaborator.name}</p>
+                                <p className="text-sm text-construction-600">{collaborator.cargo}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator className="my-4" />
+
+                    {/* Seção de Histórico */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-construction-700">
+                        Histórico de Alterações
+                      </h3>
+                      <div className="bg-construction-50 p-4 rounded-lg">
+                        <AtividadeHistoricoList historico={historicoExemplo} />
+                      </div>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>

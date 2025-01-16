@@ -1,5 +1,6 @@
 import { HistoricoAtividade } from '@/interfaces/HistoricoAtividade';
 import { format } from 'date-fns';
+import { User } from 'lucide-react';
 
 interface AtividadeHistoricoListProps {
   historico: HistoricoAtividade[];
@@ -7,21 +8,26 @@ interface AtividadeHistoricoListProps {
 
 export const AtividadeHistoricoList = ({ historico }: AtividadeHistoricoListProps) => {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold mb-2">Histórico</h3>
-      <div className="space-y-3">
-        {historico.map((item, index) => (
-          <div key={index} className="flex items-start space-x-3 text-sm">
-            <span className="text-gray-600 min-w-[100px]">
-              {format(new Date(item.timestamp), 'dd/MM/yyyy HH:mm')}
-            </span>
-            <div className="flex-1">
-              <span className="font-medium text-[#003366]">{item.changedBy.username}</span>
-              <span className="mx-2">{item.description}</span>
+    <div className="space-y-3">
+      {historico.map((item) => (
+        <div
+          key={item.id}
+          className="flex items-start space-x-3 bg-white p-3 rounded-md shadow-sm"
+        >
+          <User className="w-5 h-5 text-construction-600 mt-1" />
+          <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-construction-800">
+                {item.changedBy.username}
+              </span>
+              <span className="text-sm text-construction-500">
+                {format(new Date(item.timestamp), 'dd/MM/yyyy HH:mm')}
+              </span>
             </div>
+            <p className="text-construction-700 mt-1">{item.description}</p>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 };
