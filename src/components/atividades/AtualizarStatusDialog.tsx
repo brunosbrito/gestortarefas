@@ -71,13 +71,19 @@ export function AtualizarStatusDialog({
 
       // Combinar data e hora em um único campo ISO
       if (novoStatus === 'Em execução') {
-        formattedData.startDate = new Date(`${data.startDate}T${data.startTime}`).toISOString();
+        formattedData.startDate = new Date(
+          `${data.startDate}T${data.startTime}`
+        ).toISOString();
         delete formattedData.startTime;
       } else if (novoStatus === 'Concluídas') {
-        formattedData.endDate = new Date(`${data.endDate}T${data.endTime}`).toISOString();
+        formattedData.endDate = new Date(
+          `${data.endDate}T${data.endTime}`
+        ).toISOString();
         delete formattedData.endTime;
       } else if (novoStatus === 'Paralizadas') {
-        formattedData.pauseDate = new Date(`${data.pauseDate}T${data.pauseTime}`).toISOString();
+        formattedData.pauseDate = new Date(
+          `${data.pauseDate}T${data.pauseTime}`
+        ).toISOString();
         delete formattedData.pauseTime;
       }
 

@@ -14,6 +14,7 @@ export interface Activity {
   estimatedTime?: string;
   actualTime?: number;
   startDate?: string;
+  endDate?: string;
   pauseDate?: string;
   createdAt: string;
   updatedAt: string;
