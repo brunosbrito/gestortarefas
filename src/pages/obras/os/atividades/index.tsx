@@ -14,6 +14,9 @@ import { StatusList } from '@/components/atividades/StatusList';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useParams } from 'react-router-dom';
 import { getActivitiesByServiceOrderId } from '@/services/ActivityService';
+import { DragDropContext } from 'react-beautiful-dnd';
+import { AtualizarStatusDialog } from '@/components/atividades/AtualizarStatusDialog';
+import { useToast } from '@/hooks/use-toast';
 
 const statusListas = [
   'Planejadas',
@@ -25,7 +28,13 @@ const statusListas = [
 const Atividades = () => {
   const [atividades, setAtividades] = useState<AtividadeStatus[]>([]);
   const [openNovaAtividade, setOpenNovaAtividade] = useState(false);
+  const [dialogStatus, setDialogStatus] = useState({
+    open: false,
+    atividade: null,
+    novoStatus: '',
+  });
   const { projectId, serviceOrderId } = useParams();
+  const { toast } = useToast();
 
   const getByServiceOrderId = async () => {
     try {
@@ -39,6 +48,24 @@ const Atividades = () => {
   useEffect(() => {
     getByServiceOrderId();
   }, []);
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const { source, destination, draggableId } = result;
+    
+    if (source.droppableId === destination.droppableId) return;
+
+    const atividade = atividades.find(a => a.id === Number(draggableId));
+    
+    if (atividade) {
+      setDialogStatus({
+        open: true,
+        atividade,
+        novoStatus: destination.droppableId,
+      });
+    }
+  };
 
   return (
     <Layout>
@@ -66,11 +93,26 @@ const Atividades = () => {
           </Dialog>
         </div>
 
-        <div className="flex gap-6 overflow-x-auto pb-4">
-          {statusListas.map((status) => (
-            <StatusList key={status} status={status} atividades={atividades} />
-          ))}
-        </div>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {statusListas.map((status) => (
+              <StatusList 
+                key={status} 
+                status={status} 
+                atividades={atividades}
+                droppableId={status}
+              />
+            ))}
+          </div>
+        </DragDropContext>
+
+        <AtualizarStatusDialog
+          open={dialogStatus.open}
+          onOpenChange={(open) => setDialogStatus(prev => ({ ...prev, open }))}
+          atividade={dialogStatus.atividade}
+          novoStatus={dialogStatus.novoStatus}
+          onSuccess={getByServiceOrderId}
+        />
       </div>
     </Layout>
   );

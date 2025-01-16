@@ -32,14 +32,22 @@ import { useParams } from 'react-router-dom';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
+  index: number;
 }
 
-export const AtividadeCard = ({ atividade }: AtividadeCardProps) => {
+export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
   const { toast } = useToast();
   const { projectId, serviceOrderId } = useParams();
 
   return (
-    <Card className="bg-white cursor-move hover:shadow-md transition-shadow">
+    <Draggable draggableId={String(atividade.id)} index={index}>
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+        >
+          <Card className="bg-white hover:shadow-md transition-shadow">
       <CardHeader className="p-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">
@@ -133,6 +141,9 @@ export const AtividadeCard = ({ atividade }: AtividadeCardProps) => {
           </Button>
         </div>
       </CardFooter>
-    </Card>
+          </Card>
+        </div>
+      )}
+    </Draggable>
   );
 };

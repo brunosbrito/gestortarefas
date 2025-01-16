@@ -1,13 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { AtividadeCard } from './AtividadeCard';
+import { Droppable } from 'react-beautiful-dnd';
 
 interface StatusListProps {
   status: string;
   atividades: AtividadeStatus[];
+  droppableId: string;
 }
 
-export const StatusList = ({ status, atividades }: StatusListProps) => {
+export const StatusList = ({ status, atividades, droppableId }: StatusListProps) => {
   const atividadesFiltradas = atividades.filter((a) => a.status === status);
 
   return (
@@ -17,11 +19,24 @@ export const StatusList = ({ status, atividades }: StatusListProps) => {
           <h3 className="font-semibold text-lg">{status}</h3>
           <Badge variant="outline">{atividadesFiltradas.length}</Badge>
         </div>
-        <div className="space-y-3">
-          {atividadesFiltradas.map((atividade) => (
-            <AtividadeCard key={atividade.id} atividade={atividade} />
-          ))}
-        </div>
+        <Droppable droppableId={droppableId}>
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="space-y-3"
+            >
+              {atividadesFiltradas.map((atividade, index) => (
+                <AtividadeCard 
+                  key={atividade.id} 
+                  atividade={atividade} 
+                  index={index}
+                />
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
       </div>
     </div>
   );
