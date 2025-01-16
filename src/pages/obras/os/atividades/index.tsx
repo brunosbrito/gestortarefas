@@ -16,7 +16,6 @@ import { useParams } from 'react-router-dom';
 import { getActivitiesByServiceOrderId } from '@/services/ActivityService';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { AtualizarStatusDialog } from '@/components/atividades/AtualizarStatusDialog';
-import { useToast } from '@/hooks/use-toast';
 
 const statusListas = [
   'Planejadas',
@@ -28,13 +27,16 @@ const statusListas = [
 const Atividades = () => {
   const [atividades, setAtividades] = useState<AtividadeStatus[]>([]);
   const [openNovaAtividade, setOpenNovaAtividade] = useState(false);
-  const [dialogStatus, setDialogStatus] = useState({
+  const [dialogStatus, setDialogStatus] = useState<{
+    open: boolean;
+    atividade: AtividadeStatus | null;
+    novoStatus: string;
+  }>({
     open: false,
     atividade: null,
     novoStatus: '',
   });
   const { projectId, serviceOrderId } = useParams();
-  const { toast } = useToast();
 
   const getByServiceOrderId = async () => {
     try {
@@ -54,16 +56,17 @@ const Atividades = () => {
 
     const { source, destination, draggableId } = result;
 
-    if (source.droppableId === destination.droppableId) return;
+    // Se a lista de destino for diferente da lista de origem
+    if (source.droppableId !== destination.droppableId) {
+      const atividade = atividades.find((a) => a.id === Number(draggableId));
 
-    const atividade = atividades.find((a) => a.id === Number(draggableId));
-
-    if (atividade) {
-      setDialogStatus({
-        open: true,
-        atividade,
-        novoStatus: destination.droppableId,
-      });
+      if (atividade) {
+        setDialogStatus({
+          open: true,
+          atividade,
+          novoStatus: destination.droppableId,
+        });
+      }
     }
   };
 
