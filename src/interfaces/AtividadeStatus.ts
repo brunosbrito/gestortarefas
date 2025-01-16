@@ -24,4 +24,6 @@ export interface AtividadeStatus {
   };
   createdBy: User;
   status: 'Planejadas' | 'Em execução' | 'Concluídas' | 'Paralizadas';
+  totalTime: number;
+  originalStartDate: string;
 }

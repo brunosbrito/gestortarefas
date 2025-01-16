@@ -21,6 +21,7 @@ import {
   Edit2,
   Eye,
   GripHorizontal,
+  Hourglass,
   Upload,
   User,
   Users,
@@ -45,6 +46,20 @@ interface AtividadeCardProps {
 export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
   const { toast } = useToast();
   const { projectId, serviceOrderId } = useParams();
+
+  function formatTime(totalTime) {
+    // Verifica se o totalTime é um número válido
+    if (isNaN(totalTime) || totalTime <= 0) return '00:00';
+
+    const hours = Math.floor(totalTime); // Pega a parte inteira (horas)
+    const minutes = Math.round((totalTime - hours) * 60); // Calcula os minutos
+
+    // Formata horas e minutos com dois dígitos
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+      2,
+      '0'
+    )}`;
+  }
 
   return (
     <Draggable draggableId={String(atividade.id)} index={index}>
@@ -82,15 +97,21 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                   <Clock className="w-4 h-4 mr-2" />
                   {atividade.status === 'Em execução'
                     ? `Em execução (${format(
-                        new Date(atividade.startDate),
-                        'dd/MM/yyyy'
+                        new Date(atividade.originalStartDate),
+                        'dd/MM/yyyy hh:mm'
                       )})`
-                    : `Concluída (${format(
-                        new Date(atividade.startDate),
+                    : `Data Conclusão: ${format(
+                        new Date(atividade.originalStartDate),
                         'dd/MM/yyyy'
-                      )})`}
+                      )}`}
                 </div>
               )}
+
+              <div className="flex items-center mb-2">
+                <Hourglass className="w-4 h-4 mr-2" />
+                Tempo Atividade: {formatTime(atividade.totalTime)}
+              </div>
+
               <div className="flex items-center mb-2">
                 <Users className="w-4 h-4 mr-2" />
                 Equipe:{' '}
@@ -163,8 +184,8 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                           </p>
                           <p className="text-construction-800">
                             {format(
-                              new Date(atividade.startDate),
-                              'dd/MM/yyyy'
+                              new Date(atividade.originalStartDate),
+                              'dd/MM/yyyy hh:mm'
                             )}
                           </p>
                         </div>
@@ -176,7 +197,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                             <p className="text-construction-800">
                               {format(
                                 new Date(atividade.endDate),
-                                'dd/MM/yyyy'
+                                'dd/MM/yyyy hh:mm'
                               )}
                             </p>
                           </div>
