@@ -1,6 +1,6 @@
 export interface Colaborador {
   id: number;
-  nome: string;
+  name: string;
   cargo: string;
   email: string;
   telefone: string;
@@ -9,7 +9,7 @@ export interface Colaborador {
 }
 
 export interface CreateColaborador {
-  nome: string;
+  name: string;
   cargo: string;
   email: string;
   telefone: string;

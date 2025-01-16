@@ -14,7 +14,7 @@ import { StatusList } from '@/components/atividades/StatusList';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useParams } from 'react-router-dom';
 import { getActivitiesByServiceOrderId } from '@/services/ActivityService';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { AtualizarStatusDialog } from '@/components/atividades/AtualizarStatusDialog';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,15 +49,15 @@ const Atividades = () => {
     getByServiceOrderId();
   }, []);
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
     const { source, destination, draggableId } = result;
-    
+
     if (source.droppableId === destination.droppableId) return;
 
-    const atividade = atividades.find(a => a.id === Number(draggableId));
-    
+    const atividade = atividades.find((a) => a.id === Number(draggableId));
+
     if (atividade) {
       setDialogStatus({
         open: true,
@@ -96,9 +96,9 @@ const Atividades = () => {
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="flex gap-6 overflow-x-auto pb-4">
             {statusListas.map((status) => (
-              <StatusList 
-                key={status} 
-                status={status} 
+              <StatusList
+                key={status}
+                status={status}
                 atividades={atividades}
                 droppableId={status}
               />
@@ -108,7 +108,9 @@ const Atividades = () => {
 
         <AtualizarStatusDialog
           open={dialogStatus.open}
-          onOpenChange={(open) => setDialogStatus(prev => ({ ...prev, open }))}
+          onOpenChange={(open) =>
+            setDialogStatus((prev) => ({ ...prev, open }))
+          }
           atividade={dialogStatus.atividade}
           novoStatus={dialogStatus.novoStatus}
           onSuccess={getByServiceOrderId}
