@@ -14,7 +14,7 @@ export const StatusList = ({ status, atividades, droppableId }: StatusListProps)
 
   return (
     <div className="flex-none w-80">
-      <div className="bg-gray-100 rounded-lg p-4">
+      <div className="bg-gray-100 rounded-lg p-4 h-full">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg">{status}</h3>
           <Badge variant="outline">{atividadesFiltradas.length}</Badge>
@@ -24,7 +24,8 @@ export const StatusList = ({ status, atividades, droppableId }: StatusListProps)
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="space-y-3"
+              className="space-y-3 overflow-y-auto max-h-[calc(100vh-200px)]"
+              style={{ minHeight: '50px' }}
             >
               {atividadesFiltradas.map((atividade, index) => (
                 <AtividadeCard 
