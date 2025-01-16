@@ -5,23 +5,20 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Building2, ClipboardList, Activity, User, Check, MapPin, Eye, Edit, Pause } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NovaOSForm } from "@/components/obras/os/NovaOSForm";
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { NovaObraForm } from "@/components/obras/NovaObraForm";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { Obra } from "@/interfaces/ObrasInterface";
 import ObrasService from "@/services/ObrasService";
 import { EditObraForm } from "@/components/obras/EditObraForm";
-import { ObraDetalhesDialog } from "@/components/dashboard/ObraDetalhesDialog";
 
 const Obras = () => {
   const [obras, setObras] = useState<Obra[]>([]);
   const [open, setOpen] = useState(false);
   const [obraSelecionada, setObraSelecionada] = useState<Obra | null>(null);
-  const [dialogVisualizarAberto, setDialogVisualizarAberto] = useState(false);
   const [dialogEditarAberto, setDialogEditarAberto] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { obraId } = useParams();
 
   const fetchObras = async () => {
     try {
@@ -84,7 +81,7 @@ const Obras = () => {
           <h1 className="text-3xl font-bold text-construction-800">Obras</h1>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="btn-secondary">
+              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Obra
               </Button>
@@ -93,7 +90,14 @@ const Obras = () => {
               <DialogHeader>
                 <DialogTitle>Cadastrar Nova Obra</DialogTitle>
               </DialogHeader>
-              <NovaOSForm onSubmit={() => setOpen(false)} />
+              <NovaObraForm onSuccess={() => {
+                setOpen(false);
+                fetchObras();
+                toast({
+                  title: "Obra criada",
+                  description: "A obra foi criada com sucesso!",
+                });
+              }} />
             </DialogContent>
           </Dialog>
         </div>
@@ -139,17 +143,6 @@ const Obras = () => {
                   <ClipboardList className="w-4 h-4 mr-2" />
                   Ordens
                 </Button>
-                <Button
-                  variant="outline"
-                  className="hover:bg-secondary/20"
-                  onClick={() => {
-                    setObraSelecionada(obra);
-                    setDialogVisualizarAberto(true);
-                  }}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Visualizar
-                </Button>
                 {obra.status !== "finalizado" && (
                   <Button
                     variant="outline"
@@ -167,21 +160,6 @@ const Obras = () => {
             </Card>
           ))}
         </div>
-
-        {/* Modal de Visualização */}
-        <ObraDetalhesDialog
-          obra={obraSelecionada ? {
-            nome: obraSelecionada.name,
-            status: obraSelecionada.status,
-            dataInicio: obraSelecionada.startDate,
-            dataFim: obraSelecionada.endDate,
-            horasTrabalhadas: 0,
-            atividades: [],
-            historico: []
-          } : null}
-          open={dialogVisualizarAberto}
-          onOpenChange={setDialogVisualizarAberto}
-        />
 
         {/* Modal de Edição */}
         <Dialog open={dialogEditarAberto} onOpenChange={setDialogEditarAberto}>

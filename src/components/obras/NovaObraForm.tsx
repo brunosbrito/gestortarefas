@@ -37,10 +37,6 @@ export const NovaObraForm = ({ onSuccess }: NovaObraFormProps) => {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       await ObrasService.createObra(data as Obra);
-      toast({
-        title: "Obra criada",
-        description: "A obra foi criada com sucesso!",
-      });
       onSuccess();
     } catch (error) {
       toast({
