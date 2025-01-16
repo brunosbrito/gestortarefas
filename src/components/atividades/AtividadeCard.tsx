@@ -29,6 +29,7 @@ import { NovaAtividadeForm } from './NovaAtividadeForm';
 import { useToast } from '@/hooks/use-toast';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useParams } from 'react-router-dom';
+import { Draggable } from 'react-beautiful-dnd';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
