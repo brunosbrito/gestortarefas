@@ -87,7 +87,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                 <Users className="w-4 h-4 mr-2" />
                 Equipe:{' '}
                 {atividade.collaborators
-                  ?.map((collaborator) => collaborator.nome)
+                  ?.map((collaborator) => collaborator.name)
                   .join(', ')}
               </div>
               <div className="flex items-center mb-2">

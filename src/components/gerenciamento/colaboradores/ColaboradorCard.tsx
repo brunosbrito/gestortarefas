@@ -13,7 +13,7 @@ export const ColaboradorCard = ({ colaborador, onEdit, onView }: ColaboradorCard
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{colaborador.nome}</CardTitle>
+        <CardTitle>{colaborador.name}</CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-500">{colaborador.cargo}</p>

@@ -9,7 +9,7 @@ export const ColaboradorDetalhes = ({ colaborador }: ColaboradorDetalhesProps) =
     <div className="space-y-4">
       <div>
         <h4 className="font-semibold">Nome</h4>
-        <p>{colaborador.nome}</p>
+        <p>{colaborador.name}</p>
       </div>
       <div>
         <h4 className="font-semibold">Cargo</h4>

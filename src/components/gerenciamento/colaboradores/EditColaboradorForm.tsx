@@ -16,7 +16,7 @@ export const EditColaboradorForm = ({ colaborador, onSuccess }: EditColaboradorF
   const form = useForm<ColaboradorFormValues>({
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
-      nome: colaborador.nome,
+      nome: colaborador.name,
       cargo: colaborador.cargo,
       email: colaborador.email,
       telefone: colaborador.telefone,

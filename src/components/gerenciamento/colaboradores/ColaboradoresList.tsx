@@ -14,6 +14,7 @@ export const ColaboradoresList = () => {
   const colaboradores: Colaborador[] = [
     {
       id: 1,
+      name: "João Silva",
       nome: "João Silva",
       cargo: "Engenheiro Civil",
       email: "joao@exemplo.com",
