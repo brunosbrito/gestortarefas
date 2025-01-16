@@ -90,6 +90,7 @@ export function AtualizarStatusDialog({
       await updateActivity(atividade.id, {
         ...formattedData,
         status: novoStatus,
+        changedBy: Number(localStorage.getItem('userId')),
       });
 
       toast({
@@ -143,12 +144,12 @@ export function AtualizarStatusDialog({
                     <FormItem>
                       <FormLabel>Hora de Início</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="time" 
-                          step="1" 
-                          min="00:00" 
+                        <Input
+                          type="time"
+                          step="1"
+                          min="00:00"
                           max="23:59"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -181,12 +182,12 @@ export function AtualizarStatusDialog({
                       <FormItem>
                         <FormLabel>Hora de Conclusão</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="time" 
-                            step="1" 
-                            min="00:00" 
+                          <Input
+                            type="time"
+                            step="1"
+                            min="00:00"
                             max="23:59"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -224,12 +225,12 @@ export function AtualizarStatusDialog({
                       <FormItem>
                         <FormLabel>Hora de Paralização</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="time" 
-                            step="1" 
-                            min="00:00" 
+                          <Input
+                            type="time"
+                            step="1"
+                            min="00:00"
                             max="23:59"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
