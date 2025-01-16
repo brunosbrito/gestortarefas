@@ -19,14 +19,13 @@ type FormValues = z.infer<typeof formSchema>;
 interface AtualizarHorasFormProps {
   atividade: {
     equipe?: string[];
-    tarefaMacro: string;
-    processo: string;
   };
 }
 
 export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(true);
+  const [isValid, setIsValid] = useState(false);
 
   const defaultValues = {
     horasColaboradores: atividade.equipe?.map(colaborador => ({
@@ -40,7 +39,22 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
     defaultValues
   });
 
+  const validateForm = (values: FormValues) => {
+    const allHorasPreenchidas = values.horasColaboradores.every(item => item.horas > 0);
+    setIsValid(allHorasPreenchidas);
+    return allHorasPreenchidas;
+  };
+
   const onSubmit = (data: FormValues) => {
+    if (!validateForm(data)) {
+      toast({
+        title: "Atenção",
+        description: "Preencha as horas de todos os colaboradores antes de confirmar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     console.log(data);
     toast({
       title: "Horas atualizadas com sucesso!",
@@ -52,14 +66,9 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="mb-4">
-          <p className="text-sm font-medium">Tarefa Macro: {atividade.tarefaMacro}</p>
-          <p className="text-sm font-medium">Processo: {atividade.processo}</p>
-        </div>
-        
         <div className="space-y-4">
           {form.watch("horasColaboradores").map((campo, index) => (
-            <div key={index} className="flex gap-4 items-center">
+            <div key={index} className="flex gap-4 items-center bg-gray-50 p-4 rounded-lg">
               <FormField
                 control={form.control}
                 name={`horasColaboradores.${index}.colaborador`}
@@ -67,7 +76,7 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
                   <FormItem className="flex-1">
                     <FormLabel>Colaborador</FormLabel>
                     <FormControl>
-                      <Input {...field} readOnly />
+                      <Input {...field} readOnly className="bg-white" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -83,7 +92,11 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
                       <Input 
                         type="number" 
                         {...field} 
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                          validateForm(form.getValues());
+                        }}
+                        className="bg-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -94,7 +107,11 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
           ))}
         </div>
 
-        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+        <Button 
+          type="submit" 
+          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+          disabled={!isValid}
+        >
           Atualizar Horas
         </Button>
       </form>
