@@ -44,6 +44,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
 
   const historicoExemplo = [
     {
+      id: 1,
       status: 'Criada',
       description: 'Atividade criada',
       changedBy: {
@@ -57,6 +58,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
       timestamp: new Date('2024-01-16T10:00:00')
     },
     {
+      id: 2,
       status: 'Em execução',
       description: 'Atividade iniciada',
       changedBy: {
