@@ -1,11 +1,34 @@
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, Calendar, Edit2, Eye, GripHorizontal, Upload } from "lucide-react";
-import { NovaAtividadeForm } from "./NovaAtividadeForm";
-import { useToast } from "@/hooks/use-toast";
-import { AtividadeStatus } from "@/interfaces/AtividadeStatus";
-import { useParams } from "react-router-dom";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Building2,
+  Calendar,
+  ClipboardList,
+  Clock,
+  Edit2,
+  Eye,
+  GripHorizontal,
+  Upload,
+  User,
+  Users,
+} from 'lucide-react';
+import { NovaAtividadeForm } from './NovaAtividadeForm';
+import { useToast } from '@/hooks/use-toast';
+import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
+import { useParams } from 'react-router-dom';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -26,13 +49,42 @@ export const AtividadeCard = ({ atividade }: AtividadeCardProps) => {
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0 text-sm text-gray-500">
-        <div className="flex items-center">
+        <div className="flex items-center mb-2">
           <Building2 className="w-4 h-4 mr-2" />
-          {atividade.obra}
+          {atividade.project?.name} {/* Nome da obra */}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center mb-2">
+          <ClipboardList className="w-4 h-4 mr-2" />
+          OS Nº: {atividade.serviceOrder.serviceOrderNumber}{' '}
+          {/* Número da OS */}
+        </div>
+        <div className="flex items-center mb-2">
           <Calendar className="w-4 h-4 mr-2" />
-          Prazo: {new Date(atividade.prazo).toLocaleDateString('pt-BR')}
+          Data Criação:{' '}
+          {new Date(atividade.startDate).toLocaleDateString('pt-BR')}
+        </div>
+        {atividade.status !== 'Planejadas' && (
+          <div className="flex items-center mb-2">
+            <Clock className="w-4 h-4 mr-2" />
+            {atividade.status === 'Em Execução'
+              ? `Em execução (${new Date(
+                  atividade.startDate
+                ).toLocaleDateString('pt-BR')})`
+              : `Concluída (${new Date(atividade.startDate).toLocaleDateString(
+                  'pt-BR'
+                )})`}
+          </div>
+        )}
+        <div className="flex items-center mb-2">
+          <Users className="w-4 h-4 mr-2" />
+          Equipe:{' '}
+          {atividade.collaborators
+            ?.map((collaborator) => collaborator.name)
+            .join(', ')}
+        </div>
+        <div className="flex items-center mb-2">
+          <User className="w-4 h-4 mr-2" /> Criado por:{' '}
+          {atividade.createdBy?.username} {/* Nome do responsável */}
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between">
@@ -60,7 +112,7 @@ export const AtividadeCard = ({ atividade }: AtividadeCardProps) => {
               <DialogHeader>
                 <DialogTitle>Editar Atividade</DialogTitle>
               </DialogHeader>
-              <NovaAtividadeForm 
+              <NovaAtividadeForm
                 editMode={true}
                 projectId={Number(projectId)}
                 orderServiceId={Number(serviceOrderId)}
@@ -72,8 +124,8 @@ export const AtividadeCard = ({ atividade }: AtividadeCardProps) => {
             size="sm"
             onClick={() => {
               toast({
-                title: "Upload de imagem",
-                description: "Funcionalidade será implementada em breve",
+                title: 'Upload de imagem',
+                description: 'Funcionalidade será implementada em breve',
               });
             }}
           >

@@ -20,4 +20,5 @@ export interface Activity {
   collaborators: number[];
   projectId: number;
   orderServiceId: number;
+  createdBy: number;
 }

@@ -1,11 +1,11 @@
 export interface Colaborador {
   id: number;
-  nome: string;
+  name: string;
   cargo: string;
   email: string;
   telefone: string;
   dataAdmissao: string;
-  status: "ativo" | "inativo";
+  status: 'ativo' | 'inativo';
 }
 
 export interface CreateColaborador {
@@ -14,5 +14,5 @@ export interface CreateColaborador {
   email: string;
   telefone: string;
   dataAdmissao: string;
-  status: "ativo" | "inativo";
+  status: 'ativo' | 'inativo';
 }

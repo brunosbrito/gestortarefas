@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000';  // Defina a URL base da sua API
+const API_URL = 'http://localhost:3000'; // Defina a URL base da sua API
 
 // Função para criar uma nova atividade
 export const createActivity = async (activityData) => {
@@ -24,10 +24,25 @@ export const getAllActivities = async () => {
   }
 };
 
+export const getActivitiesByServiceOrderId = async (serviceOrderId) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/activities/service-order/${serviceOrderId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching activities', error);
+    throw error;
+  }
+};
+
 // Função para atualizar uma atividade
 export const updateActivity = async (id, activityData) => {
   try {
-    const response = await axios.put(`${API_URL}/activities/${id}`, activityData);
+    const response = await axios.put(
+      `${API_URL}/activities/${id}`,
+      activityData
+    );
     return response.data;
   } catch (error) {
     console.error('Error updating activity', error);

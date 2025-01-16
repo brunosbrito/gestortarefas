@@ -48,6 +48,7 @@ const formSchema = z.object({
   estimatedTime: z.string().optional(),
   projectId: z.number(),
   orderServiceId: z.number(),
+  createdBy: z.number(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -89,6 +90,7 @@ export function NovaAtividadeForm({
     estimatedTime: atividadeInicial?.estimatedTime || '',
     projectId: projectId,
     orderServiceId: orderServiceId,
+    createdBy: Number(localStorage.getItem('userId')) || 0,
   };
 
   const getTarefasMacro = async () => {
