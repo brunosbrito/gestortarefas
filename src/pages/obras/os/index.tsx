@@ -25,6 +25,7 @@ import {
   Eye,
   Edit,
   Hash,
+  FileText,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaOSForm } from '@/components/obras/os/NovaOSForm';
@@ -135,6 +136,10 @@ const OrdensServico = () => {
                 <div className="flex items-center space-x-2 text-sm">
                   <Building2 className="w-4 h-4 text-gray-500" />
                   <span>{os.projectId.name}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  <span>Nº Projeto: {os.projectNumber}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Calendar className="w-4 h-4 text-gray-500" />
