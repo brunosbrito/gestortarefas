@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -9,6 +9,8 @@ import { PontoTable } from "@/components/registro-ponto/PontoTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEffectivesByShiftAndDate } from "@/services/EffectiveService";
 import { useQuery } from "@tanstack/react-query";
+import ObrasService from "@/services/ObrasService";
+import ColaboradorService from "@/services/ColaboradorService";
 
 interface Funcionario {
   id: number;
@@ -20,22 +22,34 @@ interface Funcionario {
   motivoFalta?: string;
 }
 
-const obras = ["Obra A", "Obra B", "Obra C"];
-const colaboradores = ["João Silva", "Maria Santos", "Pedro Alves"];
-
 const RegistroPonto = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
   const [currentTurno, setCurrentTurno] = useState("1");
 
-  const { data: funcionarios = [], isLoading, error } = useQuery({
+  const { data: funcionarios = [], isLoading: isLoadingFuncionarios, error: funcionariosError } = useQuery({
     queryKey: ['efectivos', currentTurno],
     queryFn: () => getEffectivesByShiftAndDate(currentTurno),
   });
 
-  const handleDelete = (id: number) => {
-    setFuncionarios(prev => prev.filter(f => f.id !== id));
+  const { data: obras = [], isLoading: isLoadingObras } = useQuery({
+    queryKey: ['obras'],
+    queryFn: async () => {
+      const response = await ObrasService.getAllObras();
+      return response.map(obra => obra.name);
+    },
+  });
+
+  const { data: colaboradores = [], isLoading: isLoadingColaboradores } = useQuery({
+    queryKey: ['colaboradores'],
+    queryFn: async () => {
+      const response = await ColaboradorService.getAllColaboradores();
+      return response.data.map(col => col.name);
+    },
+  });
+
+  const handleDelete = async (id: number) => {
     toast.success("Registro excluído com sucesso");
   };
 
@@ -46,7 +60,7 @@ const RegistroPonto = () => {
 
   const onSubmit = (data: any) => {
     const novoFuncionario: Funcionario = {
-      id: funcionarios.length + 1,
+      id: Math.random(),
       nome: data.colaborador,
       setor: data.tipo === "PRODUCAO" ? "PRODUCAO" : "ADMINISTRATIVO",
       status: data.tipo === "FALTA" ? "FALTA" : "PRESENTE",
@@ -55,31 +69,19 @@ const RegistroPonto = () => {
       motivoFalta: data.motivoFalta
     };
 
-    setFuncionarios(prev => [...prev, novoFuncionario]);
     setIsDialogOpen(false);
+    toast.success("Registro adicionado com sucesso");
   };
 
   const onEditSubmit = (data: any) => {
     if (!selectedFuncionario) return;
 
-    const funcionarioAtualizado: Funcionario = {
-      ...selectedFuncionario,
-      nome: data.colaborador,
-      setor: data.tipo === "PRODUCAO" ? "PRODUCAO" : "ADMINISTRATIVO",
-      status: data.tipo === "FALTA" ? "FALTA" : "PRESENTE",
-      turno: Number(data.turno) as 1 | 2 | 3,
-      obra: data.obra,
-      motivoFalta: data.motivoFalta
-    };
-
-    setFuncionarios(prev => 
-      prev.map(f => f.id === selectedFuncionario.id ? funcionarioAtualizado : f)
-    );
     setIsEditDialogOpen(false);
     setSelectedFuncionario(null);
+    toast.success("Registro atualizado com sucesso");
   };
 
-  if (isLoading) {
+  if (isLoadingFuncionarios || isLoadingObras || isLoadingColaboradores) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-full">
@@ -89,7 +91,7 @@ const RegistroPonto = () => {
     );
   }
 
-  if (error) {
+  if (funcionariosError) {
     toast.error("Erro ao carregar registros. Tente novamente.");
   }
 
