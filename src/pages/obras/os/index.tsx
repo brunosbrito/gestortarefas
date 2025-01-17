@@ -24,6 +24,7 @@ import {
   User,
   Eye,
   Edit,
+  Hash,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaOSForm } from '@/components/obras/os/NovaOSForm';
@@ -145,6 +146,10 @@ const OrdensServico = () => {
                   <User className="w-4 h-4 text-gray-500" />
                   <span>Usuário: {os.assignedUser?.username || ''} </span>
                 </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <Hash className="w-4 h-4 text-gray-500" />
+                  <span>Quantidade: {os.quantity || 0}/0</span>
+                </div>
               </CardContent>
               <CardFooter className="flex gap-2">
                 <Button
@@ -186,6 +191,7 @@ const OrdensServico = () => {
           os={selectedOS}
           open={visualizarDialogOpen}
           onOpenChange={setVisualizarDialogOpen}
+          onUpdateProgress={getServiceOrders}
         />
 
         <EditarOSDialog
