@@ -32,7 +32,7 @@ const Atividades = () => {
   const [obra, setObra] = useState<Obra | null>(null);
   const [dialogStatus, setDialogStatus] = useState<{
     open: boolean;
-    atividade: AtividadeStatus | null;
+    atividade: { id: string; collaborators?: Colaborador[] } | null;
     novoStatus: string;
   }>({
     open: false,
@@ -79,7 +79,10 @@ const Atividades = () => {
       if (atividade) {
         setDialogStatus({
           open: true,
-          atividade,
+          atividade: {
+            id: String(atividade.id),
+            collaborators: atividade.collaborators
+          },
           novoStatus: destination.droppableId,
         });
       }
