@@ -27,7 +27,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 const emExecucaoSchema = z.object({
   startDate: z.string().min(1, 'Data de início é obrigatória'),
@@ -46,13 +46,15 @@ const paralizadaSchema = z.object({
 });
 
 const motivosParalizacao = [
-  "Falta de material",
-  "Condições climáticas",
-  "Falta de mão de obra",
-  "Problemas técnicos",
-  "Aguardando aprovação",
-  "Interferência com outras atividades",
-  "Outros"
+  'Falta de material',
+  'Falta de mão de obra',
+  'Mudança turno',
+  'Quebra/Manutenção',
+  'Falha Projeto',
+  'Erro Operador',
+  'Falta de ferramenta',
+  'Falta itens',
+  'Outros',
 ];
 
 interface AtualizarStatusDialogProps {
@@ -325,7 +327,10 @@ export function AtualizarStatusDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Motivo</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o motivo" />
