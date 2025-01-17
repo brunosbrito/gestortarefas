@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Colaborador } from "@/interfaces/ColaboradorInterface";
+import ColaboradorService from "@/services/ColaboradorService";
 import { ColaboradorFormFields, colaboradorFormSchema, ColaboradorFormValues } from "./ColaboradorFormFields";
 
 interface EditColaboradorFormProps {
@@ -16,7 +17,7 @@ export const EditColaboradorForm = ({ colaborador, onSuccess }: EditColaboradorF
   const form = useForm<ColaboradorFormValues>({
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
-      nome: colaborador.name,
+      name: colaborador.name,
       cargo: colaborador.cargo,
       email: colaborador.email,
       telefone: colaborador.telefone,
@@ -27,7 +28,7 @@ export const EditColaboradorForm = ({ colaborador, onSuccess }: EditColaboradorF
 
   const onSubmit = async (data: ColaboradorFormValues) => {
     try {
-      // Implementar a chamada à API aqui
+      await ColaboradorService.updateColaborador(colaborador.id, data);
       toast({
         title: "Colaborador atualizado",
         description: "As informações do colaborador foram atualizadas com sucesso.",
@@ -46,7 +47,9 @@ export const EditColaboradorForm = ({ colaborador, onSuccess }: EditColaboradorF
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <ColaboradorFormFields form={form} />
-        <Button type="submit" className="w-full">Atualizar Colaborador</Button>
+        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+          Atualizar Colaborador
+        </Button>
       </form>
     </Form>
   );

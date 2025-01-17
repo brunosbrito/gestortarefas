@@ -5,7 +5,7 @@ import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
 export const colaboradorFormSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
+  name: z.string().min(1, "Nome é obrigatório"),
   cargo: z.string().min(1, "Cargo é obrigatório"),
   email: z.string().email("Email inválido"),
   telefone: z.string().min(1, "Telefone é obrigatório"),
@@ -24,7 +24,7 @@ export const ColaboradorFormFields = ({ form }: ColaboradorFormFieldsProps) => {
     <>
       <FormField
         control={form.control}
-        name="nome"
+        name="name"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Nome</FormLabel>

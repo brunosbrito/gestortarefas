@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import ColaboradorService from "@/services/ColaboradorService";
 import { ColaboradorFormFields, colaboradorFormSchema, ColaboradorFormValues } from "./ColaboradorFormFields";
 
 interface NovoColaboradorFormProps {
@@ -20,11 +21,12 @@ export const NovoColaboradorForm = ({ onSuccess }: NovoColaboradorFormProps) => 
 
   const onSubmit = async (data: ColaboradorFormValues) => {
     try {
-      // Implementar a chamada à API aqui
+      await ColaboradorService.createColaborador(data);
       toast({
         title: "Colaborador adicionado",
         description: "O colaborador foi adicionado com sucesso.",
       });
+      form.reset();
       if (onSuccess) onSuccess();
     } catch (error) {
       toast({
@@ -39,7 +41,9 @@ export const NovoColaboradorForm = ({ onSuccess }: NovoColaboradorFormProps) => 
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <ColaboradorFormFields form={form} />
-        <Button type="submit" className="w-full">Adicionar Colaborador</Button>
+        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+          Adicionar Colaborador
+        </Button>
       </form>
     </Form>
   );
