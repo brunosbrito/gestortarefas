@@ -1,68 +1,185 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Colaborador } from "@/interfaces/ColaboradorInterface";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit2, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EditColaboradorForm } from "./EditColaboradorForm";
-import { ColaboradorCard } from "./ColaboradorCard";
-import { ColaboradorDetalhes } from "./ColaboradorDetalhes";
+import { Colaborador } from "@/interfaces/ColaboradorInterface";
+import ColaboradorService from "@/services/ColaboradorService";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-export const ColaboradoresList = () => {
-  const [dialogEditarAberto, setDialogEditarAberto] = useState(false);
-  const [dialogVisualizarAberto, setDialogVisualizarAberto] = useState(false);
-  const [colaboradorSelecionado, setColaboradorSelecionado] = useState<Colaborador | null>(null);
+interface ColaboradoresListProps {
+  reload: boolean;
+}
 
-  // Mock data - substituir por chamada à API
-  const colaboradores: Colaborador[] = [
-    {
-      id: 1,
-      name: "João Silva",
-      nome: "João Silva",
-      cargo: "Engenheiro Civil",
-      email: "joao@exemplo.com",
-      telefone: "(11) 99999-9999",
-      dataAdmissao: "2024-01-01",
-      status: "ativo",
-    },
-  ];
+export function ColaboradoresList({ reload }: ColaboradoresListProps) {
+  const [listColaboradores, setListColaboradores] = useState<Colaborador[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const getColaboradores = async () => {
+    try {
+      const response = await ColaboradorService.getAllColaboradores();
+      setListColaboradores(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Erro ao buscar os colaboradores:', err);
+      setError('Não foi possível carregar os colaboradores. Tente novamente mais tarde.');
+    }
+  };
+
+  useState(() => {
+    getColaboradores();
+  }, [reload]);
+
+  const handleDeleteClick = (colaborador: Colaborador) => {
+    setSelectedColaborador(colaborador);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditClick = (colaborador: Colaborador) => {
+    setSelectedColaborador(colaborador);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedColaborador) return;
+
+    try {
+      await ColaboradorService.deleteColaborador(selectedColaborador.id);
+      toast({
+        title: "Colaborador excluído",
+        description: "O colaborador foi excluído com sucesso.",
+      });
+      getColaboradores();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir colaborador",
+        description: "Não foi possível excluir o colaborador. Tente novamente.",
+      });
+      console.error("Erro ao excluir o colaborador:", error);
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedColaborador(null);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditDialogOpen(false);
+    setSelectedColaborador(null);
+    getColaboradores();
+  };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {colaboradores.map((colaborador) => (
-        <ColaboradorCard
-          key={colaborador.id}
-          colaborador={colaborador}
-          onEdit={(colaborador) => {
-            setColaboradorSelecionado(colaborador);
-            setDialogEditarAberto(true);
-          }}
-          onView={(colaborador) => {
-            setColaboradorSelecionado(colaborador);
-            setDialogVisualizarAberto(true);
-          }}
-        />
-      ))}
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Cargo</TableHead>
+              <TableHead>Data Admissão</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {listColaboradores.map((colaborador) => (
+              <TableRow key={colaborador.id}>
+                <TableCell>{colaborador.name}</TableCell>
+                <TableCell>{colaborador.cargo}</TableCell>
+                <TableCell>
+                  {format(new Date(colaborador.dataAdmissao), 'dd/MM/yyyy', { locale: ptBR })}
+                </TableCell>
+                <TableCell>
+                  <Badge 
+                    variant={colaborador.status === 'ativo' ? 'default' : 'secondary'}
+                  >
+                    {colaborador.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => handleEditClick(colaborador)}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline"  
+                    size="icon" 
+                    onClick={() => handleDeleteClick(colaborador)}
+                  >
+                    <Trash2 className="h-4 w-4" color="red"/>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
-      <Dialog open={dialogVisualizarAberto} onOpenChange={setDialogVisualizarAberto}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Detalhes do Colaborador</DialogTitle>
-          </DialogHeader>
-          {colaboradorSelecionado && <ColaboradorDetalhes colaborador={colaboradorSelecionado} />}
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o colaborador "{selectedColaborador?.name}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <Dialog open={dialogEditarAberto} onOpenChange={setDialogEditarAberto}>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Colaborador</DialogTitle>
           </DialogHeader>
-          {colaboradorSelecionado && (
+          {selectedColaborador && (
             <EditColaboradorForm
-              colaborador={colaboradorSelecionado}
-              onSuccess={() => setDialogEditarAberto(false)}
+              colaborador={selectedColaborador}
+              onSuccess={handleEditSuccess}
             />
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
-};
+}

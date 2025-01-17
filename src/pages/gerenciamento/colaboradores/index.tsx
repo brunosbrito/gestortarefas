@@ -4,8 +4,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { NovoColaboradorForm } from "@/components/gerenciamento/colaboradores/NovoColaboradorForm";
 import { ColaboradoresList } from "@/components/gerenciamento/colaboradores/ColaboradoresList";
+import { useState } from "react";
 
 const Colaboradores = () => {
+  const [reload, setReload] = useState(false);
+
+  const getColaboradores = () => {
+    setReload(prev => !prev);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -13,7 +20,7 @@ const Colaboradores = () => {
           <h1 className="text-3xl font-bold text-construction-800">Colaboradores</h1>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="btn-secondary">
+              <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Colaborador
               </Button>
@@ -22,12 +29,12 @@ const Colaboradores = () => {
               <DialogHeader>
                 <DialogTitle>Adicionar Novo Colaborador</DialogTitle>
               </DialogHeader>
-              <NovoColaboradorForm />
+              <NovoColaboradorForm onSuccess={getColaboradores} />
             </DialogContent>
           </Dialog>
         </div>
 
-        <ColaboradoresList />
+        <ColaboradoresList reload={reload} />
       </div>
     </Layout>
   );
