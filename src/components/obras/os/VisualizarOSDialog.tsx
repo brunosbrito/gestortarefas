@@ -1,16 +1,50 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Building2, ClipboardList } from "lucide-react";
+import { Calendar, User, Building2, ClipboardList, Hash } from "lucide-react";
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface VisualizarOSDialogProps {
   os: ServiceOrder | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdateProgress?: () => void;
 }
 
-export const VisualizarOSDialog = ({ os, open, onOpenChange }: VisualizarOSDialogProps) => {
+export const VisualizarOSDialog = ({ os, open, onOpenChange, onUpdateProgress }: VisualizarOSDialogProps) => {
+  const [progress, setProgress] = useState<string>("");
+  const { toast } = useToast();
+
   if (!os) return null;
+
+  const handleUpdateProgress = async () => {
+    if (!progress) return;
+
+    try {
+      // Aqui você implementaria a lógica de atualização do progresso
+      // await updateServiceOrderProgress(os.id, Number(progress));
+      
+      toast({
+        title: "Progresso atualizado",
+        description: "O progresso da OS foi atualizado com sucesso!",
+      });
+
+      if (onUpdateProgress) {
+        onUpdateProgress();
+      }
+      
+      setProgress("");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar progresso",
+        description: "Não foi possível atualizar o progresso da OS.",
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,6 +83,32 @@ export const VisualizarOSDialog = ({ os, open, onOpenChange }: VisualizarOSDialo
               Descrição
             </h3>
             <p>{os.description}</p>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-2 flex items-center">
+              <Hash className="w-4 h-4 mr-2" />
+              Quantidade
+            </h3>
+            <div className="flex items-center gap-2">
+              <p>{os.quantity || 0}</p>
+              <span>/</span>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  value={progress}
+                  onChange={(e) => setProgress(e.target.value)}
+                  placeholder="Progresso"
+                  className="w-24"
+                />
+                <Button 
+                  onClick={handleUpdateProgress}
+                  className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+                >
+                  Atualizar
+                </Button>
+              </div>
+            </div>
           </div>
 
           <div>
