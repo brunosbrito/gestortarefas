@@ -2,8 +2,13 @@ import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { navItems } from "./sidebar/menuItems";
 import { SidebarMenuItem } from "./sidebar/SidebarMenuItem";
+import { User } from "@/interfaces/UserInterface";
 
-export const Sidebar = () => {
+interface SidebarProps {
+  user: User;
+}
+
+export const Sidebar = ({ user }: SidebarProps) => {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -22,9 +27,17 @@ export const Sidebar = () => {
     );
   };
 
+  // Filtra os itens do menu baseado na role do usuário
+  const filteredNavItems = navItems.filter(item => {
+    if (item.label === 'Usuários' || item.label === 'Gerenciamento') {
+      return user.role === 'admin';
+    }
+    return true;
+  });
+
   return (
     <nav className="flex-1 p-4 space-y-2">
-      {navItems.map((item) => (
+      {filteredNavItems.map((item) => (
         <SidebarMenuItem
           key={item.label}
           item={item}
