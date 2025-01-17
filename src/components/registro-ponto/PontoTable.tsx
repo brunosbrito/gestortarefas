@@ -86,7 +86,7 @@ export const PontoTable = ({ funcionarios, turno, onEdit, onDelete }: PontoTable
                       <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                       <AlertDialogDescription>
                         Tem certeza que deseja excluir este registro de ponto? Esta ação não pode ser desfeita.
-                      </DialogDescription>
+                      </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
