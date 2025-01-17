@@ -1,11 +1,23 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
-import { Obra } from "@/interfaces/ObrasInterface";
-import { UseFormReturn } from "react-hook-form";
-import { FormValues } from "./osFormSchema";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
+import { Obra } from '@/interfaces/ObrasInterface';
+import { UseFormReturn } from 'react-hook-form';
+import { FormValues } from './osFormSchema';
 
 interface OSFormFieldsProps {
   form: UseFormReturn<FormValues>;
@@ -35,7 +47,10 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Obra</FormLabel>
-            <Select value={String(field.value)} onValueChange={(value) => field.onChange(Number(value))}>
+            <Select
+              value={String(field.value)}
+              onValueChange={(value) => field.onChange(Number(value))}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a obra" />
@@ -56,6 +71,50 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
 
       <FormField
         control={form.control}
+        name="projectNumber"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Número Projeto</FormLabel>
+            <FormControl>
+              <Input placeholder="Descrição da OS" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div style={{ display: 'flex', gap: '16px' }}>
+        <FormField
+          control={form.control}
+          name="quantity"
+          render={({ field }) => (
+            <FormItem style={{ flex: 1 }}>
+              <FormLabel>Quantidade</FormLabel>
+              <FormControl>
+                <Input placeholder="Descrição da OS" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="weight"
+          render={({ field }) => (
+            <FormItem style={{ flex: 1 }}>
+              <FormLabel>Peso (t)</FormLabel>
+              <FormControl>
+                <Input placeholder="Descrição da OS" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <FormField
+        control={form.control}
         name="createdAt"
         render={({ field }) => (
           <FormItem>
@@ -66,9 +125,11 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
                 {...field}
                 onChange={(e) => {
                   const date = new Date(e.target.value);
-                  field.onChange(format(date, "yyyy-MM-dd"));
+                  field.onChange(format(date, 'yyyy-MM-dd'));
                 }}
-                value={field.value ? format(new Date(field.value), "yyyy-MM-dd") : ""}
+                value={
+                  field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''
+                }
               />
             </FormControl>
             <FormMessage />
@@ -106,7 +167,7 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
           <FormItem>
             <FormLabel>Observações</FormLabel>
             <FormControl>
-              <Textarea 
+              <Textarea
                 placeholder="Observações adicionais"
                 className="resize-none"
                 {...field}

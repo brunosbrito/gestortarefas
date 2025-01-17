@@ -2,11 +2,14 @@ export interface ServiceOrder {
   id: string;
   serviceOrderNumber: string;
   description: string;
-  status: "em_andamento" | "concluida" | "pausada";
+  status: 'em_andamento' | 'concluida' | 'pausada';
   notes: string;
   createdAt: string;
   startDate: string;
   updatedAt: string;
+  quantity: number;
+  weight: string;
+  projectNumber: string;
   projectId: {
     id: number;
     name: string;
@@ -29,7 +32,10 @@ export interface CreateServiceOrder {
   description: string;
   projectId: number;
   createdAt: string;
-  status: "em_andamento" | "concluida" | "pausada";
+  status: 'em_andamento' | 'concluida' | 'pausada';
   notes?: string;
   assignedUser: number;
+  quantity: number;
+  weight: string;
+  projectNumber: string;
 }

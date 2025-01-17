@@ -1,16 +1,41 @@
-import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, Building2, ClipboardList, Activity, User, Check, MapPin, Eye, Edit, Pause } from "lucide-react";
-import { useEffect, useState } from "react";
-import { NovaObraForm } from "@/components/obras/NovaObraForm";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { Obra } from "@/interfaces/ObrasInterface";
-import ObrasService from "@/services/ObrasService";
-import { EditObraForm } from "@/components/obras/EditObraForm";
+import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Plus,
+  Calendar,
+  Building2,
+  ClipboardList,
+  Activity,
+  User,
+  Check,
+  MapPin,
+  Eye,
+  Edit,
+  Pause,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { NovaObraForm } from '@/components/obras/NovaObraForm';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { Obra } from '@/interfaces/ObrasInterface';
+import ObrasService from '@/services/ObrasService';
+import { EditObraForm } from '@/components/obras/EditObraForm';
 
 const Obras = () => {
   const [obras, setObras] = useState<Obra[]>([]);
@@ -37,25 +62,34 @@ const Obras = () => {
     fetchObras();
   }, []);
 
-  const getStatusBadge = (status: Obra["status"]) => {
+  const getStatusBadge = (status: Obra['status']) => {
     switch (status) {
-      case "em_andamento":
+      case 'em_andamento':
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200"
+          >
             <Check className="w-3 h-3 mr-1" />
             Em Andamento
           </Badge>
         );
-      case "finalizado":
+      case 'finalizado':
         return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          <Badge
+            variant="outline"
+            className="bg-blue-50 text-blue-700 border-blue-200"
+          >
             <Check className="w-3 h-3 mr-1" />
             Finalizado
           </Badge>
         );
-      case "interrompido":
+      case 'interrompido':
         return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200"
+          >
             <Pause className="w-3 h-3 mr-1" />
             Interrompido
           </Badge>
@@ -69,8 +103,8 @@ const Obras = () => {
     setDialogEditarAberto(false);
     fetchObras();
     toast({
-      title: "Obra atualizada",
-      description: "As informações da obra foram atualizadas com sucesso.",
+      title: 'Obra atualizada',
+      description: 'As informações da obra foram atualizadas com sucesso.',
     });
   };
 
@@ -90,14 +124,16 @@ const Obras = () => {
               <DialogHeader>
                 <DialogTitle>Cadastrar Nova Obra</DialogTitle>
               </DialogHeader>
-              <NovaObraForm onSuccess={() => {
-                setOpen(false);
-                fetchObras();
-                toast({
-                  title: "Obra criada",
-                  description: "A obra foi criada com sucesso!",
-                });
-              }} />
+              <NovaObraForm
+                onSuccess={() => {
+                  setOpen(false);
+                  fetchObras();
+                  toast({
+                    title: 'Obra criada',
+                    description: 'A obra foi criada com sucesso!',
+                  });
+                }}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -125,7 +161,10 @@ const Obras = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Calendar className="w-4 h-4 text-gray-500" />
-                  <span>Início: {new Date(obra.startDate).toLocaleDateString('pt-BR')}</span>
+                  <span>
+                    Início:{' '}
+                    {new Date(obra.startDate).toLocaleDateString('pt-BR')}
+                  </span>
                 </div>
                 {obra.observation && (
                   <div className="flex items-center space-x-2 text-sm">
@@ -135,7 +174,7 @@ const Obras = () => {
                 )}
               </CardContent>
               <CardFooter className="flex gap-2">
-                <Button 
+                <Button
                   variant="outline"
                   className="hover:bg-secondary/20"
                   onClick={() => navigate(`/obras/${obra.id}/os`)}
@@ -143,7 +182,7 @@ const Obras = () => {
                   <ClipboardList className="w-4 h-4 mr-2" />
                   Ordens
                 </Button>
-                {obra.status !== "finalizado" && (
+                {obra.status !== 'finalizado' && (
                   <Button
                     variant="outline"
                     className="hover:bg-secondary/20"
@@ -168,7 +207,7 @@ const Obras = () => {
               <DialogTitle>Editar Obra</DialogTitle>
             </DialogHeader>
             {obraSelecionada && (
-              <EditObraForm 
+              <EditObraForm
                 obra={obraSelecionada}
                 onSuccess={handleEditSuccess}
               />
