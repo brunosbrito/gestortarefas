@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
 
 const emExecucaoSchema = z.object({
   startDate: z.string().min(1, 'Data de início é obrigatória'),
@@ -60,7 +61,7 @@ const motivosParalizacao = [
 interface AtualizarStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  atividade: any;
+  atividade: { id: string; collaborators?: Colaborador[] };
   novoStatus: string;
   onSuccess: () => void;
 }
@@ -260,7 +261,7 @@ export function AtualizarStatusDialog({
                   />
                 </div>
                 <div className="space-y-4">
-                  {atividade?.collaborators?.map((colaborador: any) => (
+                  {atividade?.collaborators?.map((colaborador: Colaborador) => (
                     <div
                       key={colaborador.id}
                       className="grid grid-cols-2 gap-4"
