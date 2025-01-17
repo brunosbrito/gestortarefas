@@ -12,7 +12,7 @@ interface Funcionario {
   nome: string;
   setor: "PRODUCAO" | "ADMINISTRATIVO";
   status: "PRESENTE" | "FALTA";
-  turno: 1 | 2;
+  turno: 1 | 2 | 3;
   obra?: string;
   motivoFalta?: string;
 }
@@ -31,7 +31,7 @@ const funcionariosIniciais: Funcionario[] = [
     nome: "Maria Santos",
     setor: "ADMINISTRATIVO",
     status: "PRESENTE",
-    turno: 2
+    turno: 3
   }
 ];
 
@@ -65,7 +65,7 @@ const RegistroPonto = () => {
       nome: data.colaborador,
       setor: data.tipo === "PRODUCAO" ? "PRODUCAO" : "ADMINISTRATIVO",
       status: data.tipo === "FALTA" ? "FALTA" : "PRESENTE",
-      turno: Number(data.turno) as 1 | 2,
+      turno: Number(data.turno) as 1 | 2 | 3,
       obra: data.obra,
       motivoFalta: data.motivoFalta
     };
@@ -82,7 +82,7 @@ const RegistroPonto = () => {
       nome: data.colaborador,
       setor: data.tipo === "PRODUCAO" ? "PRODUCAO" : "ADMINISTRATIVO",
       status: data.tipo === "FALTA" ? "FALTA" : "PRESENTE",
-      turno: Number(data.turno) as 1 | 2,
+      turno: Number(data.turno) as 1 | 2 | 3,
       obra: data.obra,
       motivoFalta: data.motivoFalta
     };
@@ -168,6 +168,12 @@ const RegistroPonto = () => {
           <PontoTable
             funcionarios={funcionarios}
             turno={2}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+          <PontoTable
+            funcionarios={funcionarios}
+            turno={3}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

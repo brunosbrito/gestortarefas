@@ -9,32 +9,45 @@ interface Funcionario {
   nome: string;
   setor: "PRODUCAO" | "ADMINISTRATIVO";
   status: "PRESENTE" | "FALTA";
-  turno: 1 | 2;
+  turno: 1 | 2 | 3;
   obra?: string;
   motivoFalta?: string;
 }
 
 interface PontoTableProps {
   funcionarios: Funcionario[];
-  turno: 1 | 2;
+  turno: 1 | 2 | 3;
   onEdit: (funcionario: Funcionario) => void;
   onDelete: (id: number) => void;
 }
 
 export const PontoTable = ({ funcionarios, turno, onEdit, onDelete }: PontoTableProps) => {
   const funcionariosFiltrados = funcionarios.filter(f => f.turno === turno);
+  
+  const getTurnoLabel = (turno: number) => {
+    switch (turno) {
+      case 1:
+        return "1º Turno (06:00 - 14:00)";
+      case 2:
+        return "2º Turno (14:00 - 22:00)";
+      case 3:
+        return "Turno Central (08:00 - 17:00)";
+      default:
+        return `${turno}º Turno`;
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-construction-800">{turno}º Turno</h2>
+      <h2 className="text-xl font-semibold text-construction-800">{getTurnoLabel(turno)}</h2>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Setor</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Obra</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="w-[250px]">Nome</TableHead>
+            <TableHead className="w-[150px]">Setor</TableHead>
+            <TableHead className="w-[120px]">Status</TableHead>
+            <TableHead className="w-[200px]">Obra</TableHead>
+            <TableHead className="w-[200px] text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,7 +86,7 @@ export const PontoTable = ({ funcionarios, turno, onEdit, onDelete }: PontoTable
                       <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                       <AlertDialogDescription>
                         Tem certeza que deseja excluir este registro de ponto? Esta ação não pode ser desfeita.
-                      </AlertDialogDescription>
+                      </DialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>

@@ -77,8 +77,9 @@ export const PontoForm = ({ onSubmit, obras, colaboradores, onClose, defaultValu
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">1º Turno</SelectItem>
-                  <SelectItem value="2">2º Turno</SelectItem>
+                  <SelectItem value="1">1º Turno (06:00 - 14:00)</SelectItem>
+                  <SelectItem value="2">2º Turno (14:00 - 22:00)</SelectItem>
+                  <SelectItem value="3">Turno Central (08:00 - 17:00)</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
