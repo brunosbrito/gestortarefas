@@ -18,17 +18,16 @@ export const EditColaboradorForm = ({ colaborador, onSuccess }: EditColaboradorF
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
       name: colaborador.name,
-      cargo: colaborador.cargo,
-      email: colaborador.email,
-      telefone: colaborador.telefone,
-      dataAdmissao: colaborador.dataAdmissao,
-      status: colaborador.status,
+      role: colaborador.role,
     },
   });
 
   const onSubmit = async (data: ColaboradorFormValues) => {
     try {
-      await ColaboradorService.updateColaborador(colaborador.id, data);
+      await ColaboradorService.updateColaborador(colaborador.id, {
+        id: colaborador.id,
+        ...data
+      });
       toast({
         title: "Colaborador atualizado",
         description: "As informações do colaborador foram atualizadas com sucesso.",

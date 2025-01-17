@@ -14,9 +14,6 @@ export const NovoColaboradorForm = ({ onSuccess }: NovoColaboradorFormProps) => 
   const { toast } = useToast();
   const form = useForm<ColaboradorFormValues>({
     resolver: zodResolver(colaboradorFormSchema),
-    defaultValues: {
-      status: "ativo",
-    },
   });
 
   const onSubmit = async (data: ColaboradorFormValues) => {
