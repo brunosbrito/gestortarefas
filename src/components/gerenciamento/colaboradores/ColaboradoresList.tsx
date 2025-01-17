@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -56,7 +56,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     getColaboradores();
   }, [reload]);
 
