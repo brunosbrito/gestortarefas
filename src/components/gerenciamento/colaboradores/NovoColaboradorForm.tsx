@@ -18,7 +18,11 @@ export const NovoColaboradorForm = ({ onSuccess }: NovoColaboradorFormProps) => 
 
   const onSubmit = async (data: ColaboradorFormValues) => {
     try {
-      await ColaboradorService.createColaborador(data);
+      await ColaboradorService.createColaborador({
+        name: data.name,
+        role: data.role
+      });
+      
       toast({
         title: "Colaborador adicionado",
         description: "O colaborador foi adicionado com sucesso.",

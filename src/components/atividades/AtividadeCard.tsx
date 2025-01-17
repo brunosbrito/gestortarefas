@@ -303,7 +303,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                                   {collaborator.name}
                                 </p>
                                 <p className="text-sm text-construction-600">
-                                  {collaborator.cargo}
+                                  {collaborator.role}
                                 </p>
                               </div>
                             </div>

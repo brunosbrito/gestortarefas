@@ -29,9 +29,6 @@ import {
 import { EditColaboradorForm } from "./EditColaboradorForm";
 import { Colaborador } from "@/interfaces/ColaboradorInterface";
 import ColaboradorService from "@/services/ColaboradorService";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface ColaboradoresListProps {
   reload: boolean;
@@ -107,8 +104,6 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Cargo</TableHead>
-              <TableHead>Data Admissão</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -116,17 +111,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             {listColaboradores.map((colaborador) => (
               <TableRow key={colaborador.id}>
                 <TableCell>{colaborador.name}</TableCell>
-                <TableCell>{colaborador.cargo}</TableCell>
-                <TableCell>
-                  {format(new Date(colaborador.dataAdmissao), 'dd/MM/yyyy', { locale: ptBR })}
-                </TableCell>
-                <TableCell>
-                  <Badge 
-                    variant={colaborador.status === 'ativo' ? 'default' : 'secondary'}
-                  >
-                    {colaborador.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                  </Badge>
-                </TableCell>
+                <TableCell>{colaborador.role}</TableCell>
                 <TableCell className="flex space-x-2">
                   <Button 
                     variant="outline" 

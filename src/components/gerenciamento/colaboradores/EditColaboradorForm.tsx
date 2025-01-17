@@ -24,10 +24,13 @@ export const EditColaboradorForm = ({ colaborador, onSuccess }: EditColaboradorF
 
   const onSubmit = async (data: ColaboradorFormValues) => {
     try {
-      await ColaboradorService.updateColaborador(colaborador.id, {
+      const updatedColaborador: Colaborador = {
         id: colaborador.id,
-        ...data
-      });
+        name: data.name,
+        role: data.role
+      };
+      
+      await ColaboradorService.updateColaborador(colaborador.id, updatedColaborador);
       toast({
         title: "Colaborador atualizado",
         description: "As informações do colaborador foram atualizadas com sucesso.",
