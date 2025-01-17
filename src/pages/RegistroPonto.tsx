@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PontoForm } from "@/components/registro-ponto/PontoForm";
 import { PontoTable } from "@/components/registro-ponto/PontoTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Funcionario {
   id: number;
@@ -146,26 +147,37 @@ const RegistroPonto = () => {
           </DialogContent>
         </Dialog>
 
-        <div className="space-y-8">
-          <PontoTable
-            funcionarios={funcionarios}
-            turno={1}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-          <PontoTable
-            funcionarios={funcionarios}
-            turno={2}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-          <PontoTable
-            funcionarios={funcionarios}
-            turno={3}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </div>
+        <Tabs defaultValue="turno1" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="turno1">1º Turno (06:00 - 14:00)</TabsTrigger>
+            <TabsTrigger value="turno2">2º Turno (14:00 - 22:00)</TabsTrigger>
+            <TabsTrigger value="turno3">Turno Central (08:00 - 17:00)</TabsTrigger>
+          </TabsList>
+          <TabsContent value="turno1" className="mt-6">
+            <PontoTable
+              funcionarios={funcionarios}
+              turno={1}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+          <TabsContent value="turno2" className="mt-6">
+            <PontoTable
+              funcionarios={funcionarios}
+              turno={2}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+          <TabsContent value="turno3" className="mt-6">
+            <PontoTable
+              funcionarios={funcionarios}
+              turno={3}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
