@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { PontoForm } from "@/components/registro-ponto/PontoForm";
 import { PontoTable } from "@/components/registro-ponto/PontoTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getEffectivesByShiftAndDate } from "@/services/EffectiveService";
+import { useQuery } from "@tanstack/react-query";
 
 interface Funcionario {
   id: number;
@@ -18,32 +20,19 @@ interface Funcionario {
   motivoFalta?: string;
 }
 
-const funcionariosIniciais: Funcionario[] = [
-  {
-    id: 1,
-    nome: "João Silva",
-    setor: "PRODUCAO",
-    status: "PRESENTE",
-    turno: 1,
-    obra: "Obra A"
-  },
-  {
-    id: 2,
-    nome: "Maria Santos",
-    setor: "ADMINISTRATIVO",
-    status: "PRESENTE",
-    turno: 3
-  }
-];
-
 const obras = ["Obra A", "Obra B", "Obra C"];
 const colaboradores = ["João Silva", "Maria Santos", "Pedro Alves"];
 
 const RegistroPonto = () => {
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>(funcionariosIniciais);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
+  const [currentTurno, setCurrentTurno] = useState("1");
+
+  const { data: funcionarios = [], isLoading, error } = useQuery({
+    queryKey: ['efectivos', currentTurno],
+    queryFn: () => getEffectivesByShiftAndDate(currentTurno),
+  });
 
   const handleDelete = (id: number) => {
     setFuncionarios(prev => prev.filter(f => f.id !== id));
@@ -89,6 +78,20 @@ const RegistroPonto = () => {
     setIsEditDialogOpen(false);
     setSelectedFuncionario(null);
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-full">
+          <p className="text-lg text-gray-600">Carregando registros...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    toast.error("Erro ao carregar registros. Tente novamente.");
+  }
 
   return (
     <Layout>
@@ -147,7 +150,7 @@ const RegistroPonto = () => {
           </DialogContent>
         </Dialog>
 
-        <Tabs defaultValue="turno1" className="w-full">
+        <Tabs defaultValue="turno1" className="w-full" onValueChange={(value) => setCurrentTurno(value.replace('turno', ''))}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="turno1">1º Turno (06:00 - 14:00)</TabsTrigger>
             <TabsTrigger value="turno2">2º Turno (14:00 - 22:00)</TabsTrigger>
