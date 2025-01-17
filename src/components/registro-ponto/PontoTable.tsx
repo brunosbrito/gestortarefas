@@ -1,8 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Send } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface Funcionario {
   id: number;
@@ -37,9 +38,20 @@ export const PontoTable = ({ funcionarios, turno, onEdit, onDelete }: PontoTable
     }
   };
 
+  const handleEnviarTurno = () => {
+    console.log(`Enviando registros do ${getTurnoLabel(turno)}:`, funcionariosFiltrados);
+    toast.success(`Registros do ${getTurnoLabel(turno)} enviados com sucesso`);
+  };
+
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-construction-800">{getTurnoLabel(turno)}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-construction-800">{getTurnoLabel(turno)}</h2>
+        <Button onClick={handleEnviarTurno} variant="secondary" size="sm">
+          <Send className="w-4 h-4 mr-2" />
+          Enviar Registros do Turno
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>

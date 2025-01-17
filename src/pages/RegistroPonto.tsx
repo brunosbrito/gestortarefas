@@ -2,7 +2,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { Plus, Send } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PontoForm } from "@/components/registro-ponto/PontoForm";
 import { PontoTable } from "@/components/registro-ponto/PontoTable";
@@ -47,11 +47,6 @@ const RegistroPonto = () => {
   const handleDelete = (id: number) => {
     setFuncionarios(prev => prev.filter(f => f.id !== id));
     toast.success("Registro excluído com sucesso");
-  };
-
-  const handleEnviar = () => {
-    console.log("Enviando dados do ponto:", funcionarios);
-    toast.success("Registros enviados com sucesso");
   };
 
   const handleEdit = (funcionario: Funcionario) => {
@@ -99,64 +94,57 @@ const RegistroPonto = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-construction-800">Registro de Ponto</h1>
-          <div className="space-x-4">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Registro
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Novo Registro de Ponto</DialogTitle>
-                  <DialogDescription>
-                    Preencha os campos abaixo para adicionar um novo registro de ponto.
-                  </DialogDescription>
-                </DialogHeader>
-                <PontoForm
-                  onSubmit={onSubmit}
-                  obras={obras}
-                  colaboradores={colaboradores}
-                  onClose={() => setIsDialogOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Editar Registro de Ponto</DialogTitle>
-                  <DialogDescription>
-                    Edite as informações do registro de ponto.
-                  </DialogDescription>
-                </DialogHeader>
-                {selectedFuncionario && (
-                  <PontoForm
-                    onSubmit={onEditSubmit}
-                    obras={obras}
-                    colaboradores={colaboradores}
-                    onClose={() => setIsEditDialogOpen(false)}
-                    defaultValues={{
-                      turno: selectedFuncionario.turno.toString(),
-                      tipo: selectedFuncionario.setor,
-                      colaborador: selectedFuncionario.nome,
-                      obra: selectedFuncionario.obra,
-                      setor: selectedFuncionario.setor === "ADMINISTRATIVO" ? selectedFuncionario.setor : "",
-                      motivoFalta: selectedFuncionario.motivoFalta,
-                    }}
-                    isEdit
-                  />
-                )}
-              </DialogContent>
-            </Dialog>
-
-            <Button onClick={handleEnviar} variant="secondary">
-              <Send className="w-4 h-4 mr-2" />
-              Enviar Registros
-            </Button>
-          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Registro
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Novo Registro de Ponto</DialogTitle>
+                <DialogDescription>
+                  Preencha os campos abaixo para adicionar um novo registro de ponto.
+                </DialogDescription>
+              </DialogHeader>
+              <PontoForm
+                onSubmit={onSubmit}
+                obras={obras}
+                colaboradores={colaboradores}
+                onClose={() => setIsDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Editar Registro de Ponto</DialogTitle>
+              <DialogDescription>
+                Edite as informações do registro de ponto.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedFuncionario && (
+              <PontoForm
+                onSubmit={onEditSubmit}
+                obras={obras}
+                colaboradores={colaboradores}
+                onClose={() => setIsEditDialogOpen(false)}
+                defaultValues={{
+                  turno: selectedFuncionario.turno.toString(),
+                  tipo: selectedFuncionario.setor,
+                  colaborador: selectedFuncionario.nome,
+                  obra: selectedFuncionario.obra,
+                  setor: selectedFuncionario.setor === "ADMINISTRATIVO" ? selectedFuncionario.setor : "",
+                  motivoFalta: selectedFuncionario.motivoFalta,
+                }}
+                isEdit
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         <div className="space-y-8">
           <PontoTable
