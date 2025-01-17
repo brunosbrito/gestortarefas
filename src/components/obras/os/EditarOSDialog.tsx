@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 import { NovaOSForm } from "./NovaOSForm";
 import { useToast } from "@/hooks/use-toast";
+import { updateServiceOrder } from "@/services/ServiceOrderService";
 
 interface EditarOSDialogProps {
   os: ServiceOrder | null;
@@ -17,7 +18,11 @@ export const EditarOSDialog = ({ os, open, onOpenChange, onSuccess }: EditarOSDi
 
   const handleSubmit = async (data: any) => {
     try {
-      // Aqui você implementaria a lógica de atualização da OS
+      await updateServiceOrder(os.id, {
+        ...os,
+        ...data,
+      });
+      
       onSuccess();
       onOpenChange(false);
       
