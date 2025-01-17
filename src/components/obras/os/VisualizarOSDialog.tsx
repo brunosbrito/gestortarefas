@@ -38,8 +38,8 @@ export const VisualizarOSDialog = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    setProgress(os.progress);
-  }, []);
+    setProgress(os?.progress);
+  }, [os]);
 
   if (!os) return null;
 
@@ -177,9 +177,9 @@ export const VisualizarOSDialog = ({
           <div>
             <h3 className="font-semibold mb-2 flex items-center">
               <User className="w-4 h-4 mr-2" />
-              Responsável
+              Criado por
             </h3>
-            <p>{os.assignedUser?.name || 'Não atribuído'}</p>
+            <p>{os.assignedUser?.username || 'Não atribuído'}</p>
           </div>
 
           {os.notes && (

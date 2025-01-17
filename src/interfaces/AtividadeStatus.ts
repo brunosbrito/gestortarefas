@@ -11,6 +11,8 @@ export interface AtividadeStatus {
   process: string;
   collaborators: Colaborador[];
   serviceOrder: ServiceOrder;
+  estimatedTime: string;
+  pauseDate: string;
   project: {
     id: number;
     name: string;

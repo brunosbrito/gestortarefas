@@ -18,6 +18,7 @@ import {
   Calendar,
   ClipboardList,
   Clock,
+  Clock1,
   Edit2,
   Eye,
   GripHorizontal,
@@ -32,11 +33,8 @@ import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useParams } from 'react-router-dom';
 import { Draggable } from 'react-beautiful-dnd';
 import { AtividadeHistoricoList } from './AtividadeHistoricoList';
-import { format } from 'date-fns';
+import { differenceInSeconds, format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import { HistoricoAtividade } from '@/interfaces/HistoricoAtividade';
-import { useState } from 'react';
-import { getActivityHistoryById } from '@/services/ActivityHistoryService';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -48,18 +46,63 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
   const { projectId, serviceOrderId } = useParams();
 
   function formatTime(totalTime) {
-    // Verifica se o totalTime é um número válido
+    console.log(totalTime);
     if (isNaN(totalTime) || totalTime <= 0) return '00:00';
 
     const hours = Math.floor(totalTime); // Pega a parte inteira (horas)
     const minutes = Math.round((totalTime - hours) * 60); // Calcula os minutos
-
-    // Formata horas e minutos com dois dígitos
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
       2,
       '0'
     )}`;
   }
+
+  const calculateElapsedTime = (totalTime, startDate) => {
+    if (!startDate) return totalTime / 3600;
+
+    const startDateTime = new Date(startDate);
+    const now = new Date();
+
+    // Garantir que o horário atual seja maior que o horário de início
+    if (now < startDateTime) {
+      console.error('Erro: A data de início é maior que o horário atual.');
+      return 0;
+    }
+
+    // Calcular diferença em segundos e somar ao totalTime
+    const elapsedSeconds =
+      totalTime + (now.getTime() - startDateTime.getTime()) / 1000;
+
+    const hours = Math.floor(elapsedSeconds / 3600); // Horas completas
+    const minutes = Math.floor((elapsedSeconds % 3600) / 60); // Minutos restantes
+
+    // Total de horas no formato decimal
+    const result = hours + minutes / 60;
+    return result;
+  };
+
+  const formatEstimatedTime = (estimatedTime: string) => {
+    if (!estimatedTime) return '00:00';
+    const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+  };
+
+  const calculatePercentage = (elapsedTime, estimatedTime: string) => {
+    if (!estimatedTime) return 0;
+
+    const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
+    const totalEstimatedSeconds =
+      parseInt(hours) * 3600 + parseInt(minutes) * 60;
+
+    elapsedTime += elapsedTime * 3600;
+
+    return Math.round((elapsedTime / totalEstimatedSeconds) * 100);
+  };
+
+  const elapsedTime =
+    atividade.status === 'Em execução'
+      ? calculateElapsedTime(atividade.totalTime, atividade.startDate)
+      : atividade.totalTime;
 
   return (
     <Draggable draggableId={String(atividade.id)} index={index}>
@@ -90,27 +133,62 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
               <div className="flex items-center mb-2">
                 <Calendar className="w-4 h-4 mr-2" />
                 Data Criação:{' '}
-                {format(new Date(atividade.startDate), 'dd/MM/yyyy')}
+                {format(new Date(atividade.originalStartDate), 'dd/MM/yyyy')}
               </div>
               {atividade.status !== 'Planejadas' && (
                 <div className="flex items-center mb-2">
                   <Clock className="w-4 h-4 mr-2" />
-                  {atividade.status === 'Em execução'
-                    ? `Em execução (${format(
-                        new Date(atividade.originalStartDate),
-                        'dd/MM/yyyy hh:mm'
-                      )})`
-                    : `Data Conclusão: ${format(
-                        new Date(atividade.originalStartDate),
-                        'dd/MM/yyyy'
-                      )}`}
+                  {(() => {
+                    switch (atividade.status) {
+                      case 'Em execução':
+                        return `Em execução (${format(
+                          new Date(atividade.startDate),
+                          'dd/MM/yyyy'
+                        )})`;
+
+                      case 'Paralizadas':
+                        return `Data Paralisação: ${format(
+                          new Date(atividade.pauseDate),
+                          'dd/MM/yyyy'
+                        )}`;
+
+                      default:
+                        return `Data Conclusão: ${format(
+                          new Date(atividade.endDate),
+                          'dd/MM/yyyy'
+                        )}`;
+                    }
+                  })()}
                 </div>
               )}
 
               <div className="flex items-center mb-2">
-                <Hourglass className="w-4 h-4 mr-2" />
-                Tempo Atividade: {formatTime(atividade.totalTime)}
+                <Clock1 className="w-4 h-4 mr-2" />
+                Tempo Previsto: {formatEstimatedTime(atividade?.estimatedTime)}
               </div>
+
+              {atividade.status === 'Planejadas' ? null : (
+                <div className="flex items-center mb-2">
+                  <Hourglass className="w-4 h-4 mr-2" />
+                  Tempo Atividade: {formatTime(elapsedTime)}
+                  {' | '}
+                  <span
+                    style={{
+                      marginLeft: '5px',
+                      color:
+                        calculatePercentage(
+                          elapsedTime,
+                          atividade?.estimatedTime
+                        ) > 100
+                          ? 'red'
+                          : 'green',
+                    }}
+                  >
+                    {calculatePercentage(elapsedTime, atividade?.estimatedTime)}
+                    %
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-center mb-2">
                 <Users className="w-4 h-4 mr-2" />

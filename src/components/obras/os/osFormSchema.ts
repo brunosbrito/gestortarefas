@@ -15,6 +15,7 @@ export const formSchema = z.object({
   quantity: z.number().min(1, 'Quantidade é obrigatória'),
   projectNumber: z.string().min(1, 'Número do projeto é obrigatória'),
   weight: z.string().min(1, 'Peso é obrigatória'),
+  progress: z.number(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;

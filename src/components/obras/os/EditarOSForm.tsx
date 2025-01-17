@@ -32,6 +32,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
       projectNumber: os.projectNumber,
       quantity: os.quantity,
       weight: os.weight,
+      progress: os.progress,
     },
   });
 
@@ -86,7 +87,10 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <OSFormFields form={form} obras={obras} />
-        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+        <Button
+          type="submit"
+          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+        >
           Atualizar OS
         </Button>
       </form>

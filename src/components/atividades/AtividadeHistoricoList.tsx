@@ -52,8 +52,6 @@ export const AtividadeHistoricoList = ({
                     return 'Atividade Iniciada';
                   case 'Concluídas':
                     return 'Atividade Concluída';
-                  case 'Pausada':
-                    return 'Atividade Pausada';
                   default:
                     return item.description;
                 }

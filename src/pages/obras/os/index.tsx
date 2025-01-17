@@ -55,25 +55,6 @@ const OrdensServico = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
 
-  const handleNovaOS = async (data: CreateServiceOrder) => {
-    try {
-      const serviceOrders = await getAllServiceOrders();
-      setOrdensServico(serviceOrders || []);
-      setDialogOpen(false);
-
-      toast({
-        title: 'Ordem de Serviço criada',
-        description: 'A OS foi criada com sucesso!',
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao criar Ordem de Serviço',
-        description: 'Não foi possível criar a ordem de serviço.',
-      });
-    }
-  };
-
   const getServiceOrders = async () => {
     const serviceOrders = await getServiceOrderByProjectId(projectId);
     setObra(serviceOrders.projectId);
@@ -114,14 +95,16 @@ const OrdensServico = () => {
                 <DialogHeader>
                   <DialogTitle>Nova Ordem de Serviço</DialogTitle>
                 </DialogHeader>
-                <NovaOSForm onSuccess={() => {
-                  setDialogOpen(false);
-                  getServiceOrders();
-                  toast({
-                    title: 'Ordem de Serviço criada',
-                    description: 'A OS foi criada com sucesso.',
-                  });
-                }} />
+                <NovaOSForm
+                  onSuccess={() => {
+                    setDialogOpen(false);
+                    getServiceOrders();
+                    toast({
+                      title: 'Ordem de Serviço criada',
+                      description: 'A OS foi criada com sucesso.',
+                    });
+                  }}
+                />
               </DialogContent>
             </Dialog>
           )}
@@ -156,12 +139,16 @@ const OrdensServico = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <User className="w-4 h-4 text-gray-500" />
-                  <span>Usuário: {os.assignedUser?.username || ''} </span>
+                  <span>Criado por: {os.assignedUser?.username || ''} </span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Hash className="w-4 h-4 text-gray-500" />
                   <span>
-                    Quantidade: {os.progress || 0}/{os.quantity || 0}
+                    Quantidade: {os.progress || 0}/{os.quantity || 0} (
+                    {os.quantity
+                      ? Math.round((os.progress / os.quantity) * 100)
+                      : 0}
+                    %)
                   </span>
                 </div>
               </CardContent>
