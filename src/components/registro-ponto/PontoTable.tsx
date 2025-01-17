@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Send } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { updateEffective } from "@/services/EffectiveService";
 
 interface Funcionario {
   id: number;
@@ -38,9 +39,28 @@ export const PontoTable = ({ funcionarios, turno, onEdit, onDelete }: PontoTable
     }
   };
 
-  const handleEnviarTurno = () => {
-    console.log(`Enviando registros do ${getTurnoLabel(turno)}:`, funcionariosFiltrados);
-    toast.success(`Registros do ${getTurnoLabel(turno)} enviados com sucesso`);
+  const handleEnviarTurno = async () => {
+    try {
+      const registros = funcionariosFiltrados.map(f => ({
+        username: f.nome,
+        shift: f.turno.toString(),
+        role: f.setor,
+        project: f.obra,
+        typeRegister: f.status,
+        reason: f.motivoFalta,
+        sector: f.setor === "ADMINISTRATIVO" ? f.setor : undefined
+      }));
+
+      // Envia cada registro individualmente
+      for (const registro of registros) {
+        await updateEffective(registro);
+      }
+
+      toast.success(`Registros do ${getTurnoLabel(turno)} enviados com sucesso`);
+    } catch (error) {
+      console.error('Erro ao enviar registros:', error);
+      toast.error('Erro ao enviar registros. Tente novamente.');
+    }
   };
 
   return (
