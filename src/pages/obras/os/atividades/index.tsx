@@ -18,6 +18,7 @@ import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { AtualizarStatusDialog } from '@/components/atividades/AtualizarStatusDialog';
 import ObrasService from '@/services/ObrasService';
 import { Obra } from '@/interfaces/ObrasInterface';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
 
 const statusListas = [
   'Planejadas',
