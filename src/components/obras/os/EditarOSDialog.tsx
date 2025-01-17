@@ -1,8 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
-import { NovaOSForm } from "./NovaOSForm";
-import { useToast } from "@/hooks/use-toast";
-import { updateServiceOrder } from "@/services/ServiceOrderService";
+import { EditarOSForm } from "./EditarOSForm";
 
 interface EditarOSDialogProps {
   os: ServiceOrder | null;
@@ -12,31 +10,11 @@ interface EditarOSDialogProps {
 }
 
 export const EditarOSDialog = ({ os, open, onOpenChange, onSuccess }: EditarOSDialogProps) => {
-  const { toast } = useToast();
-
   if (!os) return null;
 
-  const handleSubmit = async (data: any) => {
-    try {
-      await updateServiceOrder(os.id, {
-        ...os,
-        ...data,
-      });
-      
-      onSuccess();
-      onOpenChange(false);
-      
-      toast({
-        title: "Ordem de Serviço atualizada",
-        description: "A OS foi atualizada com sucesso!",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar Ordem de Serviço",
-        description: "Não foi possível atualizar a ordem de serviço.",
-      });
-    }
+  const handleSuccess = () => {
+    onSuccess();
+    onOpenChange(false);
   };
 
   return (
@@ -45,7 +23,7 @@ export const EditarOSDialog = ({ os, open, onOpenChange, onSuccess }: EditarOSDi
         <DialogHeader>
           <DialogTitle>Editar Ordem de Serviço</DialogTitle>
         </DialogHeader>
-        <NovaOSForm onSubmit={handleSubmit} initialData={os} />
+        <EditarOSForm os={os} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

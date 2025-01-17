@@ -6,32 +6,32 @@ import { Button } from '@/components/ui/button';
 import { Obra } from '@/interfaces/ObrasInterface';
 import ObrasService from '@/services/ObrasService';
 import { useToast } from '@/hooks/use-toast';
-import { createServiceOrder } from '@/services/ServiceOrderService';
-import { CreateServiceOrder } from '@/interfaces/ServiceOrderInterface';
+import { updateServiceOrder } from '@/services/ServiceOrderService';
+import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { formSchema, FormValues } from './osFormSchema';
 import { OSFormFields } from './OSFormFields';
 
-function getUserIdFromLocalStorage(): number | null {
-  const userId = localStorage.getItem('userId');
-  return userId ? parseInt(userId) : null;
+interface EditarOSFormProps {
+  os: ServiceOrder;
+  onSuccess: () => void;
 }
 
-export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
+export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      status: 'em_andamento',
-      description: '',
-      projectId: undefined,
-      createdAt: '',
-      notes: '',
-      assignedUser: undefined,
-      projectNumber: undefined,
-      quantity: 0,
-      weight: undefined,
+      status: os.status,
+      description: os.description,
+      projectId: os.projectId.id,
+      createdAt: os.createdAt,
+      notes: os.notes,
+      assignedUser: os.assignedUser?.id,
+      projectNumber: os.projectNumber,
+      quantity: os.quantity,
+      weight: os.weight,
     },
   });
 
@@ -53,35 +53,24 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
   }, [toast]);
 
   const handleSubmit = async (data: FormValues) => {
-    const userId = getUserIdFromLocalStorage();
-
-    const serviceOrderData: CreateServiceOrder = {
-      description: data.description,
-      projectId: data.projectId,
-      createdAt: data.createdAt,
-      status: data.status,
-      notes: data.notes,
-      assignedUser: userId || undefined,
-      projectNumber: data.projectNumber,
-      quantity: data.quantity,
-      weight: data.weight,
-    };
-
     try {
-      await createServiceOrder(serviceOrderData);
+      await updateServiceOrder(os.id, {
+        ...os,
+        ...data,
+      });
 
       toast({
         variant: 'default',
-        title: 'Ordem de Serviço criada',
-        description: 'A nova ordem de serviço foi criada com sucesso.',
+        title: 'Ordem de Serviço atualizada',
+        description: 'A OS foi atualizada com sucesso.',
       });
 
       onSuccess();
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro ao criar Ordem de Serviço',
-        description: 'Não foi possível criar a ordem de serviço.',
+        title: 'Erro ao atualizar Ordem de Serviço',
+        description: 'Não foi possível atualizar a ordem de serviço.',
       });
     }
   };
@@ -91,7 +80,7 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <OSFormFields form={form} obras={obras} />
         <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-          Criar OS
+          Atualizar OS
         </Button>
       </form>
     </Form>
