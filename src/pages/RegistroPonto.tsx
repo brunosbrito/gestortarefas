@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -8,7 +8,6 @@ import { PontoForm } from "@/components/registro-ponto/PontoForm";
 import { PontoTable } from "@/components/registro-ponto/PontoTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEffectivesByShiftAndDate } from "@/services/EffectiveService";
-import { useQuery } from "@tanstack/react-query";
 import ObrasService from "@/services/ObrasService";
 import ColaboradorService from "@/services/ColaboradorService";
 
@@ -27,27 +26,34 @@ const RegistroPonto = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
   const [currentTurno, setCurrentTurno] = useState("1");
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [obras, setObras] = useState<string[]>([]);
+  const [colaboradores, setColaboradores] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: funcionarios = [], isLoading: isLoadingFuncionarios, error: funcionariosError } = useQuery({
-    queryKey: ['efectivos', currentTurno],
-    queryFn: () => getEffectivesByShiftAndDate(currentTurno),
-  });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [funcionariosData, obrasData, colaboradoresData] = await Promise.all([
+          getEffectivesByShiftAndDate(currentTurno),
+          ObrasService.getAllObras(),
+          ColaboradorService.getAllColaboradores()
+        ]);
 
-  const { data: obras = [], isLoading: isLoadingObras } = useQuery({
-    queryKey: ['obras'],
-    queryFn: async () => {
-      const response = await ObrasService.getAllObras();
-      return response.map(obra => obra.name);
-    },
-  });
+        setFuncionarios(funcionariosData);
+        setObras(obrasData.map(obra => obra.name));
+        setColaboradores(colaboradoresData.data.map(col => col.name));
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        toast.error("Erro ao carregar dados. Tente novamente.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const { data: colaboradores = [], isLoading: isLoadingColaboradores } = useQuery({
-    queryKey: ['colaboradores'],
-    queryFn: async () => {
-      const response = await ColaboradorService.getAllColaboradores();
-      return response.data.map(col => col.name);
-    },
-  });
+    fetchData();
+  }, [currentTurno]);
 
   const handleDelete = async (id: number) => {
     toast.success("Registro excluído com sucesso");
@@ -81,7 +87,7 @@ const RegistroPonto = () => {
     toast.success("Registro atualizado com sucesso");
   };
 
-  if (isLoadingFuncionarios || isLoadingObras || isLoadingColaboradores) {
+  if (isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-full">
@@ -89,10 +95,6 @@ const RegistroPonto = () => {
         </div>
       </Layout>
     );
-  }
-
-  if (funcionariosError) {
-    toast.error("Erro ao carregar registros. Tente novamente.");
   }
 
   return (
