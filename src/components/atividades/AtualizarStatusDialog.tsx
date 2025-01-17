@@ -6,7 +6,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,12 +17,17 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { AtualizarHorasForm } from './AtualizarHorasForm';
 import { useToast } from '@/hooks/use-toast';
 import { updateActivity } from '@/services/ActivityService';
 import { User } from 'lucide-react';
-import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { useEffect, useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const emExecucaoSchema = z.object({
   startDate: z.string().min(1, 'Data de início é obrigatória'),
@@ -40,6 +44,16 @@ const paralizadaSchema = z.object({
   pauseTime: z.string().min(1, 'Hora de paralização é obrigatória'),
   reason: z.string().min(1, 'Motivo é obrigatório'),
 });
+
+const motivosParalizacao = [
+  "Falta de material",
+  "Condições climáticas",
+  "Falta de mão de obra",
+  "Problemas técnicos",
+  "Aguardando aprovação",
+  "Interferência com outras atividades",
+  "Outros"
+];
 
 interface AtualizarStatusDialogProps {
   open: boolean;
@@ -250,13 +264,13 @@ export function AtualizarStatusDialog({
                       className="grid grid-cols-2 gap-4"
                     >
                       <div className="flex items-center space-x-2">
-                        <User /> {/* Ícone do usuário */}
+                        <User />
                         <FormLabel>{colaborador.name}</FormLabel>
                       </div>
                       <div>
                         <Input
                           type="number"
-                          name="workedHours" // Nome fixo
+                          name="workedHours"
                           placeholder="Horas"
                           min="0"
                           data-id={colaborador.id}
@@ -311,9 +325,20 @@ export function AtualizarStatusDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Motivo</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o motivo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {motivosParalizacao.map((motivo) => (
+                            <SelectItem key={motivo} value={motivo}>
+                              {motivo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
