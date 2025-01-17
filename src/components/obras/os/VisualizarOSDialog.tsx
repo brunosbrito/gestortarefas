@@ -1,11 +1,25 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Building2, ClipboardList, Hash, Weight, FileText } from "lucide-react";
-import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import {
+  Calendar,
+  User,
+  Building2,
+  ClipboardList,
+  Hash,
+  Weight,
+  FileText,
+} from 'lucide-react';
+import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { updateServiceOrderProgress } from '@/services/ServiceOrderService';
 
 interface VisualizarOSDialogProps {
   os: ServiceOrder | null;
@@ -14,34 +28,54 @@ interface VisualizarOSDialogProps {
   onUpdateProgress?: () => void;
 }
 
-export const VisualizarOSDialog = ({ os, open, onOpenChange, onUpdateProgress }: VisualizarOSDialogProps) => {
-  const [progress, setProgress] = useState<string>("");
+export const VisualizarOSDialog = ({
+  os,
+  open,
+  onOpenChange,
+  onUpdateProgress,
+}: VisualizarOSDialogProps) => {
+  const [progress, setProgress] = useState<number>();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setProgress(os.progress);
+  }, []);
 
   if (!os) return null;
 
   const handleUpdateProgress = async () => {
-    if (!progress) return;
+    if (progress < 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao atualizar progresso',
+        description: 'O progresso deve ser entre 0 e 100.',
+      });
+      return;
+    }
 
     try {
-      // Aqui você implementaria a lógica de atualização do progresso
-      // await updateServiceOrderProgress(os.id, Number(progress));
-      
+      const response = await updateServiceOrderProgress(
+        Number(os.id),
+        progress
+      );
+
+      if (response?.data?.progress) {
+        setProgress(response.data.progress);
+      }
+
       toast({
-        title: "Progresso atualizado",
-        description: "O progresso da OS foi atualizado com sucesso!",
+        title: 'Progresso atualizado',
+        description: 'O progresso da OS foi atualizado com sucesso!',
       });
 
       if (onUpdateProgress) {
         onUpdateProgress();
       }
-      
-      setProgress("");
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Erro ao atualizar progresso",
-        description: "Não foi possível atualizar o progresso da OS.",
+        variant: 'destructive',
+        title: 'Erro ao atualizar progresso',
+        description: 'Não foi possível atualizar o progresso da OS.',
       });
     }
   };
@@ -54,12 +88,26 @@ export const VisualizarOSDialog = ({ os, open, onOpenChange, onUpdateProgress }:
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">OS-{os.serviceOrderNumber.toString().padStart(3, '0')}</h2>
-            <Badge variant={os.status === "em_andamento" ? "default" : os.status === "concluida" ? "secondary" : "outline"}>
-              {os.status === "em_andamento" ? "Em Andamento" : os.status === "concluida" ? "Concluída" : "Pausada"}
+            <h2 className="text-xl font-semibold">
+              OS-{os.serviceOrderNumber.toString().padStart(3, '0')}
+            </h2>
+            <Badge
+              variant={
+                os.status === 'em_andamento'
+                  ? 'default'
+                  : os.status === 'concluida'
+                  ? 'secondary'
+                  : 'outline'
+              }
+            >
+              {os.status === 'em_andamento'
+                ? 'Em Andamento'
+                : os.status === 'concluida'
+                ? 'Concluída'
+                : 'Pausada'}
             </Badge>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold mb-2 flex items-center">
@@ -100,23 +148,21 @@ export const VisualizarOSDialog = ({ os, open, onOpenChange, onUpdateProgress }:
                 Quantidade
               </h3>
               <div className="flex items-center gap-2">
-                <p>{os.quantity || 0}</p>
+                <Input
+                  type="number"
+                  value={progress}
+                  onChange={(e) => setProgress(Number(e.target.value))}
+                  placeholder="Progresso"
+                  className="w-24"
+                />
                 <span>/</span>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={progress}
-                    onChange={(e) => setProgress(e.target.value)}
-                    placeholder="Progresso"
-                    className="w-24"
-                  />
-                  <Button 
-                    onClick={handleUpdateProgress}
-                    className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-                  >
-                    Atualizar
-                  </Button>
-                </div>
+                <p>{os.quantity || 0}</p>
+                <Button
+                  onClick={handleUpdateProgress}
+                  className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+                >
+                  Atualizar
+                </Button>
               </div>
             </div>
             <div>
@@ -133,7 +179,7 @@ export const VisualizarOSDialog = ({ os, open, onOpenChange, onUpdateProgress }:
               <User className="w-4 h-4 mr-2" />
               Responsável
             </h3>
-            <p>{os.assignedUser?.name || "Não atribuído"}</p>
+            <p>{os.assignedUser?.name || 'Não atribuído'}</p>
           </div>
 
           {os.notes && (

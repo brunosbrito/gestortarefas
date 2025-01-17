@@ -68,3 +68,11 @@ export const deleteServiceOrder = async (serviceOrderId: string) => {
     throw error;
   }
 };
+
+export const updateServiceOrderProgress = async (
+  id: number,
+  progress: number
+) => {
+  console.log(progress);
+  return axios.patch(`${API_URL}/progress/${id}`, { progress });
+};

@@ -10,6 +10,7 @@ export interface ServiceOrder {
   quantity: number;
   weight: string;
   projectNumber: string;
+  progress: number;
   projectId: {
     id: number;
     name: string;

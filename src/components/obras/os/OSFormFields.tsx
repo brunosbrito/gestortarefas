@@ -91,7 +91,12 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
             <FormItem style={{ flex: 1 }}>
               <FormLabel>Quantidade</FormLabel>
               <FormControl>
-                <Input placeholder="Descrição da OS" {...field} />
+                <Input
+                  type="number"
+                  placeholder="Quantidade"
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))} // Forçando conversão para número
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -105,7 +110,7 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
             <FormItem style={{ flex: 1 }}>
               <FormLabel>Peso (t)</FormLabel>
               <FormControl>
-                <Input placeholder="Descrição da OS" {...field} />
+                <Input placeholder="Peso" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

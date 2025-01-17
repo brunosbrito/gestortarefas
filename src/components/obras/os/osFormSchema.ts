@@ -3,6 +3,7 @@ import {
   CreateServiceOrder,
   ServiceOrder,
 } from '@/interfaces/ServiceOrderInterface';
+import { Progress } from '@radix-ui/react-progress';
 
 export const formSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),

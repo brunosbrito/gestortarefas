@@ -153,7 +153,9 @@ const OrdensServico = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Hash className="w-4 h-4 text-gray-500" />
-                  <span>Quantidade: {os.quantity || 0}/0</span>
+                  <span>
+                    Quantidade: {os.progress || 0}/{os.quantity || 0}
+                  </span>
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2">

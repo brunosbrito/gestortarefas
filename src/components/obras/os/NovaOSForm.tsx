@@ -30,7 +30,7 @@ export const NovaOSForm = ({ onSubmit, initialData }: NovaOSFormProps) => {
       notes: initialData?.notes || '',
       assignedUser: initialData?.assignedUser?.id || undefined,
       projectNumber: initialData?.projectNumber || undefined,
-      quantity: initialData?.quantity || undefined,
+      quantity: initialData?.quantity || 0,
       weight: initialData?.weight || undefined,
     },
   });
