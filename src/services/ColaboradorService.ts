@@ -1,11 +1,10 @@
-import { Colaborador } from '@/interfaces/ColaboradorInterface';
-import { Obra } from '@/interfaces/ObrasInterface';
+import { Colaborador, CreateColaborador } from '@/interfaces/ColaboradorInterface';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/collaborators/';
 
 class ColaboradorService {
-  async createColaborador(colaboradorData: Colaborador) {
+  async createColaborador(colaboradorData: CreateColaborador) {
     try {
       const response = await axios.post(API_URL, colaboradorData);
       return response;
