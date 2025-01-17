@@ -55,8 +55,15 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
   const handleSubmit = async (data: FormValues) => {
     try {
       await updateServiceOrder(os.id, {
-        ...os,
-        ...data,
+        description: data.description,
+        projectId: data.projectId,
+        createdAt: data.createdAt,
+        status: data.status,
+        notes: data.notes,
+        assignedUser: data.assignedUser,
+        projectNumber: data.projectNumber,
+        quantity: data.quantity,
+        weight: data.weight,
       });
 
       toast({

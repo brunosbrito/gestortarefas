@@ -114,7 +114,14 @@ const OrdensServico = () => {
                 <DialogHeader>
                   <DialogTitle>Nova Ordem de Serviço</DialogTitle>
                 </DialogHeader>
-                <NovaOSForm onSubmit={handleNovaOS} />
+                <NovaOSForm onSuccess={() => {
+                  setDialogOpen(false);
+                  getServiceOrders();
+                  toast({
+                    title: 'Ordem de Serviço criada',
+                    description: 'A OS foi criada com sucesso.',
+                  });
+                }} />
               </DialogContent>
             </Dialog>
           )}
