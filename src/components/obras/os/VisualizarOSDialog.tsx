@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Building2, ClipboardList, Hash } from "lucide-react";
+import { Calendar, User, Building2, ClipboardList, Hash, Weight, FileText } from "lucide-react";
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,27 +87,44 @@ export const VisualizarOSDialog = ({ os, open, onOpenChange, onUpdateProgress }:
 
           <div>
             <h3 className="font-semibold mb-2 flex items-center">
-              <Hash className="w-4 h-4 mr-2" />
-              Quantidade
+              <FileText className="w-4 h-4 mr-2" />
+              Número do Projeto
             </h3>
-            <div className="flex items-center gap-2">
-              <p>{os.quantity || 0}</p>
-              <span>/</span>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  value={progress}
-                  onChange={(e) => setProgress(e.target.value)}
-                  placeholder="Progresso"
-                  className="w-24"
-                />
-                <Button 
-                  onClick={handleUpdateProgress}
-                  className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-                >
-                  Atualizar
-                </Button>
+            <p>{os.projectNumber}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-semibold mb-2 flex items-center">
+                <Hash className="w-4 h-4 mr-2" />
+                Quantidade
+              </h3>
+              <div className="flex items-center gap-2">
+                <p>{os.quantity || 0}</p>
+                <span>/</span>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={progress}
+                    onChange={(e) => setProgress(e.target.value)}
+                    placeholder="Progresso"
+                    className="w-24"
+                  />
+                  <Button 
+                    onClick={handleUpdateProgress}
+                    className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+                  >
+                    Atualizar
+                  </Button>
+                </div>
               </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2 flex items-center">
+                <Weight className="w-4 h-4 mr-2" />
+                Peso (t)
+              </h3>
+              <p>{os.weight}</p>
             </div>
           </div>
 
