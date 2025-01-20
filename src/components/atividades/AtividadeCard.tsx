@@ -28,6 +28,13 @@ import {
   User,
   Users,
 } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { NovaAtividadeForm } from './NovaAtividadeForm';
 import { useToast } from '@/hooks/use-toast';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
@@ -264,6 +271,39 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                   </DialogHeader>
 
                   <div className="space-y-6 py-4">
+                    {/* Seção de Imagens */}
+                    {atividade.images && atividade.images.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-construction-700">
+                          Imagens da Atividade
+                        </h3>
+                        <Carousel className="w-full max-w-xl mx-auto">
+                          <CarouselContent>
+                            {atividade.images.map((image, index) => (
+                              <CarouselItem key={image.id}>
+                                <div className="p-1">
+                                  <div className="flex flex-col space-y-2">
+                                    <img
+                                      src={`data:image/jpeg;base64,${image.imageData}`}
+                                      alt={`Imagem ${index + 1}`}
+                                      className="w-full h-64 object-cover rounded-lg"
+                                    />
+                                    {image.description && (
+                                      <p className="text-sm text-gray-600 text-center">
+                                        {image.description.toString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious />
+                          <CarouselNext />
+                        </Carousel>
+                      </div>
+                    )}
+
                     {/* Seção de Informações Básicas */}
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold text-construction-700">
