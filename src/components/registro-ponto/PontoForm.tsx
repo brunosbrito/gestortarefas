@@ -25,13 +25,15 @@ import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
 
 const formSchema = z.object({
   shift: z.string({ required_error: 'Selecione o turno' }),
-  typeRegister: z.string({ required_error: 'Selecione o tipo de registro' }),
+  typeRegister: z.enum(['PRODUCAO', 'ADMINISTRATIVO', 'ENGENHARIA', 'FALTA'], {
+    required_error: 'Selecione o tipo de registro',
+  }),
   username: z.string({ required_error: 'Selecione o colaborador' }),
   project: z.string().optional(),
   sector: z.string().optional(),
   reason: z.string().optional(),
-  role: z.string().optional(),
-  status: z.string().optional(),
+  role: z.enum(['PRODUCAO', 'ADMINISTRATIVO', 'ENGENHARIA']).optional(),
+  status: z.enum(['PRESENTE', 'FALTA']).optional(),
 });
 
 interface PontoFormProps {
@@ -69,12 +71,12 @@ export const PontoForm = ({
     const effectiveData: CreateEffectiveDto = {
       username: data.username,
       shift: Number(data.shift),
-      role: data.role,
+      role: data.role || 'PRODUCAO',
       project: data.project,
       typeRegister: data.typeRegister,
       reason: data.reason,
       sector: data.sector,
-      status: data.status === 'FALTA' ? 'FALTA' : 'PRESENTE',
+      status: data.typeRegister === 'FALTA' ? 'FALTA' : 'PRESENTE',
       createdAt: new Date(),
     };
 
@@ -131,6 +133,7 @@ export const PontoForm = ({
                 <SelectContent>
                   <SelectItem value="PRODUCAO">Produção</SelectItem>
                   <SelectItem value="ADMINISTRATIVO">Administrativo</SelectItem>
+                  <SelectItem value="ENGENHARIA">Engenharia</SelectItem>
                   <SelectItem value="FALTA">Falta</SelectItem>
                 </SelectContent>
               </Select>
@@ -171,10 +174,7 @@ export const PontoForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Obra</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a obra" />
@@ -194,7 +194,7 @@ export const PontoForm = ({
           />
         )}
 
-        {tipoRegistro === 'ADMINISTRATIVO' && (
+        {(tipoRegistro === 'ADMINISTRATIVO' || tipoRegistro === 'ENGENHARIA') && (
           <FormField
             control={form.control}
             name="sector"

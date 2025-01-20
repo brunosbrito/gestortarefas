@@ -1,17 +1,17 @@
 export interface CreateEffectiveDto {
   username: string;
   shift: number;
-  role: string;
+  role: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA';
   createdAt?: Date;
   project?: string;
-  typeRegister?: string;
+  typeRegister: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA';
   reason?: string;
   sector?: string;
-  status?: string;
+  status: 'PRESENTE' | 'FALTA';
 }
 
 export interface UpdateEffectiveDto extends Partial<CreateEffectiveDto> {
   username: string;
   shift: number;
-  role: string;
+  role: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA';
 }
