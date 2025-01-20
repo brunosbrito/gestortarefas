@@ -10,8 +10,12 @@ export interface CreateEffectiveDto {
   status: 'PRESENTE' | 'FALTA';
 }
 
-export interface UpdateEffectiveDto extends Partial<CreateEffectiveDto> {
+export interface UpdateEffectiveDto {
   username: string;
   shift: number;
   role: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA';
+  project?: string;
+  typeRegister: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA';
+  reason?: string;
+  sector?: string;
 }

@@ -57,7 +57,7 @@ export const PontoForm = ({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues || {
       shift: '',
-      typeRegister: '',
+      typeRegister: 'PRODUCAO',
       username: '',
       project: '',
       sector: '',

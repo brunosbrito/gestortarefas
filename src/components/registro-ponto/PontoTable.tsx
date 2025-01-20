@@ -59,7 +59,7 @@ export const PontoTable = ({
         shift: f.shift,
         role: f.role,
         project: f.project,
-        typeRegister: f.status,
+        typeRegister: f.typeRegister,
         reason: f.reason,
         sector: f.setor === 'ADMINISTRATIVO' ? f.setor : undefined,
       }));
