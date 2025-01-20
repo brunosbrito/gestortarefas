@@ -8,6 +8,4 @@ export interface Funcionario {
   reason?: string;
   sector?: string;
   status: 'PRESENTE' | 'FALTA';
-  turno: number;
-  setor: string;
 }
