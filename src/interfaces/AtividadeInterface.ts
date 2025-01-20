@@ -1,7 +1,9 @@
+export type AtividadeStatus = 'não iniciada' | 'em andamento' | 'concluída' | 'pausada' | 'cancelada';
+
 export interface Activity {
   id: number;
   description: string;
-  status: 'Planejado' | 'Pendente' | 'Em andamento' | 'Concluída';
+  status: AtividadeStatus;
   observation?: string;
   imageUrl?: string;
   imageDescription?: string;
