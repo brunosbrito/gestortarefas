@@ -456,8 +456,17 @@ export function NovaAtividadeForm({
         />
 
         <div className="space-y-4">
-          <FileUploadField form={form} fileType="imagem" accept="image/*" />
-          <FileUploadField form={form} fileType="arquivo" />
+          <FileUploadField 
+            form={form} 
+            fileType="imagem" 
+            accept="image/*" 
+            activityId={atividadeInicial?.id}
+          />
+          <FileUploadField 
+            form={form} 
+            fileType="arquivo"
+            activityId={atividadeInicial?.id}
+          />
         </div>
 
         <Button
