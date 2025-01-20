@@ -38,7 +38,7 @@ export const PontoTable = ({
   onDelete,
 }: PontoTableProps) => {
   const funcionariosFiltrados = funcionarios.filter((f) => f.shift === turno);
-  console.log(funcionariosFiltrados);
+
   const getTurnoLabel = (turno: number) => {
     switch (turno) {
       case 1:
@@ -61,7 +61,7 @@ export const PontoTable = ({
         project: f.project,
         typeRegister: f.typeRegister,
         reason: f.reason,
-        sector: f.setor === 'ADMINISTRATIVO' ? f.setor : undefined,
+        sector: f.sector,
       }));
 
       for (const registro of registros) {
@@ -91,11 +91,15 @@ export const PontoTable = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[250px]">Nome</TableHead>
-            <TableHead className="w-[150px]">Setor</TableHead>
-            <TableHead className="w-[120px]">Status</TableHead>
-            <TableHead className="w-[200px]">Obra</TableHead>
-            <TableHead className="w-[200px] text-right">Ações</TableHead>
+            <TableHead>Nome</TableHead>
+            <TableHead>Turno</TableHead>
+            <TableHead>Tipo Registro</TableHead>
+            <TableHead>Função</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Obra</TableHead>
+            <TableHead>Setor</TableHead>
+            <TableHead>Motivo</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -104,13 +108,15 @@ export const PontoTable = ({
               <TableCell className="font-medium">
                 {funcionario.username}
               </TableCell>
+              <TableCell>{getTurnoLabel(funcionario.shift)}</TableCell>
               <TableCell>
-                <Badge
-                  variant={
-                    funcionario.setor === 'PRODUCAO' ? 'default' : 'secondary'
-                  }
-                >
-                  {funcionario.setor}
+                <Badge variant="outline">
+                  {funcionario.typeRegister}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary">
+                  {funcionario.role}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -125,6 +131,8 @@ export const PontoTable = ({
                 </Badge>
               </TableCell>
               <TableCell>{funcionario.project || '-'}</TableCell>
+              <TableCell>{funcionario.sector || '-'}</TableCell>
+              <TableCell>{funcionario.reason || '-'}</TableCell>
               <TableCell className="text-right space-x-2">
                 <Button
                   variant="ghost"
