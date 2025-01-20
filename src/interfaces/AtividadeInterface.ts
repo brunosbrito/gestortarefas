@@ -20,7 +20,7 @@ export interface Activity {
   pauseDate?: string;
   createdAt: string;
   updatedAt: string;
-  collaborators: number[];
+  collaborators: number[] | { id: number; name: string; role: string }[];
   projectId: number;
   orderServiceId: number;
   createdBy: number;
