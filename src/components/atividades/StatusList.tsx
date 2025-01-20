@@ -1,11 +1,11 @@
 import { Badge } from '@/components/ui/badge';
-import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
+import { Activity } from '@/interfaces/AtividadeInterface';
 import { AtividadeCard } from './AtividadeCard';
 import { Droppable } from 'react-beautiful-dnd';
 
 interface StatusListProps {
   status: string;
-  atividades: AtividadeStatus[];
+  atividades: Activity[];
   droppableId: string;
 }
 
