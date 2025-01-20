@@ -289,7 +289,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                                 <div className="p-1">
                                   <div className="flex flex-col space-y-2">
                                     <img
-                                      src={`data:image/jpeg;base64,${image.imageData}`}
+                                      src={`data:image/jpeg;base64,${image.imageData.toString('base64')}`}
                                       alt={`Imagem ${index + 1}`}
                                       className="w-full h-64 object-cover rounded-lg"
                                     />
