@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { Activity } from '@/interfaces/AtividadeInterface';
+import { Activity, AtividadeStatus } from '@/interfaces/AtividadeInterface';
 import { AtividadeCard } from './AtividadeCard';
 import { Droppable } from 'react-beautiful-dnd';
 
@@ -7,9 +7,10 @@ interface StatusListProps {
   status: string;
   atividades: Activity[];
   droppableId: string;
+  onStatusChange: (id: number, newStatus: AtividadeStatus) => void;
 }
 
-export const StatusList = ({ status, atividades, droppableId }: StatusListProps) => {
+export const StatusList = ({ status, atividades, droppableId, onStatusChange }: StatusListProps) => {
   const atividadesFiltradas = atividades.filter((a) => a.status === status);
 
   return (
@@ -32,6 +33,7 @@ export const StatusList = ({ status, atividades, droppableId }: StatusListProps)
                   key={atividade.id} 
                   atividade={atividade} 
                   index={index}
+                  onStatusChange={onStatusChange}
                 />
               ))}
               {provided.placeholder}

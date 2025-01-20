@@ -11,7 +11,7 @@ import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaAtividadeForm } from '@/components/atividades/NovaAtividadeForm';
 import { StatusList } from '@/components/atividades/StatusList';
-import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
+import { Activity, AtividadeStatus } from '@/interfaces/AtividadeInterface';
 import { useParams } from 'react-router-dom';
 import { getActivitiesByServiceOrderId } from '@/services/ActivityService';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
@@ -28,7 +28,7 @@ const statusListas = [
 ] as const;
 
 const Atividades = () => {
-  const [atividades, setAtividades] = useState<AtividadeStatus[]>([]);
+  const [atividades, setAtividades] = useState<Activity[]>([]);
   const [openNovaAtividade, setOpenNovaAtividade] = useState(false);
   const [obra, setObra] = useState<Obra | null>(null);
   const [dialogStatus, setDialogStatus] = useState<{
@@ -95,6 +95,11 @@ const Atividades = () => {
     getByServiceOrderId();
   };
 
+  const handleStatusChange = (id: number, newStatus: AtividadeStatus) => {
+    // Implementar a lógica de atualização do status
+    console.log('Atualizando status:', id, newStatus);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -132,6 +137,7 @@ const Atividades = () => {
                 status={status}
                 atividades={atividades}
                 droppableId={status}
+                onStatusChange={handleStatusChange}
               />
             ))}
           </div>
