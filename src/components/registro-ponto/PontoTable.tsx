@@ -95,7 +95,6 @@ export const PontoTable = ({
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead>Turno</TableHead>
             <TableHead>Função</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Obra</TableHead>
@@ -110,7 +109,6 @@ export const PontoTable = ({
               <TableCell className="font-medium">
                 {funcionario.username}
               </TableCell>
-              <TableCell>{getTurnoLabel(funcionario.shift)}</TableCell>
               <TableCell>
                 <Badge variant="secondary">
                   {funcionario.role}
