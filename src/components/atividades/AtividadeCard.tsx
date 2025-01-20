@@ -105,7 +105,9 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
       ? calculateElapsedTime(atividade.totalTime, atividade.startDate)
       : atividade.totalTime;
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -120,7 +122,8 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
       toast({
         variant: 'destructive',
         title: 'Erro no upload',
-        description: 'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
+        description:
+          'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
       });
     }
   };
