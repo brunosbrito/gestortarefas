@@ -21,37 +21,19 @@ import {
 import { toast } from 'sonner';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
+import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
 
-const formSchema = z
-  .object({
-    turno: z.string({ required_error: 'Selecione o turno' }),
-    tipo: z.string({ required_error: 'Selecione o tipo de registro' }),
-    colaborador: z.string({ required_error: 'Selecione o colaborador' }),
-    obra: z.string().optional(),
-    setor: z.string().optional(),
-    motivoFalta: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.tipo === 'PRODUCAO' && !data.obra) {
-        return false;
-      }
-      if (data.tipo === 'ADMINISTRATIVO' && !data.setor) {
-        return false;
-      }
-      if (data.tipo === 'FALTA' && !data.motivoFalta) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: 'Preencha todos os campos obrigatórios',
-      path: ['tipo'],
-    }
-  );
+const formSchema = z.object({
+  turno: z.string({ required_error: 'Selecione o turno' }),
+  tipo: z.string({ required_error: 'Selecione o tipo de registro' }),
+  colaborador: z.string({ required_error: 'Selecione o colaborador' }),
+  obra: z.string().optional(),
+  setor: z.string().optional(),
+  motivoFalta: z.string().optional(),
+});
 
 interface PontoFormProps {
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onSubmit: (data: CreateEffectiveDto) => void;
   obras: Obra[];
   colaboradores: Colaborador[];
   onClose: () => void;
@@ -79,13 +61,22 @@ export const PontoForm = ({
     },
   });
 
-  const tipoRegistro = form.watch('tipo') as
-    | 'PRODUCAO'
-    | 'ADMINISTRATIVO'
-    | 'FALTA';
+  const tipoRegistro = form.watch('tipo');
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    onSubmit(data);
+    const effectiveData: CreateEffectiveDto = {
+      username: data.colaborador,
+      shift: Number(data.turno),
+      role: data.tipo,
+      project: data.obra,
+      typeRegister: data.tipo === 'FALTA' ? 'FALTA' : 'PRESENTE',
+      reason: data.motivoFalta,
+      sector: data.setor,
+      status: data.tipo === 'FALTA' ? 'FALTA' : 'PRESENTE',
+      createdAt: new Date(),
+    };
+
+    onSubmit(effectiveData);
     form.reset();
     onClose();
     toast.success(
@@ -113,9 +104,7 @@ export const PontoForm = ({
                 <SelectContent>
                   <SelectItem value="1">1º Turno (06:00 - 14:00)</SelectItem>
                   <SelectItem value="2">2º Turno (14:00 - 22:00)</SelectItem>
-                  <SelectItem value="3">
-                    Turno Central (08:00 - 17:00)
-                  </SelectItem>
+                  <SelectItem value="3">Turno Central (08:00 - 17:00)</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -233,7 +222,7 @@ export const PontoForm = ({
           />
         )}
 
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
           {isEdit ? 'Salvar Alterações' : 'Salvar Registro'}
         </Button>
       </form>

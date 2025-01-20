@@ -24,32 +24,33 @@ import { toast } from 'sonner';
 import { updateEffective } from '@/services/EffectiveService';
 
 interface Funcionario {
-  turno: number;
-  role: string;
-  setor: string;
   id: number;
   username: string;
-  sector: 'PRODUCAO' | 'ADMINISTRATIVO';
-  status: 'PRESENTE' | 'FALTA';
-  shift: 1 | 2 | 3;
+  role: string;
+  shift: number;
   project?: string;
+  typeRegister?: string;
   reason?: string;
+  sector?: string;
+  status: 'PRESENTE' | 'FALTA';
+  turno: number;
+  setor: 'PRODUCAO' | 'ADMINISTRATIVO';
 }
 
 interface PontoTableProps {
   funcionarios: Funcionario[];
-  shift: 1 | 2 | 3;
+  turno: number;
   onEdit: (funcionario: Funcionario) => void;
   onDelete: (id: number) => void;
 }
 
 export const PontoTable = ({
   funcionarios,
-  shift,
+  turno,
   onEdit,
   onDelete,
 }: PontoTableProps) => {
-  const funcionariosFiltrados = funcionarios.filter((f) => f.turno === shift);
+  const funcionariosFiltrados = funcionarios.filter((f) => f.turno === turno);
 
   const getTurnoLabel = (turno: number) => {
     switch (turno) {
@@ -82,7 +83,7 @@ export const PontoTable = ({
       }
 
       toast.success(
-        `Registros do ${getTurnoLabel(shift)} enviados com sucesso`
+        `Registros do ${getTurnoLabel(turno)} enviados com sucesso`
       );
     } catch (error) {
       console.error('Erro ao enviar registros:', error);
@@ -94,7 +95,7 @@ export const PontoTable = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-construction-800">
-          {getTurnoLabel(shift)}
+          {getTurnoLabel(turno)}
         </h2>
         <Button onClick={handleEnviarTurno} variant="secondary" size="sm">
           <Send className="w-4 h-4 mr-2" />
