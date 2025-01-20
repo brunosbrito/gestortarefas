@@ -168,9 +168,14 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
           <Card className="bg-white hover:shadow-md transition-shadow">
             <CardHeader className="p-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">
-                  {atividade.description}
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-[#FF7F0E]">
+                    #{atividade.id}
+                  </span>
+                  <CardTitle className="text-sm font-medium">
+                    {atividade.description}
+                  </CardTitle>
+                </div>
                 <GripHorizontal className="w-4 h-4 text-gray-400" />
               </div>
             </CardHeader>
