@@ -1,7 +1,7 @@
 export interface CreateEffectiveDto {
   username: string;
   shift: number;
-  role: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA';
+  role: 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO';
   createdAt?: Date;
   project?: string;
   typeRegister: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA';
@@ -13,7 +13,7 @@ export interface CreateEffectiveDto {
 export interface UpdateEffectiveDto {
   username: string;
   shift: number;
-  role: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA';
+  role: 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO';
   project?: string;
   typeRegister: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA';
   reason?: string;

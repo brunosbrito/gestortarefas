@@ -29,6 +29,7 @@ interface PontoTableProps {
   turno: number;
   onEdit: (funcionario: Funcionario) => void;
   onDelete: (id: number) => void;
+  onRefresh: () => void;
 }
 
 export const PontoTable = ({
@@ -36,6 +37,7 @@ export const PontoTable = ({
   turno,
   onEdit,
   onDelete,
+  onRefresh,
 }: PontoTableProps) => {
   const funcionariosFiltrados = funcionarios.filter((f) => f.shift === turno);
 
@@ -71,6 +73,7 @@ export const PontoTable = ({
       toast.success(
         `Registros do ${getTurnoLabel(turno)} enviados com sucesso`
       );
+      onRefresh();
     } catch (error) {
       console.error('Erro ao enviar registros:', error);
       toast.error('Erro ao enviar registros. Tente novamente.');
@@ -93,7 +96,6 @@ export const PontoTable = ({
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Turno</TableHead>
-            <TableHead>Tipo Registro</TableHead>
             <TableHead>Função</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Obra</TableHead>
@@ -109,11 +111,6 @@ export const PontoTable = ({
                 {funcionario.username}
               </TableCell>
               <TableCell>{getTurnoLabel(funcionario.shift)}</TableCell>
-              <TableCell>
-                <Badge variant="outline">
-                  {funcionario.typeRegister}
-                </Badge>
-              </TableCell>
               <TableCell>
                 <Badge variant="secondary">
                   {funcionario.role}
@@ -160,7 +157,10 @@ export const PontoTable = ({
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => onDelete(funcionario.id)}
+                        onClick={() => {
+                          onDelete(funcionario.id);
+                          onRefresh();
+                        }}
                       >
                         Confirmar
                       </AlertDialogAction>

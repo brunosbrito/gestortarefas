@@ -34,33 +34,32 @@ const RegistroPonto = () => {
   const [colaboradores, setColaboradores] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const funcionariosData = await getEffectivesByShiftAndDate(
+        currentTurno
+      );
+      const obrasData = await ObrasService.getAllObras();
+      const colaboradoresData = await ColaboradorService.getAllColaboradores();
+
+      setFuncionarios(funcionariosData);
+      setObras(obrasData);
+      setColaboradores(colaboradoresData.data);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      toast.error('Erro ao carregar dados. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const funcionariosData = await getEffectivesByShiftAndDate(
-          currentTurno
-        );
-        const obrasData = await ObrasService.getAllObras();
-
-        const colaboradoresData =
-          await ColaboradorService.getAllColaboradores();
-
-        setFuncionarios(funcionariosData);
-        setObras(obrasData);
-        setColaboradores(colaboradoresData.data);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        toast.error('Erro ao carregar dados. Tente novamente.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
   }, [currentTurno]);
 
-  const handleDelete = async () => {
+  const handleDelete = async (id: number) => {
+    // Implementar lógica de exclusão
     toast.success('Registro excluído com sucesso');
   };
 
@@ -69,19 +68,30 @@ const RegistroPonto = () => {
     setIsEditDialogOpen(true);
   };
 
-  const onSubmit = (data: any) => {
-    setIsDialogOpen(false);
-
-    createEffective(data);
-    toast.success('Registro adicionado com sucesso');
+  const onSubmit = async (data: any) => {
+    try {
+      await createEffective(data);
+      setIsDialogOpen(false);
+      toast.success('Registro adicionado com sucesso');
+      fetchData(); // Recarrega a tabela após adicionar
+    } catch (error) {
+      console.error('Erro ao criar registro:', error);
+      toast.error('Erro ao criar registro. Tente novamente.');
+    }
   };
 
-  const onEditSubmit = () => {
+  const onEditSubmit = async (data: any) => {
     if (!selectedFuncionario) return;
-
-    setIsEditDialogOpen(false);
-    setSelectedFuncionario(null);
-    toast.success('Registro atualizado com sucesso');
+    try {
+      // Implementar lógica de edição
+      setIsEditDialogOpen(false);
+      setSelectedFuncionario(null);
+      toast.success('Registro atualizado com sucesso');
+      fetchData(); // Recarrega a tabela após editar
+    } catch (error) {
+      console.error('Erro ao atualizar registro:', error);
+      toast.error('Erro ao atualizar registro. Tente novamente.');
+    }
   };
 
   if (isLoading) {
@@ -145,10 +155,7 @@ const RegistroPonto = () => {
                   typeRegister: selectedFuncionario.typeRegister,
                   username: selectedFuncionario.username,
                   project: selectedFuncionario.project,
-                  sector:
-                    selectedFuncionario.sector === 'ADMINISTRATIVO'
-                      ? selectedFuncionario.sector
-                      : '',
+                  sector: selectedFuncionario.sector,
                   reason: selectedFuncionario.reason,
                 }}
                 isEdit
@@ -175,6 +182,7 @@ const RegistroPonto = () => {
               turno={1}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onRefresh={fetchData}
             />
           </TabsContent>
           <TabsContent value="turno2" className="mt-6">
@@ -183,6 +191,7 @@ const RegistroPonto = () => {
               turno={2}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onRefresh={fetchData}
             />
           </TabsContent>
           <TabsContent value="turno3" className="mt-6">
@@ -191,6 +200,7 @@ const RegistroPonto = () => {
               turno={3}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onRefresh={fetchData}
             />
           </TabsContent>
         </Tabs>
