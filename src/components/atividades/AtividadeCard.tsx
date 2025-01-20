@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Building2,
@@ -28,25 +27,20 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { NovaAtividadeForm } from './NovaAtividadeForm';
 import { useToast } from '@/hooks/use-toast';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useParams } from 'react-router-dom';
 import { Draggable } from 'react-beautiful-dnd';
 import { AtividadeHistoricoList } from './AtividadeHistoricoList';
-import { differenceInSeconds, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { uploadActivityImage } from '@/services/ActivityImageService';
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { AtividadeImageCarousel } from './AtividadeImageCarousel';
+import { AtividadeInfoBasica } from './AtividadeInfoBasica';
+import { AtividadeEquipe } from './AtividadeEquipe';
+import { AtividadeUploadDialog } from './AtividadeUploadDialog';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -61,15 +55,11 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   function formatTime(totalTime) {
-    console.log(totalTime);
     if (isNaN(totalTime) || totalTime <= 0) return '00:00';
 
-    const hours = Math.floor(totalTime); // Pega a parte inteira (horas)
-    const minutes = Math.round((totalTime - hours) * 60); // Calcula os minutos
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
-      2,
-      '0'
-    )}`;
+    const hours = Math.floor(totalTime);
+    const minutes = Math.round((totalTime - hours) * 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
 
   const calculateElapsedTime = (totalTime, startDate) => {
@@ -78,22 +68,18 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
     const startDateTime = new Date(startDate);
     const now = new Date();
 
-    // Garantir que o horário atual seja maior que o horário de início
     if (now < startDateTime) {
       console.error('Erro: A data de início é maior que o horário atual.');
       return 0;
     }
 
-    // Calcular diferença em segundos e somar ao totalTime
     const elapsedSeconds =
       totalTime + (now.getTime() - startDateTime.getTime()) / 1000;
 
-    const hours = Math.floor(elapsedSeconds / 3600); // Horas completas
-    const minutes = Math.floor((elapsedSeconds % 3600) / 60); // Minutos restantes
+    const hours = Math.floor(elapsedSeconds / 3600);
+    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
 
-    // Total de horas no formato decimal
-    const result = hours + minutes / 60;
-    return result;
+    return hours + minutes / 60;
   };
 
   const formatEstimatedTime = (estimatedTime: string) => {
@@ -276,143 +262,17 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                   </DialogHeader>
 
                   <div className="space-y-6 py-4">
-                    {/* Seção de Imagens */}
-                    {atividade.images && atividade.images.length > 0 && (
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-construction-700">
-                          Imagens da Atividade
-                        </h3>
-                        <Carousel className="w-full max-w-xl mx-auto">
-                          <CarouselContent>
-                            {atividade.images.map((image, index) => (
-                              <CarouselItem key={image.id}>
-                                <div className="p-1">
-                                  <div className="flex flex-col space-y-2">
-                                    <img
-                                      src={`data:image/jpeg;base64,${image.imageData.toString('base64')}`}
-                                      alt={`Imagem ${index + 1}`}
-                                      className="w-full h-64 object-cover rounded-lg"
-                                    />
-                                    {image.description && (
-                                      <p className="text-sm text-gray-600 text-center">
-                                        {image.description.toString()}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious />
-                          <CarouselNext />
-                        </Carousel>
-                      </div>
-                    )}
-
-                    {/* Seção de Informações Básicas */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-construction-700">
-                        Informações Gerais
-                      </h3>
-                      <div className="grid grid-cols-2 gap-4 bg-construction-50 p-4 rounded-lg">
-                        <div>
-                          <p className="font-medium text-construction-600">
-                            Descrição
-                          </p>
-                          <p className="text-construction-800">
-                            {atividade.description}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-construction-600">
-                            Status
-                          </p>
-                          <p className="text-construction-800">
-                            {atividade.status}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-construction-600">
-                            Macro Tarefa
-                          </p>
-                          <p className="text-construction-800">
-                            {atividade.macroTask}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-construction-600">
-                            Processo
-                          </p>
-                          <p className="text-construction-800">
-                            {atividade.process}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-construction-600">
-                            Data de Início
-                          </p>
-                          <p className="text-construction-800">
-                            {format(
-                              new Date(atividade.originalStartDate),
-                              'dd/MM/yyyy hh:mm'
-                            )}
-                          </p>
-                        </div>
-                        {atividade.endDate && (
-                          <div>
-                            <p className="font-medium text-construction-600">
-                              Data de Conclusão
-                            </p>
-                            <p className="text-construction-800">
-                              {format(
-                                new Date(atividade.endDate),
-                                'dd/MM/yyyy hh:mm'
-                              )}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
+                    <AtividadeImageCarousel images={atividade.images} />
+                    <AtividadeInfoBasica atividade={atividade} />
                     <Separator className="my-4" />
-
-                    {/* Seção da Equipe */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-construction-700">
-                        Equipe Responsável
-                      </h3>
-                      <div className="bg-construction-50 p-4 rounded-lg">
-                        <div className="grid grid-cols-2 gap-4">
-                          {atividade.collaborators?.map((collaborator) => (
-                            <div
-                              key={collaborator.id}
-                              className="flex items-center space-x-2 bg-white p-3 rounded-md shadow-sm"
-                            >
-                              <User className="w-5 h-5 text-construction-600" />
-                              <div>
-                                <p className="font-medium text-construction-800">
-                                  {collaborator.name}
-                                </p>
-                                <p className="text-sm text-construction-600">
-                                  {collaborator.role}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
+                    <AtividadeEquipe collaborators={atividade.collaborators} />
                     <Separator className="my-4" />
-
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold text-construction-700">
                         Histórico de Alterações
                       </h3>
                       <div className="bg-construction-50 p-4 rounded-lg">
-                        <AtividadeHistoricoList
-                          activityId={Number(atividade.id)}
-                        />
+                        <AtividadeHistoricoList activityId={Number(atividade.id)} />
                       </div>
                     </div>
                   </div>
@@ -462,46 +322,17 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
             </CardFooter>
           </Card>
 
-          <Dialog
-            open={isUploadDialogOpen}
-            onOpenChange={setIsUploadDialogOpen}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Descrição da Imagem</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="imageDescription">
-                    Adicione uma descrição para a imagem
-                  </Label>
-                  <Input
-                    id="imageDescription"
-                    value={imageDescription}
-                    onChange={(e) => setImageDescription(e.target.value)}
-                    placeholder="Digite a descrição da imagem"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsUploadDialogOpen(false);
-                    setSelectedFile(null);
-                    setImageDescription('');
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-                  onClick={handleImageUpload}
-                >
-                  Enviar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
+          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <AtividadeUploadDialog
+              imageDescription={imageDescription}
+              onDescriptionChange={setImageDescription}
+              onCancel={() => {
+                setIsUploadDialogOpen(false);
+                setSelectedFile(null);
+                setImageDescription('');
+              }}
+              onUpload={handleImageUpload}
+            />
           </Dialog>
         </div>
       )}
