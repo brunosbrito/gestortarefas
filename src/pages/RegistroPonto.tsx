@@ -108,13 +108,13 @@ const RegistroPonto = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-construction-800">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-construction-800">
             Registro de Ponto
           </h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Registro
               </Button>
@@ -166,16 +166,22 @@ const RegistroPonto = () => {
         </Dialog>
 
         <Tabs
-          defaultValue="turno1"
           value={`turno${currentTurno}`}
           onValueChange={(value) => setCurrentTurno(value.replace('turno', ''))}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="turno1">1º Turno (06:00 - 14:00)</TabsTrigger>
-            <TabsTrigger value="turno2">2º Turno (14:00 - 22:00)</TabsTrigger>
-            <TabsTrigger value="turno3">
-              Turno Central (08:00 - 17:00)
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2">
+            <TabsTrigger value="turno1" className="text-sm sm:text-base">
+              1º Turno
+              <span className="hidden sm:inline"> (06:00 - 14:00)</span>
+            </TabsTrigger>
+            <TabsTrigger value="turno2" className="text-sm sm:text-base">
+              2º Turno
+              <span className="hidden sm:inline"> (14:00 - 22:00)</span>
+            </TabsTrigger>
+            <TabsTrigger value="turno3" className="text-sm sm:text-base">
+              Turno Central
+              <span className="hidden sm:inline"> (08:00 - 17:00)</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="turno1" className="mt-6">
