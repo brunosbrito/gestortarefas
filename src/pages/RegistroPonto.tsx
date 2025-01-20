@@ -18,20 +18,7 @@ import ObrasService from '@/services/ObrasService';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { getEffectivesByShiftAndDate } from '@/services/EffectiveService';
-
-interface Funcionario {
-  id: number;
-  username: string;
-  role: 'PRODUCAO' | 'ADMINISTRATIVO';
-  shift: 1 | 2 | 3;
-  project?: string;
-  typeRegister?: string;
-  reason?: string;
-  sector?: string;
-  status?: string;
-  turno: 1 | 2 | 3;
-  setor: string;
-}
+import { Funcionario } from '@/interfaces/FuncionarioInterface';
 
 const RegistroPonto = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);

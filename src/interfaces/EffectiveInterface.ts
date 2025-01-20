@@ -10,4 +10,8 @@ export interface CreateEffectiveDto {
   status?: string;
 }
 
-export interface UpdateEffectiveDto extends Partial<CreateEffectiveDto> {}
+export interface UpdateEffectiveDto extends Partial<CreateEffectiveDto> {
+  username: string;
+  shift: number;
+  role: string;
+}

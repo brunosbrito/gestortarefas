@@ -22,20 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { updateEffective } from '@/services/EffectiveService';
-
-interface Funcionario {
-  id: number;
-  username: string;
-  role: string;
-  shift: number;
-  project?: string;
-  typeRegister?: string;
-  reason?: string;
-  sector?: string;
-  status: 'PRESENTE' | 'FALTA';
-  turno: number;
-  setor: 'PRODUCAO' | 'ADMINISTRATIVO';
-}
+import { Funcionario } from '@/interfaces/FuncionarioInterface';
 
 interface PontoTableProps {
   funcionarios: Funcionario[];
@@ -69,7 +56,7 @@ export const PontoTable = ({
     try {
       const registros = funcionariosFiltrados.map((f) => ({
         username: f.username,
-        shift: f.shift.toString(),
+        shift: f.shift,
         role: f.role,
         project: f.project,
         typeRegister: f.status,
@@ -77,7 +64,6 @@ export const PontoTable = ({
         sector: f.setor === 'ADMINISTRATIVO' ? f.setor : undefined,
       }));
 
-      // Envia cada registro individualmente
       for (const registro of registros) {
         await updateEffective(registro);
       }
