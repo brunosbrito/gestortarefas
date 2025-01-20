@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Building2,
@@ -36,6 +37,9 @@ import { AtividadeHistoricoList } from './AtividadeHistoricoList';
 import { differenceInSeconds, format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { uploadActivityImage } from '@/services/ActivityImageService';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -45,6 +49,9 @@ interface AtividadeCardProps {
 export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
   const { toast } = useToast();
   const { projectId, serviceOrderId } = useParams();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageDescription, setImageDescription] = useState('');
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   function formatTime(totalTime) {
     console.log(totalTime);
@@ -105,25 +112,38 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
       ? calculateElapsedTime(atividade.totalTime, atividade.startDate)
       : atividade.totalTime;
 
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setSelectedFile(file);
+      setIsUploadDialogOpen(true);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedFile) return;
 
     try {
-      await uploadActivityImage(atividade.id, file);
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('description', imageDescription);
+
+      await uploadActivityImage(atividade.id, formData);
+      
       toast({
         title: 'Upload realizado com sucesso',
         description: 'A imagem foi enviada e será processada em breve.',
       });
+      
+      setIsUploadDialogOpen(false);
+      setSelectedFile(null);
+      setImageDescription('');
     } catch (error) {
       console.error('Erro no upload:', error);
       toast({
         variant: 'destructive',
         title: 'Erro no upload',
-        description:
-          'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
+        description: 'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
       });
     }
   };
@@ -374,7 +394,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                     type="file"
                     accept="image/*"
                     capture="environment"
-                    onChange={handleImageUpload}
+                    onChange={handleFileSelect}
                     className="hidden"
                     id={`upload-image-${atividade.id}`}
                   />
@@ -394,6 +414,45 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
               </div>
             </CardFooter>
           </Card>
+
+          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Descrição da Imagem</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="imageDescription">
+                    Adicione uma descrição para a imagem
+                  </Label>
+                  <Input
+                    id="imageDescription"
+                    value={imageDescription}
+                    onChange={(e) => setImageDescription(e.target.value)}
+                    placeholder="Digite a descrição da imagem"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsUploadDialogOpen(false);
+                    setSelectedFile(null);
+                    setImageDescription('');
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+                  onClick={handleImageUpload}
+                >
+                  Enviar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </Draggable>
