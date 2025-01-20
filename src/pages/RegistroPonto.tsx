@@ -1,52 +1,69 @@
-import { useState, useEffect } from "react";
-import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
-import { toast } from "sonner";
-import { PontoForm } from "@/components/registro-ponto/PontoForm";
-import { PontoTable } from "@/components/registro-ponto/PontoTable";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getEffectivesByShiftAndDate } from "@/services/EffectiveService";
-import ObrasService from "@/services/ObrasService";
-import ColaboradorService from "@/services/ColaboradorService";
+import { useState, useEffect } from 'react';
+import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { PontoForm } from '@/components/registro-ponto/PontoForm';
+import { PontoTable } from '@/components/registro-ponto/PontoTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ObrasService from '@/services/ObrasService';
+import ColaboradorService from '@/services/ColaboradorService';
+import { Obra } from '@/interfaces/ObrasInterface';
+import { getEffectivesByShiftAndDate } from '@/services/EffectiveService';
 
 interface Funcionario {
   id: number;
-  nome: string;
-  setor: "PRODUCAO" | "ADMINISTRATIVO";
-  status: "PRESENTE" | "FALTA";
+  username: string;
+  role: 'PRODUCAO' | 'ADMINISTRATIVO';
+  shift: 1 | 2 | 3;
+  project?: string;
+  typeRegister?: string;
+  reason?: string;
+  sector?: string;
+  status?: string;
   turno: 1 | 2 | 3;
-  obra?: string;
-  motivoFalta?: string;
+  setor: string;
 }
 
 const RegistroPonto = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null);
-  const [currentTurno, setCurrentTurno] = useState("1");
+  const [selectedFuncionario, setSelectedFuncionario] =
+    useState<Funcionario | null>(null);
+  const [currentTurno, setCurrentTurno] = useState('1');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
-  const [obras, setObras] = useState<string[]>([]);
-  const [colaboradores, setColaboradores] = useState<string[]>([]);
+  const [obras, setObras] = useState<Obra[]>([]);
+  const [colaboradores, setColaboradores] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [funcionariosData, obrasData, colaboradoresData] = await Promise.all([
-          getEffectivesByShiftAndDate(currentTurno),
-          ObrasService.getAllObras(),
-          ColaboradorService.getAllColaboradores()
-        ]);
+        const funcionariosData = await getEffectivesByShiftAndDate(
+          currentTurno
+        );
+        const obrasData = await ObrasService.getAllObras();
+
+        const colaboradoresData =
+          await ColaboradorService.getAllColaboradores();
 
         setFuncionarios(funcionariosData);
-        setObras(obrasData.map(obra => obra.name));
-        setColaboradores(colaboradoresData.data.map(col => col.name));
+        setObras(obrasData);
+        setColaboradores(colaboradoresData.data);
+
+        console.log(colaboradores);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        toast.error("Erro ao carregar dados. Tente novamente.");
+        toast.error('Erro ao carregar dados. Tente novamente.');
       } finally {
         setIsLoading(false);
       }
@@ -55,8 +72,8 @@ const RegistroPonto = () => {
     fetchData();
   }, [currentTurno]);
 
-  const handleDelete = async (id: number) => {
-    toast.success("Registro excluído com sucesso");
+  const handleDelete = async () => {
+    toast.success('Registro excluído com sucesso');
   };
 
   const handleEdit = (funcionario: Funcionario) => {
@@ -65,26 +82,16 @@ const RegistroPonto = () => {
   };
 
   const onSubmit = (data: any) => {
-    const novoFuncionario: Funcionario = {
-      id: Math.random(),
-      nome: data.colaborador,
-      setor: data.tipo === "PRODUCAO" ? "PRODUCAO" : "ADMINISTRATIVO",
-      status: data.tipo === "FALTA" ? "FALTA" : "PRESENTE",
-      turno: Number(data.turno) as 1 | 2 | 3,
-      obra: data.obra,
-      motivoFalta: data.motivoFalta
-    };
-
     setIsDialogOpen(false);
-    toast.success("Registro adicionado com sucesso");
+    toast.success('Registro adicionado com sucesso');
   };
 
-  const onEditSubmit = (data: any) => {
+  const onEditSubmit = () => {
     if (!selectedFuncionario) return;
 
     setIsEditDialogOpen(false);
     setSelectedFuncionario(null);
-    toast.success("Registro atualizado com sucesso");
+    toast.success('Registro atualizado com sucesso');
   };
 
   if (isLoading) {
@@ -101,7 +108,9 @@ const RegistroPonto = () => {
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-construction-800">Registro de Ponto</h1>
+          <h1 className="text-3xl font-bold text-construction-800">
+            Registro de Ponto
+          </h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -113,7 +122,8 @@ const RegistroPonto = () => {
               <DialogHeader>
                 <DialogTitle>Novo Registro de Ponto</DialogTitle>
                 <DialogDescription>
-                  Preencha os campos abaixo para adicionar um novo registro de ponto.
+                  Preencha os campos abaixo para adicionar um novo registro de
+                  ponto.
                 </DialogDescription>
               </DialogHeader>
               <PontoForm
@@ -141,12 +151,15 @@ const RegistroPonto = () => {
                 colaboradores={colaboradores}
                 onClose={() => setIsEditDialogOpen(false)}
                 defaultValues={{
-                  turno: selectedFuncionario.turno.toString(),
-                  tipo: selectedFuncionario.setor,
-                  colaborador: selectedFuncionario.nome,
-                  obra: selectedFuncionario.obra,
-                  setor: selectedFuncionario.setor === "ADMINISTRATIVO" ? selectedFuncionario.setor : "",
-                  motivoFalta: selectedFuncionario.motivoFalta,
+                  turno: selectedFuncionario.shift.toString(),
+                  tipo: selectedFuncionario.sector,
+                  colaborador: selectedFuncionario.username,
+                  obra: selectedFuncionario.project,
+                  setor:
+                    selectedFuncionario.sector === 'ADMINISTRATIVO'
+                      ? selectedFuncionario.sector
+                      : '',
+                  motivoFalta: selectedFuncionario.reason,
                 }}
                 isEdit
               />
@@ -154,11 +167,17 @@ const RegistroPonto = () => {
           </DialogContent>
         </Dialog>
 
-        <Tabs defaultValue="turno1" className="w-full" onValueChange={(value) => setCurrentTurno(value.replace('turno', ''))}>
+        <Tabs
+          defaultValue="turno1"
+          className="w-full"
+          onValueChange={(value) => setCurrentTurno(value.replace('turno', ''))}
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="turno1">1º Turno (06:00 - 14:00)</TabsTrigger>
             <TabsTrigger value="turno2">2º Turno (14:00 - 22:00)</TabsTrigger>
-            <TabsTrigger value="turno3">Turno Central (08:00 - 17:00)</TabsTrigger>
+            <TabsTrigger value="turno3">
+              Turno Central (08:00 - 17:00)
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="turno1" className="mt-6">
             <PontoTable

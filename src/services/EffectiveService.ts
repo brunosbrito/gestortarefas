@@ -8,13 +8,16 @@ const apiClient = axios.create({
   timeout: 5000,
 });
 
-const handleError = (error: any) => {
+import { AxiosError } from 'axios';
+
+const handleError = (error: AxiosError) => {
   if (error.response) {
     console.error('Erro na resposta:', error.response.data);
     console.error('Status:', error.response.status);
-    return `Erro na resposta: ${
-      error.response.data.message || 'Erro desconhecido'
-    }`;
+    const errorMessage =
+      (error.response.data as { message?: string }).message ||
+      'Erro desconhecido';
+    return `Erro na resposta: ${errorMessage}`;
   } else if (error.request) {
     console.error('Erro na requisição:', error.request);
     return 'Erro na requisição, sem resposta do servidor.';
@@ -35,9 +38,7 @@ export const updateEffective = async (effectiveData: UpdateEffectiveDto) => {
 
 export const getEffectivesByShiftAndDate = async (shift: string) => {
   try {
-    const response = await apiClient.get('/by-shift-and-date', {
-      params: { shift },
-    });
+    const response = await apiClient.get(`/by-shift-and-date/${shift}`);
     return response.data;
   } catch (error) {
     throw new Error(handleError(error));
