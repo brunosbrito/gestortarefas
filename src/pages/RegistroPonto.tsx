@@ -37,9 +37,7 @@ const RegistroPonto = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const funcionariosData = await getEffectivesByShiftAndDate(
-        currentTurno
-      );
+      const funcionariosData = await getEffectivesByShiftAndDate(currentTurno);
       const obrasData = await ObrasService.getAllObras();
       const colaboradoresData = await ColaboradorService.getAllColaboradores();
 
@@ -73,7 +71,7 @@ const RegistroPonto = () => {
       await createEffective(data);
       setIsDialogOpen(false);
       toast.success('Registro adicionado com sucesso');
-      fetchData(); // Recarrega a tabela após adicionar
+      fetchData();
     } catch (error) {
       console.error('Erro ao criar registro:', error);
       toast.error('Erro ao criar registro. Tente novamente.');
@@ -87,7 +85,7 @@ const RegistroPonto = () => {
       setIsEditDialogOpen(false);
       setSelectedFuncionario(null);
       toast.success('Registro atualizado com sucesso');
-      fetchData(); // Recarrega a tabela após editar
+      fetchData();
     } catch (error) {
       console.error('Erro ao atualizar registro:', error);
       toast.error('Erro ao atualizar registro. Tente novamente.');
@@ -166,8 +164,9 @@ const RegistroPonto = () => {
 
         <Tabs
           defaultValue="turno1"
-          className="w-full"
+          value={`turno${currentTurno}`}
           onValueChange={(value) => setCurrentTurno(value.replace('turno', ''))}
+          className="w-full"
         >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="turno1">1º Turno (06:00 - 14:00)</TabsTrigger>
