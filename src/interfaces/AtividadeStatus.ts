@@ -33,5 +33,5 @@ export interface AtividadeStatus {
     imageName: string;
     imageData: Buffer;
     description: Buffer;
-  };
+  }[];
 }
