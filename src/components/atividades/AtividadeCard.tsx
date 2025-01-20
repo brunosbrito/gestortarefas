@@ -122,19 +122,20 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
 
   const handleImageUpload = async () => {
     if (!selectedFile) return;
-
+    const userId = localStorage.getItem('userId');
     try {
       const formData = new FormData();
       formData.append('image', selectedFile);
       formData.append('description', imageDescription);
+      formData.append('createdById', userId);
 
       await uploadActivityImage(atividade.id, formData);
-      
+
       toast({
         title: 'Upload realizado com sucesso',
         description: 'A imagem foi enviada e será processada em breve.',
       });
-      
+
       setIsUploadDialogOpen(false);
       setSelectedFile(null);
       setImageDescription('');
@@ -143,7 +144,8 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
       toast({
         variant: 'destructive',
         title: 'Erro no upload',
-        description: 'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
+        description:
+          'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
       });
     }
   };
@@ -415,7 +417,10 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
             </CardFooter>
           </Card>
 
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <Dialog
+            open={isUploadDialogOpen}
+            onOpenChange={setIsUploadDialogOpen}
+          >
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Descrição da Imagem</DialogTitle>

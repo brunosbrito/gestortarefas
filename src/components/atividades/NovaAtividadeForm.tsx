@@ -456,14 +456,14 @@ export function NovaAtividadeForm({
         />
 
         <div className="space-y-4">
-          <FileUploadField 
-            form={form} 
-            fileType="imagem" 
-            accept="image/*" 
+          <FileUploadField
+            form={form}
+            fileType="imagem"
+            accept="image/*"
             activityId={atividadeInicial?.id}
           />
-          <FileUploadField 
-            form={form} 
+          <FileUploadField
+            form={form}
             fileType="arquivo"
             activityId={atividadeInicial?.id}
           />
