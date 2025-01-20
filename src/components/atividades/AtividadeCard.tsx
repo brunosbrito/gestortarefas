@@ -35,6 +35,7 @@ import { Draggable } from 'react-beautiful-dnd';
 import { AtividadeHistoricoList } from './AtividadeHistoricoList';
 import { differenceInSeconds, format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
+import { uploadActivityImage } from '@/services/ActivityImageService';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -103,6 +104,26 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
     atividade.status === 'Em execução'
       ? calculateElapsedTime(atividade.totalTime, atividade.startDate)
       : atividade.totalTime;
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await uploadActivityImage(atividade.id, file);
+      toast({
+        title: 'Upload realizado com sucesso',
+        description: 'A imagem foi enviada e será processada em breve.',
+      });
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro no upload',
+        description: 'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
+      });
+    }
+  };
 
   return (
     <Draggable draggableId={String(atividade.id)} index={index}>
@@ -345,18 +366,28 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                     />
                   </DialogContent>
                 </Dialog>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    toast({
-                      title: 'Upload de imagem',
-                      description: 'Funcionalidade será implementada em breve',
-                    });
-                  }}
-                >
-                  <Upload className="w-4 h-4" />
-                </Button>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id={`upload-image-${atividade.id}`}
+                  />
+                  <label htmlFor={`upload-image-${atividade.id}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="cursor-pointer"
+                      asChild
+                    >
+                      <span>
+                        <Upload className="w-4 h-4" />
+                      </span>
+                    </Button>
+                  </label>
+                </div>
               </div>
             </CardFooter>
           </Card>
