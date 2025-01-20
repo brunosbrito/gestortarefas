@@ -68,6 +68,9 @@ const RegistroPonto = () => {
 
   const onSubmit = async (data: any) => {
     try {
+      if (data.typeRegister !== 'FALTA') {
+        data.role = data.typeRegister;
+      }
       await createEffective(data);
       setIsDialogOpen(false);
       toast.success('Registro adicionado com sucesso');
