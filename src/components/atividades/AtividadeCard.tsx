@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Draggable } from 'react-beautiful-dnd';
-import { Activity, AtividadeStatus } from '@/interfaces/AtividadeInterface';
+import { Activity, ActivityStatus } from '@/interfaces/AtividadeInterface';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Upload, User } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,7 +23,7 @@ import { uploadActivityImage } from '@/services/ActivityImageService';
 interface AtividadeCardProps {
   atividade: Activity;
   index: number;
-  onStatusChange: (id: number, newStatus: AtividadeStatus) => void;
+  onStatusChange: (id: number, newStatus: ActivityStatus) => void;
 }
 
 const statusColors = {
@@ -40,7 +40,7 @@ export function AtividadeCard({ atividade, index, onStatusChange }: AtividadeCar
   const [imageDescription, setImageDescription] = useState('');
   const { toast } = useToast();
 
-  const handleStatusChange = (newStatus: AtividadeStatus) => {
+  const handleStatusChange = (newStatus: ActivityStatus) => {
     onStatusChange(atividade.id, newStatus);
   };
 
@@ -63,11 +63,11 @@ export function AtividadeCard({ atividade, index, onStatusChange }: AtividadeCar
     }
 
     try {
-      await uploadActivityImage({
-        activityId: atividade.id,
-        image: selectedFile,
-        description: imageDescription
-      });
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('description', imageDescription);
+
+      await uploadActivityImage(atividade.id, selectedFile, imageDescription);
       
       toast({
         title: 'Upload realizado com sucesso',

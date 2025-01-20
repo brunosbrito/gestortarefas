@@ -2,16 +2,10 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000';
 
-interface UploadImageParams {
-  activityId: number;
-  image: File;
-  description: string;
-}
-
-export const uploadActivityImage = async ({ activityId, image, description }: UploadImageParams) => {
+export const uploadActivityImage = async (activityId: number, file: File, description: string) => {
   try {
     const formData = new FormData();
-    formData.append('image', image);
+    formData.append('image', file);
     formData.append('description', description);
 
     const response = await axios.post(
