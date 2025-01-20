@@ -28,4 +28,10 @@ export interface AtividadeStatus {
   status: 'Planejadas' | 'Em execução' | 'Concluídas' | 'Paralizadas';
   totalTime: number;
   originalStartDate: string;
+  images: {
+    id: number;
+    imageName: string;
+    imageData: Buffer;
+    description: Buffer;
+  };
 }
