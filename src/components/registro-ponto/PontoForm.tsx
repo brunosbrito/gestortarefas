@@ -24,12 +24,14 @@ import { Obra } from '@/interfaces/ObrasInterface';
 import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
 
 const formSchema = z.object({
-  turno: z.string({ required_error: 'Selecione o turno' }),
-  tipo: z.string({ required_error: 'Selecione o tipo de registro' }),
-  colaborador: z.string({ required_error: 'Selecione o colaborador' }),
-  obra: z.string().optional(),
-  setor: z.string().optional(),
-  motivoFalta: z.string().optional(),
+  shift: z.string({ required_error: 'Selecione o turno' }),
+  typeRegister: z.string({ required_error: 'Selecione o tipo de registro' }),
+  username: z.string({ required_error: 'Selecione o colaborador' }),
+  project: z.string().optional(),
+  sector: z.string().optional(),
+  reason: z.string().optional(),
+  role: z.string().optional(),
+  status: z.string().optional(),
 });
 
 interface PontoFormProps {
@@ -52,27 +54,27 @@ export const PontoForm = ({
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues || {
-      turno: '',
-      tipo: '',
-      colaborador: '',
-      obra: '',
-      setor: '',
-      motivoFalta: '',
+      shift: '',
+      typeRegister: '',
+      username: '',
+      project: '',
+      sector: '',
+      reason: '',
     },
   });
 
-  const tipoRegistro = form.watch('tipo');
+  const tipoRegistro = form.watch('typeRegister');
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
     const effectiveData: CreateEffectiveDto = {
-      username: data.colaborador,
-      shift: Number(data.turno),
-      role: data.tipo,
-      project: data.obra,
-      typeRegister: data.tipo === 'FALTA' ? 'FALTA' : 'PRESENTE',
-      reason: data.motivoFalta,
-      sector: data.setor,
-      status: data.tipo === 'FALTA' ? 'FALTA' : 'PRESENTE',
+      username: data.username,
+      shift: Number(data.shift),
+      role: data.role,
+      project: data.project,
+      typeRegister: data.typeRegister,
+      reason: data.reason,
+      sector: data.sector,
+      status: data.status === 'FALTA' ? 'FALTA' : 'PRESENTE',
       createdAt: new Date(),
     };
 
@@ -91,7 +93,7 @@ export const PontoForm = ({
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="turno"
+          name="shift"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Turno</FormLabel>
@@ -104,7 +106,9 @@ export const PontoForm = ({
                 <SelectContent>
                   <SelectItem value="1">1º Turno (06:00 - 14:00)</SelectItem>
                   <SelectItem value="2">2º Turno (14:00 - 22:00)</SelectItem>
-                  <SelectItem value="3">Turno Central (08:00 - 17:00)</SelectItem>
+                  <SelectItem value="3">
+                    Turno Central (08:00 - 17:00)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -114,7 +118,7 @@ export const PontoForm = ({
 
         <FormField
           control={form.control}
-          name="tipo"
+          name="typeRegister"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tipo de Registro</FormLabel>
@@ -137,7 +141,7 @@ export const PontoForm = ({
 
         <FormField
           control={form.control}
-          name="colaborador"
+          name="username"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Colaborador</FormLabel>
@@ -163,7 +167,7 @@ export const PontoForm = ({
         {tipoRegistro === 'PRODUCAO' && (
           <FormField
             control={form.control}
-            name="obra"
+            name="project"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Obra</FormLabel>
@@ -193,7 +197,7 @@ export const PontoForm = ({
         {tipoRegistro === 'ADMINISTRATIVO' && (
           <FormField
             control={form.control}
-            name="setor"
+            name="sector"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Setor</FormLabel>
@@ -209,7 +213,7 @@ export const PontoForm = ({
         {tipoRegistro === 'FALTA' && (
           <FormField
             control={form.control}
-            name="motivoFalta"
+            name="reason"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Motivo da Falta</FormLabel>
@@ -222,7 +226,10 @@ export const PontoForm = ({
           />
         )}
 
-        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+        <Button
+          type="submit"
+          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+        >
           {isEdit ? 'Salvar Alterações' : 'Salvar Registro'}
         </Button>
       </form>

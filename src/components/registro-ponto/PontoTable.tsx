@@ -37,8 +37,8 @@ export const PontoTable = ({
   onEdit,
   onDelete,
 }: PontoTableProps) => {
-  const funcionariosFiltrados = funcionarios.filter((f) => f.turno === turno);
-
+  const funcionariosFiltrados = funcionarios.filter((f) => f.shift === turno);
+  console.log(funcionariosFiltrados);
   const getTurnoLabel = (turno: number) => {
     switch (turno) {
       case 1:

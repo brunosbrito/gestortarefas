@@ -17,7 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ObrasService from '@/services/ObrasService';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Obra } from '@/interfaces/ObrasInterface';
-import { getEffectivesByShiftAndDate } from '@/services/EffectiveService';
+import {
+  createEffective,
+  getEffectivesByShiftAndDate,
+} from '@/services/EffectiveService';
 import { Funcionario } from '@/interfaces/FuncionarioInterface';
 
 const RegistroPonto = () => {
@@ -46,8 +49,6 @@ const RegistroPonto = () => {
         setFuncionarios(funcionariosData);
         setObras(obrasData);
         setColaboradores(colaboradoresData.data);
-
-        console.log(colaboradores);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         toast.error('Erro ao carregar dados. Tente novamente.');
@@ -70,6 +71,8 @@ const RegistroPonto = () => {
 
   const onSubmit = (data: any) => {
     setIsDialogOpen(false);
+
+    createEffective(data);
     toast.success('Registro adicionado com sucesso');
   };
 
@@ -138,15 +141,15 @@ const RegistroPonto = () => {
                 colaboradores={colaboradores}
                 onClose={() => setIsEditDialogOpen(false)}
                 defaultValues={{
-                  turno: selectedFuncionario.shift.toString(),
-                  tipo: selectedFuncionario.sector,
-                  colaborador: selectedFuncionario.username,
-                  obra: selectedFuncionario.project,
-                  setor:
+                  shift: selectedFuncionario.shift.toString(),
+                  typeRegister: selectedFuncionario.typeRegister,
+                  username: selectedFuncionario.username,
+                  project: selectedFuncionario.project,
+                  sector:
                     selectedFuncionario.sector === 'ADMINISTRATIVO'
                       ? selectedFuncionario.sector
                       : '',
-                  motivoFalta: selectedFuncionario.reason,
+                  reason: selectedFuncionario.reason,
                 }}
                 isEdit
               />
