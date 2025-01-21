@@ -32,7 +32,7 @@ export interface ServiceOrder {
 export interface CreateServiceOrder {
   description: string;
   projectId: number;
-  createdAt: string;
+  startDate: string;
   status: 'em_andamento' | 'concluida' | 'pausada';
   notes?: string;
   assignedUser: number;

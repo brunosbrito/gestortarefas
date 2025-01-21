@@ -26,7 +26,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
       status: os.status,
       description: os.description,
       projectId: os.projectId.id,
-      createdAt: os.createdAt,
+      startDate: os.startDate,
       notes: os.notes,
       assignedUser: os.assignedUser?.id,
       projectNumber: os.projectNumber,
@@ -58,7 +58,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
       await updateServiceOrder(os.id, {
         description: data.description,
         projectId: data.projectId,
-        createdAt: data.createdAt,
+        startDate: data.startDate,
         status: data.status,
         notes: data.notes,
         assignedUser: data.assignedUser,

@@ -13,6 +13,7 @@ export interface AtividadeStatus {
   serviceOrder: ServiceOrder;
   estimatedTime: string;
   pauseDate: string;
+  createdAt: string;
   project: {
     id: number;
     name: string;
@@ -31,7 +32,7 @@ export interface AtividadeStatus {
   images: {
     id: number;
     imageName: string;
-    imageData: Buffer;
-    description: Buffer;
+    imagePath: string;
+    description: string;
   }[];
 }

@@ -163,7 +163,9 @@ const Obras = () => {
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <span>
                     Início:{' '}
-                    {new Date(obra.startDate).toLocaleDateString('pt-BR')}
+                    {new Date(`${obra.startDate}T00:00:00`).toLocaleDateString(
+                      'pt-BR'
+                    )}
                   </span>
                 </div>
                 {obra.observation && (

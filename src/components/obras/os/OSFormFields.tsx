@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from './osFormSchema';
@@ -120,7 +119,7 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="createdAt"
+        name="startDate"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Data de Início</FormLabel>
@@ -128,12 +127,10 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
               <Input
                 type="date"
                 {...field}
-                onChange={(e) => {
-                  const date = new Date(e.target.value);
-                  field.onChange(format(date, 'yyyy-MM-dd'));
-                }}
                 value={
-                  field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''
+                  field.value
+                    ? new Date(field.value).toISOString().split('T')[0]
+                    : ''
                 }
               />
             </FormControl>

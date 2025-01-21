@@ -59,7 +59,10 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
 
     const hours = Math.floor(totalTime);
     const minutes = Math.round((totalTime - hours) * 60);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+      2,
+      '0'
+    )}`;
   }
 
   const calculateElapsedTime = (totalTime, startDate) => {
@@ -176,8 +179,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
               </div>
               <div className="flex items-center mb-2">
                 <Calendar className="w-4 h-4 mr-2" />
-                Data Criação:{' '}
-                {format(new Date(atividade.originalStartDate), 'dd/MM/yyyy')}
+                Data Criação: {format(atividade.createdAt, 'dd/MM/yyyy')}
               </div>
               {atividade.status !== 'Planejadas' && (
                 <div className="flex items-center mb-2">
@@ -272,7 +274,9 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                         Histórico de Alterações
                       </h3>
                       <div className="bg-construction-50 p-4 rounded-lg">
-                        <AtividadeHistoricoList activityId={Number(atividade.id)} />
+                        <AtividadeHistoricoList
+                          activityId={Number(atividade.id)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -322,7 +326,10 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
             </CardFooter>
           </Card>
 
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <Dialog
+            open={isUploadDialogOpen}
+            onOpenChange={setIsUploadDialogOpen}
+          >
             <AtividadeUploadDialog
               imageDescription={imageDescription}
               onDescriptionChange={setImageDescription}

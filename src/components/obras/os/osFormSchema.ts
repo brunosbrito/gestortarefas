@@ -3,19 +3,18 @@ import {
   CreateServiceOrder,
   ServiceOrder,
 } from '@/interfaces/ServiceOrderInterface';
-import { Progress } from '@radix-ui/react-progress';
 
 export const formSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   projectId: z.number().min(1, 'Obra é obrigatória'),
-  createdAt: z.string().min(1, 'Data de início é obrigatória'),
+  startDate: z.string().min(1, 'Data de início é obrigatória'),
   status: z.enum(['em_andamento', 'concluida', 'pausada']),
   notes: z.string().optional(),
   assignedUser: z.number().optional(),
   quantity: z.number().min(1, 'Quantidade é obrigatória'),
   projectNumber: z.string().min(1, 'Número do projeto é obrigatória'),
   weight: z.string().min(1, 'Peso é obrigatória'),
-  progress: z.number(),
+  progress: z.number().optional(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;

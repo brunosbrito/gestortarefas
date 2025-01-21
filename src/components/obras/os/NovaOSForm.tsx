@@ -26,12 +26,13 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
       status: 'em_andamento',
       description: '',
       projectId: undefined,
-      createdAt: '',
+      startDate: '',
       notes: '',
-      assignedUser: undefined,
-      projectNumber: undefined,
+      assignedUser: 0,
+      projectNumber: '',
       quantity: 0,
-      weight: undefined,
+      weight: '',
+      progress: 0,
     },
   });
 
@@ -53,12 +54,13 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
   }, [toast]);
 
   const handleSubmit = async (data: FormValues) => {
+    console.log(data);
     const userId = getUserIdFromLocalStorage();
 
     const serviceOrderData: CreateServiceOrder = {
       description: data.description,
       projectId: data.projectId,
-      createdAt: data.createdAt,
+      startDate: data.startDate,
       status: data.status,
       notes: data.notes,
       assignedUser: userId || undefined,
@@ -90,7 +92,10 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <OSFormFields form={form} obras={obras} />
-        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+        <Button
+          type="submit"
+          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+        >
           Criar OS
         </Button>
       </form>
