@@ -2,6 +2,7 @@ version: '3'
 services:
   react-app:
     build: .
+    image: frontend-gestor-tarefas
     ports:
       - '80:80'
     restart: unless-stopped
