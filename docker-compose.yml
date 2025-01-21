@@ -4,18 +4,8 @@ services:
   react-app:
     build: .
     image: frontend-gestor-tarefas
-    labels:
-      - 'traefik.enable=true' # Habilita o Traefik para esse serviço
-      - 'traefik.http.routers.frontend.rule=Host(`gestor_tarefas.gmxindustrial.com.br`)' # Define a regra para o subdomínio
-      - 'traefik.http.routers.frontend.entrypoints=websecure' # Define o entrypoint para HTTPS
-      - 'traefik.http.routers.frontend.tls=true' # Habilita o TLS (SSL)
-      - 'traefik.http.routers.frontend.tls.certresolver=letsencryptresolver' # Usa o Let's Encrypt para o certificado SSL
     networks:
       - gmlIndustrialFrontNet # Rede bridge recém-criada para o front-end
     ports:
-      - '8080:80' # Redireciona a porta 8080 para a porta 80 do container
+      - '8081:80' # Redireciona a porta 8080 para a porta 80 do container
     restart: unless-stopped
-
-networks:
-  gmlIndustrialFrontNet:
-    external: false # A rede é local, não externa
