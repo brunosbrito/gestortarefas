@@ -30,6 +30,8 @@ import ColaboradorService from '@/services/ColaboradorService';
 import { Activity } from '@/interfaces/AtividadeInterface';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 
+type UnidadeTempo = 'minutos' | 'horas';
+
 const formSchema = z.object({
   macroTask: z.string().min(1, 'Tarefa macro é obrigatória'),
   process: z.string().min(1, 'Processo é obrigatório'),
@@ -51,6 +53,8 @@ const formSchema = z.object({
   orderServiceId: z.number(),
   createdBy: z.number(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface NovaAtividadeFormProps {
   editMode?: boolean;
@@ -74,7 +78,7 @@ export function NovaAtividadeForm({
   const [processos, setProcessos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
 
-  const defaultValues = {
+  const defaultValues: FormValues = {
     macroTask: atividadeInicial?.macroTask || '',
     process: atividadeInicial?.process || '',
     description: atividadeInicial?.description || '',
@@ -94,7 +98,7 @@ export function NovaAtividadeForm({
     createdBy: Number(localStorage.getItem('userId')) || 0,
   };
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
@@ -127,7 +131,7 @@ export function NovaAtividadeForm({
     }
   };
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     try {
       if (editMode && atividadeInicial) {
         await updateActivity(atividadeInicial.id, data);
