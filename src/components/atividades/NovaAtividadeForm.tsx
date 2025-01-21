@@ -36,7 +36,7 @@ const formSchema = z.object({
   description: z.string().min(1, 'Atividade é obrigatória'),
   quantity: z.number().min(1, 'Unidade é obrigatória'),
   timePerUnit: z.number().min(1, 'Tempo por unidade é obrigatório'),
-  unidadeTempo: z.enum(['minutos', 'horas']),
+  unidadeTempo: z.enum(['minutos', 'horas'] as const),
   collaborators: z
     .array(z.number())
     .min(1, 'Selecione pelo menos um colaborador'),

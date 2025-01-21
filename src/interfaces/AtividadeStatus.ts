@@ -29,6 +29,13 @@ export interface AtividadeStatus {
   status: 'Planejadas' | 'Em execução' | 'Concluídas' | 'Paralizadas';
   totalTime: number;
   originalStartDate: string;
+  quantity?: number;
+  timePerUnit?: number;
+  observation?: string;
+  imageUrl?: string;
+  imageDescription?: string;
+  fileUrl?: string;
+  fileDescription?: string;
   images: {
     id: number;
     imageName: string;
