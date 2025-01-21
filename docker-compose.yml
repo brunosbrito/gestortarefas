@@ -10,9 +10,13 @@ services:
       - 'traefik.http.routers.frontend.tls=true' # Habilita o TLS (SSL)
       - 'traefik.http.routers.frontend.tls.certresolver=letsencryptresolver' # Usa o Let's Encrypt para o certificado SSL
     networks:
-      - gmlIndustrialNet # Rede do Docker que o Traefik também está usando
+      - gmlIndustrialNet # Rede do Docker Swarm
+    deploy:
+      replicas: 1 # Define quantas réplicas do serviço você deseja no Swarm
+      restart_policy:
+        condition: on-failure
     ports:
-      - '8080:80' # Mapeia a porta 8080 para a porta 80 do contêiner
+      - '8080:80' # Redireciona a porta 8080 para a porta 80 do container
     restart: unless-stopped
 
 networks:
