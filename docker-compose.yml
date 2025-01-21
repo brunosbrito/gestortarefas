@@ -3,5 +3,5 @@ services:
     build: .
     image: frontend-gestor-tarefas
     ports:
-      - '8081:80'
+      - '80:80'
     restart: unless-stopped
