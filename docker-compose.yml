@@ -1,20 +1,19 @@
 version: '3'
+
 services:
   react-app:
     build: .
     image: frontend-gestor-tarefas
     labels:
-      - 'traefik.enable=true' # Habilita o Traefik para esse serviço
-      - 'traefik.http.routers.frontend.rule=Host(`gestor-tarefas.gmxindustrial.com.br`)' # Define a regra para o subdomínio
-      - 'traefik.http.routers.frontend.entrypoints=websecure' # Define o entrypoint para HTTPS
-      - 'traefik.http.routers.frontend.tls=true' # Habilita o TLS (SSL)
-      - 'traefik.http.routers.frontend.tls.certresolver=letsencryptresolver' # Usa o Let's Encrypt para o certificado SSL
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.frontend.rule=Host(`gestor_tarefas.gmxindustrial.com.br`)'
+      - 'traefik.http.routers.frontend.entrypoints=websecure'
+      - 'traefik.http.routers.frontend.tls=true'
+      - 'traefik.http.routers.frontend.tls.certresolver=letsencryptresolver'
     networks:
-      - gmlIndustrialNet # Rede do Docker Swarm
-    deploy:
-      replicas: 1 # Define quantas réplicas do serviço você deseja no Swarm
-      restart_policy:
-        condition: on-failure
+      - gmlIndustrialNet
+    ports:
+      - '8080:80'
     restart: unless-stopped
 
 networks:
