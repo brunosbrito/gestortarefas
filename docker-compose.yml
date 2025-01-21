@@ -1,11 +1,7 @@
-version: '3'
-
 services:
   react-app:
     build: .
     image: frontend-gestor-tarefas
-    networks:
-      - gmlIndustrialFrontNet # Rede bridge recém-criada para o front-end
     ports:
-      - '8081:80' # Redireciona a porta 8080 para a porta 80 do container
+      - '8081:80'
     restart: unless-stopped
