@@ -1,13 +1,14 @@
+import API_URL from '@/config';
 import { User } from '@/interfaces/UserInterface';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/users/';
+const URL = `${API_URL}/users/`;
 const token = localStorage.getItem('authToken');
 
 class UserService {
   async getAllUsers() {
     try {
-      const response = await axios.get(API_URL, {
+      const response = await axios.get(URL, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -21,7 +22,7 @@ class UserService {
 
   async getUserById(id: string) {
     try {
-      const response = await axios.get(`${API_URL}${id}`, {
+      const response = await axios.get(`${URL}${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -35,7 +36,7 @@ class UserService {
 
   async updateUser(id: string, user: User) {
     try {
-      const response = await axios.put(`${API_URL}${id}`, user, {
+      const response = await axios.put(`${URL}${id}`, user, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -50,7 +51,7 @@ class UserService {
 
   async deleteUser(id: string) {
     try {
-      const response = await axios.delete(`${API_URL}${id}`, {
+      const response = await axios.delete(`${URL}${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

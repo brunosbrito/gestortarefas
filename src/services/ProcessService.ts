@@ -1,27 +1,28 @@
+import API_URL from '@/config';
 import { CreateProcesso } from '@/interfaces/ProcessoInterface';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/process';
+const URL = `${API_URL}/process`;
 
 class ProcessService {
   getAll() {
-    return axios.get(API_URL);
+    return axios.get(URL);
   }
 
   get(id: number) {
-    return axios.get(`${API_URL}/${id}`);
+    return axios.get(`${URL}/${id}`);
   }
 
   create(data: CreateProcesso) {
-    return axios.post(API_URL, data);
+    return axios.post(URL, data);
   }
 
   update(id: number, data: CreateProcesso) {
-    return axios.put(`${API_URL}/${id}`, data);
+    return axios.put(`${URL}/${id}`, data);
   }
 
   delete(id: number) {
-    return axios.delete(`${API_URL}/${id}`);
+    return axios.delete(`${URL}/${id}`);
   }
 }
 

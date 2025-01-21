@@ -4,7 +4,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
+} from '@/components/ui/carousel';
 
 interface AtividadeImage {
   id: number;
@@ -17,8 +17,12 @@ interface AtividadeImageCarouselProps {
   images: AtividadeImage[];
 }
 
-export const AtividadeImageCarousel = ({ images }: AtividadeImageCarouselProps) => {
+export const AtividadeImageCarousel = ({
+  images,
+}: AtividadeImageCarouselProps) => {
   if (!images || images.length === 0) return null;
+
+  console.log(images.map((i) => i.imageData));
 
   return (
     <div className="space-y-4">
@@ -32,10 +36,13 @@ export const AtividadeImageCarousel = ({ images }: AtividadeImageCarouselProps) 
               <div className="p-1">
                 <div className="flex flex-col space-y-2">
                   <img
-                    src={`data:image/jpeg;base64,${image.imageData.toString('base64')}`}
+                    src={`data:image/jpeg;base64,${image.imageData.toString(
+                      'base64'
+                    )}`}
                     alt={`Imagem ${index + 1}`}
                     className="w-full h-64 object-cover rounded-lg"
                   />
+
                   {image.description && (
                     <p className="text-sm text-gray-600 text-center">
                       {image.description.toString()}

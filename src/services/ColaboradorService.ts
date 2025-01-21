@@ -1,15 +1,16 @@
+import API_URL from '@/config';
 import {
   Colaborador,
   CreateColaborador,
 } from '@/interfaces/ColaboradorInterface';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/collaborators/';
+const URL = `${API_URL}/collaborators/`;
 
 class ColaboradorService {
   async createColaborador(colaboradorData: CreateColaborador) {
     try {
-      const response = await axios.post(API_URL, colaboradorData);
+      const response = await axios.post(URL, colaboradorData);
       return response;
     } catch (error) {
       console.error('Erro ao criar colaborador:', error);
@@ -19,7 +20,7 @@ class ColaboradorService {
 
   async getAllColaboradores() {
     try {
-      const response = await axios.get(API_URL);
+      const response = await axios.get(URL);
       return response;
     } catch (error) {
       console.error('Erro ao buscar colaboradores:', error);
@@ -29,7 +30,7 @@ class ColaboradorService {
 
   async getColaboradorById(id: number) {
     try {
-      const response = await axios.get(`${API_URL}:${id}`);
+      const response = await axios.get(`${URL}:${id}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar colaborador:', error);
@@ -39,7 +40,7 @@ class ColaboradorService {
 
   async updateColaborador(id: number, colaboradorData: Colaborador) {
     try {
-      const response = await axios.put(`${API_URL}${id}`, colaboradorData);
+      const response = await axios.put(`${URL}${id}`, colaboradorData);
       return response;
     } catch (error) {
       console.error('Erro ao atualizar colaborador:', error);

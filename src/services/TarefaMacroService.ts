@@ -1,28 +1,29 @@
+import API_URL from '@/config';
 import { CreateTarefaMacro } from '@/interfaces/TarefaMacroInterface';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/macro-tasks';
+const URL = `${API_URL}/macro-tasks`;
 
 class TarefaMacroService {
-    getAll() {
-        return axios.get(API_URL);
-    }
+  getAll() {
+    return axios.get(URL);
+  }
 
-    get(id: string) {
-        return axios.get(`${API_URL}/${id}`);
-    }
+  get(id: string) {
+    return axios.get(`${URL}/${id}`);
+  }
 
-    create(data: CreateTarefaMacro) {
-        return axios.post(API_URL, data);
-    }
+  create(data: CreateTarefaMacro) {
+    return axios.post(URL, data);
+  }
 
-    update(id: string, data: CreateTarefaMacro) {
-        return axios.put(`${API_URL}/${id}`, data);
-    }
+  update(id: string, data: CreateTarefaMacro) {
+    return axios.put(`${URL}/${id}`, data);
+  }
 
-    delete(id: number) {
-        return axios.delete(`${API_URL}/${id}`);
-    }
+  delete(id: number) {
+    return axios.delete(`${URL}/${id}`);
+  }
 }
 
 export default new TarefaMacroService();

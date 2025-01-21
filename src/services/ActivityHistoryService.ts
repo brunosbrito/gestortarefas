@@ -1,13 +1,12 @@
+import API_URL from '@/config';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:3000';  // Defina a URL base da sua API
 
 // Função para criar um histórico de atividade
 export const createActivityHistory = async (activityHistoryData, userId) => {
   try {
     const response = await axios.post(`${API_URL}/activity-history`, {
       ...activityHistoryData,
-      userId
+      userId,
     });
     return response.data;
   } catch (error) {

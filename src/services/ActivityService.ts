@@ -1,6 +1,5 @@
+import API_URL from '@/config';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:3000'; // Defina a URL base da sua API
 
 // Função para criar uma nova atividade
 export const createActivity = async (activityData) => {
