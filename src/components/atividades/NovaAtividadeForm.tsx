@@ -21,13 +21,14 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { createActivity } from '@/services/ActivityService';
+import { createActivity, updateActivity } from '@/services/ActivityService';
 import { FileUploadField } from './FileUploadField';
 import { Badge } from '../ui/badge';
 import TarefaMacroService from '@/services/TarefaMacroService';
 import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Activity } from '@/interfaces/AtividadeInterface';
+import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 
 const formSchema = z.object({
   macroTask: z.string().min(1, 'Tarefa macro é obrigatória'),
@@ -51,11 +52,9 @@ const formSchema = z.object({
   createdBy: z.number(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 interface NovaAtividadeFormProps {
   editMode?: boolean;
-  atividadeInicial?: Activity;
+  atividadeInicial?: AtividadeStatus;
   projectId: number;
   orderServiceId: number;
   onSuccess?: () => void;
@@ -75,15 +74,15 @@ export function NovaAtividadeForm({
   const [processos, setProcessos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
 
-  const defaultValues: FormValues = {
+  const defaultValues = {
     macroTask: atividadeInicial?.macroTask || '',
     process: atividadeInicial?.process || '',
     description: atividadeInicial?.description || '',
     quantity: atividadeInicial?.quantity || 0,
     timePerUnit: atividadeInicial?.timePerUnit || 0,
     unidadeTempo: 'minutos',
-    collaborators: atividadeInicial?.collaborators || [],
-    startDate: atividadeInicial?.startDate || '',
+    collaborators: atividadeInicial?.collaborators?.map(c => c.id) || [],
+    startDate: atividadeInicial?.startDate ? new Date(atividadeInicial.startDate).toISOString().split('T')[0] : '',
     observation: atividadeInicial?.observation || '',
     imageUrl: atividadeInicial?.imageUrl || null,
     imageDescription: atividadeInicial?.imageDescription || '',
@@ -94,6 +93,11 @@ export function NovaAtividadeForm({
     orderServiceId: orderServiceId,
     createdBy: Number(localStorage.getItem('userId')) || 0,
   };
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+  });
 
   const getTarefasMacro = async () => {
     try {
@@ -123,77 +127,30 @@ export function NovaAtividadeForm({
     }
   };
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues,
-  });
-
-  const calcularTempoPrevisto = (
-    unidade: number,
-    tempoPorUnidade: number,
-    unidadeTempo: 'minutos' | 'horas'
-  ) => {
-    const tempoTotal = unidade * tempoPorUnidade;
-    if (unidadeTempo === 'minutos') {
-      const horas = Math.floor(tempoTotal / 60);
-      const minutos = tempoTotal % 60;
-      return `${horas}h${minutos}min`;
-    }
-    return `${tempoTotal}h`;
-  };
-
-  const handleCalculoTempo = () => {
-    const unidade = form.watch('quantity');
-    const tempoPorUnidade = form.watch('timePerUnit');
-    const unidadeTempo = form.watch('unidadeTempo');
-
-    if (unidade && tempoPorUnidade && unidadeTempo) {
-      const tempo = calcularTempoPrevisto(
-        unidade,
-        tempoPorUnidade,
-        unidadeTempo
-      );
-      setTempoPrevisto(tempo);
-    }
-  };
-
-  const handleTarefaMacroChange = (value: string) => {
-    if (editMode) {
-      setShowHorasColaboradores(true);
-    }
-    form.setValue('macroTask', value);
-  };
-
-  const handleProcessoChange = (value: string) => {
-    if (editMode) {
-      setShowHorasColaboradores(true);
-    }
-    form.setValue('process', value);
-  };
-
-  const onSubmit = async (data: FormValues) => {
-    const dataD = {
-      ...data,
-      estimatedTime: tempoPrevisto,
-      projectId: projectId,
-      orderServiceId: orderServiceId,
-    };
-
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      await createActivity(dataD);
-      toast({
-        title: 'Atividade criada',
-        description: 'A atividade foi criada com sucesso.',
-      });
+      if (editMode && atividadeInicial) {
+        await updateActivity(atividadeInicial.id, data);
+        toast({
+          title: 'Atividade atualizada',
+          description: 'A atividade foi atualizada com sucesso.',
+        });
+      } else {
+        await createActivity(data);
+        toast({
+          title: 'Atividade criada',
+          description: 'A atividade foi criada com sucesso.',
+        });
+      }
+      
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro ao criar atividade',
-        description:
-          'Ocorreu um erro ao criar a atividade. Tente novamente mais tarde.',
+        title: editMode ? 'Erro ao atualizar atividade' : 'Erro ao criar atividade',
+        description: 'Ocorreu um erro. Tente novamente mais tarde.',
       });
     }
   };
@@ -202,7 +159,11 @@ export function NovaAtividadeForm({
     getTarefasMacro();
     getProcessos();
     getColaboradores();
-  }, []);
+
+    if (atividadeInicial?.estimatedTime) {
+      setTempoPrevisto(atividadeInicial.estimatedTime);
+    }
+  }, [atividadeInicial]);
 
   return (
     <Form {...form}>
@@ -214,7 +175,7 @@ export function NovaAtividadeForm({
             <FormItem>
               <FormLabel>Tarefa Macro</FormLabel>
               <Select
-                onValueChange={handleTarefaMacroChange}
+                onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
@@ -242,7 +203,7 @@ export function NovaAtividadeForm({
             <FormItem>
               <FormLabel>Processo</FormLabel>
               <Select
-                onValueChange={handleProcessoChange}
+                onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
@@ -290,7 +251,6 @@ export function NovaAtividadeForm({
                     {...field}
                     onChange={(e) => {
                       field.onChange(Number(e.target.value));
-                      handleCalculoTempo();
                     }}
                   />
                 </FormControl>
@@ -312,7 +272,6 @@ export function NovaAtividadeForm({
                       {...field}
                       onChange={(e) => {
                         field.onChange(Number(e.target.value));
-                        handleCalculoTempo();
                       }}
                     />
                   </FormControl>
@@ -328,10 +287,7 @@ export function NovaAtividadeForm({
                 <FormItem>
                   <FormLabel>Unidade</FormLabel>
                   <Select
-                    onValueChange={(value: 'minutos' | 'horas') => {
-                      field.onChange(value);
-                      handleCalculoTempo();
-                    }}
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -351,10 +307,6 @@ export function NovaAtividadeForm({
           </div>
         </div>
 
-        <div className="bg-gray-100 p-2 rounded">
-          <p className="text-sm font-medium">Tempo Previsto: {tempoPrevisto}</p>
-        </div>
-
         <FormField
           control={form.control}
           name="collaborators"
@@ -363,7 +315,7 @@ export function NovaAtividadeForm({
               <FormLabel>Equipe</FormLabel>
               <Select
                 onValueChange={(value) => {
-                  const numericValue = Number(value); // Converter o valor para número
+                  const numericValue = Number(value);
                   const currentValues = field.value || [];
                   if (!currentValues.includes(numericValue)) {
                     field.onChange([...currentValues, numericValue]);

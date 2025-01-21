@@ -295,6 +295,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                     </DialogHeader>
                     <NovaAtividadeForm
                       editMode={true}
+                      atividadeInicial={atividade}
                       projectId={Number(projectId)}
                       orderServiceId={Number(serviceOrderId)}
                     />
