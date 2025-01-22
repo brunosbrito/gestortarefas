@@ -2,15 +2,13 @@ services:
   react-app:
     build: .
     image: frontend-gestor-tarefas
-    ports:
-      - '80:80'
     restart: unless-stopped
     networks:
-      frontendGetortarefasNet:
+      frontendGestorTarefasNet:
         ipv4_address: 10.5.0.5
 
 networks:
-  frontendGetortarefasNet:
+  frontendGestorTarefasNet:
     driver: bridge
     ipam:
       config:
