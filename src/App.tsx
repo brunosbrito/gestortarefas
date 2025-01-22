@@ -13,7 +13,7 @@ import Processos from './pages/gerenciamento/processos';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/">
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
