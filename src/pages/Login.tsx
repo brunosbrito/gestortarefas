@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { login } from "@/services/AuthService";
-import { Eye, EyeOff } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { login } from '@/services/AuthService';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl font-bold text-center text-primary">
-            Sistema de Gestão
+            Gestor de Tarefas
           </CardTitle>
           <p className="text-muted-foreground text-center">
             Faça login para acessar o sistema
@@ -55,7 +55,7 @@ const Login = () => {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -80,10 +80,7 @@ const Login = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button 
-              type="submit" 
-              className="w-full btn-secondary"
-            >
+            <Button type="submit" className="w-full btn-secondary">
               Entrar
             </Button>
           </form>
