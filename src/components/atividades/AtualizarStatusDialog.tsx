@@ -51,10 +51,11 @@ const paralizadaSchema = z.object({
   realizationDescription: z.string().min(1, 'Descrição do que foi realizado é obrigatória'),
 });
 
-type FormValues = 
-  | z.infer<typeof emExecucaoSchema>
-  | z.infer<typeof concluidaSchema>
-  | z.infer<typeof paralizadaSchema>;
+type EmExecucaoForm = z.infer<typeof emExecucaoSchema>;
+type ConcluidaForm = z.infer<typeof concluidaSchema>;
+type ParalizadaForm = z.infer<typeof paralizadaSchema>;
+
+type FormValues = EmExecucaoForm | ConcluidaForm | ParalizadaForm;
 
 const motivosParalizacao = [
   'Falta de material',
@@ -84,43 +85,48 @@ export function AtualizarStatusDialog({
   onSuccess,
 }: AtualizarStatusDialogProps) {
   const { toast } = useToast();
-  const schema =
-    novoStatus === 'Em execução'
-      ? emExecucaoSchema
-      : novoStatus === 'Concluídas'
-      ? concluidaSchema
-      : paralizadaSchema;
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      ...(novoStatus === 'Concluídas' ? {
+  const getDefaultValues = () => {
+    if (novoStatus === 'Concluídas') {
+      return {
         workedHours: atividade?.collaborators?.map(col => ({
           id: col.id.toString(),
           hours: 0,
         })) || [],
-      } : {}),
-    },
+      } as Partial<ConcluidaForm>;
+    }
+    return {};
+  };
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(
+      novoStatus === 'Em execução'
+        ? emExecucaoSchema
+        : novoStatus === 'Concluídas'
+        ? concluidaSchema
+        : paralizadaSchema
+    ),
+    defaultValues: getDefaultValues(),
   });
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const formattedData = { ...data };
+      const formattedData: Record<string, any> = { ...data };
 
       if (novoStatus === 'Em execução') {
-        const execData = data as z.infer<typeof emExecucaoSchema>;
+        const execData = data as EmExecucaoForm;
         formattedData.startDate = new Date(
           `${execData.startDate}T${execData.startTime}`
         ).toISOString();
         delete formattedData.startTime;
       } else if (novoStatus === 'Concluídas') {
-        const concData = data as z.infer<typeof concluidaSchema>;
+        const concData = data as ConcluidaForm;
         formattedData.endDate = new Date(
           `${concData.endDate}T${concData.endTime}`
         ).toISOString();
         delete formattedData.endTime;
       } else if (novoStatus === 'Paralizadas') {
-        const paraData = data as z.infer<typeof paralizadaSchema>;
+        const paraData = data as ParalizadaForm;
         formattedData.pauseDate = new Date(
           `${paraData.pauseDate}T${paraData.pauseTime}`
         ).toISOString();
