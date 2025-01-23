@@ -51,6 +51,11 @@ const paralizadaSchema = z.object({
   realizationDescription: z.string().min(1, 'Descrição do que foi realizado é obrigatória'),
 });
 
+type FormValues = 
+  | z.infer<typeof emExecucaoSchema>
+  | z.infer<typeof concluidaSchema>
+  | z.infer<typeof paralizadaSchema>;
+
 const motivosParalizacao = [
   'Falta de material',
   'Falta de mão de obra',
@@ -86,33 +91,38 @@ export function AtualizarStatusDialog({
       ? concluidaSchema
       : paralizadaSchema;
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      workedHours: atividade?.collaborators?.map(col => ({
-        id: col.id.toString(),
-        hours: 0,
-      })) || [],
+      ...(novoStatus === 'Concluídas' ? {
+        workedHours: atividade?.collaborators?.map(col => ({
+          id: col.id.toString(),
+          hours: 0,
+        })) || [],
+      } : {}),
     },
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormValues) => {
     try {
       const formattedData = { ...data };
 
       if (novoStatus === 'Em execução') {
+        const execData = data as z.infer<typeof emExecucaoSchema>;
         formattedData.startDate = new Date(
-          `${data.startDate}T${data.startTime}`
+          `${execData.startDate}T${execData.startTime}`
         ).toISOString();
         delete formattedData.startTime;
       } else if (novoStatus === 'Concluídas') {
+        const concData = data as z.infer<typeof concluidaSchema>;
         formattedData.endDate = new Date(
-          `${data.endDate}T${data.endTime}`
+          `${concData.endDate}T${concData.endTime}`
         ).toISOString();
         delete formattedData.endTime;
       } else if (novoStatus === 'Paralizadas') {
+        const paraData = data as z.infer<typeof paralizadaSchema>;
         formattedData.pauseDate = new Date(
-          `${data.pauseDate}T${data.pauseTime}`
+          `${paraData.pauseDate}T${paraData.pauseTime}`
         ).toISOString();
         delete formattedData.pauseTime;
       }
@@ -261,6 +271,7 @@ export function AtualizarStatusDialog({
                                 id: colaborador.id.toString(),
                                 hours: parseFloat(e.target.value),
                               })}
+                              value={field.value?.hours || ''}
                             />
                           </FormControl>
                           <FormMessage />
