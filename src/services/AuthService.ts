@@ -10,8 +10,7 @@ export const login = async (email: string, password: string) => {
 
     const { token } = response.data.access_token;
 
-    localStorage.setItem('authToken', response.data.access_token);
-    localStorage.setItem('userId', response.data.userId);
+    // O armazenamento do token será gerenciado pelo componente Login
     return token;
   } catch (error) {
     console.error('Erro ao fazer login:', error);
@@ -21,5 +20,11 @@ export const login = async (email: string, password: string) => {
 
 export const logout = () => {
   localStorage.removeItem('authToken');
-  localStorage.removeItem('userId');
+  localStorage.removeItem('rememberMe');
+  localStorage.removeItem('userEmail');
+  sessionStorage.removeItem('authToken');
+};
+
+export const getStoredToken = () => {
+  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 };

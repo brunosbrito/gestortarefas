@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { login } from '@/services/AuthService';
 import { Eye, EyeOff } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,11 +15,23 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      const response = await login(email, password);
+      
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem('authToken', response);
+        localStorage.setItem('userEmail', email);
+      } else {
+        sessionStorage.setItem('authToken', response);
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('userEmail');
+      }
+      
       navigate('/dashboard');
     } catch (err: unknown) {
       setError('Falha no login. Verifique suas credenciais.');
@@ -75,12 +88,25 @@ const Login = () => {
                 </button>
               </div>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              />
+              <Label
+                htmlFor="rememberMe"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Lembrar de mim
+              </Label>
+            </div>
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" className="w-full btn-secondary">
+            <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
               Entrar
             </Button>
           </form>
