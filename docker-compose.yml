@@ -4,10 +4,12 @@ services:
     image: frontend-gestor-tarefas
     restart: unless-stopped
     ports:
-      - '8080:80' # Mapeia a porta 80 do container para a porta 80 do host
+      - '8080:80' # Mapeia a porta 80 do container para a porta 8080 do host
     networks:
       frontendGestorTarefasNet:
         ipv4_address: 10.5.0.5 # IP estático na rede Docker
+    volumes:
+      - /var/www/frontend-gestor-tarefas:/usr/share/nginx/html # Mapeia o build para a VPS
 
 networks:
   frontendGestorTarefasNet:
