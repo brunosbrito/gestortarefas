@@ -1,27 +1,33 @@
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useToast } from '@/hooks/use-toast';
 
-const token = localStorage.getItem('authToken');
-
-const userFormSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email inválido"),
-  role: z.enum(["admin", "basic"], {
-    required_error: "Selecione uma função",
-  }),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Senhas não correspondem",
-  path: ["confirmPassword"],
-});
+const userFormSchema = z
+  .object({
+    username: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+    email: z.string().email('Email inválido'),
+    role: z.enum(['admin', 'basic'], {
+      required_error: 'Selecione uma função',
+    }),
+    password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Senhas não correspondem',
+    path: ['confirmPassword'],
+  });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
 
@@ -30,40 +36,30 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      role: "basic",
-      password: "",
-      confirmPassword: "",
+      username: '',
+      email: '',
+      role: 'basic',
+      password: '',
+      confirmPassword: '',
     },
   });
 
   const onSubmit = async (data: UserFormValues) => {
     try {
-      await axios.post('http://localhost:3000/auth/register', {
-        email: data.email,
-        password: data.password,
-        username: data.name,
-        role: data.role,
-      },{
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
       toast({
-        title: "Usuário criado com sucesso!",
-        description: `${data.name} foi adicionado como ${data.role === 'admin' ? 'administrador' : 'usuário básico'}.`,
+        title: 'Usuário criado com sucesso!',
+        description: `${data.username} foi adicionado como ${
+          data.role === 'admin' ? 'administrador' : 'usuário básico'
+        }.`,
       });
 
       form.reset();
       if (onSuccess) onSuccess();
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Erro ao criar usuário",
-        description: "Ocorreu um erro ao criar o usuário. Tente novamente.",
+        variant: 'destructive',
+        title: 'Erro ao criar usuário',
+        description: 'Ocorreu um erro ao criar o usuário. Tente novamente.',
       });
     }
   };
@@ -73,7 +69,7 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="name"
+          name="username"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome</FormLabel>
@@ -113,17 +109,13 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                     <FormControl>
                       <RadioGroupItem value="admin" />
                     </FormControl>
-                    <FormLabel className="font-normal">
-                      Administrador
-                    </FormLabel>
+                    <FormLabel className="font-normal">Administrador</FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
                       <RadioGroupItem value="basic" />
                     </FormControl>
-                    <FormLabel className="font-normal">
-                      Básico
-                    </FormLabel>
+                    <FormLabel className="font-normal">Básico</FormLabel>
                   </FormItem>
                 </RadioGroup>
               </FormControl>
@@ -138,7 +130,11 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <FormItem>
               <FormLabel>Senha</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Digite a senha" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Digite a senha"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -151,13 +147,19 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <FormItem>
               <FormLabel>Confirmar Senha</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Confirme a senha" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Confirme a senha"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">Criar Usuário</Button>
+        <Button type="submit" className="w-full">
+          Criar Usuário
+        </Button>
       </form>
     </Form>
   );

@@ -6,6 +6,23 @@ const URL = `${API_URL}/users/`;
 const token = localStorage.getItem('authToken');
 
 class UserService {
+  async createUser(data: User) {
+    await axios.post(
+      'http://localhost:3000/auth/register',
+      {
+        email: data.email,
+        password: data.password,
+        username: data.username,
+        role: data.role,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
   async getAllUsers() {
     try {
       const response = await axios.get(URL, {
