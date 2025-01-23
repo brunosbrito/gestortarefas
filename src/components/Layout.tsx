@@ -1,13 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Header } from "./layout/Header";
 import { Sidebar } from "./layout/Sidebar";
 import { useUser } from "./layout/useUser";
 import { Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const user = useUser();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   if (!user) {
     return <div>Carregando...</div>;
