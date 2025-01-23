@@ -1,14 +1,13 @@
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import {
   Form,
   FormControl,
@@ -17,10 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { updateActivity } from '@/services/ActivityService';
-import { User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -30,6 +26,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import { useToast } from '@/hooks/use-toast';
+import { updateActivity } from '@/services/ActivityService';
 
 const emExecucaoSchema = z.object({
   startDate: z.string().min(1, 'Data de início é obrigatória'),
@@ -40,6 +38,10 @@ const concluidaSchema = z.object({
   endDate: z.string().min(1, 'Data de conclusão é obrigatória'),
   endTime: z.string().min(1, 'Hora de conclusão é obrigatória'),
   realizationDescription: z.string().min(1, 'Descrição do que foi realizado é obrigatória'),
+  workedHours: z.array(z.object({
+    id: z.string(),
+    hours: z.number().min(0.1, 'As horas trabalhadas devem ser maiores que 0'),
+  })),
 });
 
 const paralizadaSchema = z.object({
@@ -77,7 +79,6 @@ export function AtualizarStatusDialog({
   onSuccess,
 }: AtualizarStatusDialogProps) {
   const { toast } = useToast();
-  const [isFormValid, setIsFormValid] = useState(false);
   const schema =
     novoStatus === 'Em execução'
       ? emExecucaoSchema
@@ -87,53 +88,15 @@ export function AtualizarStatusDialog({
 
   const form = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      workedHours: atividade?.collaborators?.map(col => ({
+        id: col.id.toString(),
+        hours: 0,
+      })) || [],
+    },
   });
 
-  const validateWorkedHours = () => {
-    const inputs = document.querySelectorAll('input[name="workedHours"]');
-    let isValid = true;
-
-    inputs.forEach((input) => {
-      const value = (input as HTMLInputElement).value;
-      if (!value || isNaN(Number(value)) || Number(value) <= 0) {
-        isValid = false;
-      }
-    });
-
-    setIsFormValid(isValid);
-  };
-
-  useEffect(() => {
-    validateWorkedHours();
-  }, [atividade]);
-
-  const onSubmit = async (data: any, event: React.FormEvent) => {
-    event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-    let allHoursFilled = true;
-    const workedHours: { id: string; hours: number }[] = [];
-    const inputs = document.querySelectorAll('input[name="workedHours"]');
-
-    inputs.forEach((input) => {
-      const id = (input as HTMLInputElement).dataset.id;
-      const hours = Number((input as HTMLInputElement).value);
-
-      if (id && !isNaN(hours)) {
-        workedHours.push({ id, hours });
-      } else {
-        allHoursFilled = false;
-      }
-    });
-
-    if (!allHoursFilled) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description:
-          'Por favor, preencha as horas de trabalho para todos os colaboradores.',
-      });
-      return;
-    }
+  const onSubmit = async (data: any) => {
     try {
       const formattedData = { ...data };
 
@@ -147,7 +110,6 @@ export function AtualizarStatusDialog({
           `${data.endDate}T${data.endTime}`
         ).toISOString();
         delete formattedData.endTime;
-        formattedData.users = workedHours;
       } else if (novoStatus === 'Paralizadas') {
         formattedData.pauseDate = new Date(
           `${data.pauseDate}T${data.pauseTime}`
@@ -281,26 +243,30 @@ export function AtualizarStatusDialog({
                   )}
                 />
                 <div className="space-y-4">
-                  {atividade?.collaborators?.map((colaborador: Colaborador) => (
-                    <div
+                  {atividade?.collaborators?.map((colaborador, index) => (
+                    <FormField
                       key={colaborador.id}
-                      className="grid grid-cols-2 gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <User />
-                        <FormLabel>{colaborador.name}</FormLabel>
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          name="workedHours"
-                          placeholder="Horas"
-                          min="0"
-                          data-id={colaborador.id}
-                          onChange={validateWorkedHours}
-                        />
-                      </div>
-                    </div>
+                      control={form.control}
+                      name={`workedHours.${index}`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Horas trabalhadas - {colaborador.name}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              placeholder="Digite as horas trabalhadas"
+                              onChange={(e) => field.onChange({
+                                id: colaborador.id.toString(),
+                                hours: parseFloat(e.target.value),
+                              })}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   ))}
                 </div>
               </>
