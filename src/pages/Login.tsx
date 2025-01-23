@@ -21,7 +21,8 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await login(email, password);
-      
+      console.log(response);
+
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('authToken', response);
@@ -31,7 +32,7 @@ const Login = () => {
         localStorage.removeItem('rememberMe');
         localStorage.removeItem('userEmail');
       }
-      
+
       navigate('/dashboard');
     } catch (err: unknown) {
       setError('Falha no login. Verifique suas credenciais.');
@@ -106,7 +107,10 @@ const Login = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            <Button
+              type="submit"
+              className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+            >
               Entrar
             </Button>
           </form>

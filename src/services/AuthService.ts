@@ -8,10 +8,7 @@ export const login = async (email: string, password: string) => {
       password,
     });
 
-    const { token } = response.data.access_token;
-
-    // O armazenamento do token será gerenciado pelo componente Login
-    return token;
+    return response.data.access_token;
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     throw error;
@@ -26,5 +23,7 @@ export const logout = () => {
 };
 
 export const getStoredToken = () => {
-  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  return (
+    localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
+  );
 };
