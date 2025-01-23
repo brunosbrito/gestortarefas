@@ -1,8 +1,10 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { navItems } from "./sidebar/menuItems";
 import { SidebarMenuItem } from "./sidebar/SidebarMenuItem";
 import { User } from "@/interfaces/UserInterface";
+import { logout } from "@/services/AuthService";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SidebarProps {
   user: User;
@@ -10,6 +12,8 @@ interface SidebarProps {
 
 export const Sidebar = ({ user }: SidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   useEffect(() => {
@@ -25,6 +29,17 @@ export const Sidebar = ({ user }: SidebarProps) => {
         ? prev.filter(item => item !== label)
         : [...prev, label]
     );
+  };
+
+  const handleMenuClick = (path: string, label: string) => {
+    if (label === 'Sair') {
+      logout();
+      toast({
+        description: "Você foi desconectado com sucesso.",
+      });
+      navigate('/login');
+      return;
+    }
   };
 
   // Filtra os itens do menu baseado na role do usuário
@@ -44,6 +59,7 @@ export const Sidebar = ({ user }: SidebarProps) => {
           isExpanded={expandedItems.includes(item.label)}
           isActive={location.pathname === item.path}
           onToggle={() => toggleExpand(item.label)}
+          onClick={() => handleMenuClick(item.path, item.label)}
         />
       ))}
     </nav>
