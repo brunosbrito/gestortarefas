@@ -20,7 +20,7 @@ const Login = () => {
   useEffect(() => {
     const token = getStoredToken();
     if (token) {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [navigate]);
 
@@ -28,6 +28,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await login(email, password);
+      console.log(response);
 
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
@@ -39,7 +40,7 @@ const Login = () => {
         localStorage.removeItem('userEmail');
       }
 
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: unknown) {
       setError('Falha no login. Verifique suas credenciais.');
     }

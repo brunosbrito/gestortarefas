@@ -8,33 +8,26 @@ interface SidebarMenuItemProps {
   isExpanded: boolean;
   isActive: boolean;
   onToggle: () => void;
-  onClick?: (path: string, label: string) => void;
 }
 
 export const SidebarMenuItem = ({ 
   item, 
   isExpanded, 
   isActive,
-  onToggle,
-  onClick
+  onToggle 
 }: SidebarMenuItemProps) => {
   const hasSubItems = item.subItems && item.subItems.length > 0;
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (hasSubItems) {
-      e.preventDefault();
-      onToggle();
-    } else if (onClick) {
-      e.preventDefault();
-      onClick(item.path || '', item.label);
-    }
-  };
 
   return (
     <div className="space-y-1">
       <Link
         to={item.path || "#"}
-        onClick={handleClick}
+        onClick={(e) => {
+          if (hasSubItems) {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
         className={`flex items-center w-full space-x-3 px-4 py-3 rounded-lg text-construction-600 hover:bg-construction-100 ${
           isActive ? "bg-primary text-white" : ""
         }`}
