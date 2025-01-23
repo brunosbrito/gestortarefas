@@ -37,6 +37,7 @@ export const getActivitiesByServiceOrderId = async (serviceOrderId) => {
 
 // Função para atualizar uma atividade
 export const updateActivity = async (id, activityData) => {
+  console.log(activityData);
   try {
     const response = await axios.put(
       `${API_URL}/activities/${id}`,

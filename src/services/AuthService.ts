@@ -8,18 +8,11 @@ export const login = async (email: string, password: string) => {
       password,
     });
 
-    return response.data.access_token;
+    return response;
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     throw error;
   }
-};
-
-export const logout = () => {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('rememberMe');
-  localStorage.removeItem('userEmail');
-  sessionStorage.removeItem('authToken');
 };
 
 export const getStoredToken = () => {

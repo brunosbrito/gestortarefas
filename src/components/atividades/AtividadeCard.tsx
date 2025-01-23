@@ -51,7 +51,11 @@ interface AtividadeCardProps {
   onMoveAtividade?: (atividadeId: number, novoStatus: string) => void;
 }
 
-export const AtividadeCard = ({ atividade, index, onMoveAtividade }: AtividadeCardProps) => {
+export const AtividadeCard = ({
+  atividade,
+  index,
+  onMoveAtividade,
+}: AtividadeCardProps) => {
   const { toast } = useToast();
   const { projectId, serviceOrderId } = useParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -94,7 +98,7 @@ export const AtividadeCard = ({ atividade, index, onMoveAtividade }: AtividadeCa
   const formatEstimatedTime = (estimatedTime: string) => {
     if (!estimatedTime) return '00:00';
     const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
-    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+    return `${hours.padStart(2, '0')}:${minutes?.padStart(2, '0')}`;
   };
 
   const calculatePercentage = (elapsedTime, estimatedTime: string) => {
@@ -180,7 +184,7 @@ export const AtividadeCard = ({ atividade, index, onMoveAtividade }: AtividadeCa
                 <GripHorizontal className="w-4 h-4 text-gray-400" />
               </div>
             </CardHeader>
-            
+
             <CardContent className="p-4 pt-0 text-sm text-gray-500">
               <div className="flex items-center mb-2">
                 <Building2 className="w-4 h-4 mr-2" />

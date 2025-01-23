@@ -28,14 +28,19 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await login(email, password);
-      console.log(response);
+      if (response.data.message == 'Credenciais inválidas') {
+        setError('Falha no login. Verifique suas credenciais.');
+        return;
+      }
 
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
-        localStorage.setItem('authToken', response);
+        localStorage.setItem('authToken', response.data.access_token);
         localStorage.setItem('userEmail', email);
+        localStorage.setItem('userId', response.data.userId);
       } else {
-        sessionStorage.setItem('authToken', response);
+        sessionStorage.setItem('authToken', response.data.access_token);
+        localStorage.setItem('userId', response.data.userId);
         localStorage.removeItem('rememberMe');
         localStorage.removeItem('userEmail');
       }

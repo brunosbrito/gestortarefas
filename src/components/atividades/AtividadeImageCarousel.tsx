@@ -34,7 +34,7 @@ export const AtividadeImageCarousel = ({
               <div className="p-1">
                 <div className="flex flex-col space-y-2">
                   <img
-                    src={`http://159.223.152.198:3000${image.imagePath}`}
+                    src={`https://gestor-tarefas.gmxindustrial.com.br${image.imagePath}`}
                     alt={`Imagem ${index + 1}`}
                     className="w-full h-64 object-cover rounded-lg"
                   />
