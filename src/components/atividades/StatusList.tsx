@@ -7,9 +7,10 @@ interface StatusListProps {
   status: string;
   atividades: AtividadeStatus[];
   droppableId: string;
+  onMoveAtividade?: (atividadeId: number, novoStatus: string) => void;
 }
 
-export const StatusList = ({ status, atividades, droppableId }: StatusListProps) => {
+export const StatusList = ({ status, atividades, droppableId, onMoveAtividade }: StatusListProps) => {
   const atividadesFiltradas = atividades.filter((a) => a.status === status);
 
   return (
@@ -32,6 +33,7 @@ export const StatusList = ({ status, atividades, droppableId }: StatusListProps)
                   key={atividade.id} 
                   atividade={atividade} 
                   index={index}
+                  onMoveAtividade={onMoveAtividade}
                 />
               ))}
               {provided.placeholder}

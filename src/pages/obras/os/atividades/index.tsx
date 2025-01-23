@@ -19,6 +19,7 @@ import { AtualizarStatusDialog } from '@/components/atividades/AtualizarStatusDi
 import ObrasService from '@/services/ObrasService';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import { useToast } from '@/hooks/use-toast';
 
 const statusListas = [
   'Planejadas',
@@ -28,6 +29,7 @@ const statusListas = [
 ] as const;
 
 const Atividades = () => {
+  const { toast } = useToast();
   const [atividades, setAtividades] = useState<AtividadeStatus[]>([]);
   const [openNovaAtividade, setOpenNovaAtividade] = useState(false);
   const [obra, setObra] = useState<Obra | null>(null);
@@ -48,13 +50,17 @@ const Atividades = () => {
       setAtividades(data);
     } catch (error) {
       console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar atividades",
+        description: "Não foi possível carregar as atividades. Tente novamente.",
+      });
     }
   };
 
   useEffect(() => {
     getByServiceOrderId();
     
-    // Buscar informações da obra
     const fetchObra = async () => {
       if (projectId) {
         try {
@@ -62,6 +68,11 @@ const Atividades = () => {
           setObra(obraData);
         } catch (error) {
           console.error('Erro ao buscar obra:', error);
+          toast({
+            variant: "destructive",
+            title: "Erro ao carregar obra",
+            description: "Não foi possível carregar os dados da obra. Tente novamente.",
+          });
         }
       }
     };
@@ -90,9 +101,18 @@ const Atividades = () => {
     }
   };
 
-  const handleSuccess = () => {
-    setOpenNovaAtividade(false);
-    getByServiceOrderId();
+  const handleMoveAtividade = (atividadeId: number, novoStatus: string) => {
+    const atividade = atividades.find((a) => a.id === atividadeId);
+    if (atividade) {
+      setDialogStatus({
+        open: true,
+        atividade: {
+          id: String(atividadeId),
+          collaborators: atividade.collaborators
+        },
+        novoStatus: novoStatus,
+      });
+    }
   };
 
   return (
@@ -117,7 +137,10 @@ const Atividades = () => {
                 <NovaAtividadeForm
                   projectId={Number(projectId)}
                   orderServiceId={Number(serviceOrderId)}
-                  onSuccess={handleSuccess}
+                  onSuccess={() => {
+                    setOpenNovaAtividade(false);
+                    getByServiceOrderId();
+                  }}
                 />
               </DialogContent>
             </Dialog>
@@ -132,6 +155,7 @@ const Atividades = () => {
                 status={status}
                 atividades={atividades}
                 droppableId={status}
+                onMoveAtividade={handleMoveAtividade}
               />
             ))}
           </div>

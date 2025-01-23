@@ -23,6 +23,7 @@ import {
   Eye,
   GripHorizontal,
   Hourglass,
+  MoveHorizontal,
   Upload,
   User,
   Users,
@@ -41,18 +42,23 @@ import { AtividadeImageCarousel } from './AtividadeImageCarousel';
 import { AtividadeInfoBasica } from './AtividadeInfoBasica';
 import { AtividadeEquipe } from './AtividadeEquipe';
 import { AtividadeUploadDialog } from './AtividadeUploadDialog';
+import { MoverAtividadeDialog } from './MoverAtividadeDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
   index: number;
+  onMoveAtividade?: (atividadeId: number, novoStatus: string) => void;
 }
 
-export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
+export const AtividadeCard = ({ atividade, index, onMoveAtividade }: AtividadeCardProps) => {
   const { toast } = useToast();
   const { projectId, serviceOrderId } = useParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageDescription, setImageDescription] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   function formatTime(totalTime) {
     if (isNaN(totalTime) || totalTime <= 0) return '00:00';
@@ -146,6 +152,12 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
     }
   };
 
+  const handleMove = (novoStatus: string) => {
+    if (onMoveAtividade) {
+      onMoveAtividade(atividade.id, novoStatus);
+    }
+  };
+
   return (
     <Draggable draggableId={String(atividade.id)} index={index}>
       {(provided) => (
@@ -168,6 +180,7 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                 <GripHorizontal className="w-4 h-4 text-gray-400" />
               </div>
             </CardHeader>
+            
             <CardContent className="p-4 pt-0 text-sm text-gray-500">
               <div className="flex items-center mb-2">
                 <Building2 className="w-4 h-4 mr-2" />
@@ -283,6 +296,15 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
                 </DialogContent>
               </Dialog>
               <div className="flex gap-2">
+                {isMobile && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsMoveDialogOpen(true)}
+                  >
+                    <MoveHorizontal className="w-4 h-4" />
+                  </Button>
+                )}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -342,6 +364,12 @@ export const AtividadeCard = ({ atividade, index }: AtividadeCardProps) => {
               onUpload={handleImageUpload}
             />
           </Dialog>
+
+          <MoverAtividadeDialog
+            open={isMoveDialogOpen}
+            onOpenChange={setIsMoveDialogOpen}
+            onMove={handleMove}
+          />
         </div>
       )}
     </Draggable>
