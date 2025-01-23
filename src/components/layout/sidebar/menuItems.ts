@@ -6,7 +6,6 @@ import {
   Settings,
   ListTodo,
   GitFork,
-  LogOut,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -52,9 +51,4 @@ export const navItems: MenuItem[] = [
     label: 'Registro de Ponto',
     path: '/ponto',
   },
-  {
-    icon: LogOut,
-    label: 'Sair',
-    path: '/logout',
-  }
 ];
