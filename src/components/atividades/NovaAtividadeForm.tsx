@@ -159,6 +159,25 @@ export function NovaAtividadeForm({
     }
   };
 
+  const calculateEstimatedTime = () => {
+    const quantity = form.getValues('quantity');
+    const timePerUnit = form.getValues('timePerUnit');
+    const unidadeTempo = form.getValues('unidadeTempo');
+
+    if (!quantity || !timePerUnit) return;
+
+    const totalMinutes = unidadeTempo === 'minutos' 
+      ? quantity * timePerUnit
+      : quantity * timePerUnit * 60;
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    const estimatedTime = `${hours}h${minutes}min`;
+    form.setValue('estimatedTime', estimatedTime);
+    setTempoPrevisto(estimatedTime);
+  };
+
   useEffect(() => {
     getTarefasMacro();
     getProcessos();
@@ -168,6 +187,16 @@ export function NovaAtividadeForm({
       setTempoPrevisto(atividadeInicial.estimatedTime);
     }
   }, [atividadeInicial]);
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'quantity' || name === 'timePerUnit' || name === 'unidadeTempo') {
+        calculateEstimatedTime();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   return (
     <Form {...form}>
@@ -309,6 +338,26 @@ export function NovaAtividadeForm({
               )}
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          <FormField
+            control={form.control}
+            name="estimatedTime"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tempo Previsto</FormLabel>
+                <FormControl>
+                  <Input
+                    value={tempoPrevisto}
+                    readOnly
+                    className="bg-gray-100"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <FormField
