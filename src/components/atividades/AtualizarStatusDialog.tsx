@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 
 const emExecucaoSchema = z.object({
@@ -38,12 +39,14 @@ const emExecucaoSchema = z.object({
 const concluidaSchema = z.object({
   endDate: z.string().min(1, 'Data de conclusão é obrigatória'),
   endTime: z.string().min(1, 'Hora de conclusão é obrigatória'),
+  realizationDescription: z.string().min(1, 'Descrição do que foi realizado é obrigatória'),
 });
 
 const paralizadaSchema = z.object({
   pauseDate: z.string().min(1, 'Data de paralização é obrigatória'),
   pauseTime: z.string().min(1, 'Hora de paralização é obrigatória'),
   reason: z.string().min(1, 'Motivo é obrigatório'),
+  realizationDescription: z.string().min(1, 'Descrição do que foi realizado é obrigatória'),
 });
 
 const motivosParalizacao = [
@@ -176,7 +179,7 @@ export function AtualizarStatusDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[90%] sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
             {novoStatus === 'Em execução' && 'Iniciar Atividade'}
@@ -260,6 +263,23 @@ export function AtualizarStatusDialog({
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="realizationDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>O que foi realizado?</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descreva o que foi realizado nesta atividade"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className="space-y-4">
                   {atividade?.collaborators?.map((colaborador: Colaborador) => (
                     <div
@@ -345,6 +365,23 @@ export function AtualizarStatusDialog({
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="realizationDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>O que foi realizado até o momento?</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Descreva o que foi realizado até o momento nesta atividade"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
