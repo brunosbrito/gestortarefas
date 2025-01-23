@@ -18,7 +18,7 @@ export const login = async (email: string, password: string) => {
   }
 };
 
-export const createUser = async (data: User) => {
+export const createUser = async (data: Partial<User>) => {
   await axios.post(
     `${URL}/auth/register`,
     {

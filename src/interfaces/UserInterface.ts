@@ -1,8 +1,10 @@
+import { EnumValues } from 'zod';
+
 export interface User {
-    id: number;
-    username: string;
-    email: string;
-    password: string;
-    isActive: boolean;
-    role: string;
+  id: number;
+  username: string;
+  email: string;
+  password: string;
+  isActive: boolean;
+  role: string;
 }

@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
+import { createUser } from '@/services/AuthService';
 
 const userFormSchema = z
   .object({
@@ -46,6 +47,8 @@ export const UserForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
   const onSubmit = async (data: UserFormValues) => {
     try {
+      createUser(data);
+
       toast({
         title: 'Usuário criado com sucesso!',
         description: `${data.username} foi adicionado como ${
