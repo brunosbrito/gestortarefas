@@ -20,7 +20,7 @@ export const login = async (email: string, password: string) => {
 
 export const createUser = async (data: Partial<User>) => {
   await axios.post(
-    `${URL}/auth/register`,
+    `${API_URL}/auth/register`,
     {
       email: data.email,
       password: data.password,
