@@ -16,12 +16,14 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from './osFormSchema';
+import { Obra } from '@/interfaces/ObrasInterface';
 
 interface OSFormFieldsProps {
   form: UseFormReturn<FormValues>;
+  obras?: Obra[];
 }
 
-export const OSFormFields = ({ form }: OSFormFieldsProps) => {
+export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
   return (
     <>
       <FormField
@@ -45,7 +47,7 @@ export const OSFormFields = ({ form }: OSFormFieldsProps) => {
           <FormItem>
             <FormLabel>Número Projeto</FormLabel>
             <FormControl>
-              <Input placeholder="Descrição da OS" {...field} />
+              <Input placeholder="Número do Projeto" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -64,7 +66,7 @@ export const OSFormFields = ({ form }: OSFormFieldsProps) => {
                   type="number"
                   placeholder="Quantidade"
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))} // Forçando conversão para número
+                  onChange={(e) => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
               <FormMessage />
