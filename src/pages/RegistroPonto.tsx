@@ -19,7 +19,9 @@ import ColaboradorService from '@/services/ColaboradorService';
 import { Obra } from '@/interfaces/ObrasInterface';
 import {
   createEffective,
+  deleteEffectives,
   getEffectivesByShiftAndDate,
+  updateEffective,
 } from '@/services/EffectiveService';
 import { Funcionario } from '@/interfaces/FuncionarioInterface';
 
@@ -57,8 +59,9 @@ const RegistroPonto = () => {
   }, [currentTurno]);
 
   const handleDelete = async (id: number) => {
-    // Implementar lógica de exclusão
+    await deleteEffectives(id);
     toast.success('Registro excluído com sucesso');
+    fetchData();
   };
 
   const handleEdit = (funcionario: Funcionario) => {
@@ -84,7 +87,7 @@ const RegistroPonto = () => {
   const onEditSubmit = async (data: any) => {
     if (!selectedFuncionario) return;
     try {
-      // Implementar lógica de edição
+      await updateEffective(data, selectedFuncionario.id);
       setIsEditDialogOpen(false);
       setSelectedFuncionario(null);
       toast.success('Registro atualizado com sucesso');
@@ -173,15 +176,12 @@ const RegistroPonto = () => {
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2">
             <TabsTrigger value="turno1" className="text-sm sm:text-base">
               1º Turno
-              <span className="hidden sm:inline"> (06:00 - 14:00)</span>
             </TabsTrigger>
             <TabsTrigger value="turno2" className="text-sm sm:text-base">
               2º Turno
-              <span className="hidden sm:inline"> (14:00 - 22:00)</span>
             </TabsTrigger>
             <TabsTrigger value="turno3" className="text-sm sm:text-base">
               Turno Central
-              <span className="hidden sm:inline"> (08:00 - 17:00)</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="turno1" className="mt-6">

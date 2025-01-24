@@ -17,9 +17,9 @@ export const createEffective = async (data: CreateEffectiveDto) => {
   }
 };
 
-export const updateEffective = async (data: UpdateEffectiveDto) => {
+export const updateEffective = async (data: UpdateEffectiveDto, id: number) => {
   try {
-    const response = await axios.post(`${URL}/update`, data);
+    const response = await axios.put(`${URL}/${id}`, data);
     return response.data;
   } catch (error) {
     console.error('Erro ao atualizar registro:', error);
@@ -33,6 +33,35 @@ export const getEffectivesByShiftAndDate = async (shift: string) => {
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar registros:', error);
+    throw error;
+  }
+};
+
+export const deleteEffectives = async (id: number) => {
+  try {
+    const response = await axios.delete(`${URL}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao deletar registros:', error);
+    throw error;
+  }
+};
+
+export const enviarEfetivo = async (registro: any) => {
+  try {
+    const response = await axios.post(
+      `https://primary-production-0dcd.up.railway.app/webhook/efetivo`,
+      registro,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao deletar registros:', error);
     throw error;
   }
 };

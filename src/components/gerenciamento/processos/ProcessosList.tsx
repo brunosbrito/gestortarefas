@@ -54,15 +54,17 @@ export function ProcessosList({ reload }: ProcessosListProps) {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!selectedProcesso) return;
+  const handleDelete = async (id: number) => {
+    if (!id) return;
 
     try {
+      await ProcessService.delete(id);
+      getProcessos();
+
       toast({
         title: 'Processo excluído',
         description: 'O processo foi excluído com sucesso.',
       });
-      getProcessos();
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -149,7 +151,9 @@ export function ProcessosList({ reload }: ProcessosListProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogAction
+              onClick={() => handleDelete(selectedProcesso.id)}
+            >
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>

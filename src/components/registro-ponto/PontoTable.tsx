@@ -25,9 +25,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { updateEffective } from '@/services/EffectiveService';
+import { enviarEfetivo, updateEffective } from '@/services/EffectiveService';
 import { Funcionario } from '@/interfaces/FuncionarioInterface';
 
 interface PontoTableProps {
@@ -50,11 +50,11 @@ export const PontoTable = ({
   const getTurnoLabel = (turno: number) => {
     switch (turno) {
       case 1:
-        return '1º Turno (06:00 - 14:00)';
+        return '1º Turno';
       case 2:
-        return '2º Turno (14:00 - 22:00)';
+        return '2º Turno';
       case 3:
-        return 'Turno Central (08:00 - 17:00)';
+        return 'Turno Central';
       default:
         return `${turno}º Turno`;
     }
@@ -72,12 +72,10 @@ export const PontoTable = ({
         sector: f.sector,
       }));
 
-      for (const registro of registros) {
-        await updateEffective(registro);
-      }
-
-      toast.success(`Registros do ${getTurnoLabel(turno)} enviados com sucesso`);
-      onRefresh();
+      enviarEfetivo(registros);
+      toast.success(
+        `Registros do ${getTurnoLabel(turno)} enviados com sucesso`
+      );
     } catch (error) {
       console.error('Erro ao enviar registros:', error);
       toast.error('Erro ao enviar registros. Tente novamente.');
@@ -132,9 +130,7 @@ export const PontoTable = ({
                   </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
-                  <Badge variant="secondary">
-                    {funcionario.role}
-                  </Badge>
+                  <Badge variant="secondary">{funcionario.role}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge
@@ -176,10 +172,12 @@ export const PontoTable = ({
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            Confirmar exclusão
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Tem certeza que deseja excluir este registro de ponto?
-                            Esta ação não pode ser desfeita.
+                            Tem certeza que deseja excluir este registro de
+                            ponto? Esta ação não pode ser desfeita.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -187,7 +185,6 @@ export const PontoTable = ({
                           <AlertDialogAction
                             onClick={() => {
                               onDelete(funcionario.id);
-                              onRefresh();
                             }}
                           >
                             Confirmar
@@ -212,7 +209,9 @@ export const PontoTable = ({
                         </DropdownMenuItem>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <DropdownMenuItem
+                              onSelect={(e) => e.preventDefault()}
+                            >
                               <Trash2 className="w-4 h-4 mr-2" />
                               Excluir
                             </DropdownMenuItem>

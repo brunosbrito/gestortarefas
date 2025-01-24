@@ -331,7 +331,6 @@ export const AtividadeCard = ({
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={handleFileSelect}
                     className="hidden"
                     id={`upload-image-${atividade.id}`}

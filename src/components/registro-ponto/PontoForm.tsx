@@ -106,11 +106,9 @@ export const PontoForm = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">1º Turno (06:00 - 14:00)</SelectItem>
-                  <SelectItem value="2">2º Turno (14:00 - 22:00)</SelectItem>
-                  <SelectItem value="3">
-                    Turno Central (08:00 - 17:00)
-                  </SelectItem>
+                  <SelectItem value="1">1º Turno</SelectItem>
+                  <SelectItem value="2">2º Turno</SelectItem>
+                  <SelectItem value="3">Turno Central</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -174,7 +172,10 @@ export const PontoForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Obra</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a obra" />
@@ -194,7 +195,8 @@ export const PontoForm = ({
           />
         )}
 
-        {(tipoRegistro === 'ADMINISTRATIVO' || tipoRegistro === 'ENGENHARIA') && (
+        {(tipoRegistro === 'ADMINISTRATIVO' ||
+          tipoRegistro === 'ENGENHARIA') && (
           <FormField
             control={form.control}
             name="sector"

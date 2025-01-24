@@ -50,7 +50,7 @@ class ColaboradorService {
 
   async deleteColaborador(id: number) {
     try {
-      await axios.delete(`${API_URL}${id}`);
+      await axios.delete(`${URL}${id}`);
     } catch (error) {
       console.error('Erro ao deletar colaborador:', error);
       throw error;
