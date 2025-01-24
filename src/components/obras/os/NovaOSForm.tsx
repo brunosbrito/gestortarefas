@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
@@ -35,6 +35,8 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
       progress: 0,
       arquivo: undefined,
       arquivoDescricao: '',
+      imagem: undefined,
+      imagemDescricao: '',
     },
   });
 
@@ -69,6 +71,14 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
       }
     }
 
+    // Adiciona a imagem se existir
+    if (data.imagem) {
+      formData.append('imagem', data.imagem);
+      if (data.imagemDescricao) {
+        formData.append('imagemDescricao', data.imagemDescricao);
+      }
+    }
+
     try {
       await createServiceOrder(formData);
 
@@ -96,6 +106,11 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
           form={form} 
           fileType="arquivo" 
           accept=".pdf,.doc,.docx,.xls,.xlsx"
+        />
+        <FileUploadField 
+          form={form} 
+          fileType="imagem" 
+          accept="image/*"
         />
         <Button
           type="submit"

@@ -13,6 +13,8 @@ export const formSchema = z.object({
   progress: z.number(),
   arquivo: z.any().optional(),
   arquivoDescricao: z.string().optional(),
+  imagem: z.any().optional(),
+  imagemDescricao: z.string().optional(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;

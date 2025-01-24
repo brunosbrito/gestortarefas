@@ -13,6 +13,8 @@ import {
   Hash,
   Weight,
   FileText,
+  Image,
+  File,
 } from 'lucide-react';
 import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { Button } from '@/components/ui/button';
@@ -20,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { updateServiceOrderProgress } from '@/services/ServiceOrderService';
+import { AtividadeImageCarousel } from '@/components/atividades/AtividadeImageCarousel';
 
 interface VisualizarOSDialogProps {
   os: ServiceOrder | null;
@@ -82,7 +85,7 @@ export const VisualizarOSDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Detalhes da Ordem de Serviço</DialogTitle>
         </DialogHeader>
@@ -107,6 +110,42 @@ export const VisualizarOSDialog = ({
                 : 'Pausada'}
             </Badge>
           </div>
+
+          {/* Seção de Imagens */}
+          {os.images && os.images.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2 flex items-center">
+                <Image className="w-4 h-4 mr-2" />
+                Imagens
+              </h3>
+              <AtividadeImageCarousel images={os.images} />
+            </div>
+          )}
+
+          {/* Seção de Arquivos */}
+          {os.files && os.files.length > 0 && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2 flex items-center">
+                <File className="w-4 h-4 mr-2" />
+                Arquivos
+              </h3>
+              <div className="space-y-2">
+                {os.files.map((file, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <FileText className="w-4 h-4" />
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {file.name || `Arquivo ${index + 1}`}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
