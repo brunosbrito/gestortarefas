@@ -83,6 +83,14 @@ export const VisualizarOSDialog = ({
     }
   };
 
+  // Mapeia as imagens da OS para o formato esperado pelo AtividadeImageCarousel
+  const mappedImages = os.images?.map((img, index) => ({
+    id: index,
+    imageName: img.description || `Imagem ${index + 1}`,
+    imagePath: img.url,
+    description: img.description || ''
+  })) || [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
@@ -112,13 +120,13 @@ export const VisualizarOSDialog = ({
           </div>
 
           {/* Seção de Imagens */}
-          {os.images && os.images.length > 0 && (
+          {mappedImages.length > 0 && (
             <div className="mt-4">
               <h3 className="font-semibold mb-2 flex items-center">
                 <Image className="w-4 h-4 mr-2" />
                 Imagens
               </h3>
-              <AtividadeImageCarousel images={os.images} />
+              <AtividadeImageCarousel images={mappedImages} />
             </div>
           )}
 
