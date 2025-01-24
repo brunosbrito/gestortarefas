@@ -11,15 +11,6 @@ export interface ServiceOrder {
   weight: string;
   projectNumber: string;
   progress: number;
-  images?: Array<{
-    url: string;
-    description?: string;
-  }>;
-  files?: Array<{
-    url: string;
-    name?: string;
-    description?: string;
-  }>;
   projectId: {
     id: number;
     name: string;

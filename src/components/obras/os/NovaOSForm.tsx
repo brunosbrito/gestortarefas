@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Obra } from '@/interfaces/ObrasInterface';
+import ObrasService from '@/services/ObrasService';
 import { useToast } from '@/hooks/use-toast';
 import { createServiceOrder } from '@/services/ServiceOrderService';
 import { CreateServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { formSchema, FormValues } from './osFormSchema';
 import { OSFormFields } from './OSFormFields';
 import { useParams } from 'react-router-dom';
-import { FileUploadField } from '@/components/atividades/FileUploadField';
 
 function getUserIdFromLocalStorage(): number | null {
   const userId = localStorage.getItem('userId');
@@ -33,16 +34,11 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
       quantity: 0,
       weight: '',
       progress: 0,
-      arquivo: undefined,
-      arquivoDescricao: '',
-      imagem: undefined,
-      imagemDescricao: '',
     },
   });
 
   const handleSubmit = async (data: FormValues) => {
     const userId = getUserIdFromLocalStorage();
-    const formData = new FormData();
 
     const serviceOrderData: CreateServiceOrder = {
       description: data.description,
@@ -56,31 +52,8 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
       weight: data.weight,
     };
 
-    // Adiciona os dados da OS ao FormData
-    Object.entries(serviceOrderData).forEach(([key, value]) => {
-      if (value !== undefined) {
-        formData.append(key, value.toString());
-      }
-    });
-
-    // Adiciona o arquivo se existir
-    if (data.arquivo) {
-      formData.append('arquivo', data.arquivo);
-      if (data.arquivoDescricao) {
-        formData.append('arquivoDescricao', data.arquivoDescricao);
-      }
-    }
-
-    // Adiciona a imagem se existir
-    if (data.imagem) {
-      formData.append('imagem', data.imagem);
-      if (data.imagemDescricao) {
-        formData.append('imagemDescricao', data.imagemDescricao);
-      }
-    }
-
     try {
-      await createServiceOrder(formData);
+      await createServiceOrder(serviceOrderData);
 
       toast({
         variant: 'default',
@@ -102,16 +75,6 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <OSFormFields form={form} />
-        <FileUploadField 
-          form={form} 
-          fileType="arquivo" 
-          accept=".pdf,.doc,.docx,.xls,.xlsx"
-        />
-        <FileUploadField 
-          form={form} 
-          fileType="imagem" 
-          accept="image/*"
-        />
         <Button
           type="submit"
           className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"

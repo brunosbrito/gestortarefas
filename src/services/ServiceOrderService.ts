@@ -7,15 +7,9 @@ import axios from 'axios';
 
 const URL = `${API_URL}/service-orders`;
 
-export const createServiceOrder = async (data: FormData | Partial<CreateServiceOrder>) => {
+export const createServiceOrder = async (data: Partial<CreateServiceOrder>) => {
   try {
-    const config = data instanceof FormData ? {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    } : {};
-    
-    const response = await axios.post(URL, data, config);
+    const response = await axios.post(URL, data);
     return response.data;
   } catch (error) {
     console.error('Erro ao criar ordem de serviço:', error);
