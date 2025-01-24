@@ -10,6 +10,7 @@ import { createServiceOrder } from '@/services/ServiceOrderService';
 import { CreateServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { formSchema, FormValues } from './osFormSchema';
 import { OSFormFields } from './OSFormFields';
+import { useParams } from 'react-router-dom';
 
 function getUserIdFromLocalStorage(): number | null {
   const userId = localStorage.getItem('userId');
@@ -17,15 +18,15 @@ function getUserIdFromLocalStorage(): number | null {
 }
 
 export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const [obras, setObras] = useState<Obra[]>([]);
   const { toast } = useToast();
+  const { projectId } = useParams();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       status: 'em_andamento',
       description: '',
-      projectId: undefined,
+      projectId: Number(projectId),
       startDate: '',
       notes: '',
       assignedUser: 0,
@@ -36,25 +37,7 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
     },
   });
 
-  useEffect(() => {
-    const fetchObras = async () => {
-      try {
-        const obrasData = await ObrasService.getAllObras();
-        setObras(obrasData || []);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erro ao carregar obras',
-          description: 'Não foi possível carregar a lista de obras.',
-        });
-      }
-    };
-
-    fetchObras();
-  }, [toast]);
-
   const handleSubmit = async (data: FormValues) => {
-    console.log(data);
     const userId = getUserIdFromLocalStorage();
 
     const serviceOrderData: CreateServiceOrder = {
@@ -91,7 +74,7 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <OSFormFields form={form} obras={obras} />
+        <OSFormFields form={form} />
         <Button
           type="submit"
           className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"

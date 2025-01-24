@@ -78,19 +78,6 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
             </span>
           </label>
           
-          {isImage && (
-            <label
-              htmlFor={fieldName}
-              className="flex items-center justify-center h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none sm:w-32"
-            >
-              <span className="flex flex-col items-center space-y-2">
-                <Camera className="w-6 h-6 text-gray-600" />
-                <span className="text-sm text-center text-gray-600">
-                  Tirar foto
-                </span>
-              </span>
-            </label>
-          )}
         </div>
         
         <FormField

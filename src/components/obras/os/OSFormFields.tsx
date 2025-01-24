@@ -14,16 +14,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Obra } from '@/interfaces/ObrasInterface';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from './osFormSchema';
 
 interface OSFormFieldsProps {
   form: UseFormReturn<FormValues>;
-  obras: Obra[];
 }
 
-export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
+export const OSFormFields = ({ form }: OSFormFieldsProps) => {
   return (
     <>
       <FormField
@@ -35,34 +33,6 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
             <FormControl>
               <Input placeholder="Descrição da OS" {...field} />
             </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="projectId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Obra</FormLabel>
-            <Select
-              value={String(field.value)}
-              onValueChange={(value) => field.onChange(Number(value))}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a obra" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {obras.map((obra) => (
-                  <SelectItem key={obra.id} value={String(obra.id)}>
-                    {obra.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <FormMessage />
           </FormItem>
         )}
