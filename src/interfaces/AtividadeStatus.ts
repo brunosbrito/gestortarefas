@@ -14,6 +14,7 @@ export interface AtividadeStatus {
   estimatedTime: string;
   pauseDate: string;
   createdAt: string;
+  cod_sequencial: number;
   project: {
     id: number;
     name: string;

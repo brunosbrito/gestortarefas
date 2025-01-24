@@ -175,7 +175,7 @@ export const AtividadeCard = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-[#FF7F0E]">
-                    #{atividade.id}
+                    #{atividade.cod_sequencial}
                   </span>
                   <CardTitle className="text-sm font-medium">
                     {atividade.description}
