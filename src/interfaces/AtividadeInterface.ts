@@ -22,4 +22,8 @@ export interface Activity {
   projectId: number;
   orderServiceId: number;
   createdBy: number;
+  arquivo?: File;
+  arquivoDescricao?: string;
+  imagem?: File;
+  imagemDescricao?: string;
 }
