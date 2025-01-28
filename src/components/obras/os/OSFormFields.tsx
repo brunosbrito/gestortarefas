@@ -23,7 +23,7 @@ interface OSFormFieldsProps {
   obras: Obra[];
 }
 
-export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
+export const OSFormFields = ({ form }: OSFormFieldsProps) => {
   return (
     <>
       <FormField
@@ -47,7 +47,7 @@ export const OSFormFields = ({ form, obras }: OSFormFieldsProps) => {
           <FormItem>
             <FormLabel>Número Projeto</FormLabel>
             <FormControl>
-              <Input placeholder="Descrição da OS" {...field} />
+              <Input placeholder="Número do projeto" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
