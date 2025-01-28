@@ -20,6 +20,7 @@ function getUserIdFromLocalStorage(): number | null {
 export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const { toast } = useToast();
   const { projectId } = useParams();
+  const [obras, setObras] = useState<Obra[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -36,6 +37,23 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
       progress: 0,
     },
   });
+
+  useEffect(() => {
+    const fetchObras = async () => {
+      try {
+        const obrasData = await ObrasService.getAllObras();
+        setObras(obrasData || []);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao carregar obras',
+          description: 'Não foi possível carregar a lista de obras.',
+        });
+      }
+    };
+
+    fetchObras();
+  }, [toast]);
 
   const handleSubmit = async (data: FormValues) => {
     const userId = getUserIdFromLocalStorage();
@@ -74,7 +92,7 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <OSFormFields form={form} />
+        <OSFormFields form={form} obras={obras} />
         <Button
           type="submit"
           className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
