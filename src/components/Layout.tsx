@@ -5,6 +5,7 @@ import { useUser } from "./layout/useUser";
 import { Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { getStoredToken } from "@/services/AuthService";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const user = useUser();
@@ -12,8 +13,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) {
+    const token = getStoredToken();
+    if (!token) {
       navigate("/");
     }
   }, [navigate]);
