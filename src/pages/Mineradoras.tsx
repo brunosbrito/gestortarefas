@@ -1,12 +1,7 @@
-import Layout from '@/components/Layout';
 import Obras from './Obras';
 
 const Mineradoras = () => {
-  return (
-    <Layout>
-      <Obras type="Mineradora" />
-    </Layout>
-  );
+  return <Obras type="Mineradora" />;
 };
 
 export default Mineradoras;
