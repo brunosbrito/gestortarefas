@@ -6,6 +6,8 @@ import {
   Settings,
   ListTodo,
   GitFork,
+  Factory,
+  Mountain,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -24,6 +26,16 @@ export const navItems: MenuItem[] = [
     icon: Building2,
     label: 'Obras',
     path: '/obras',
+  },
+  {
+    icon: Factory,
+    label: 'Fábricas',
+    path: '/fabricas',
+  },
+  {
+    icon: Mountain,
+    label: 'Mineradoras',
+    path: '/mineradoras',
   },
   {
     icon: Settings,

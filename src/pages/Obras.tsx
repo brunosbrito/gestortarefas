@@ -21,13 +21,13 @@ import {
   Calendar,
   Building2,
   ClipboardList,
-  Activity,
   User,
   Check,
   MapPin,
-  Eye,
   Edit,
   Pause,
+  Factory,
+  Mountain,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaObraForm } from '@/components/obras/NovaObraForm';
@@ -37,7 +37,11 @@ import { Obra } from '@/interfaces/ObrasInterface';
 import ObrasService from '@/services/ObrasService';
 import { EditObraForm } from '@/components/obras/EditObraForm';
 
-const Obras = () => {
+interface ObrasProps {
+  type?: 'Obra' | 'Fabrica' | 'Mineradora';
+}
+
+const Obras = ({ type = 'Obra' }: ObrasProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
   const [open, setOpen] = useState(false);
   const [obraSelecionada, setObraSelecionada] = useState<Obra | null>(null);
@@ -45,22 +49,44 @@ const Obras = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const getTitleByType = () => {
+    switch (type) {
+      case 'Fabrica':
+        return 'Fábricas';
+      case 'Mineradora':
+        return 'Mineradoras';
+      default:
+        return 'Obras';
+    }
+  };
+
+  const getIconByType = () => {
+    switch (type) {
+      case 'Fabrica':
+        return Factory;
+      case 'Mineradora':
+        return Mountain;
+      default:
+        return Building2;
+    }
+  };
+
   const fetchObras = async () => {
     try {
-      const obrasData = await ObrasService.getAllObras();
+      const obrasData = await ObrasService.getProjectsByType(type);
       setObras(obrasData || []);
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro ao carregar obras',
-        description: 'Não foi possível carregar a lista de obras.',
+        title: 'Erro ao carregar projetos',
+        description: 'Não foi possível carregar a lista de projetos.',
       });
     }
   };
 
   useEffect(() => {
     fetchObras();
-  }, []);
+  }, [type]);
 
   const getStatusBadge = (status: Obra['status']) => {
     switch (status) {
@@ -108,29 +134,32 @@ const Obras = () => {
     });
   };
 
+  const Icon = getIconByType();
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-construction-800">Obras</h1>
+          <h1 className="text-3xl font-bold text-construction-800">{getTitleByType()}</h1>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
                 <Plus className="w-4 h-4 mr-2" />
-                Nova Obra
+                {`Nova ${type}`}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
-                <DialogTitle>Cadastrar Nova Obra</DialogTitle>
+                <DialogTitle>{`Cadastrar Nova ${type}`}</DialogTitle>
               </DialogHeader>
               <NovaObraForm
+                type={type}
                 onSuccess={() => {
                   setOpen(false);
                   fetchObras();
                   toast({
-                    title: 'Obra criada',
-                    description: 'A obra foi criada com sucesso!',
+                    title: 'Projeto criado',
+                    description: 'O projeto foi criado com sucesso!',
                   });
                 }}
               />
@@ -144,7 +173,7 @@ const Obras = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Building2 className="w-5 h-5 text-[#FF7F0E]" />
+                    <Icon className="w-5 h-5 text-[#FF7F0E]" />
                     <CardTitle className="text-xl">{obra.name}</CardTitle>
                   </div>
                   {getStatusBadge(obra.status)}
@@ -202,11 +231,10 @@ const Obras = () => {
           ))}
         </div>
 
-        {/* Modal de Edição */}
         <Dialog open={dialogEditarAberto} onOpenChange={setDialogEditarAberto}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Editar Obra</DialogTitle>
+              <DialogTitle>Editar {type}</DialogTitle>
             </DialogHeader>
             {obraSelecionada && (
               <EditObraForm

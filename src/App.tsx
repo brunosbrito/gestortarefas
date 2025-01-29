@@ -10,6 +10,8 @@ import Login from './pages/Login';
 import Colaboradores from './pages/gerenciamento/colaboradores';
 import TarefasMacro from './pages/gerenciamento/tarefas-macro';
 import Processos from './pages/gerenciamento/processos';
+import Fabricas from './pages/Fabricas';
+import Mineradoras from './pages/Mineradoras';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
         <Route path="/obras" element={<Obras />} />
+        <Route path="/fabricas" element={<Fabricas />} />
+        <Route path="/mineradoras" element={<Mineradoras />} />
         <Route path="/obras/:projectId/os" element={<OrdensServico />} />
         <Route
           path="/obras/:projectId/os/:serviceOrderId/atividades"
