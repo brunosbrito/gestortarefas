@@ -3,16 +3,25 @@ import { Input } from "@/components/ui/input";
 import { File, Image, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface FileUploadFieldProps {
   form: UseFormReturn<any>;
   fileType: "imagem" | "arquivo";
   accept?: string;
   activityId?: number;
+  initialPreview?: string;
+  initialDescription?: string;
 }
 
-export function FileUploadField({ form, fileType, accept, activityId }: FileUploadFieldProps) {
+export function FileUploadField({ 
+  form, 
+  fileType, 
+  accept, 
+  activityId,
+  initialPreview,
+  initialDescription 
+}: FileUploadFieldProps) {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -22,6 +31,17 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
   const descriptionField = isImage ? "imagemDescricao" : "arquivoDescricao";
   const label = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
   const placeholder = isImage ? "Descrição da imagem (opcional)" : "Descrição do arquivo (opcional)";
+
+  useEffect(() => {
+    if (initialPreview) {
+      setPreviewUrl(initialPreview);
+      const fileName = initialPreview.split('/').pop();
+      setFileName(fileName || null);
+    }
+    if (initialDescription) {
+      form.setValue(descriptionField, initialDescription);
+    }
+  }, [initialPreview, initialDescription]);
 
   const validateFile = (file: File) => {
     if (isImage) {

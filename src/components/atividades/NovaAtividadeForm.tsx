@@ -91,9 +91,9 @@ export function NovaAtividadeForm({
       : '',
     observation: atividadeInicial?.observation || '',
     imagem: undefined,
-    imagemDescricao: '',
+    imagemDescricao: atividadeInicial?.imageDescription || '',
     arquivo: undefined,
-    arquivoDescricao: '',
+    arquivoDescricao: atividadeInicial?.fileDescription || '',
     estimatedTime: atividadeInicial?.estimatedTime || '',
     projectId: projectId,
     orderServiceId: orderServiceId,
@@ -127,11 +127,39 @@ export function NovaAtividadeForm({
     try {
       const colaboradores = await ColaboradorService.getAllColaboradores();
       setColaboradores(colaboradores.data);
-      console.log(colaboradores.data);
+      
+      if (editMode && atividadeInicial?.collaborators) {
+        const colaboradoresIds = atividadeInicial.collaborators.map(c => c.id);
+        form.setValue('collaborators', colaboradoresIds);
+      }
     } catch (error) {
       console.error('Error fetching colaboradores', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar colaboradores",
+        description: "Ocorreu um erro ao carregar a lista de colaboradores.",
+      });
     }
   };
+
+  useEffect(() => {
+    getTarefasMacro();
+    getProcessos();
+    getColaboradores();
+
+    if (atividadeInicial?.estimatedTime) {
+      setTempoPrevisto(atividadeInicial.estimatedTime);
+    }
+
+    if (editMode && atividadeInicial) {
+      if (atividadeInicial.imageUrl) {
+        form.setValue('imagemDescricao', atividadeInicial.imageDescription || '');
+      }
+      if (atividadeInicial.fileUrl) {
+        form.setValue('arquivoDescricao', atividadeInicial.fileDescription || '');
+      }
+    }
+  }, [atividadeInicial, editMode]);
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -207,16 +235,6 @@ export function NovaAtividadeForm({
     form.setValue('estimatedTime', estimatedTime);
     setTempoPrevisto(estimatedTime);
   };
-
-  useEffect(() => {
-    getTarefasMacro();
-    getProcessos();
-    getColaboradores();
-
-    if (atividadeInicial?.estimatedTime) {
-      setTempoPrevisto(atividadeInicial.estimatedTime);
-    }
-  }, [atividadeInicial]);
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -494,11 +512,15 @@ export function NovaAtividadeForm({
             fileType="imagem"
             accept="image/*"
             activityId={atividadeInicial?.id}
+            initialPreview={atividadeInicial?.imageUrl ? `https://api.gmxindustrial.com.br${atividadeInicial.imageUrl}` : undefined}
+            initialDescription={atividadeInicial?.imageDescription}
           />
           <FileUploadField
             form={form}
             fileType="arquivo"
             activityId={atividadeInicial?.id}
+            initialPreview={atividadeInicial?.fileUrl ? `https://api.gmxindustrial.com.br${atividadeInicial.fileUrl}` : undefined}
+            initialDescription={atividadeInicial?.fileDescription}
           />
         </div>
 
