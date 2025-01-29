@@ -51,21 +51,21 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <FormLabel>{label}</FormLabel>
-      <div className="mt-2 space-y-2">
-        <Input
-          type="file"
-          accept={accept}
-          capture={isImage ? "environment" : undefined}
-          onChange={handleFileChange}
-          className="hidden"
-          id={fieldName}
-        />
-        <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex gap-4">
+        <div className="w-48">
+          <Input
+            type="file"
+            accept={accept}
+            capture={isImage ? "environment" : undefined}
+            onChange={handleFileChange}
+            className="hidden"
+            id={fieldName}
+          />
           <label
             htmlFor={fieldName}
-            className="flex-1 flex items-center justify-center h-20 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none relative"
+            className="flex items-center justify-center h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none relative"
           >
             {isImage && previewUrl ? (
               <div className="relative w-full h-full">
@@ -79,20 +79,20 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
                 </div>
               </div>
             ) : fileName ? (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center gap-2">
                 {isImage ? (
                   <Image className="w-6 h-6 text-gray-600" />
                 ) : (
                   <File className="w-6 h-6 text-gray-600" />
                 )}
-                <span className="text-sm text-gray-600 truncate max-w-[200px]">
+                <span className="text-sm text-gray-600 truncate max-w-[160px] text-center">
                   {fileName}
                 </span>
               </div>
             ) : (
-              <span className="flex items-center space-x-2">
+              <span className="flex flex-col items-center space-y-2">
                 <Upload className="w-6 h-6 text-gray-600" />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 text-center">
                   Clique para fazer upload {isImage ? "de imagem" : "de arquivo"}
                 </span>
               </span>
@@ -100,18 +100,21 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
           </label>
         </div>
         
-        <FormField
-          control={form.control}
-          name={descriptionField}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input placeholder={placeholder} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="flex-1">
+          <FormField
+            control={form.control}
+            name={descriptionField}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descrição {isImage ? "da imagem" : "do arquivo"}</FormLabel>
+                <FormControl>
+                  <Input placeholder={placeholder} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
     </div>
   );
