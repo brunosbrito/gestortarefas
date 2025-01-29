@@ -133,7 +133,7 @@ export function AtualizarStatusDialog({
         delete formattedData.pauseTime;
       }
 
-      await updateActivity(atividade.id, {
+      await updateActivity(Number(atividade.id), {
         ...formattedData,
         status: novoStatus,
         changedBy: Number(localStorage.getItem('userId')),
