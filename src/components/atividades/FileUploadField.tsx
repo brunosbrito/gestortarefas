@@ -2,7 +2,6 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { File, Image, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
-import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -24,9 +23,40 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
   const label = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
   const placeholder = isImage ? "Descrição da imagem (opcional)" : "Descrição do arquivo (opcional)";
 
+  const validateFile = (file: File) => {
+    if (isImage) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          variant: "destructive",
+          title: "Formato inválido",
+          description: "Por favor, selecione apenas arquivos de imagem (jpg, png, etc).",
+        });
+        return false;
+      }
+    } else {
+      if (file.type !== 'application/pdf') {
+        toast({
+          variant: "destructive",
+          title: "Formato inválido",
+          description: "Por favor, selecione apenas arquivos PDF.",
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!validateFile(file)) {
+      e.target.value = '';
+      setFileName(null);
+      setPreviewUrl(null);
+      form.setValue(fieldName, null);
+      return;
+    }
 
     try {
       form.setValue(fieldName, file);
@@ -57,7 +87,7 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
         <div className="w-48">
           <Input
             type="file"
-            accept={accept}
+            accept={isImage ? "image/*" : ".pdf"}
             capture={isImage ? "environment" : undefined}
             onChange={handleFileChange}
             className="hidden"

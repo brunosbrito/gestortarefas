@@ -1,52 +1,77 @@
-import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
-import { format } from 'date-fns';
+import { AtividadeStatus } from "@/interfaces/AtividadeStatus";
+import { Button } from "../ui/button";
+import { Eye, FileText } from "lucide-react";
 
 interface AtividadeInfoBasicaProps {
   atividade: AtividadeStatus;
 }
 
-export const AtividadeInfoBasica = ({
-  atividade,
-}: AtividadeInfoBasicaProps) => {
+export function AtividadeInfoBasica({ atividade }: AtividadeInfoBasicaProps) {
+  const handleViewImage = () => {
+    if (atividade.imagePath) {
+      window.open(`https://api.gmxindustrial.com.br${atividade.imagePath}`, '_blank');
+    }
+  };
+
+  const handleViewPDF = () => {
+    if (atividade.filePath) {
+      window.open(`https://api.gmxindustrial.com.br${atividade.filePath}`, '_blank');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-construction-700">
-        Informações Gerais
+        Informações Básicas
       </h3>
-      <div className="grid grid-cols-2 gap-4 bg-construction-50 p-4 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <p className="font-medium text-construction-600">Descrição</p>
-          <p className="text-construction-800">{atividade.description}</p>
+          <p className="text-sm font-medium text-gray-500">Descrição</p>
+          <p className="text-base">{atividade.description}</p>
         </div>
         <div>
-          <p className="font-medium text-construction-600">Status</p>
-          <p className="text-construction-800">{atividade.status}</p>
+          <p className="text-sm font-medium text-gray-500">Tarefa Macro</p>
+          <p className="text-base">{atividade.macroTask}</p>
         </div>
         <div>
-          <p className="font-medium text-construction-600">Macro Tarefa</p>
-          <p className="text-construction-800">{atividade.macroTask}</p>
+          <p className="text-sm font-medium text-gray-500">Processo</p>
+          <p className="text-base">{atividade.process}</p>
         </div>
         <div>
-          <p className="font-medium text-construction-600">Processo</p>
-          <p className="text-construction-800">{atividade.process}</p>
+          <p className="text-sm font-medium text-gray-500">Status</p>
+          <p className="text-base">{atividade.status}</p>
         </div>
-        <div>
-          <p className="font-medium text-construction-600">Data de Ciação</p>
-          <p className="text-construction-800">
-            {format(new Date(atividade.createdAt), 'dd/MM/yyyy')}
-          </p>
-        </div>
-        {atividade.endDate && (
-          <div>
-            <p className="font-medium text-construction-600">
-              Data de Conclusão
-            </p>
-            <p className="text-construction-800">
-              {format(new Date(atividade.endDate), 'dd/MM/yyyy HH:mm')}
-            </p>
+        {atividade.observation && (
+          <div className="col-span-2">
+            <p className="text-sm font-medium text-gray-500">Observação</p>
+            <p className="text-base">{atividade.observation}</p>
           </div>
         )}
+        <div className="col-span-2 flex gap-2">
+          {atividade.imagePath && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewImage}
+              className="flex items-center gap-2"
+            >
+              <Eye className="w-4 h-4" />
+              Ver Imagem
+            </Button>
+          )}
+          {atividade.filePath && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewPDF}
+              className="flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Ver PDF
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
-};
+}
