@@ -23,9 +23,10 @@ const formSchema = z.object({
 
 interface NovaObraFormProps {
   onSuccess: () => void;
+  type: 'Obra' | 'Fabrica' | 'Mineradora';
 }
 
-export const NovaObraForm = ({ onSuccess }: NovaObraFormProps) => {
+export const NovaObraForm = ({ onSuccess, type }: NovaObraFormProps) => {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -36,7 +37,7 @@ export const NovaObraForm = ({ onSuccess }: NovaObraFormProps) => {
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      await ObrasService.createObra(data as Obra);
+      await ObrasService.createObra({ ...data, type } as Obra);
       onSuccess();
     } catch (error) {
       toast({
@@ -55,9 +56,9 @@ export const NovaObraForm = ({ onSuccess }: NovaObraFormProps) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nome da Obra</FormLabel>
+              <FormLabel>Nome da {type}</FormLabel>
               <FormControl>
-                <Input placeholder="Digite o nome da obra" {...field} />
+                <Input placeholder={`Digite o nome da ${type}`} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,7 +100,7 @@ export const NovaObraForm = ({ onSuccess }: NovaObraFormProps) => {
             <FormItem>
               <FormLabel>Endereço</FormLabel>
               <FormControl>
-                <Input placeholder="Digite o endereço da obra" {...field} />
+                <Input placeholder="Digite o endereço" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -176,7 +177,7 @@ export const NovaObraForm = ({ onSuccess }: NovaObraFormProps) => {
         />
 
         <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-          Criar Obra
+          Criar {type}
         </Button>
       </form>
     </Form>
