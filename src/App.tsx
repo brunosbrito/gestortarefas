@@ -12,6 +12,7 @@ import TarefasMacro from './pages/gerenciamento/tarefas-macro';
 import Processos from './pages/gerenciamento/processos';
 import Fabricas from './pages/Fabricas';
 import Mineradoras from './pages/Mineradoras';
+import NaoConformidades from './pages/nao-conformidades';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/obras" element={<Obras />} />
         <Route path="/fabricas" element={<Fabricas />} />
         <Route path="/mineradoras" element={<Mineradoras />} />
+        <Route path="/nao-conformidades" element={<NaoConformidades />} />
         <Route path="/obras/:projectId/os" element={<OrdensServico />} />
         <Route
           path="/obras/:projectId/os/:serviceOrderId/atividades"

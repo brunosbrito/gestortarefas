@@ -8,6 +8,7 @@ import {
   GitFork,
   Factory,
   Mountain,
+  AlertOctagon,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -36,6 +37,11 @@ export const navItems: MenuItem[] = [
     icon: Mountain,
     label: 'Mineradoras',
     path: '/mineradoras',
+  },
+  {
+    icon: AlertOctagon,
+    label: 'Não Conformidades',
+    path: '/nao-conformidades',
   },
   {
     icon: Settings,
