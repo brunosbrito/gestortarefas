@@ -50,8 +50,6 @@ export const AtividadeHistoricoList = ({
                     return 'Atividade Criada';
                   case 'Em execução':
                     return 'Atividade Iniciada';
-                  case 'Concluídas':
-                    return 'Atividade Concluída';
                   default:
                     return item.description;
                 }
