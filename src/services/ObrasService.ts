@@ -27,7 +27,7 @@ class ProjectService {
 
   async getProjectsByType(type: string) {
     try {
-      const response = await axios.get(`${URL}/type/${type}`);
+      const response = await axios.get(`${URL}type/${type}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar projetos:', error);

@@ -29,7 +29,7 @@ export const navItems: MenuItem[] = [
   },
   {
     icon: Factory,
-    label: 'Fábricas',
+    label: 'Fábrica',
     path: '/fabricas',
   },
   {
@@ -62,5 +62,5 @@ export const navItems: MenuItem[] = [
     icon: Clock,
     label: 'Registro de Ponto',
     path: '/ponto',
-  }
+  },
 ];

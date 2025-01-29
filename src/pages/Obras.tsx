@@ -52,7 +52,7 @@ const Obras = ({ type = 'Obra' }: ObrasProps) => {
   const getTitleByType = () => {
     switch (type) {
       case 'Fabrica':
-        return 'Fábricas';
+        return 'Fabricas';
       case 'Mineradora':
         return 'Mineradoras';
       default:
@@ -140,7 +140,9 @@ const Obras = ({ type = 'Obra' }: ObrasProps) => {
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-construction-800">{getTitleByType()}</h1>
+          <h1 className="text-3xl font-bold text-construction-800">
+            {getTitleByType()}
+          </h1>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
