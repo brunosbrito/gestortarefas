@@ -85,8 +85,10 @@ export function NovaAtividadeForm({
     quantity: atividadeInicial?.quantity || 0,
     timePerUnit: atividadeInicial?.timePerUnit || 0,
     unidadeTempo: 'minutos',
-    collaborators: atividadeInicial?.collaborators?.map(c => c.id) || [],
-    startDate: atividadeInicial?.startDate ? new Date(atividadeInicial.startDate).toISOString().split('T')[0] : '',
+    collaborators: atividadeInicial?.collaborators?.map((c) => c.id) || [],
+    startDate: atividadeInicial?.startDate
+      ? new Date(atividadeInicial.startDate).toISOString().split('T')[0]
+      : '',
     observation: atividadeInicial?.observation || '',
     imagem: undefined,
     imagemDescricao: '',
@@ -134,9 +136,9 @@ export function NovaAtividadeForm({
   const onSubmit = async (data: FormValues) => {
     try {
       const formData = new FormData();
-      
+
       // Adiciona os campos básicos
-      Object.keys(data).forEach(key => {
+      Object.keys(data).forEach((key) => {
         if (key !== 'imagem' && key !== 'arquivo' && data[key] !== undefined) {
           formData.append(key, data[key]);
         }
@@ -146,7 +148,7 @@ export function NovaAtividadeForm({
       if (data.imagem) {
         formData.append('imagem', data.imagem);
         if (data.imagemDescricao) {
-          formData.append('imagemDescricao', data.imagemDescricao);
+          formData.append('imageDescription', data.imagemDescricao);
         }
       }
 
@@ -154,7 +156,7 @@ export function NovaAtividadeForm({
       if (data.arquivo) {
         formData.append('arquivo', data.arquivo);
         if (data.arquivoDescricao) {
-          formData.append('arquivoDescricao', data.arquivoDescricao);
+          formData.append('fileDescription', data.arquivoDescricao);
         }
       }
 
@@ -171,14 +173,16 @@ export function NovaAtividadeForm({
           description: 'A atividade foi criada com sucesso.',
         });
       }
-      
+
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: editMode ? 'Erro ao atualizar atividade' : 'Erro ao criar atividade',
+        title: editMode
+          ? 'Erro ao atualizar atividade'
+          : 'Erro ao criar atividade',
         description: 'Ocorreu um erro. Tente novamente mais tarde.',
       });
     }
@@ -191,9 +195,10 @@ export function NovaAtividadeForm({
 
     if (!quantity || !timePerUnit) return;
 
-    const totalMinutes = unidadeTempo === 'minutos' 
-      ? quantity * timePerUnit
-      : quantity * timePerUnit * 60;
+    const totalMinutes =
+      unidadeTempo === 'minutos'
+        ? quantity * timePerUnit
+        : quantity * timePerUnit * 60;
 
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
@@ -215,7 +220,11 @@ export function NovaAtividadeForm({
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (name === 'quantity' || name === 'timePerUnit' || name === 'unidadeTempo') {
+      if (
+        name === 'quantity' ||
+        name === 'timePerUnit' ||
+        name === 'unidadeTempo'
+      ) {
         calculateEstimatedTime();
       }
     });
@@ -232,10 +241,7 @@ export function NovaAtividadeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tarefa Macro</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a tarefa macro" />
@@ -260,10 +266,7 @@ export function NovaAtividadeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Processo</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o processo" />
