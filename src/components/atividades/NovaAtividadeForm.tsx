@@ -78,7 +78,7 @@ export function NovaAtividadeForm({
   const [processos, setProcessos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
 
-  const defaultValues: FormValues = {
+  const defaultValues: Partial<z.infer<typeof formSchema>> = {
     macroTask: atividadeInicial?.macroTask || '',
     process: atividadeInicial?.process || '',
     description: atividadeInicial?.description || '',
@@ -88,10 +88,10 @@ export function NovaAtividadeForm({
     collaborators: atividadeInicial?.collaborators?.map(c => c.id) || [],
     startDate: atividadeInicial?.startDate ? new Date(atividadeInicial.startDate).toISOString().split('T')[0] : '',
     observation: atividadeInicial?.observation || '',
-    imageUrl: atividadeInicial?.imageUrl || null,
-    imageDescription: atividadeInicial?.imageDescription || '',
-    fileUrl: atividadeInicial?.fileUrl || null,
-    fileDescription: atividadeInicial?.fileDescription || '',
+    imagem: undefined,
+    imagemDescricao: '',
+    arquivo: undefined,
+    arquivoDescricao: '',
     estimatedTime: atividadeInicial?.estimatedTime || '',
     projectId: projectId,
     orderServiceId: orderServiceId,
