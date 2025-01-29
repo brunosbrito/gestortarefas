@@ -27,6 +27,16 @@ class ObraService {
     }
   }
 
+  async getObrasByType(type: string) {
+    try {
+      const response = await axios.get(`${URL}/type/${type}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar obras:', error);
+      throw error;
+    }
+  }
+
   // Buscar obra por ID
   async getObraById(id: number) {
     try {

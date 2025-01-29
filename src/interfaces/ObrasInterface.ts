@@ -7,5 +7,6 @@ export interface Obra {
   startDate: string;
   endDate?: string;
   observation?: string;
-  status: "em_andamento" | "finalizado" | "interrompido";
+  status: 'em_andamento' | 'finalizado' | 'interrompido';
+  type: 'Fabrica' | 'Obra' | 'Mineradora';
 }
