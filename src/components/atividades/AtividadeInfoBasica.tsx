@@ -8,14 +8,14 @@ interface AtividadeInfoBasicaProps {
 
 export function AtividadeInfoBasica({ atividade }: AtividadeInfoBasicaProps) {
   const handleViewImage = () => {
-    if (atividade.imagePath) {
-      window.open(`https://api.gmxindustrial.com.br${atividade.imagePath}`, '_blank');
+    if (atividade.imageUrl) {
+      window.open(`https://api.gmxindustrial.com.br${atividade.imageUrl}`, '_blank');
     }
   };
 
   const handleViewPDF = () => {
-    if (atividade.filePath) {
-      window.open(`https://api.gmxindustrial.com.br${atividade.filePath}`, '_blank');
+    if (atividade.fileUrl) {
+      window.open(`https://api.gmxindustrial.com.br${atividade.fileUrl}`, '_blank');
     }
   };
 
@@ -48,7 +48,7 @@ export function AtividadeInfoBasica({ atividade }: AtividadeInfoBasicaProps) {
           </div>
         )}
         <div className="col-span-2 flex gap-2">
-          {atividade.imagePath && (
+          {atividade.imageUrl && (
             <Button
               variant="outline"
               size="sm"
@@ -59,7 +59,7 @@ export function AtividadeInfoBasica({ atividade }: AtividadeInfoBasicaProps) {
               Ver Imagem
             </Button>
           )}
-          {atividade.filePath && (
+          {atividade.fileUrl && (
             <Button
               variant="outline"
               size="sm"
