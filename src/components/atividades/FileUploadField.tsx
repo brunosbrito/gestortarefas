@@ -1,6 +1,6 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Camera, Upload } from "lucide-react";
+import { File, Image, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ interface FileUploadFieldProps {
 export function FileUploadField({ form, fileType, accept, activityId }: FileUploadFieldProps) {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   
   const isImage = fileType === "imagem";
   const fieldName = isImage ? "imagem" : "arquivo";
@@ -29,6 +30,7 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
 
     try {
       form.setValue(fieldName, file);
+      setFileName(file.name);
       
       if (isImage) {
         const reader = new FileReader();
@@ -63,7 +65,7 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
         <div className="flex flex-col sm:flex-row gap-2">
           <label
             htmlFor={fieldName}
-            className="flex-1 flex items-center justify-center h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none relative"
+            className="flex-1 flex items-center justify-center h-20 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none relative"
           >
             {isImage && previewUrl ? (
               <div className="relative w-full h-full">
@@ -73,8 +75,19 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
                   className="w-full h-full object-contain"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <Camera className="w-8 h-8 text-white" />
+                  <Image className="w-6 h-6 text-white" />
                 </div>
+              </div>
+            ) : fileName ? (
+              <div className="flex items-center gap-2">
+                {isImage ? (
+                  <Image className="w-6 h-6 text-gray-600" />
+                ) : (
+                  <File className="w-6 h-6 text-gray-600" />
+                )}
+                <span className="text-sm text-gray-600 truncate max-w-[200px]">
+                  {fileName}
+                </span>
               </div>
             ) : (
               <span className="flex items-center space-x-2">
