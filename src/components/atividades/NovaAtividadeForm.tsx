@@ -133,14 +133,39 @@ export function NovaAtividadeForm({
 
   const onSubmit = async (data: FormValues) => {
     try {
+      const formData = new FormData();
+      
+      // Adiciona os campos básicos
+      Object.keys(data).forEach(key => {
+        if (key !== 'imagem' && key !== 'arquivo' && data[key] !== undefined) {
+          formData.append(key, data[key]);
+        }
+      });
+
+      // Adiciona a imagem e sua descrição
+      if (data.imagem) {
+        formData.append('imagem', data.imagem);
+        if (data.imagemDescricao) {
+          formData.append('imagemDescricao', data.imagemDescricao);
+        }
+      }
+
+      // Adiciona o arquivo e sua descrição
+      if (data.arquivo) {
+        formData.append('arquivo', data.arquivo);
+        if (data.arquivoDescricao) {
+          formData.append('arquivoDescricao', data.arquivoDescricao);
+        }
+      }
+
       if (editMode && atividadeInicial) {
-        await updateActivity(atividadeInicial.id, data);
+        await updateActivity(atividadeInicial.id, formData);
         toast({
           title: 'Atividade atualizada',
           description: 'A atividade foi atualizada com sucesso.',
         });
       } else {
-        await createActivity(data);
+        await createActivity(formData);
         toast({
           title: 'Atividade criada',
           description: 'A atividade foi criada com sucesso.',

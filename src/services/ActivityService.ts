@@ -2,9 +2,13 @@ import API_URL from '@/config';
 import axios from 'axios';
 
 // Função para criar uma nova atividade
-export const createActivity = async (activityData) => {
+export const createActivity = async (formData: FormData) => {
   try {
-    const response = await axios.post(`${API_URL}/activities`, activityData);
+    const response = await axios.post(`${API_URL}/activities`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating activity', error);
@@ -36,12 +40,16 @@ export const getActivitiesByServiceOrderId = async (serviceOrderId) => {
 };
 
 // Função para atualizar uma atividade
-export const updateActivity = async (id, activityData) => {
-  console.log(activityData);
+export const updateActivity = async (id: number, formData: FormData) => {
   try {
     const response = await axios.put(
-      `${API_URL}/activities/${id}`,
-      activityData
+      `${API_URL}/activities/${id}`, 
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response.data;
   } catch (error) {

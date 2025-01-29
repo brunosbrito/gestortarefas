@@ -4,6 +4,7 @@ import { Camera, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface FileUploadFieldProps {
   form: UseFormReturn<any>;
@@ -14,6 +15,8 @@ interface FileUploadFieldProps {
 
 export function FileUploadField({ form, fileType, accept, activityId }: FileUploadFieldProps) {
   const { toast } = useToast();
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
   const isImage = fileType === "imagem";
   const fieldName = isImage ? "imagem" : "arquivo";
   const descriptionField = isImage ? "imagemDescricao" : "arquivoDescricao";
@@ -27,22 +30,14 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
     try {
       form.setValue(fieldName, file);
       
-      if (isImage && activityId) {
-        const description = form.getValues(descriptionField);
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        if (description) {
-          formData.append('description', description);
-        }
-
-        // Aqui você pode adicionar a lógica para exibir um preview da imagem se desejar
-        
-        toast({
-          title: "Upload realizado com sucesso",
-          description: "A imagem foi enviada e será processada em breve.",
-        });
+      if (isImage) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewUrl(reader.result as string);
+        };
+        reader.readAsDataURL(file);
       }
+      
     } catch (error) {
       console.error('Erro no upload:', error);
       toast({
@@ -68,16 +63,28 @@ export function FileUploadField({ form, fileType, accept, activityId }: FileUplo
         <div className="flex flex-col sm:flex-row gap-2">
           <label
             htmlFor={fieldName}
-            className="flex-1 flex items-center justify-center h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none"
+            className="flex-1 flex items-center justify-center h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none relative"
           >
-            <span className="flex items-center space-x-2">
-              <Upload className="w-6 h-6 text-gray-600" />
-              <span className="text-sm text-gray-600">
-                Clique para fazer upload {isImage ? "de imagem" : "de arquivo"}
+            {isImage && previewUrl ? (
+              <div className="relative w-full h-full">
+                <img 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  className="w-full h-full object-contain"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <Camera className="w-8 h-8 text-white" />
+                </div>
+              </div>
+            ) : (
+              <span className="flex items-center space-x-2">
+                <Upload className="w-6 h-6 text-gray-600" />
+                <span className="text-sm text-gray-600">
+                  Clique para fazer upload {isImage ? "de imagem" : "de arquivo"}
+                </span>
               </span>
-            </span>
+            )}
           </label>
-          
         </div>
         
         <FormField
