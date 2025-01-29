@@ -40,7 +40,7 @@ export const navItems: MenuItem[] = [
   },
   {
     icon: AlertOctagon,
-    label: 'Não Conformidades',
+    label: 'RNC',
     path: '/nao-conformidades',
   },
   {
