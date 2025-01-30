@@ -56,8 +56,11 @@ const OrdensServico = () => {
   const { projectId } = useParams();
 
   const getServiceOrders = async () => {
+    if (!projectId) return;
     const serviceOrders = await getServiceOrderByProjectId(projectId);
-    setObra(serviceOrders.projectId);
+    if (serviceOrders && serviceOrders.length > 0) {
+      setObra(serviceOrders[0].projectId);
+    }
     setOrdensServico(serviceOrders || []);
   };
 

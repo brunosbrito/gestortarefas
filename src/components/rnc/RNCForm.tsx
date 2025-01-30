@@ -58,7 +58,7 @@ export function RNCForm() {
 
   const { data: serviceOrders = [], isLoading: isLoadingServiceOrders } = useQuery({
     queryKey: ['serviceOrders', form.watch('projectId')],
-    queryFn: () => ServiceOrderService.getAllServiceOrders(form.watch('projectId')),
+    queryFn: () => ServiceOrderService.getAllServiceOrders(form.watch('projectId') ? Number(form.watch('projectId')) : undefined),
     enabled: !!form.watch('projectId'),
   });
 
