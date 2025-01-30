@@ -59,7 +59,12 @@ const OrdensServico = () => {
     if (!projectId) return;
     const serviceOrders = await getServiceOrderByProjectId(projectId);
     if (serviceOrders && serviceOrders.length > 0) {
-      setObra(serviceOrders[0].projectId);
+      const projectData = serviceOrders[0].projectId;
+      setObra({
+        ...projectData,
+        type: 'Obra', // Definindo um valor padrão para o type
+        groupNumber: projectData.groupNumber.toString(), // Convertendo para string conforme a interface
+      });
     }
     setOrdensServico(serviceOrders || []);
   };
