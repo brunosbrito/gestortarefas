@@ -1,27 +1,11 @@
 export interface RNC {
-  id: string;
+  id: number;
   description: string;
   responsibleIdentification: string;
   dateOccurrence: string;
-  correctiveAction?: string;
-  responsibleAction?: string;
-  dateConclusion?: string;
-  createdAt: string;
-  updatedAt: string;
-  project: {
-    id: number;
-    name: string;
-    type: 'Fabrica' | 'Obra' | 'Mineradora';
-  };
-  serviceOrder: {
-    id: string;
-    serviceOrderNumber: string;
-    description: string;
-  };
-  responsibleRNC: {
-    id: number;
-    username: string;
-  };
+  projectId: number;
+  serviceOrderId: string;
+  responsibleRNCId: number;
 }
 
 export interface CreateRNC {
@@ -37,9 +21,6 @@ export interface UpdateRNC {
   description?: string;
   responsibleIdentification?: string;
   dateOccurrence?: string;
-  correctiveAction?: string;
-  responsibleAction?: string;
-  dateConclusion?: string;
   projectId?: number;
   serviceOrderId?: string;
   responsibleRNCId?: number;
