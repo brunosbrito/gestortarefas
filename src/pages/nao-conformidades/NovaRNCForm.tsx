@@ -22,12 +22,16 @@ import {
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import ObrasService from "@/services/ObrasService";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const formSchema = z.object({
+  projectType: z.enum(["fabrica", "obra"], {
+    required_error: "Tipo de projeto é obrigatório",
+  }),
   projectId: z.string().min(1, "Projeto é obrigatório"),
   responsibleRNCId: z.string().min(1, "Responsável é obrigatório"),
   description: z.string().min(1, "Descrição é obrigatória"),
-  serviceOrderId: z.string().optional(),
+  serviceOrderId: z.string().min(1, "Ordem de serviço é obrigatória"),
   responsibleIdentification: z.string().optional(),
   dateOccurrence: z.string().min(1, "Data da ocorrência é obrigatória"),
 });
@@ -56,6 +60,7 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      projectType: "obra",
       projectId: "",
       responsibleRNCId: "",
       description: "",
@@ -67,7 +72,6 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Aqui você implementará a lógica para salvar a RNC
       console.log("Valores do formulário:", values);
       
       toast({
@@ -87,9 +91,42 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
     }
   };
 
+  const filteredProjects = projects.filter(project => 
+    form.watch("projectType") === "fabrica" 
+      ? project.type === "factory" 
+      : project.type === "construction"
+  );
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="projectType"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Tipo de Projeto</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex flex-row space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="fabrica" id="fabrica" />
+                    <label htmlFor="fabrica">Fábrica</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="obra" id="obra" />
+                    <label htmlFor="obra">Obra</label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="projectId"
@@ -103,7 +140,7 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {projects.map((project) => (
+                  {filteredProjects.map((project) => (
                     <SelectItem key={project.id} value={String(project.id)}>
                       {project.name}
                     </SelectItem>
@@ -120,7 +157,7 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
           name="serviceOrderId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ordem de Serviço (Opcional)</FormLabel>
+              <FormLabel>Ordem de Serviço</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
