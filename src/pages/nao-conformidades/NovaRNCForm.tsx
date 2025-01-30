@@ -20,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import ObrasService from "@/services/ObrasService";
 
 const formSchema = z.object({
   projectId: z.string().min(1, "Projeto é obrigatório"),
@@ -36,6 +38,20 @@ interface NovaRNCFormProps {
 
 export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
   const { toast } = useToast();
+
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: ObrasService.getAllObras,
+    meta: {
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar projetos",
+          description: "Não foi possível carregar a lista de projetos.",
+        });
+      },
+    },
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,8 +103,11 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">Projeto 1</SelectItem>
-                  <SelectItem value="2">Projeto 2</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={String(project.id)}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
