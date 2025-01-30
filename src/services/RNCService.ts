@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { CreateRNC, RNC } from '@/interfaces/RNCInterface';
-import { API_URL } from '@/config';
+import API_URL from '@/config';
 
 const RNCService = {
   async createRNC(data: CreateRNC): Promise<RNC> {

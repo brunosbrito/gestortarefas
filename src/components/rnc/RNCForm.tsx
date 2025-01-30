@@ -23,8 +23,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import RNCService from '@/services/RNCService';
-import { ObrasService } from '@/services/ObrasService';
+import ObrasService from '@/services/ObrasService';
 import { ServiceOrderService } from '@/services/ServiceOrderService';
+import { Obra } from '@/interfaces/ObrasInterface';
 
 const rncFormSchema = z.object({
   description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
@@ -50,14 +51,14 @@ export function RNCForm() {
     },
   });
 
-  const { data: projects, isLoading: isLoadingProjects } = useQuery({
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Obra[]>({
     queryKey: ['projects'],
-    queryFn: ObrasService.getObras,
+    queryFn: ObrasService.getAllObras,
   });
 
-  const { data: serviceOrders, isLoading: isLoadingServiceOrders } = useQuery({
+  const { data: serviceOrders = [], isLoading: isLoadingServiceOrders } = useQuery({
     queryKey: ['serviceOrders', form.watch('projectId')],
-    queryFn: () => ServiceOrderService.getServiceOrders(form.watch('projectId')),
+    queryFn: () => ServiceOrderService.getAllServiceOrders(form.watch('projectId')),
     enabled: !!form.watch('projectId'),
   });
 
