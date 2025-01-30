@@ -62,8 +62,9 @@ const OrdensServico = () => {
       const projectData = serviceOrders[0].projectId;
       setObra({
         ...projectData,
-        type: 'Obra', // Definindo um valor padrão para o type
-        groupNumber: projectData.groupNumber.toString(), // Convertendo para string conforme a interface
+        type: 'Obra',
+        groupNumber: projectData.groupNumber.toString(),
+        status: projectData.status as 'em_andamento' | 'finalizado' | 'interrompido',
       });
     }
     setOrdensServico(serviceOrders || []);
