@@ -1,68 +1,17 @@
-import API_URL from '@/config';
-import { CreateRNC, RNC, UpdateRNC } from '@/interfaces/RNCInterface';
 import axios from 'axios';
+import { CreateRNC, RNC } from '@/interfaces/RNCInterface';
+import { API_URL } from '@/config';
 
-const URL = `${API_URL}/non-conformities`;
+const RNCService = {
+  async createRNC(data: CreateRNC): Promise<RNC> {
+    const response = await axios.post(`${API_URL}/rnc`, data);
+    return response.data;
+  },
 
-class RNCService {
-  async createRNC(data: CreateRNC) {
-    try {
-      const response = await axios.post(URL, data);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar RNC:', error);
-      throw error;
-    }
-  }
+  async getRNCs(): Promise<RNC[]> {
+    const response = await axios.get(`${API_URL}/rnc`);
+    return response.data;
+  },
+};
 
-  async getAllRNCs() {
-    try {
-      const response = await axios.get(URL);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar RNCs:', error);
-      throw error;
-    }
-  }
-
-  async getRNCById(id: string) {
-    try {
-      const response = await axios.get(`${URL}/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar RNC:', error);
-      throw error;
-    }
-  }
-
-  async getRNCsByProject(projectId: number) {
-    try {
-      const response = await axios.get(`${URL}/project/${projectId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar RNCs do projeto:', error);
-      throw error;
-    }
-  }
-
-  async updateRNC(id: string, data: UpdateRNC) {
-    try {
-      const response = await axios.put(`${URL}/${id}`, data);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar RNC:', error);
-      throw error;
-    }
-  }
-
-  async deleteRNC(id: string) {
-    try {
-      await axios.delete(`${URL}/${id}`);
-    } catch (error) {
-      console.error('Erro ao deletar RNC:', error);
-      throw error;
-    }
-  }
-}
-
-export default new RNCService();
+export default RNCService;

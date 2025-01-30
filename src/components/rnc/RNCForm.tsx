@@ -1,3 +1,8 @@
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -8,23 +13,18 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useToast } from '@/hooks/use-toast';
-import RNCService from '@/services/RNCService';
-import { Textarea } from '../ui/textarea';
-import { useQuery } from '@tanstack/react-query';
-import ProjectService from '@/services/ObrasService';
-import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
-import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
+import RNCService from '@/services/RNCService';
+import { ObrasService } from '@/services/ObrasService';
+import { ServiceOrderService } from '@/services/ServiceOrderService';
 
 const rncFormSchema = z.object({
   description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
@@ -36,14 +36,15 @@ const rncFormSchema = z.object({
 
 type RNCFormValues = z.infer<typeof rncFormSchema>;
 
-export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
+export function RNCForm() {
   const { toast } = useToast();
+
   const form = useForm<RNCFormValues>({
     resolver: zodResolver(rncFormSchema),
     defaultValues: {
       description: '',
       responsibleIdentification: '',
-      dateOccurrence: new Date().toISOString().split('T')[0],
+      dateOccurrence: format(new Date(), 'yyyy-MM-dd'),
       projectId: '',
       serviceOrderId: '',
     },
@@ -51,12 +52,12 @@ export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
     queryKey: ['projects'],
-    queryFn: ProjectService.getAllObras,
+    queryFn: ObrasService.getObras,
   });
 
   const { data: serviceOrders, isLoading: isLoadingServiceOrders } = useQuery({
     queryKey: ['serviceOrders', form.watch('projectId')],
-    queryFn: () => getAllServiceOrders(Number(form.watch('projectId'))),
+    queryFn: () => ServiceOrderService.getServiceOrders(form.watch('projectId')),
     enabled: !!form.watch('projectId'),
   });
 
@@ -75,27 +76,22 @@ export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
       toast({
         title: 'RNC criado com sucesso!',
-        description: 'O registro de não conformidade foi criado.',
+        variant: 'default',
       });
 
       form.reset();
-      if (onSuccess) onSuccess();
     } catch (error) {
       toast({
-        variant: 'destructive',
         title: 'Erro ao criar RNC',
-        description: 'Ocorreu um erro ao criar o registro. Tente novamente.',
+        description: 'Ocorreu um erro ao tentar criar o RNC. Tente novamente.',
+        variant: 'destructive',
       });
     }
   };
 
-  if (isLoadingProjects) {
-    return <div>Carregando...</div>;
-  }
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="description"
@@ -103,9 +99,8 @@ export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <FormItem>
               <FormLabel>Descrição da Não Conformidade</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Descreva detalhadamente a não conformidade identificada"
-                  className="min-h-[100px]"
+                <Textarea
+                  placeholder="Descreva a não conformidade identificada"
                   {...field}
                 />
               </FormControl>
@@ -147,19 +142,23 @@ export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           name="projectId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Projeto</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Projeto (Obra/Fábrica)</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o projeto" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {projects?.map((project) => (
-                    <SelectItem key={project.id} value={String(project.id)}>
-                      {project.name} ({project.type})
-                    </SelectItem>
-                  ))}
+                  {isLoadingProjects ? (
+                    <SelectItem value="">Carregando...</SelectItem>
+                  ) : (
+                    projects?.map((project) => (
+                      <SelectItem key={project.id} value={String(project.id)}>
+                        {project.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -173,18 +172,22 @@ export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Ordem de Serviço</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a OS" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {serviceOrders?.map((so: ServiceOrder) => (
-                    <SelectItem key={so.id} value={so.id}>
-                      {so.serviceOrderNumber} - {so.description}
-                    </SelectItem>
-                  ))}
+                  {isLoadingServiceOrders ? (
+                    <SelectItem value="">Carregando...</SelectItem>
+                  ) : (
+                    serviceOrders?.map((os) => (
+                      <SelectItem key={os.id} value={os.id}>
+                        {os.description}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -192,10 +195,10 @@ export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           )}
         />
 
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="bg-[#FFA500] hover:bg-[#FF7F0E]">
           Registrar RNC
         </Button>
       </form>
     </Form>
   );
-};
+}
