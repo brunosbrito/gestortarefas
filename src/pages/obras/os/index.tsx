@@ -56,17 +56,8 @@ const OrdensServico = () => {
   const { projectId } = useParams();
 
   const getServiceOrders = async () => {
-    if (!projectId) return;
     const serviceOrders = await getServiceOrderByProjectId(projectId);
-    if (serviceOrders && serviceOrders.length > 0) {
-      const projectData = serviceOrders[0].projectId;
-      setObra({
-        ...projectData,
-        type: 'Obra',
-        groupNumber: projectData.groupNumber.toString(),
-        status: projectData.status as 'em_andamento' | 'finalizado' | 'interrompido',
-      });
-    }
+    setObra(serviceOrders.projectId);
     setOrdensServico(serviceOrders || []);
   };
 

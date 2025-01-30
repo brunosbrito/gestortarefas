@@ -20,7 +20,7 @@ export const createServiceOrder = async (data: Partial<CreateServiceOrder>) => {
 export const getAllServiceOrders = async (projectId?: number) => {
   try {
     const url = projectId ? `${URL}?projectId=${projectId}` : URL;
-    const response = await axios.get<ServiceOrder[]>(url);
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar ordens de serviço:', error);
@@ -28,9 +28,19 @@ export const getAllServiceOrders = async (projectId?: number) => {
   }
 };
 
+export const getServiceOrderById = async (serviceOrderId: string) => {
+  try {
+    const response = await axios.get(`${URL}/${serviceOrderId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar ordem de serviço:', error);
+    throw error;
+  }
+};
+
 export const getServiceOrderByProjectId = async (projectId: string) => {
   try {
-    const response = await axios.get<ServiceOrder[]>(`${URL}/project/${projectId}`);
+    const response = await axios.get(`${URL}/project/${projectId}`);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar ordem de serviço:', error);
@@ -51,18 +61,19 @@ export const updateServiceOrder = async (
   }
 };
 
+export const deleteServiceOrder = async (serviceOrderId: string) => {
+  try {
+    await axios.delete(`${URL}/${serviceOrderId}`);
+  } catch (error) {
+    console.error('Erro ao excluir ordem de serviço:', error);
+    throw error;
+  }
+};
+
 export const updateServiceOrderProgress = async (
   id: number,
   progress: number
 ) => {
+  console.log(progress);
   return axios.patch(`${URL}/progress/${id}`, { progress });
-};
-
-// Também exportamos como objeto para manter compatibilidade
-export const ServiceOrderService = {
-  getAllServiceOrders,
-  getServiceOrderByProjectId,
-  updateServiceOrder,
-  updateServiceOrderProgress,
-  createServiceOrder,
 };
