@@ -63,8 +63,11 @@ export const RNCForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const onSubmit = async (data: RNCFormValues) => {
     try {
       await RNCService.createRNC({
-        ...data,
+        description: data.description,
+        responsibleIdentification: data.responsibleIdentification,
+        dateOccurrence: data.dateOccurrence,
         projectId: Number(data.projectId),
+        serviceOrderId: data.serviceOrderId,
         responsibleRNCId: 1, // Temporário, deve vir do usuário logado
       });
 
