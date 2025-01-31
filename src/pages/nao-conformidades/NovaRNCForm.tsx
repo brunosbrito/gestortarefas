@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -6,28 +6,38 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { useEffect, useState } from 'react';
+import { Obra } from '@/interfaces/ObrasInterface';
+import ObrasService from '@/services/ObrasService';
+import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
+import { getServiceOrderByProjectId } from '@/services/ServiceOrderService';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import ColaboradorService from '@/services/ColaboradorService';
+import RncService from '@/services/NonConformityService';
 
 const formSchema = z.object({
-  projectId: z.string().min(1, "Projeto é obrigatório"),
-  responsibleRNCId: z.string().min(1, "Responsável é obrigatório"),
-  description: z.string().min(1, "Descrição é obrigatória"),
-  serviceOrderId: z.string().optional(),
-  responsibleIdentification: z.string().optional(),
-  dateOccurrence: z.string().min(1, "Data da ocorrência é obrigatória"),
+  projectId: z.string().min(1, 'Projeto é obrigatório'),
+  responsibleRnc: z.string().min(1, 'Responsável pela rnc é obrigatório'),
+  description: z.string().min(1, 'Descrição é obrigatória'),
+  serviceOrderId: z.string().min(1, 'Obra/Fabrica é obrigatória'),
+  responsibleIdentification: z
+    .string()
+    .min(1, 'Responsável pela identificacao é obrigatório'),
+  dateOccurrence: z.string().min(1, 'Data da ocorrência é obrigatória'),
 });
 
 interface NovaRNCFormProps {
@@ -36,27 +46,37 @@ interface NovaRNCFormProps {
 
 export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
   const { toast } = useToast();
+  const [projetos, setProjetos] = useState<Obra[]>([]);
+  const [os, setOs] = useState<ServiceOrder[]>([]);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      projectId: "",
-      responsibleRNCId: "",
-      description: "",
-      serviceOrderId: "",
-      responsibleIdentification: "",
-      dateOccurrence: new Date().toISOString().split("T")[0],
+      projectId: '',
+      responsibleRnc: '',
+      description: '',
+      serviceOrderId: '',
+      responsibleIdentification: '',
+      dateOccurrence: new Date().toISOString().split('T')[0],
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Aqui você implementará a lógica para salvar a RNC
-      console.log("Valores do formulário:", values);
-      
+      await RncService.createRnc({
+        projectId: values.projectId!,
+        responsibleRnc: values.responsibleRnc!,
+        description: values.description!,
+        serviceOrderId: values.serviceOrderId!,
+        responsibleIdentification: values.responsibleIdentification!,
+        dateOccurrence: values.dateOccurrence!,
+      });
+      console.log('Valores do formulário:', values);
+
       toast({
-        title: "RNC criada com sucesso",
-        description: "O registro de não conformidade foi criado.",
+        title: 'RNC criada com sucesso',
+        description: 'O registro de não conformidade foi criado.',
       });
 
       if (onSuccess) {
@@ -64,12 +84,44 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
       }
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Erro ao criar RNC",
-        description: "Ocorreu um erro ao criar o registro. Tente novamente.",
+        variant: 'destructive',
+        title: 'Erro ao criar RNC',
+        description: 'Ocorreu um erro ao criar o registro. Tente novamente.',
       });
     }
   };
+
+  const getProjetos = async () => {
+    try {
+      const projetos = await ObrasService.getAllObras();
+      setProjetos(projetos);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getOsByProject = async (projectId: string) => {
+    try {
+      const ordemServico = await getServiceOrderByProjectId(projectId);
+      setOs(ordemServico);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getColaboradores = async () => {
+    try {
+      const response = await ColaboradorService.getAllColaboradores();
+      setColaboradores(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getProjetos();
+    getColaboradores();
+  }, []);
 
   return (
     <Form {...form}>
@@ -79,16 +131,25 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
           name="projectId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Projeto</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Local</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  getOsByProject(value);
+                }}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o projeto" />
+                    <SelectValue placeholder="Selecione o grupo" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">Projeto 1</SelectItem>
-                  <SelectItem value="2">Projeto 2</SelectItem>
+                  {projetos.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -109,8 +170,11 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">OS 001</SelectItem>
-                  <SelectItem value="2">OS 002</SelectItem>
+                  {os.map((x) => (
+                    <SelectItem key={x.id} value={x.id.toString()}>
+                      {x.serviceOrderNumber} - {x.description}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -120,10 +184,10 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
 
         <FormField
           control={form.control}
-          name="responsibleRNCId"
+          name="responsibleRnc"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Responsável</FormLabel>
+              <FormLabel>Responsável pela RNC</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -131,8 +195,11 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">João Silva</SelectItem>
-                  <SelectItem value="2">Maria Santos</SelectItem>
+                  {colaboradores.map((c: Colaborador) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -145,9 +212,25 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
           name="responsibleIdentification"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Identificação do Responsável (Opcional)</FormLabel>
+              <FormLabel>Responsável Indentificacao RNC</FormLabel>
               <FormControl>
-                <Input placeholder="Digite a identificação" {...field} />
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o responsável" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {colaboradores.map((c: Colaborador) => (
+                      <SelectItem key={c.id} value={c.id.toString()}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>

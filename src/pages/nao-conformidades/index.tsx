@@ -1,11 +1,24 @@
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NovaRNCDialog } from './NovaRNCDialog';
+import RncService from '@/services/NonConformityService';
+import { NonConformity } from '@/interfaces/RncInterface';
 
 const NaoConformidades = () => {
   const [showNovaRNCDialog, setShowNovaRNCDialog] = useState(false);
+  const [dadosRnc, setDadosRnc] = useState<NonConformity[]>([]);
+
+  const getAllRnc = async () => {
+    const rnc = await RncService.getAllRnc();
+    setDadosRnc(rnc);
+    console.log(rnc);
+  };
+
+  useEffect(() => {
+    getAllRnc();
+  }, []);
 
   return (
     <Layout>
