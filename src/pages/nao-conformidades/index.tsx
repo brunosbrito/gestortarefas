@@ -5,23 +5,51 @@ import { useEffect, useState } from 'react';
 import { NovaRNCDialog } from './NovaRNCDialog';
 import RncService from '@/services/NonConformityService';
 import { NonConformity } from '@/interfaces/RncInterface';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@radix-ui/react-select';
+import { Obra } from '@/interfaces/ObrasInterface';
+import ObrasService from '@/services/ObrasService';
 
 const NaoConformidades = () => {
   const [showNovaRNCDialog, setShowNovaRNCDialog] = useState(false);
   const [dadosRnc, setDadosRnc] = useState<NonConformity[]>([]);
-  const [mostrarFinalizadas, setMostrarFinalizadas] = useState<'todas' | 'em_andamento'>('todas');
+  const [projetos, setProjetos] = useState<Obra[]>([]);
+  const [mostrarFinalizadas, setMostrarFinalizadas] = useState<
+    'todas' | 'em_andamento'
+  >('todas');
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
     setDadosRnc(rnc);
   };
 
+  const getProjetos = async () => {
+    try {
+      const projetos = await ObrasService.getAllObras();
+      setProjetos(projetos);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     getAllRnc();
+    getProjetos();
   }, []);
 
   const rncsFiltradas = dadosRnc.filter((rnc) => {
@@ -49,7 +77,9 @@ const NaoConformidades = () => {
           <Filter className="h-5 w-5 text-construction-600" />
           <RadioGroup
             defaultValue="todas"
-            onValueChange={(value) => setMostrarFinalizadas(value as 'todas' | 'em_andamento')}
+            onValueChange={(value) =>
+              setMostrarFinalizadas(value as 'todas' | 'em_andamento')
+            }
             className="flex gap-4"
           >
             <div className="flex items-center space-x-2">
@@ -61,28 +91,44 @@ const NaoConformidades = () => {
               <label htmlFor="em_andamento">Em Andamento</label>
             </div>
           </RadioGroup>
+
+          <Select>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Selecione um projeto" />
+            </SelectTrigger>
+            <SelectContent>
+              {projetos.map((projeto) => (
+                <SelectItem key={projeto.id} value={projeto.id.toString()}>
+                  {projeto.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rncsFiltradas.map((rnc) => (
             <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-lg">{rnc.project.name}</CardTitle>
+                <CardTitle className="text-lg">{}</CardTitle>
                 <CardDescription>
-                  OS: {rnc.serviceOrder.name} | {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', { locale: ptBR })}
+                  OS: |{' '}
+                  {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
+                    locale: ptBR,
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm text-construction-600">
-                    <strong>Responsável:</strong> {rnc.responsibleRNC.name}
+                    <strong>Responsável:</strong>
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Descrição:</strong> {rnc.description}
                   </p>
                   {rnc.correctiveAction && (
                     <p className="text-sm text-construction-600">
-                      <strong>Ação Corretiva:</strong> {rnc.correctiveAction}
+                      <strong>Ação Corretiva:</strong>
                     </p>
                   )}
                 </div>
