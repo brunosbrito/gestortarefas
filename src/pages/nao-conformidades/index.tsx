@@ -13,7 +13,7 @@ import { ptBR } from 'date-fns/locale';
 const NaoConformidades = () => {
   const [showNovaRNCDialog, setShowNovaRNCDialog] = useState(false);
   const [dadosRnc, setDadosRnc] = useState<NonConformity[]>([]);
-  const [tipoFiltro, setTipoFiltro] = useState<'todos' | 'Fabrica' | 'Obra'>('todos');
+  const [mostrarFinalizadas, setMostrarFinalizadas] = useState<'todas' | 'em_andamento'>('todas');
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
@@ -25,8 +25,8 @@ const NaoConformidades = () => {
   }, []);
 
   const rncsFiltradas = dadosRnc.filter((rnc) => {
-    if (tipoFiltro === 'todos') return true;
-    return rnc.project.type === tipoFiltro;
+    if (mostrarFinalizadas === 'todas') return true;
+    return !rnc.dateConclusion;
   });
 
   return (
@@ -48,21 +48,17 @@ const NaoConformidades = () => {
         <div className="flex items-center gap-4 p-4 bg-construction-100 rounded-lg">
           <Filter className="h-5 w-5 text-construction-600" />
           <RadioGroup
-            defaultValue="todos"
-            onValueChange={(value) => setTipoFiltro(value as 'todos' | 'Fabrica' | 'Obra')}
+            defaultValue="todas"
+            onValueChange={(value) => setMostrarFinalizadas(value as 'todas' | 'em_andamento')}
             className="flex gap-4"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="todos" id="todos" />
-              <label htmlFor="todos">Todos</label>
+              <RadioGroupItem value="todas" id="todas" />
+              <label htmlFor="todas">Todas</label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Fabrica" id="fabrica" />
-              <label htmlFor="fabrica">Fábrica</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Obra" id="obra" />
-              <label htmlFor="obra">Obra</label>
+              <RadioGroupItem value="em_andamento" id="em_andamento" />
+              <label htmlFor="em_andamento">Em Andamento</label>
             </div>
           </RadioGroup>
         </div>
