@@ -111,7 +111,6 @@ export function AtualizarStatusDialog({
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const formData = new FormData();
       const formattedData: Record<string, any> = { ...data };
 
       if (novoStatus === 'Em execução') {
@@ -134,22 +133,10 @@ export function AtualizarStatusDialog({
         delete formattedData.pauseTime;
       }
 
-      // Adiciona todos os campos ao FormData
-      Object.entries(formattedData).forEach(([key, value]) => {
-        if (value !== undefined) {
-          if (typeof value === 'object') {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, value.toString());
-          }
-        }
-      });
+      formattedData.status = novoStatus;
+      formattedData.changedBy = localStorage.getItem('userId') || '0';
 
-      // Adiciona o status e changedBy
-      formData.append('status', novoStatus);
-      formData.append('changedBy', localStorage.getItem('userId') || '0');
-
-      await updateActivity(Number(atividade.id), formData);
+      await updateActivity(Number(atividade.id), formattedData);
 
       toast({
         title: 'Status atualizado',
