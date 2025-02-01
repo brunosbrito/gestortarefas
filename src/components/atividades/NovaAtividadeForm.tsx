@@ -164,19 +164,46 @@ export function NovaAtividadeForm({
   const onSubmit = async (data: FormValues) => {
     try {
       const activityData = {
-        ...data,
+        macroTask: data.macroTask,
+        process: data.process,
+        description: data.description,
+        quantity: data.quantity,
+        timePerUnit: data.timePerUnit,
+        unidadeTempo: data.unidadeTempo,
+        collaborators: data.collaborators,
+        startDate: data.startDate,
+        observation: data.observation,
+        imagemDescricao: data.imagemDescricao,
+        arquivoDescricao: data.arquivoDescricao,
+        estimatedTime: data.estimatedTime,
         projectId,
         orderServiceId,
         createdBy: Number(localStorage.getItem('userId')) || 0,
       };
 
       if (editMode && atividadeInicial) {
+        // Se houver novos arquivos, inclua-os no objeto
+        if (data.imagem instanceof File) {
+          activityData.imagem = data.imagem;
+        }
+        if (data.arquivo instanceof File) {
+          activityData.arquivo = data.arquivo;
+        }
+
         await updateActivity(atividadeInicial.id, activityData);
         toast({
           title: 'Atividade atualizada',
           description: 'A atividade foi atualizada com sucesso.',
         });
       } else {
+        // Para nova atividade, inclua os arquivos apenas se existirem
+        if (data.imagem instanceof File) {
+          activityData.imagem = data.imagem;
+        }
+        if (data.arquivo instanceof File) {
+          activityData.arquivo = data.arquivo;
+        }
+
         await createActivity(activityData);
         toast({
           title: 'Atividade criada',
