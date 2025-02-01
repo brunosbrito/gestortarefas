@@ -79,17 +79,16 @@ export function FileUploadField({
     }
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        form.setValue(fieldName, base64String);
-        setFileName(file.name);
-        
-        if (isImage) {
-          setPreviewUrl(base64String);
-        }
-      };
-      reader.readAsDataURL(file);
+      form.setValue(fieldName, file);
+      setFileName(file.name);
+      
+      if (isImage) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewUrl(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
       
     } catch (error) {
       console.error('Erro no upload:', error);
