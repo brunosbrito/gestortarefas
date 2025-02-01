@@ -163,7 +163,27 @@ export function NovaAtividadeForm({
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const activityData = {
+      interface ActivityData {
+        macroTask: string;
+        process: string;
+        description: string;
+        quantity: number;
+        timePerUnit: number;
+        unidadeTempo: 'minutos' | 'horas';
+        collaborators: number[];
+        startDate: string;
+        observation: string;
+        imagemDescricao: string;
+        arquivoDescricao: string;
+        estimatedTime: string;
+        projectId: number;
+        orderServiceId: number;
+        createdBy: number;
+        imagem?: File;
+        arquivo?: File;
+      }
+
+      const activityData: ActivityData = {
         macroTask: data.macroTask,
         process: data.process,
         description: data.description,
@@ -182,7 +202,6 @@ export function NovaAtividadeForm({
       };
 
       if (editMode && atividadeInicial) {
-        // Se houver novos arquivos, inclua-os no objeto
         if (data.imagem instanceof File) {
           activityData.imagem = data.imagem;
         }
@@ -196,7 +215,6 @@ export function NovaAtividadeForm({
           description: 'A atividade foi atualizada com sucesso.',
         });
       } else {
-        // Para nova atividade, inclua os arquivos apenas se existirem
         if (data.imagem instanceof File) {
           activityData.imagem = data.imagem;
         }
