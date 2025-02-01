@@ -1,6 +1,6 @@
 export interface CreateNonConformity {
   projectId: string;
-  responsibleRnc: string;
+  responsibleRncId: string;
   description: string;
   serviceOrderId: string;
   responsibleIdentification: string;

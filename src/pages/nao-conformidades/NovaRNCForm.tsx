@@ -66,7 +66,7 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
     try {
       await RncService.createRnc({
         projectId: values.projectId!,
-        responsibleRnc: values.responsibleRnc!,
+        responsibleRncId: values.responsibleRnc!,
         description: values.description!,
         serviceOrderId: values.serviceOrderId!,
         responsibleIdentification: values.responsibleIdentification!,
