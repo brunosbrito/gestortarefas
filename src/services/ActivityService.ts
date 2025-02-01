@@ -2,13 +2,9 @@ import API_URL from '@/config';
 import axios from 'axios';
 
 // Função para criar uma nova atividade
-export const createActivity = async (formData: FormData) => {
+export const createActivity = async (data: any) => {
   try {
-    const response = await axios.post(`${API_URL}/activities`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await axios.post(`${API_URL}/activities`, data);
     return response.data;
   } catch (error) {
     console.error('Error creating activity', error);
@@ -27,7 +23,7 @@ export const getAllActivities = async () => {
   }
 };
 
-export const getActivitiesByServiceOrderId = async (serviceOrderId) => {
+export const getActivitiesByServiceOrderId = async (serviceOrderId: string) => {
   try {
     const response = await axios.get(
       `${API_URL}/activities/service-order/${serviceOrderId}`
@@ -40,16 +36,11 @@ export const getActivitiesByServiceOrderId = async (serviceOrderId) => {
 };
 
 // Função para atualizar uma atividade
-export const updateActivity = async (id: number, formData: FormData) => {
+export const updateActivity = async (id: number, data: any) => {
   try {
     const response = await axios.put(
       `${API_URL}/activities/${id}`, 
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      data
     );
     return response.data;
   } catch (error) {
@@ -59,7 +50,7 @@ export const updateActivity = async (id: number, formData: FormData) => {
 };
 
 // Função para excluir uma atividade
-export const deleteActivity = async (id) => {
+export const deleteActivity = async (id: number) => {
   try {
     const response = await axios.delete(`${API_URL}/activities/${id}`);
     return response.data;

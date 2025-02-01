@@ -3,12 +3,12 @@ import axios from 'axios';
 
 export const uploadActivityImage = async (
   activityId: number,
-  formData: FormData
+  imageData: any
 ) => {
   try {
     const response = await axios.post(
       `${API_URL}/activity-images/upload/${activityId}`,
-      formData
+      imageData
     );
 
     return response.data;
