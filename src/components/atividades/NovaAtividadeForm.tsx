@@ -127,17 +127,19 @@ export function NovaAtividadeForm({
     try {
       const colaboradores = await ColaboradorService.getAllColaboradores();
       setColaboradores(colaboradores.data);
-      
+
       if (editMode && atividadeInicial?.collaborators) {
-        const colaboradoresIds = atividadeInicial.collaborators.map(c => c.id);
+        const colaboradoresIds = atividadeInicial.collaborators.map(
+          (c) => c.id
+        );
         form.setValue('collaborators', colaboradoresIds);
       }
     } catch (error) {
       console.error('Error fetching colaboradores', error);
       toast({
-        variant: "destructive",
-        title: "Erro ao carregar colaboradores",
-        description: "Ocorreu um erro ao carregar a lista de colaboradores.",
+        variant: 'destructive',
+        title: 'Erro ao carregar colaboradores',
+        description: 'Ocorreu um erro ao carregar a lista de colaboradores.',
       });
     }
   };
@@ -153,10 +155,16 @@ export function NovaAtividadeForm({
 
     if (editMode && atividadeInicial) {
       if (atividadeInicial.imageUrl) {
-        form.setValue('imagemDescricao', atividadeInicial.imageDescription || '');
+        form.setValue(
+          'imagemDescricao',
+          atividadeInicial.imageDescription || ''
+        );
       }
       if (atividadeInicial.fileUrl) {
-        form.setValue('arquivoDescricao', atividadeInicial.fileDescription || '');
+        form.setValue(
+          'arquivoDescricao',
+          atividadeInicial.fileDescription || ''
+        );
       }
     }
   }, [atividadeInicial, editMode]);
@@ -164,7 +172,7 @@ export function NovaAtividadeForm({
   const onSubmit = async (data: FormValues) => {
     try {
       if (editMode && atividadeInicial) {
-        const activityData: ActivityData = {
+        const activityData: any = {
           macroTask: data.macroTask,
           process: data.process,
           description: data.description,
@@ -197,7 +205,7 @@ export function NovaAtividadeForm({
       } else {
         // Usar FormData para nova atividade
         const formData = new FormData();
-        
+
         // Adicionar dados básicos
         formData.append('macroTask', data.macroTask);
         formData.append('process', data.process);
@@ -212,8 +220,11 @@ export function NovaAtividadeForm({
         formData.append('estimatedTime', data.estimatedTime || '');
         formData.append('projectId', projectId.toString());
         formData.append('orderServiceId', orderServiceId.toString());
-        formData.append('createdBy', (Number(localStorage.getItem('userId')) || 0).toString());
-        
+        formData.append(
+          'createdBy',
+          (Number(localStorage.getItem('userId')) || 0).toString()
+        );
+
         // Adicionar array de colaboradores
         data.collaborators.forEach((collaboratorId, index) => {
           formData.append(`collaborators[${index}]`, collaboratorId.toString());
@@ -544,14 +555,22 @@ export function NovaAtividadeForm({
             fileType="imagem"
             accept="image/*"
             activityId={atividadeInicial?.id}
-            initialPreview={atividadeInicial?.imageUrl ? `https://api.gmxindustrial.com.br${atividadeInicial.imageUrl}` : undefined}
+            initialPreview={
+              atividadeInicial?.imageUrl
+                ? `https://api.gmxindustrial.com.br${atividadeInicial.imageUrl}`
+                : undefined
+            }
             initialDescription={atividadeInicial?.imageDescription}
           />
           <FileUploadField
             form={form}
             fileType="arquivo"
             activityId={atividadeInicial?.id}
-            initialPreview={atividadeInicial?.fileUrl ? `https://api.gmxindustrial.com.br${atividadeInicial.fileUrl}` : undefined}
+            initialPreview={
+              atividadeInicial?.fileUrl
+                ? `https://api.gmxindustrial.com.br${atividadeInicial.fileUrl}`
+                : undefined
+            }
             initialDescription={atividadeInicial?.fileDescription}
           />
         </div>
