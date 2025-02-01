@@ -163,45 +163,25 @@ export function NovaAtividadeForm({
 
   const onSubmit = async (data: FormValues) => {
     try {
-      interface ActivityData {
-        macroTask: string;
-        process: string;
-        description: string;
-        quantity: number;
-        timePerUnit: number;
-        unidadeTempo: 'minutos' | 'horas';
-        collaborators: number[];
-        startDate: string;
-        observation: string;
-        imagemDescricao: string;
-        arquivoDescricao: string;
-        estimatedTime: string;
-        projectId: number;
-        orderServiceId: number;
-        createdBy: number;
-        imagem?: File;
-        arquivo?: File;
-      }
-
-      const activityData: ActivityData = {
-        macroTask: data.macroTask,
-        process: data.process,
-        description: data.description,
-        quantity: data.quantity,
-        timePerUnit: data.timePerUnit,
-        unidadeTempo: data.unidadeTempo,
-        collaborators: data.collaborators,
-        startDate: data.startDate,
-        observation: data.observation,
-        imagemDescricao: data.imagemDescricao,
-        arquivoDescricao: data.arquivoDescricao,
-        estimatedTime: data.estimatedTime,
-        projectId,
-        orderServiceId,
-        createdBy: Number(localStorage.getItem('userId')) || 0,
-      };
-
       if (editMode && atividadeInicial) {
+        const activityData: ActivityData = {
+          macroTask: data.macroTask,
+          process: data.process,
+          description: data.description,
+          quantity: data.quantity,
+          timePerUnit: data.timePerUnit,
+          unidadeTempo: data.unidadeTempo,
+          collaborators: data.collaborators,
+          startDate: data.startDate,
+          observation: data.observation,
+          imagemDescricao: data.imagemDescricao,
+          arquivoDescricao: data.arquivoDescricao,
+          estimatedTime: data.estimatedTime,
+          projectId,
+          orderServiceId,
+          createdBy: Number(localStorage.getItem('userId')) || 0,
+        };
+
         if (data.imagem instanceof File) {
           activityData.imagem = data.imagem;
         }
@@ -215,14 +195,39 @@ export function NovaAtividadeForm({
           description: 'A atividade foi atualizada com sucesso.',
         });
       } else {
+        // Usar FormData para nova atividade
+        const formData = new FormData();
+        
+        // Adicionar dados básicos
+        formData.append('macroTask', data.macroTask);
+        formData.append('process', data.process);
+        formData.append('description', data.description);
+        formData.append('quantity', data.quantity.toString());
+        formData.append('timePerUnit', data.timePerUnit.toString());
+        formData.append('unidadeTempo', data.unidadeTempo);
+        formData.append('startDate', data.startDate);
+        formData.append('observation', data.observation || '');
+        formData.append('imagemDescricao', data.imagemDescricao || '');
+        formData.append('arquivoDescricao', data.arquivoDescricao || '');
+        formData.append('estimatedTime', data.estimatedTime || '');
+        formData.append('projectId', projectId.toString());
+        formData.append('orderServiceId', orderServiceId.toString());
+        formData.append('createdBy', (Number(localStorage.getItem('userId')) || 0).toString());
+        
+        // Adicionar array de colaboradores
+        data.collaborators.forEach((collaboratorId, index) => {
+          formData.append(`collaborators[${index}]`, collaboratorId.toString());
+        });
+
+        // Adicionar arquivos se existirem
         if (data.imagem instanceof File) {
-          activityData.imagem = data.imagem;
+          formData.append('imagem', data.imagem);
         }
         if (data.arquivo instanceof File) {
-          activityData.arquivo = data.arquivo;
+          formData.append('arquivo', data.arquivo);
         }
 
-        await createActivity(activityData);
+        await createActivity(formData);
         toast({
           title: 'Atividade criada',
           description: 'A atividade foi criada com sucesso.',

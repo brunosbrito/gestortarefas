@@ -1,10 +1,13 @@
 import API_URL from '@/config';
 import axios from 'axios';
 
-// Função para criar uma nova atividade
-export const createActivity = async (data: any) => {
+export const createActivity = async (data: FormData) => {
   try {
-    const response = await axios.post(`${API_URL}/activities`, data);
+    const response = await axios.post(`${API_URL}/activities`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating activity', error);
