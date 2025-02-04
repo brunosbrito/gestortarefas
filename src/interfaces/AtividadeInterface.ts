@@ -10,7 +10,6 @@ export interface Activity {
   macroTask?: string;
   process?: string;
   timePerUnit?: number;
-  timeUnit?: string;
   quantity?: number;
   estimatedTime?: string;
   actualTime?: number;

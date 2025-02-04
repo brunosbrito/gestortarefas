@@ -1,20 +1,17 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { File, Image, Upload } from "lucide-react";
-import { Control } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 
 interface FileUploadFieldProps {
-  form?: any;
+  form: UseFormReturn<any>;
   fileType: "imagem" | "arquivo";
   accept?: string;
   activityId?: number;
   initialPreview?: string;
   initialDescription?: string;
-  label?: string;
-  name?: string;
-  control: Control<any>;
 }
 
 export function FileUploadField({ 
@@ -23,19 +20,16 @@ export function FileUploadField({
   accept, 
   activityId,
   initialPreview,
-  initialDescription,
-  label,
-  name,
-  control 
+  initialDescription 
 }: FileUploadFieldProps) {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   
   const isImage = fileType === "imagem";
-  const fieldName = name || (isImage ? "imagem" : "arquivo");
+  const fieldName = isImage ? "imagem" : "arquivo";
   const descriptionField = isImage ? "imagemDescricao" : "arquivoDescricao";
-  const defaultLabel = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
+  const label = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
   const placeholder = isImage ? "Descrição da imagem (opcional)" : "Descrição do arquivo (opcional)";
 
   useEffect(() => {
@@ -108,7 +102,7 @@ export function FileUploadField({
 
   return (
     <div className="space-y-4">
-      <FormLabel>{label || defaultLabel}</FormLabel>
+      <FormLabel>{label}</FormLabel>
       <div className="flex gap-4">
         <div className="w-48">
           <Input
@@ -158,7 +152,7 @@ export function FileUploadField({
         
         <div className="flex-1">
           <FormField
-            control={control}
+            control={form.control}
             name={descriptionField}
             render={({ field }) => (
               <FormItem>
