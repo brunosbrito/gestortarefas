@@ -30,7 +30,9 @@ const NaoConformidades = () => {
   const [dadosRnc, setDadosRnc] = useState<NonConformity[]>([]);
   const [projetos, setProjetos] = useState<Obra[]>([]);
   const [projetoSelecionado, setProjetoSelecionado] = useState<string>('');
-  const [mostrarFinalizadas, setMostrarFinalizadas] = useState<'todas' | 'em_andamento'>('todas');
+  const [mostrarFinalizadas, setMostrarFinalizadas] = useState<
+    'todas' | 'em_andamento'
+  >('todas');
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
@@ -52,9 +54,13 @@ const NaoConformidades = () => {
   }, []);
 
   const rncsFiltradas = dadosRnc.filter((rnc) => {
-    const filtroStatus = mostrarFinalizadas === 'todas' ? true : !rnc.dateConclusion;
-    const filtroProjeto = projetoSelecionado ? rnc.project.id === projetoSelecionado : true;
-    
+    console.log(rnc);
+    const filtroStatus =
+      mostrarFinalizadas === 'todas' ? true : !rnc.dateConclusion;
+    const filtroProjeto = projetoSelecionado
+      ? rnc.project.id === projetoSelecionado
+      : true;
+
     return filtroStatus && filtroProjeto;
   });
 
@@ -101,9 +107,12 @@ const NaoConformidades = () => {
               <SelectValue placeholder="Selecione um projeto" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os projetos</SelectItem>
+              <SelectItem value="all">Todos os projetos</SelectItem>
               {projetos.map((projeto) => (
-                <SelectItem key={projeto.id} value={projeto.id?.toString() || ''}>
+                <SelectItem
+                  key={projeto.id}
+                  value={projeto.id?.toString() || ''}
+                >
                   {projeto.name}
                 </SelectItem>
               ))}
@@ -115,9 +124,9 @@ const NaoConformidades = () => {
           {rncsFiltradas.map((rnc) => (
             <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-lg">{rnc.project.name}</CardTitle>
+                <CardTitle className="text-lg"></CardTitle>
                 <CardDescription>
-                  OS: {rnc.serviceOrder.name} |{' '}
+                  OS: |{' '}
                   {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
                     locale: ptBR,
                   })}
@@ -126,7 +135,7 @@ const NaoConformidades = () => {
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm text-construction-600">
-                    <strong>Responsável:</strong> {rnc.responsibleRNC.name}
+                    <strong>Responsável:</strong>
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Descrição:</strong> {rnc.description}

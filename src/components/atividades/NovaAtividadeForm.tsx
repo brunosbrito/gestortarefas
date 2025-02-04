@@ -29,6 +29,7 @@ import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Activity } from '@/interfaces/AtividadeInterface';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
 
 type UnidadeTempo = 'minutos' | 'horas';
 
@@ -42,7 +43,6 @@ const formSchema = z.object({
   collaborators: z
     .array(z.number())
     .min(1, 'Selecione pelo menos um colaborador'),
-  startDate: z.string().min(1, 'Data de início é obrigatória'),
   observation: z.string().optional(),
   imagem: z.any().optional(),
   imagemDescricao: z.string().optional(),
@@ -86,9 +86,6 @@ export function NovaAtividadeForm({
     timePerUnit: atividadeInicial?.timePerUnit || 0,
     unidadeTempo: 'minutos',
     collaborators: atividadeInicial?.collaborators?.map((c) => c.id) || [],
-    startDate: atividadeInicial?.startDate
-      ? new Date(atividadeInicial.startDate).toISOString().split('T')[0]
-      : '',
     observation: atividadeInicial?.observation || '',
     imagem: undefined,
     imagemDescricao: atividadeInicial?.imageDescription || '',
@@ -180,7 +177,6 @@ export function NovaAtividadeForm({
           timePerUnit: data.timePerUnit,
           unidadeTempo: data.unidadeTempo,
           collaborators: data.collaborators,
-          startDate: data.startDate,
           observation: data.observation,
           imagemDescricao: data.imagemDescricao,
           arquivoDescricao: data.arquivoDescricao,
@@ -213,7 +209,6 @@ export function NovaAtividadeForm({
         formData.append('quantity', data.quantity.toString());
         formData.append('timePerUnit', data.timePerUnit.toString());
         formData.append('unidadeTempo', data.unidadeTempo);
-        formData.append('startDate', data.startDate);
         formData.append('observation', data.observation || '');
         formData.append('imagemDescricao', data.imagemDescricao || '');
         formData.append('arquivoDescricao', data.arquivoDescricao || '');
@@ -452,85 +447,99 @@ export function NovaAtividadeForm({
         <FormField
           control={form.control}
           name="collaborators"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Equipe</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  const numericValue = Number(value);
-                  const currentValues = field.value || [];
-                  if (!currentValues.includes(numericValue)) {
-                    field.onChange([...currentValues, numericValue]);
-                  }
-                }}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue>
-                      {field.value?.length
-                        ? field.value
-                            .map((id: number) => {
-                              const colaborador = colaboradores.find(
-                                (col) => col.id === id
-                              );
-                              return colaborador?.name || '';
-                            })
-                            .join(', ')
-                        : 'Selecione os colaboradores'}
-                    </SelectValue>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {colaboradores.map((colaborador) => (
-                    <SelectItem
-                      key={colaborador.id}
-                      value={String(colaborador.id)}
-                    >
-                      {colaborador.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {field.value?.map((colaboradorId: number) => {
-                  const colaborador = colaboradores.find(
-                    (col) => col.id === colaboradorId
-                  );
-                  return (
-                    <Badge
-                      key={colaboradorId}
-                      variant="secondary"
-                      className="cursor-pointer"
-                      onClick={() => {
-                        const newEquipe = field.value.filter(
-                          (id: number) => id !== colaboradorId
-                        );
-                        field.onChange(newEquipe);
-                      }}
-                    >
-                      {colaborador?.name}
-                    </Badge>
-                  );
-                })}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            // Caso esteja no modo de edição, preenche `field.value` com os colaboradores selecionados anteriormente
+            const selectedCollaborators = field.value || []; // Aqui você assume que o valor vem previamente carregado
+
+            return (
+              <FormItem>
+                <FormLabel>Equipe</FormLabel>
+                <Select
+                  value={
+                    selectedCollaborators?.length
+                      ? selectedCollaborators[0].toString()
+                      : ''
+                  } // Mostra o primeiro colaborador como selecionado
+                  onValueChange={(value) => {
+                    const numericValue = Number(value);
+                    const currentValues = selectedCollaborators;
+                    if (!currentValues.includes(numericValue)) {
+                      field.onChange([...currentValues, numericValue]);
+                    }
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue>
+                        {selectedCollaborators?.length
+                          ? selectedCollaborators
+                              .map((id: number) => {
+                                const colaborador = colaboradores.find(
+                                  (col) => col.id === id
+                                );
+                                return colaborador?.name || '';
+                              })
+                              .join(', ')
+                          : 'Selecione os colaboradores'}
+                      </SelectValue>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {colaboradores.map((colaborador) => (
+                      <SelectItem
+                        key={colaborador.id}
+                        value={String(colaborador.id)}
+                      >
+                        {colaborador.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedCollaborators?.map((colaboradorId: number) => {
+                    const colaborador = colaboradores.find(
+                      (col) => col.id === colaboradorId
+                    );
+                    return (
+                      <Badge
+                        key={colaboradorId}
+                        variant="secondary"
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const newEquipe = selectedCollaborators.filter(
+                            (id: number) => id !== colaboradorId
+                          );
+                          field.onChange(newEquipe);
+                        }}
+                      >
+                        {colaborador?.name}
+                      </Badge>
+                    );
+                  })}
+                </div>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
-        <FormField
-          control={form.control}
-          name="startDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Data de Início</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* 
+        {editMode && (
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data início</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )} */}
 
         <FormField
           control={form.control}

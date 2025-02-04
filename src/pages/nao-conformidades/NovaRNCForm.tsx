@@ -31,7 +31,7 @@ import RncService from '@/services/NonConformityService';
 
 const formSchema = z.object({
   projectId: z.string().min(1, 'Projeto é obrigatório'),
-  responsibleRnc: z.string().min(1, 'Responsável pela rnc é obrigatório'),
+  responsibleRncId: z.string().min(1, 'Responsável pela rnc é obrigatório'),
   description: z.string().min(1, 'Descrição é obrigatória'),
   serviceOrderId: z.string().min(1, 'Obra/Fabrica é obrigatória'),
   responsibleIdentification: z
@@ -54,7 +54,7 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       projectId: '',
-      responsibleRnc: '',
+      responsibleRncId: '',
       description: '',
       serviceOrderId: '',
       responsibleIdentification: '',
@@ -66,13 +66,12 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
     try {
       await RncService.createRnc({
         projectId: values.projectId!,
-        responsibleRncId: values.responsibleRnc!,
+        responsibleRncId: values.responsibleRncId!,
         description: values.description!,
         serviceOrderId: values.serviceOrderId!,
         responsibleIdentification: values.responsibleIdentification!,
         dateOccurrence: values.dateOccurrence!,
       });
-      console.log('Valores do formulário:', values);
 
       toast({
         title: 'RNC criada com sucesso',
@@ -184,7 +183,7 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
 
         <FormField
           control={form.control}
-          name="responsibleRnc"
+          name="responsibleRncId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Responsável pela RNC</FormLabel>

@@ -196,7 +196,7 @@ export const AtividadeCard = ({
               </div>
               <div className="flex items-center mb-2">
                 <Calendar className="w-4 h-4 mr-2" />
-                Data Criação: {format(atividade.createdAt, 'dd/MM/yyyy')}
+                Data Criação: {format(atividade?.createdAt, 'dd/MM/yyyy')}
               </div>
               {atividade.status !== 'Planejadas' && (
                 <div className="flex items-center mb-2">
@@ -204,7 +204,7 @@ export const AtividadeCard = ({
                   {(() => {
                     switch (atividade.status) {
                       case 'Em execução':
-                        return `Em execução (${format(
+                        return `Data início (${format(
                           new Date(atividade.startDate),
                           'dd/MM/yyyy'
                         )})`;

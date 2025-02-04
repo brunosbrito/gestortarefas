@@ -22,4 +22,5 @@ export interface Activity {
   projectId: number;
   orderServiceId: number;
   createdBy: number;
+  unidadeTempo?: string;
 }
