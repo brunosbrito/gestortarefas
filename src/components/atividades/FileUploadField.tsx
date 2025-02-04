@@ -13,6 +13,7 @@ interface FileUploadFieldProps {
   initialPreview?: string;
   initialDescription?: string;
   label?: string;
+  name?: string;
 }
 
 export function FileUploadField({ 
@@ -22,14 +23,15 @@ export function FileUploadField({
   activityId,
   initialPreview,
   initialDescription,
-  label 
+  label,
+  name 
 }: FileUploadFieldProps) {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   
   const isImage = fileType === "imagem";
-  const fieldName = isImage ? "imagem" : "arquivo";
+  const fieldName = name || (isImage ? "imagem" : "arquivo");
   const descriptionField = isImage ? "imagemDescricao" : "arquivoDescricao";
   const defaultLabel = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
   const placeholder = isImage ? "Descrição da imagem (opcional)" : "Descrição do arquivo (opcional)";
