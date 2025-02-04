@@ -12,6 +12,7 @@ interface FileUploadFieldProps {
   activityId?: number;
   initialPreview?: string;
   initialDescription?: string;
+  label?: string;
 }
 
 export function FileUploadField({ 
@@ -20,7 +21,8 @@ export function FileUploadField({
   accept, 
   activityId,
   initialPreview,
-  initialDescription 
+  initialDescription,
+  label 
 }: FileUploadFieldProps) {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -29,7 +31,7 @@ export function FileUploadField({
   const isImage = fileType === "imagem";
   const fieldName = isImage ? "imagem" : "arquivo";
   const descriptionField = isImage ? "imagemDescricao" : "arquivoDescricao";
-  const label = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
+  const defaultLabel = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
   const placeholder = isImage ? "Descrição da imagem (opcional)" : "Descrição do arquivo (opcional)";
 
   useEffect(() => {
@@ -102,7 +104,7 @@ export function FileUploadField({
 
   return (
     <div className="space-y-4">
-      <FormLabel>{label}</FormLabel>
+      <FormLabel>{label || defaultLabel}</FormLabel>
       <div className="flex gap-4">
         <div className="w-48">
           <Input
