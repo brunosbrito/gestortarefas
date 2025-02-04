@@ -202,8 +202,12 @@ export function NovaAtividadeForm({
           title: 'Atividade atualizada',
           description: 'A atividade foi atualizada com sucesso.',
         });
+
+        // Chama o callback onSuccess após atualizar
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
-        // Usar FormData para nova atividade
         const formData = new FormData();
 
         // Adicionar dados básicos
@@ -243,10 +247,11 @@ export function NovaAtividadeForm({
           title: 'Atividade criada',
           description: 'A atividade foi criada com sucesso.',
         });
-      }
 
-      if (onSuccess) {
-        onSuccess();
+        // Chama o callback onSuccess após criar
+        if (onSuccess) {
+          onSuccess();
+        }
       }
     } catch (error) {
       toast({
