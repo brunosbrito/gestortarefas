@@ -62,6 +62,7 @@ export const AtividadeCard = ({
   const [imageDescription, setImageDescription] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
   function formatTime(totalTime) {
@@ -160,6 +161,12 @@ export const AtividadeCard = ({
     if (onMoveAtividade) {
       onMoveAtividade(atividade.id, novoStatus);
     }
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditDialogOpen(false);
+    // Força a atualização da lista de atividades
+    window.location.reload();
   };
 
   return (
@@ -309,7 +316,7 @@ export const AtividadeCard = ({
                     <MoveHorizontal className="w-4 h-4" />
                   </Button>
                 )}
-                <Dialog>
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <Edit2 className="w-4 h-4" />
@@ -324,6 +331,7 @@ export const AtividadeCard = ({
                       atividadeInicial={atividade}
                       projectId={Number(projectId)}
                       orderServiceId={Number(serviceOrderId)}
+                      onSuccess={handleEditSuccess}
                     />
                   </DialogContent>
                 </Dialog>
