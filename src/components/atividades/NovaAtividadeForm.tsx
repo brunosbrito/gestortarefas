@@ -283,11 +283,13 @@ export function NovaAtividadeForm({
           name="imagem"
           label="Imagem"
           control={form.control}
+          fileType="imagem"
         />
         <FileUploadField
           name="arquivo"
           label="Arquivo"
           control={form.control}
+          fileType="arquivo"
         />
         <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
           {editMode ? 'Atualizar Atividade' : 'Criar Atividade'}
