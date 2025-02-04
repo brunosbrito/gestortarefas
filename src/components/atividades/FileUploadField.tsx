@@ -1,12 +1,12 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { File, Image, Upload } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
+import { Control } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 
 interface FileUploadFieldProps {
-  form: UseFormReturn<any>;
+  form?: any;
   fileType: "imagem" | "arquivo";
   accept?: string;
   activityId?: number;
@@ -14,6 +14,7 @@ interface FileUploadFieldProps {
   initialDescription?: string;
   label?: string;
   name?: string;
+  control: Control<any>;
 }
 
 export function FileUploadField({ 
@@ -24,7 +25,8 @@ export function FileUploadField({
   initialPreview,
   initialDescription,
   label,
-  name 
+  name,
+  control 
 }: FileUploadFieldProps) {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -156,7 +158,7 @@ export function FileUploadField({
         
         <div className="flex-1">
           <FormField
-            control={form.control}
+            control={control}
             name={descriptionField}
             render={({ field }) => (
               <FormItem>
