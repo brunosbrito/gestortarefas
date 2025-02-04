@@ -12,21 +12,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { createActivity, updateActivity } from '@/services/ActivityService';
 import { Activity } from '@/interfaces/AtividadeInterface';
 import { FileUploadField } from './FileUploadField';
-import { ProcessService } from '@/services/ProcessService';
-import { TarefaMacroService } from '@/services/TarefaMacroService';
-import { ColaboradorService } from '@/services/ColaboradorService';
+import ProcessService from '@/services/ProcessService';
+import TarefaMacroService from '@/services/TarefaMacroService';
+import ColaboradorService from '@/services/ColaboradorService';
 
 const formSchema = z.object({
   macroTask: z.string().min(1, 'Tarefa macro é obrigatória'),
@@ -41,8 +34,8 @@ const formSchema = z.object({
   imagemDescricao: z.string().optional(),
   arquivoDescricao: z.string().optional(),
   estimatedTime: z.string().optional(),
-  imagem: z.instanceof(File).optional(),
-  arquivo: z.instanceof(File).optional(),
+  imagem: z.instanceof(File).optional().nullable(),
+  arquivo: z.instanceof(File).optional().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -65,7 +58,6 @@ export function NovaAtividadeForm({
   onCancel,
 }: NovaAtividadeFormProps) {
   const { toast } = useToast();
-  const [collaborators, setCollaborators] = useState<number[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,14 +67,31 @@ export function NovaAtividadeForm({
       description: atividadeInicial.description,
       quantity: atividadeInicial.quantity,
       timePerUnit: atividadeInicial.timePerUnit,
-      unidadeTempo: atividadeInicial.unidadeTempo,
+      unidadeTempo: atividadeInicial.timeUnit || 'horas',
       collaborators: atividadeInicial.collaborators,
       startDate: atividadeInicial.startDate,
       observation: atividadeInicial.observation || '',
-      imagemDescricao: atividadeInicial.imageDescription || '',
-      arquivoDescricao: atividadeInicial.fileDescription || '',
+      imagemDescricao: '',
+      arquivoDescricao: '',
       estimatedTime: atividadeInicial.estimatedTime || '',
-    } : {},
+      imagem: null,
+      arquivo: null,
+    } : {
+      macroTask: '',
+      process: '',
+      description: '',
+      quantity: 0,
+      timePerUnit: 0,
+      unidadeTempo: 'horas',
+      collaborators: [],
+      startDate: '',
+      observation: '',
+      imagemDescricao: '',
+      arquivoDescricao: '',
+      estimatedTime: '',
+      imagem: null,
+      arquivo: null,
+    },
   });
 
   const onSubmit = async (data: FormValues) => {
@@ -94,7 +103,7 @@ export function NovaAtividadeForm({
           description: data.description,
           quantity: data.quantity,
           timePerUnit: data.timePerUnit,
-          unidadeTempo: data.unidadeTempo,
+          timeUnit: data.unidadeTempo,
           collaborators: data.collaborators,
           startDate: data.startDate,
           observation: data.observation,
@@ -106,34 +115,27 @@ export function NovaAtividadeForm({
           createdBy: Number(localStorage.getItem('userId')) || 0,
         };
 
-        if (data.imagem instanceof File) {
-          activityData.imagem = data.imagem;
-        }
-        if (data.arquivo instanceof File) {
-          activityData.arquivo = data.arquivo;
-        }
-
         await updateActivity(atividadeInicial.id, activityData);
         toast({
           title: 'Atividade atualizada',
           description: 'A atividade foi atualizada com sucesso.',
         });
         
-        // Chama o callback de sucesso para fechar o modal e atualizar a lista
         if (onSuccess) {
           onSuccess();
         }
       } else {
-        // Usar FormData para nova atividade
         const formData = new FormData();
         
-        // Adicionar dados básicos
         formData.append('macroTask', data.macroTask);
         formData.append('process', data.process);
         formData.append('description', data.description);
         formData.append('quantity', data.quantity.toString());
         formData.append('timePerUnit', data.timePerUnit.toString());
-        formData.append('unidadeTempo', data.unidadeTempo);
+        formData.append('timeUnit', data.unidadeTempo);
+        data.collaborators.forEach((collaboratorId, index) => {
+          formData.append(`collaborators[${index}]`, collaboratorId.toString());
+        });
         formData.append('startDate', data.startDate);
         formData.append('observation', data.observation || '');
         formData.append('imagemDescricao', data.imagemDescricao || '');
@@ -142,13 +144,7 @@ export function NovaAtividadeForm({
         formData.append('projectId', projectId.toString());
         formData.append('orderServiceId', orderServiceId.toString());
         formData.append('createdBy', (Number(localStorage.getItem('userId')) || 0).toString());
-        
-        // Adicionar array de colaboradores
-        data.collaborators.forEach((collaboratorId, index) => {
-          formData.append(`collaborators[${index}]`, collaboratorId.toString());
-        });
 
-        // Adicionar arquivos se existirem
         if (data.imagem instanceof File) {
           formData.append('imagem', data.imagem);
         }
@@ -162,7 +158,6 @@ export function NovaAtividadeForm({
           description: 'A atividade foi criada com sucesso.',
         });
         
-        // Chama o callback de sucesso para fechar o modal e atualizar a lista
         if (onSuccess) {
           onSuccess();
         }
@@ -300,4 +295,3 @@ export function NovaAtividadeForm({
       </form>
     </Form>
   );
-}
