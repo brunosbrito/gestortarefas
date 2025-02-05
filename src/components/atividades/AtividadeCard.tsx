@@ -27,6 +27,7 @@ import {
   Upload,
   User,
   Users,
+  CheckCircle2,
 } from 'lucide-react';
 import { NovaAtividadeForm } from './NovaAtividadeForm';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +45,7 @@ import { AtividadeEquipe } from './AtividadeEquipe';
 import { AtividadeUploadDialog } from './AtividadeUploadDialog';
 import { MoverAtividadeDialog } from './MoverAtividadeDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Progress } from '@/components/ui/progress';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -169,6 +171,14 @@ export const AtividadeCard = ({
     window.location.reload();
   };
 
+  const calculateProgress = () => {
+    if (!atividade.quantity) return 0;
+    // Aqui você pode ajustar conforme a lógica real de progresso
+    // Por enquanto estou usando o tempo como base
+    const progress = (atividade.totalTime / (atividade.quantity * 3600)) * 100;
+    return Math.min(Math.max(progress, 0), 100);
+  };
+
   return (
     <Draggable draggableId={String(atividade.id)} index={index}>
       {(provided) => (
@@ -181,7 +191,7 @@ export const AtividadeCard = ({
             <CardHeader className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-[#FF7F0E]">
+                  <span className="text-2xl font-bold text-[#FF7F0E]">
                     #{atividade.cod_sequencial}
                   </span>
                   <CardTitle className="text-sm font-medium">
@@ -205,6 +215,21 @@ export const AtividadeCard = ({
                 <Calendar className="w-4 h-4 mr-2" />
                 Data Criação: {format(atividade?.createdAt, 'dd/MM/yyyy')}
               </div>
+
+              {atividade.quantity && (
+                <div className="space-y-2 mb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <CheckCircle2 className="w-4 h-4 mr-2 text-[#FF7F0E]" />
+                      <span>
+                        Progresso: {Math.round(calculateProgress())}% ({Math.floor(atividade.totalTime / 3600)} de {atividade.quantity} unidades)
+                      </span>
+                    </div>
+                  </div>
+                  <Progress value={calculateProgress()} className="h-2" />
+                </div>
+              )}
+
               {atividade.status !== 'Planejadas' && (
                 <div className="flex items-center mb-2">
                   <Clock className="w-4 h-4 mr-2" />
