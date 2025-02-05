@@ -31,6 +31,7 @@ export interface AtividadeStatus {
   totalTime: number;
   originalStartDate: string;
   quantity?: number;
+  completedQuantity?: number;
   timePerUnit?: number;
   observation?: string;
   imageUrl?: string;

@@ -172,10 +172,8 @@ export const AtividadeCard = ({
   };
 
   const calculateProgress = () => {
-    if (!atividade.quantity) return 0;
-    // Aqui você pode ajustar conforme a lógica real de progresso
-    // Por enquanto estou usando o tempo como base
-    const progress = (atividade.totalTime / (atividade.quantity * 3600)) * 100;
+    if (!atividade.quantity || !atividade.completedQuantity) return 0;
+    const progress = (atividade.completedQuantity / atividade.quantity) * 100;
     return Math.min(Math.max(progress, 0), 100);
   };
 
@@ -222,7 +220,7 @@ export const AtividadeCard = ({
                     <div className="flex items-center">
                       <CheckCircle2 className="w-4 h-4 mr-2 text-[#FF7F0E]" />
                       <span>
-                        Progresso: {Math.round(calculateProgress())}% ({Math.floor(atividade.totalTime / 3600)} de {atividade.quantity} unidades)
+                        Progresso: {Math.round(calculateProgress())}% ({atividade.completedQuantity || 0} de {atividade.quantity} unidades)
                       </span>
                     </div>
                   </div>
