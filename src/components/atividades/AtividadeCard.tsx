@@ -221,7 +221,7 @@ export const AtividadeCard = ({
                 Data Criação: {format(atividade?.createdAt, 'dd/MM/yyyy')}
               </div>
 
-              {atividade.quantity && (
+              {typeof atividade.quantity === 'number' && (
                 <div className="space-y-2 mb-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -419,12 +419,18 @@ export const AtividadeCard = ({
             onMove={handleMove}
           />
 
-          <AtualizarProgressoDialog
-            open={isProgressDialogOpen}
-            onOpenChange={setIsProgressDialogOpen}
-            atividade={atividade}
-            onSuccess={handleProgressSuccess}
-          />
+          {typeof atividade.quantity === 'number' && (
+            <AtualizarProgressoDialog
+              open={isProgressDialogOpen}
+              onOpenChange={setIsProgressDialogOpen}
+              atividade={{
+                id: atividade.id,
+                quantity: atividade.quantity,
+                completedQuantity: atividade.completedQuantity || 0
+              }}
+              onSuccess={handleProgressSuccess}
+            />
+          )}
         </div>
       )}
     </Draggable>

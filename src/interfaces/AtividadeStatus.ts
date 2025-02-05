@@ -30,8 +30,8 @@ export interface AtividadeStatus {
   status: 'Planejadas' | 'Em execução' | 'Concluídas' | 'Paralizadas';
   totalTime: number;
   originalStartDate: string;
-  quantity?: number;
-  completedQuantity?: number;
+  quantity: number;
+  completedQuantity: number;
   timePerUnit?: number;
   observation?: string;
   imageUrl?: string;
