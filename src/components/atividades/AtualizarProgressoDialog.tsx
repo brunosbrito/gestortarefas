@@ -18,10 +18,15 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { updateActivity } from '@/services/ActivityService';
+import {
+  updateActivity,
+  updateCompletedQuantity,
+} from '@/services/ActivityService';
 
 const formSchema = z.object({
-  completedQuantity: z.number().min(0, 'A quantidade deve ser maior ou igual a 0'),
+  completedQuantity: z
+    .number()
+    .min(0, 'A quantidade deve ser maior ou igual a 0'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,15 +63,13 @@ export function AtualizarProgressoDialog({
         toast({
           variant: 'destructive',
           title: 'Erro ao atualizar progresso',
-          description: 'A quantidade concluída não pode ser maior que a quantidade total.',
+          description:
+            'A quantidade concluída não pode ser maior que a quantidade total.',
         });
         return;
       }
 
-      await updateActivity(atividade.id, {
-        completedQuantity: data.completedQuantity,
-        changedBy: localStorage.getItem('userId') || '0',
-      });
+      await updateCompletedQuantity(atividade.id, data.completedQuantity);
 
       toast({
         title: 'Progresso atualizado',

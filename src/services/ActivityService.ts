@@ -41,9 +41,22 @@ export const getActivitiesByServiceOrderId = async (serviceOrderId: string) => {
 // Função para atualizar uma atividade
 export const updateActivity = async (id: number, data: any) => {
   try {
-    const response = await axios.put(
-      `${API_URL}/activities/${id}`, 
-      data
+    const response = await axios.put(`${API_URL}/activities/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating activity', error);
+    throw error;
+  }
+};
+
+export const updateCompletedQuantity = async (
+  id: number,
+  completedQuantity: number
+) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/activities/${id}/completedQuantity`,
+      { completedQuantity: completedQuantity }
     );
     return response.data;
   } catch (error) {

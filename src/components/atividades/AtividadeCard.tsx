@@ -28,6 +28,7 @@ import {
   User,
   Users,
   CheckCircle2,
+  RefreshCcw,
 } from 'lucide-react';
 import { NovaAtividadeForm } from './NovaAtividadeForm';
 import { useToast } from '@/hooks/use-toast';
@@ -169,7 +170,6 @@ export const AtividadeCard = ({
 
   const handleEditSuccess = () => {
     setIsEditDialogOpen(false);
-    // Força a atualização da lista de atividades
     window.location.reload();
   };
 
@@ -180,7 +180,6 @@ export const AtividadeCard = ({
   };
 
   const handleProgressSuccess = () => {
-    // Força a atualização da lista de atividades
     window.location.reload();
   };
 
@@ -227,7 +226,9 @@ export const AtividadeCard = ({
                     <div className="flex items-center">
                       <CheckCircle2 className="w-4 h-4 mr-2 text-[#FF7F0E]" />
                       <span>
-                        Progresso: {Math.round(calculateProgress())}% ({atividade.completedQuantity || 0} de {atividade.quantity} unidades)
+                        Progresso: {Math.round(calculateProgress())}% (
+                        {atividade.completedQuantity || 0} de{' '}
+                        {atividade.quantity} )
                       </span>
                     </div>
                     <Button
@@ -235,7 +236,7 @@ export const AtividadeCard = ({
                       size="sm"
                       onClick={() => setIsProgressDialogOpen(true)}
                     >
-                      Atualizar
+                      <RefreshCcw size={16} />
                     </Button>
                   </div>
                   <Progress value={calculateProgress()} className="h-2" />
@@ -353,7 +354,10 @@ export const AtividadeCard = ({
                     <MoveHorizontal className="w-4 h-4" />
                   </Button>
                 )}
-                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <Dialog
+                  open={isEditDialogOpen}
+                  onOpenChange={setIsEditDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                       <Edit2 className="w-4 h-4" />
@@ -426,7 +430,7 @@ export const AtividadeCard = ({
               atividade={{
                 id: atividade.id,
                 quantity: atividade.quantity,
-                completedQuantity: atividade.completedQuantity || 0
+                completedQuantity: atividade.completedQuantity || 0,
               }}
               onSuccess={handleProgressSuccess}
             />
