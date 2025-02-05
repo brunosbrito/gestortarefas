@@ -18,10 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import {
-  updateActivity,
-  updateCompletedQuantity,
-} from '@/services/ActivityService';
+import { updateCompletedQuantity } from '@/services/ActivityService';
 
 const formSchema = z.object({
   completedQuantity: z
@@ -68,8 +65,12 @@ export function AtualizarProgressoDialog({
         });
         return;
       }
-
-      await updateCompletedQuantity(atividade.id, data.completedQuantity);
+      const userId = Number(localStorage.getItem('userId'));
+      await updateCompletedQuantity(
+        atividade.id,
+        data.completedQuantity,
+        userId
+      );
 
       toast({
         title: 'Progresso atualizado',

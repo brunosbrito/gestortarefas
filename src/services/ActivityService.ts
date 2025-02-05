@@ -51,12 +51,13 @@ export const updateActivity = async (id: number, data: any) => {
 
 export const updateCompletedQuantity = async (
   id: number,
-  completedQuantity: number
+  completedQuantity: number,
+  changedBy: number
 ) => {
   try {
     const response = await axios.patch(
       `${API_URL}/activities/${id}/completedQuantity`,
-      { completedQuantity: completedQuantity }
+      { completedQuantity, changedBy }
     );
     return response.data;
   } catch (error) {
