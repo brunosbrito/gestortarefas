@@ -46,6 +46,7 @@ import { AtividadeUploadDialog } from './AtividadeUploadDialog';
 import { MoverAtividadeDialog } from './MoverAtividadeDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Progress } from '@/components/ui/progress';
+import { AtualizarProgressoDialog } from './AtualizarProgressoDialog';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
@@ -65,6 +66,7 @@ export const AtividadeCard = ({
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
   function formatTime(totalTime) {
@@ -177,6 +179,11 @@ export const AtividadeCard = ({
     return Math.min(Math.max(progress, 0), 100);
   };
 
+  const handleProgressSuccess = () => {
+    // Força a atualização da lista de atividades
+    window.location.reload();
+  };
+
   return (
     <Draggable draggableId={String(atividade.id)} index={index}>
       {(provided) => (
@@ -223,6 +230,13 @@ export const AtividadeCard = ({
                         Progresso: {Math.round(calculateProgress())}% ({atividade.completedQuantity || 0} de {atividade.quantity} unidades)
                       </span>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsProgressDialogOpen(true)}
+                    >
+                      Atualizar
+                    </Button>
                   </div>
                   <Progress value={calculateProgress()} className="h-2" />
                 </div>
@@ -403,6 +417,13 @@ export const AtividadeCard = ({
             open={isMoveDialogOpen}
             onOpenChange={setIsMoveDialogOpen}
             onMove={handleMove}
+          />
+
+          <AtualizarProgressoDialog
+            open={isProgressDialogOpen}
+            onOpenChange={setIsProgressDialogOpen}
+            atividade={atividade}
+            onSuccess={handleProgressSuccess}
           />
         </div>
       )}
