@@ -50,7 +50,7 @@ export const deleteEffectives = async (id: number) => {
 export const enviarEfetivo = async (registro: any) => {
   try {
     const response = await axios.post(
-      `https://primary-production-0dcd.up.railway.app/webhook/efetivo`,
+      `https://primary-production-aeb5.up.railway.app/webhook/efetivo`,
       registro,
       {
         headers: {
