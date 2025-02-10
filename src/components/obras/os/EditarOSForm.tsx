@@ -40,11 +40,14 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
     },
   });
 
+  console.log('Form values:', form.getValues());
+
   useEffect(() => {
     const fetchObras = async () => {
       try {
         const obrasData = await ObrasService.getAllObras();
         setObras(obrasData || []);
+        console.log('Obras carregadas:', obrasData);
       } catch (error) {
         console.error('Erro ao carregar obras:', error);
         toast({
@@ -58,29 +61,30 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
     fetchObras();
   }, [toast]);
 
-  const onSubmit = async (data: FormValues) => {
-    console.log('Iniciando submit com dados:', data);
+  const onSubmit = async (values: FormValues) => {
+    console.log('Form handleSubmit chamado com valores:', values);
     setIsSubmitting(true);
 
     try {
       console.log('Tentando atualizar OS com ID:', os.id);
       
       const updatedData = {
-        description: data.description,
-        projectId: data.projectId,
-        startDate: data.startDate,
-        status: data.status,
-        notes: data.notes,
-        assignedUser: data.assignedUser,
-        projectNumber: data.projectNumber,
-        quantity: data.quantity,
-        weight: data.weight,
-        progress: data.progress,
+        description: values.description,
+        projectId: values.projectId,
+        startDate: values.startDate,
+        status: values.status,
+        notes: values.notes,
+        assignedUser: values.assignedUser,
+        projectNumber: values.projectNumber,
+        quantity: values.quantity,
+        weight: values.weight,
+        progress: values.progress,
       };
 
       console.log('Dados formatados para envio:', updatedData);
 
-      await updateServiceOrder(os.id, updatedData);
+      const response = await updateServiceOrder(os.id, updatedData);
+      console.log('Resposta da atualização:', response);
 
       toast({
         variant: 'default',
@@ -101,14 +105,23 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
     }
   };
 
+  console.log('Form está sendo renderizado');
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form 
+        onSubmit={(e) => {
+          console.log('Form submit iniciado');
+          form.handleSubmit(onSubmit)(e);
+        }} 
+        className="space-y-6"
+      >
         <OSFormFields form={form} obras={obras} />
         <Button
           type="submit"
           className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
           disabled={isSubmitting}
+          onClick={() => console.log('Botão submit clicado')}
         >
           {isSubmitting ? 'Atualizando...' : 'Atualizar OS'}
         </Button>
