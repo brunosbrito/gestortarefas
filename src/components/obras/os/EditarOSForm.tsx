@@ -22,6 +22,8 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  console.log('OS recebida:', os);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,12 +58,14 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
     fetchObras();
   }, [toast]);
 
-  const handleSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
+    console.log('Iniciando submit com dados:', data);
+    setIsSubmitting(true);
+
     try {
-      setIsSubmitting(true);
-      console.log('Dados enviados:', data);
+      console.log('Tentando atualizar OS com ID:', os.id);
       
-      await updateServiceOrder(os.id, {
+      const updatedData = {
         description: data.description,
         projectId: data.projectId,
         startDate: data.startDate,
@@ -71,7 +75,12 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
         projectNumber: data.projectNumber,
         quantity: data.quantity,
         weight: data.weight,
-      });
+        progress: data.progress,
+      };
+
+      console.log('Dados formatados para envio:', updatedData);
+
+      await updateServiceOrder(os.id, updatedData);
 
       toast({
         variant: 'default',
@@ -94,7 +103,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <OSFormFields form={form} obras={obras} />
         <Button
           type="submit"
