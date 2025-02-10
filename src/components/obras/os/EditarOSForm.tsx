@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +20,7 @@ interface EditarOSFormProps {
 export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -27,7 +29,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
       description: os.description,
       projectId: os.projectId.id,
       startDate: os.startDate,
-      notes: os.notes,
+      notes: os.notes || '',
       assignedUser: os.assignedUser?.id,
       projectNumber: os.projectNumber,
       quantity: os.quantity,
@@ -42,6 +44,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
         const obrasData = await ObrasService.getAllObras();
         setObras(obrasData || []);
       } catch (error) {
+        console.error('Erro ao carregar obras:', error);
         toast({
           variant: 'destructive',
           title: 'Erro ao carregar obras',
@@ -55,6 +58,9 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
 
   const handleSubmit = async (data: FormValues) => {
     try {
+      setIsSubmitting(true);
+      console.log('Dados enviados:', data);
+      
       await updateServiceOrder(os.id, {
         description: data.description,
         projectId: data.projectId,
@@ -75,11 +81,14 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
 
       onSuccess();
     } catch (error) {
+      console.error('Erro ao atualizar OS:', error);
       toast({
         variant: 'destructive',
         title: 'Erro ao atualizar Ordem de Serviço',
         description: 'Não foi possível atualizar a ordem de serviço.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -90,8 +99,9 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
         <Button
           type="submit"
           className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+          disabled={isSubmitting}
         >
-          Atualizar OS
+          {isSubmitting ? 'Atualizando...' : 'Atualizar OS'}
         </Button>
       </form>
     </Form>
