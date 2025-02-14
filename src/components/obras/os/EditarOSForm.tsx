@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,9 +19,6 @@ interface EditarOSFormProps {
 export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  console.log('OS recebida:', os);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -31,7 +27,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
       description: os.description,
       projectId: os.projectId.id,
       startDate: os.startDate,
-      notes: os.notes || '',
+      notes: os.notes,
       assignedUser: os.assignedUser?.id,
       projectNumber: os.projectNumber,
       quantity: os.quantity,
@@ -40,16 +36,12 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
     },
   });
 
-  console.log('Form values:', form.getValues());
-
   useEffect(() => {
     const fetchObras = async () => {
       try {
         const obrasData = await ObrasService.getAllObras();
         setObras(obrasData || []);
-        console.log('Obras carregadas:', obrasData);
       } catch (error) {
-        console.error('Erro ao carregar obras:', error);
         toast({
           variant: 'destructive',
           title: 'Erro ao carregar obras',
@@ -61,30 +53,19 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
     fetchObras();
   }, [toast]);
 
-  const onSubmit = async (values: FormValues) => {
-    console.log('Form handleSubmit chamado com valores:', values);
-    setIsSubmitting(true);
-
+  const handleSubmit = async (data: FormValues) => {
     try {
-      console.log('Tentando atualizar OS com ID:', os.id);
-      
-      const updatedData = {
-        description: values.description,
-        projectId: values.projectId,
-        startDate: values.startDate,
-        status: values.status,
-        notes: values.notes,
-        assignedUser: values.assignedUser,
-        projectNumber: values.projectNumber,
-        quantity: values.quantity,
-        weight: values.weight,
-        progress: values.progress,
-      };
-
-      console.log('Dados formatados para envio:', updatedData);
-
-      const response = await updateServiceOrder(os.id, updatedData);
-      console.log('Resposta da atualização:', response);
+      await updateServiceOrder(os.id, {
+        description: data.description,
+        projectId: data.projectId,
+        startDate: data.startDate,
+        status: data.status,
+        notes: data.notes,
+        assignedUser: data.assignedUser,
+        projectNumber: data.projectNumber,
+        quantity: data.quantity,
+        weight: data.weight,
+      });
 
       toast({
         variant: 'default',
@@ -94,36 +75,23 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
 
       onSuccess();
     } catch (error) {
-      console.error('Erro ao atualizar OS:', error);
       toast({
         variant: 'destructive',
         title: 'Erro ao atualizar Ordem de Serviço',
         description: 'Não foi possível atualizar a ordem de serviço.',
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  console.log('Form está sendo renderizado');
-  
   return (
     <Form {...form}>
-      <form 
-        onSubmit={(e) => {
-          console.log('Form submit iniciado');
-          form.handleSubmit(onSubmit)(e);
-        }} 
-        className="space-y-6"
-      >
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <OSFormFields form={form} obras={obras} />
         <Button
           type="submit"
           className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-          disabled={isSubmitting}
-          onClick={() => console.log('Botão submit clicado')}
         >
-          {isSubmitting ? 'Atualizando...' : 'Atualizar OS'}
+          Atualizar OS
         </Button>
       </form>
     </Form>

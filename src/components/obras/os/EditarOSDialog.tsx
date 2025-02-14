@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 import { EditarOSForm } from "./EditarOSForm";
@@ -11,6 +10,8 @@ interface EditarOSDialogProps {
 }
 
 export const EditarOSDialog = ({ os, open, onOpenChange, onSuccess }: EditarOSDialogProps) => {
+  if (!os) return null;
+
   const handleSuccess = () => {
     onSuccess();
     onOpenChange(false);
@@ -18,11 +19,11 @@ export const EditarOSDialog = ({ os, open, onOpenChange, onSuccess }: EditarOSDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Ordem de Serviço</DialogTitle>
         </DialogHeader>
-        {os && <EditarOSForm os={os} onSuccess={handleSuccess} />}
+        <EditarOSForm os={os} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );
