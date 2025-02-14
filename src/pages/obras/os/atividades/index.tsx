@@ -1,3 +1,4 @@
+
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -156,6 +157,7 @@ const Atividades = () => {
                 atividades={atividades}
                 droppableId={status}
                 onMoveAtividade={handleMoveAtividade}
+                onDelete={getByServiceOrderId}
               />
             ))}
           </div>

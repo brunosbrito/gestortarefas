@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Building2,
@@ -29,6 +31,7 @@ import {
   Users,
   CheckCircle2,
   RefreshCcw,
+  Trash2,
 } from 'lucide-react';
 import { NovaAtividadeForm } from './NovaAtividadeForm';
 import { useToast } from '@/hooks/use-toast';
@@ -48,17 +51,20 @@ import { MoverAtividadeDialog } from './MoverAtividadeDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Progress } from '@/components/ui/progress';
 import { AtualizarProgressoDialog } from './AtualizarProgressoDialog';
+import { deleteActivity } from '@/services/ActivityService';
 
 interface AtividadeCardProps {
   atividade: AtividadeStatus;
   index: number;
   onMoveAtividade?: (atividadeId: number, novoStatus: string) => void;
+  onDelete?: () => void;
 }
 
 export const AtividadeCard = ({
   atividade,
   index,
   onMoveAtividade,
+  onDelete,
 }: AtividadeCardProps) => {
   const { toast } = useToast();
   const { projectId, serviceOrderId } = useParams();
@@ -68,6 +74,8 @@ export const AtividadeCard = ({
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isMobile = useIsMobile();
 
   function formatTime(totalTime) {
@@ -181,6 +189,30 @@ export const AtividadeCard = ({
 
   const handleProgressSuccess = () => {
     window.location.reload();
+  };
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await deleteActivity(atividade.id);
+      toast({
+        title: "Atividade excluída",
+        description: "A atividade foi excluída com sucesso.",
+      });
+      setIsDeleteDialogOpen(false);
+      if (onDelete) {
+        onDelete();
+      }
+    } catch (error) {
+      console.error('Erro ao excluir atividade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir atividade",
+        description: "Não foi possível excluir a atividade. Tente novamente.",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -397,6 +429,36 @@ export const AtividadeCard = ({
                     </Button>
                   </label>
                 </div>
+                <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirmar Exclusão</DialogTitle>
+                      <DialogDescription>
+                        Tem certeza que deseja excluir esta atividade? Esta ação não pode ser desfeita.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsDeleteDialogOpen(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? 'Excluindo...' : 'Excluir'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardFooter>
           </Card>

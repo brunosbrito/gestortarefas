@@ -1,3 +1,4 @@
+
 import { Badge } from '@/components/ui/badge';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { AtividadeCard } from './AtividadeCard';
@@ -8,9 +9,10 @@ interface StatusListProps {
   atividades: AtividadeStatus[];
   droppableId: string;
   onMoveAtividade?: (atividadeId: number, novoStatus: string) => void;
+  onDelete?: () => void;
 }
 
-export const StatusList = ({ status, atividades, droppableId, onMoveAtividade }: StatusListProps) => {
+export const StatusList = ({ status, atividades, droppableId, onMoveAtividade, onDelete }: StatusListProps) => {
   const atividadesFiltradas = atividades.filter((a) => a.status === status);
 
   return (
@@ -34,6 +36,7 @@ export const StatusList = ({ status, atividades, droppableId, onMoveAtividade }:
                   atividade={atividade} 
                   index={index}
                   onMoveAtividade={onMoveAtividade}
+                  onDelete={onDelete}
                 />
               ))}
               {provided.placeholder}
