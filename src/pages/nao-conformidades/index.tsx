@@ -1,4 +1,3 @@
-
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter } from 'lucide-react';
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Obra } from '@/interfaces/ObrasInterface';
 import ObrasService from '@/services/ObrasService';
+import { DetalhesRNCDialog } from './DetalhesRNCDialog';
 
 const NaoConformidades = () => {
   const [showNovaRNCDialog, setShowNovaRNCDialog] = useState(false);
@@ -34,6 +34,8 @@ const NaoConformidades = () => {
   const [mostrarFinalizadas, setMostrarFinalizadas] = useState<
     'todas' | 'em_andamento'
   >('todas');
+  const [rncSelecionada, setRncSelecionada] = useState<NonConformity | null>(null);
+  const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
@@ -63,6 +65,11 @@ const NaoConformidades = () => {
 
     return filtroStatus && filtroProjeto;
   });
+
+  const handleRncClick = (rnc: NonConformity) => {
+    setRncSelecionada(rnc);
+    setShowDetalhesDialog(true);
+  };
 
   return (
     <Layout>
@@ -122,11 +129,20 @@ const NaoConformidades = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rncsFiltradas.map((rnc) => (
-            <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={rnc.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleRncClick(rnc)}
+            >
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-construction-800">RNC #{rnc.id}</CardTitle>
+                <CardTitle className="text-lg font-semibold text-construction-800">
+                  RNC #{rnc.id}
+                </CardTitle>
                 <CardDescription>
-                  OS: {rnc.serviceOrder.name} | {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', { locale: ptBR })}
+                  OS: {rnc.serviceOrder.name} |{' '}
+                  {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
+                    locale: ptBR,
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -135,7 +151,8 @@ const NaoConformidades = () => {
                     <strong>Responsável:</strong> {rnc.responsibleRNC.name}
                   </p>
                   <p className="text-sm text-construction-600">
-                    <strong>Identificado por:</strong> {rnc.responsibleIdentification}
+                    <strong>Identificado por:</strong>{' '}
+                    {rnc.responsibleIdentification}
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Descrição:</strong> {rnc.description}
@@ -149,6 +166,12 @@ const NaoConformidades = () => {
         <NovaRNCDialog
           open={showNovaRNCDialog}
           onOpenChange={setShowNovaRNCDialog}
+        />
+
+        <DetalhesRNCDialog
+          rnc={rncSelecionada}
+          open={showDetalhesDialog}
+          onOpenChange={setShowDetalhesDialog}
         />
       </div>
     </Layout>
