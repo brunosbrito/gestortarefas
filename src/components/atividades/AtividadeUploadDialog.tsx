@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import {
   DialogContent,
@@ -13,6 +14,8 @@ interface AtividadeUploadDialogProps {
   onDescriptionChange: (description: string) => void;
   onCancel: () => void;
   onUpload: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export const AtividadeUploadDialog = ({
@@ -20,6 +23,8 @@ export const AtividadeUploadDialog = ({
   onDescriptionChange,
   onCancel,
   onUpload,
+  open,
+  onOpenChange,
 }: AtividadeUploadDialogProps) => {
   return (
     <DialogContent>
