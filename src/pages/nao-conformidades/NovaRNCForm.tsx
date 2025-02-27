@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
   Select,
@@ -28,6 +29,7 @@ import { getServiceOrderByProjectId } from '@/services/ServiceOrderService';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ColaboradorService from '@/services/ColaboradorService';
 import RncService from '@/services/NonConformityService';
+import { FileUploadField } from '@/components/atividades/FileUploadField';
 
 const formSchema = z.object({
   projectId: z.string().min(1, 'Projeto é obrigatório'),
@@ -38,6 +40,16 @@ const formSchema = z.object({
     .string()
     .min(1, 'Responsável pela identificacao é obrigatório'),
   dateOccurrence: z.string().min(1, 'Data da ocorrência é obrigatória'),
+  workforce: z.array(z.object({
+    name: z.string().min(1, 'Nome é obrigatório')
+  })),
+  materials: z.array(z.object({
+    name: z.string().min(1, 'Nome é obrigatório')
+  })),
+  images: z.array(z.object({
+    file: z.any(),
+    description: z.string().optional()
+  }))
 });
 
 interface NovaRNCFormProps {
@@ -59,19 +71,60 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
       serviceOrderId: '',
       responsibleIdentification: '',
       dateOccurrence: new Date().toISOString().split('T')[0],
+      workforce: [],
+      materials: [],
+      images: []
     },
+  });
+
+  const { fields: workforceFields, append: appendWorkforce, remove: removeWorkforce } = useFieldArray({
+    control: form.control,
+    name: "workforce"
+  });
+
+  const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({
+    control: form.control,
+    name: "materials"
+  });
+
+  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
+    control: form.control,
+    name: "images"
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await RncService.createRnc({
-        projectId: values.projectId!,
-        responsibleRncId: values.responsibleRncId!,
-        description: values.description!,
-        serviceOrderId: values.serviceOrderId!,
-        responsibleIdentification: values.responsibleIdentification!,
-        dateOccurrence: values.dateOccurrence!,
+      const formData = new FormData();
+
+      // Adiciona os dados básicos
+      formData.append('projectId', values.projectId);
+      formData.append('responsibleRncId', values.responsibleRncId);
+      formData.append('description', values.description);
+      formData.append('serviceOrderId', values.serviceOrderId);
+      formData.append('responsibleIdentification', values.responsibleIdentification);
+      formData.append('dateOccurrence', values.dateOccurrence);
+
+      // Adiciona a mão de obra
+      values.workforce.forEach((worker, index) => {
+        formData.append(`workforce[${index}]name`, worker.name);
       });
+
+      // Adiciona os materiais
+      values.materials.forEach((material, index) => {
+        formData.append(`materials[${index}]name`, material.name);
+      });
+
+      // Adiciona as imagens
+      values.images.forEach((image, index) => {
+        if (image.file) {
+          formData.append(`images[${index}]file`, image.file);
+        }
+        if (image.description) {
+          formData.append(`images[${index}]description`, image.description);
+        }
+      });
+
+      await RncService.createRnc(formData);
 
       toast({
         title: 'RNC criada com sucesso',
@@ -267,6 +320,101 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
             </FormItem>
           )}
         />
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Mão de Obra</h3>
+          {workforceFields.map((field, index) => (
+            <div key={field.id} className="flex gap-2">
+              <FormField
+                control={form.control}
+                name={`workforce.${index}.name`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input placeholder="Nome do trabalhador" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => removeWorkforce(index)}
+              >
+                Remover
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => appendWorkforce({ name: '' })}
+          >
+            Adicionar Mão de Obra
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Materiais</h3>
+          {materialFields.map((field, index) => (
+            <div key={field.id} className="flex gap-2">
+              <FormField
+                control={form.control}
+                name={`materials.${index}.name`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input placeholder="Nome do material" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => removeMaterial(index)}
+              >
+                Remover
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => appendMaterial({ name: '' })}
+          >
+            Adicionar Material
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Imagens</h3>
+          {imageFields.map((field, index) => (
+            <div key={field.id} className="space-y-2">
+              <FileUploadField
+                form={form}
+                fileType="imagem"
+                activityId={index}
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => removeImage(index)}
+              >
+                Remover Imagem
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => appendImage({ file: null, description: '' })}
+          >
+            Adicionar Imagem
+          </Button>
+        </div>
 
         <Button
           type="submit"
