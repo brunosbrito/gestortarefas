@@ -1,3 +1,4 @@
+
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter } from 'lucide-react';
@@ -8,9 +9,9 @@ import { NonConformity } from '@/interfaces/RncInterface';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
@@ -54,7 +55,6 @@ const NaoConformidades = () => {
   }, []);
 
   const rncsFiltradas = dadosRnc.filter((rnc) => {
-    console.log(rnc);
     const filtroStatus =
       mostrarFinalizadas === 'todas' ? true : !rnc.dateConclusion;
     const filtroProjeto = projetoSelecionado
@@ -73,7 +73,7 @@ const NaoConformidades = () => {
           </h1>
           <Button
             onClick={() => setShowNovaRNCDialog(true)}
-            className="bg-secondary hover:bg-secondary/90"
+            className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
           >
             <Plus className="mr-2 h-4 w-4" />
             Nova RNC
@@ -124,27 +124,22 @@ const NaoConformidades = () => {
           {rncsFiltradas.map((rnc) => (
             <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-lg"></CardTitle>
+                <CardTitle className="text-lg font-semibold text-construction-800">RNC #{rnc.id}</CardTitle>
                 <CardDescription>
-                  OS: |{' '}
-                  {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
-                    locale: ptBR,
-                  })}
+                  OS: {rnc.serviceOrder.name} | {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', { locale: ptBR })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm text-construction-600">
-                    <strong>Responsável:</strong>
+                    <strong>Responsável:</strong> {rnc.responsibleRNC.name}
+                  </p>
+                  <p className="text-sm text-construction-600">
+                    <strong>Identificado por:</strong> {rnc.responsibleIdentification}
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Descrição:</strong> {rnc.description}
                   </p>
-                  {rnc.correctiveAction && (
-                    <p className="text-sm text-construction-600">
-                      <strong>Ação Corretiva:</strong> {rnc.correctiveAction}
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
