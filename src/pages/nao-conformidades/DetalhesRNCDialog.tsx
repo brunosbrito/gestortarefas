@@ -80,7 +80,7 @@ export function DetalhesRNCDialog({
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Ordem de Serviço:</span>{' '}
-                  {rnc.serviceOrder.description}
+                  {/* {rnc.serviceOrder.description} */}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Responsável:</span>{' '}
