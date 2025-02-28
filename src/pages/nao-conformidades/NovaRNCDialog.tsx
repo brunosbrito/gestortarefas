@@ -1,27 +1,10 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { NovaRNCForm } from './NovaRNCForm';
-import { MaoObraForm } from './components/MaoObraForm';
-import { MateriaisForm } from './components/MateriaisForm';
-import { ImagensForm } from './components/ImagensForm';
 import { CreateWorkforce, NonConformity } from '@/interfaces/RncInterface';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import RncService from '@/services/NonConformityService';
 
 interface NovaRNCDialogProps {
   open: boolean;
@@ -29,173 +12,48 @@ interface NovaRNCDialogProps {
   rncParaEditar?: NonConformity | null;
 }
 
-const correctiveActionSchema = z.object({
-  correctiveAction: z.string().min(1, "Ação corretiva é obrigatória"),
-  responsibleAction: z.string().min(1, "Responsável pela ação é obrigatório"),
-});
-
 export function NovaRNCDialog({ open, onOpenChange, rncParaEditar }: NovaRNCDialogProps) {
   const { toast } = useToast();
-  const [step, setStep] = useState<string>('info');
-  const [rncData, setRncData] = useState<any>(null);
-  const [workforce, setWorkforce] = useState<CreateWorkforce[]>([]);
-  const [materials, setMaterials] = useState<string[]>([]);
-  const [images, setImages] = useState<File[]>([]);
-  const [tempRncId] = useState<string>(rncParaEditar?.id || 'temp-id');
 
-  useEffect(() => {
-    if (rncParaEditar && open) {
-      setRncData(rncParaEditar);
-      setWorkforce(rncParaEditar.workforce || []);
-      setMaterials(rncParaEditar.materials?.map(m => m.name) || []);
-      setImages([]);
-      setStep('info');
-    }
-  }, [rncParaEditar, open]);
-
-  const correctiveForm = useForm<z.infer<typeof correctiveActionSchema>>({
-    resolver: zodResolver(correctiveActionSchema),
-    defaultValues: {
-      correctiveAction: rncParaEditar?.correctiveAction || "",
-      responsibleAction: rncParaEditar?.responsibleAction || "",
-    },
-  });
-
-  const handleSuccess = (correctiveData: z.infer<typeof correctiveActionSchema>) => {
-    const finalData = {
-      ...rncData,
-      workforce,
-      materials,
-      images,
-      ...correctiveData
-    };
-    
-    if (rncParaEditar) {
-      console.log('Atualizando RNC:', finalData);
+  const handleSuccess = async (data: any) => {
+    try {
+      if (rncParaEditar) {
+        await RncService.updateRnc(rncParaEditar.id, data);
+        toast({
+          title: 'RNC atualizada com sucesso',
+          description: 'As informações básicas foram atualizadas. Você pode adicionar mais detalhes depois.',
+        });
+      } else {
+        await RncService.createRnc(data);
+        toast({
+          title: 'RNC criada com sucesso',
+          description: 'RNC criada. Você pode adicionar mão de obra, materiais, imagens e ação corretiva posteriormente.',
+        });
+      }
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erro ao salvar RNC:', error);
       toast({
-        title: 'RNC atualizada com sucesso',
-        description: 'As alterações foram salvas com sucesso.',
-      });
-    } else {
-      console.log('Criando nova RNC:', finalData);
-      toast({
-        title: 'RNC criada com sucesso',
-        description: 'A RNC foi criada e está pronta para revisão.',
+        variant: "destructive",
+        title: 'Erro ao salvar',
+        description: 'Ocorreu um erro ao salvar a RNC. Tente novamente.',
       });
     }
-    
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {rncParaEditar ? 'Editar RNC' : 'Nova RNC'}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={step} onValueChange={setStep} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
-            <TabsTrigger value="info">Informações</TabsTrigger>
-            <TabsTrigger value="workforce">Mão de Obra</TabsTrigger>
-            <TabsTrigger value="materials">Materiais</TabsTrigger>
-            <TabsTrigger value="images">Imagens</TabsTrigger>
-          </TabsList>
-
-          <div className="mt-4 space-y-4">
-            <TabsContent value="info">
-              <NovaRNCForm
-                onNext={(data) => {
-                  setRncData(data);
-                  setStep('workforce');
-                }}
-              />
-            </TabsContent>
-
-            <TabsContent value="workforce">
-              <MaoObraForm
-                rncId={tempRncId}
-                onClose={() => setStep('materials')}
-              />
-            </TabsContent>
-
-            <TabsContent value="materials">
-              <MateriaisForm
-                rncId={tempRncId}
-                onClose={() => setStep('images')}
-              />
-            </TabsContent>
-
-            <TabsContent value="images" className="space-y-6">
-              <ImagensForm
-                rncId={tempRncId}
-                onClose={() => {}}
-              />
-
-              <div className="border-t pt-4">
-                <Form {...correctiveForm}>
-                  <form 
-                    onSubmit={correctiveForm.handleSubmit(handleSuccess)} 
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={correctiveForm.control}
-                      name="correctiveAction"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ação Corretiva</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Descreva a ação corretiva a ser tomada"
-                              className="min-h-[100px]"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={correctiveForm.control}
-                      name="responsibleAction"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Responsável pela Ação</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Nome do responsável pela ação"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex justify-between pt-4">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setStep('materials')}
-                      >
-                        Voltar
-                      </Button>
-                      <Button 
-                        type="submit"
-                        className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-                      >
-                        Finalizar RNC
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </div>
-            </TabsContent>
-          </div>
-        </Tabs>
+        <NovaRNCForm
+          onNext={handleSuccess}
+          initialData={rncParaEditar}
+        />
       </DialogContent>
     </Dialog>
   );

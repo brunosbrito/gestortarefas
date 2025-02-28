@@ -27,6 +27,7 @@ import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { getServiceOrderByProjectId } from '@/services/ServiceOrderService';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ColaboradorService from '@/services/ColaboradorService';
+import { NonConformity } from '@/interfaces/RncInterface';
 
 const formSchema = z.object({
   projectId: z.string().min(1, 'Projeto é obrigatório'),
@@ -49,16 +50,34 @@ const formSchema = z.object({
 
 interface NovaRNCFormProps {
   onNext: (data: z.infer<typeof formSchema>) => void;
+  initialData?: NonConformity | null;
 }
 
-export function NovaRNCForm({ onNext }: NovaRNCFormProps) {
+export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
   const [projetos, setProjetos] = useState<Obra[]>([]);
   const [os, setOs] = useState<ServiceOrder[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      projectId: initialData.project?.id.toString() || '',
+      responsibleRncId: initialData.responsibleRNC?.id.toString() || '',
+      description: initialData.description || '',
+      serviceOrderId: initialData.serviceOrder?.id.toString() || '',
+      responsibleIdentification: initialData.responsibleIdentification || '',
+      dateOccurrence: initialData.dateOccurrence?.split('T')[0] || new Date().toISOString().split('T')[0],
+      contractNumber: initialData.contractNumber || '',
+      contractDuration: initialData.contractDuration || 0,
+      elapsedTime: initialData.elapsedTime || 0,
+      remainingTime: initialData.remainingTime || 0,
+      location: initialData.location || '',
+      clientName: initialData.clientName || '',
+      workSchedule: {
+        entryExit: initialData.workSchedule?.entryExit || '',
+        interval: initialData.workSchedule?.interval || '',
+      },
+    } : {
       projectId: '',
       responsibleRncId: '',
       description: '',
@@ -87,12 +106,17 @@ export function NovaRNCForm({ onNext }: NovaRNCFormProps) {
         ]);
         setProjetos(projetosRes);
         setColaboradores(colaboradoresRes.data);
+
+        if (initialData?.project?.id) {
+          const ordemServico = await getServiceOrderByProjectId(initialData.project.id.toString());
+          setOs(ordemServico);
+        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       }
     };
     loadData();
-  }, []);
+  }, [initialData]);
 
   const handleProjectChange = async (projectId: string) => {
     try {
@@ -384,7 +408,7 @@ export function NovaRNCForm({ onNext }: NovaRNCFormProps) {
           type="submit"
           className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
         >
-          Próximo
+          {initialData ? 'Salvar Alterações' : 'Criar RNC'}
         </Button>
       </form>
     </Form>
