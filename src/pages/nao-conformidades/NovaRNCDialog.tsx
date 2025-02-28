@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -7,7 +8,7 @@ import { NovaRNCForm } from './NovaRNCForm';
 import { MaoObraForm } from './components/MaoObraForm';
 import { MateriaisForm } from './components/MateriaisForm';
 import { ImagensForm } from './components/ImagensForm';
-import { CreateWorkforce } from '@/interfaces/RncInterface';
+import { CreateWorkforce, NonConformity } from '@/interfaces/RncInterface';
 import {
   Form,
   FormControl,
