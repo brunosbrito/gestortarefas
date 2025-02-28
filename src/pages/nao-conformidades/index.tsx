@@ -1,4 +1,3 @@
-
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, Users, Package, Image, Eye } from 'lucide-react';
@@ -139,7 +138,7 @@ const NaoConformidades = () => {
                   RNC #{rnc.id}
                 </CardTitle>
                 <CardDescription>
-                  OS: {rnc.serviceOrder.name} |{' '}
+                  OS: {rnc.serviceOrder.description} |{' '}
                   {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
                     locale: ptBR,
                   })}

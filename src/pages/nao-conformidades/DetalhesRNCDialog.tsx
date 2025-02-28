@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -47,7 +46,7 @@ export function DetalhesRNCDialog({
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Ordem de Serviço:</span>{' '}
-                  {rnc.serviceOrder.name}
+                  {rnc.serviceOrder.description}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Responsável:</span>{' '}

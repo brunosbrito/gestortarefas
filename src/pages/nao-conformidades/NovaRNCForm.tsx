@@ -62,7 +62,16 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await RncService.createRnc(values);
+      const formData = new FormData();
+      
+      formData.append('projectId', values.projectId);
+      formData.append('responsibleRncId', values.responsibleRncId);
+      formData.append('description', values.description);
+      formData.append('serviceOrderId', values.serviceOrderId);
+      formData.append('responsibleIdentification', values.responsibleIdentification);
+      formData.append('dateOccurrence', values.dateOccurrence);
+
+      await RncService.createRnc(formData);
 
       toast({
         title: 'RNC criada com sucesso',
