@@ -1,4 +1,3 @@
-
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, Users, Package, Image, Eye } from 'lucide-react';
@@ -29,6 +28,9 @@ import ObrasService from '@/services/ObrasService';
 import { DetalhesRNCDialog } from './DetalhesRNCDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { MaoObraForm } from './components/MaoObraForm';
+import { MateriaisForm } from './components/MateriaisForm';
+import { ImagensForm } from './components/ImagensForm';
 
 const NaoConformidades = () => {
   const { toast } = useToast();
@@ -239,10 +241,12 @@ const NaoConformidades = () => {
             <DialogHeader>
               <DialogTitle>Mão de Obra - RNC #{rncSelecionada?.id}</DialogTitle>
             </DialogHeader>
-            {/* Adicionar componente de gestão de mão de obra aqui */}
-            <div className="p-4">
-              <p>Funcionalidade em desenvolvimento</p>
-            </div>
+            {rncSelecionada && (
+              <MaoObraForm 
+                rncId={rncSelecionada.id} 
+                onClose={() => setShowMaoObraDialog(false)} 
+              />
+            )}
           </DialogContent>
         </Dialog>
 
@@ -252,10 +256,12 @@ const NaoConformidades = () => {
             <DialogHeader>
               <DialogTitle>Materiais - RNC #{rncSelecionada?.id}</DialogTitle>
             </DialogHeader>
-            {/* Adicionar componente de gestão de materiais aqui */}
-            <div className="p-4">
-              <p>Funcionalidade em desenvolvimento</p>
-            </div>
+            {rncSelecionada && (
+              <MateriaisForm 
+                rncId={rncSelecionada.id} 
+                onClose={() => setShowMateriaisDialog(false)} 
+              />
+            )}
           </DialogContent>
         </Dialog>
 
@@ -265,10 +271,12 @@ const NaoConformidades = () => {
             <DialogHeader>
               <DialogTitle>Imagens - RNC #{rncSelecionada?.id}</DialogTitle>
             </DialogHeader>
-            {/* Adicionar componente de gestão de imagens aqui */}
-            <div className="p-4">
-              <p>Funcionalidade em desenvolvimento</p>
-            </div>
+            {rncSelecionada && (
+              <ImagensForm 
+                rncId={rncSelecionada.id} 
+                onClose={() => setShowImagensDialog(false)} 
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
