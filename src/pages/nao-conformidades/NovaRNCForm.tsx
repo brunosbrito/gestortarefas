@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,6 +29,7 @@ import { getServiceOrderByProjectId } from '@/services/ServiceOrderService';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ColaboradorService from '@/services/ColaboradorService';
 import RncService from '@/services/NonConformityService';
+import { CreateNonConformity } from '@/interfaces/RncInterface';
 
 const formSchema = z.object({
   projectId: z.string().min(1, 'Projeto é obrigatório'),
@@ -37,6 +39,8 @@ const formSchema = z.object({
   responsibleIdentification: z.string().min(1, 'Responsável pela identificacao é obrigatório'),
   dateOccurrence: z.string().min(1, 'Data da ocorrência é obrigatória'),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface NovaRNCFormProps {
   onSuccess?: () => void;
@@ -48,7 +52,7 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
   const [os, setOs] = useState<ServiceOrder[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       projectId: '',
@@ -60,9 +64,18 @@ export function NovaRNCForm({ onSuccess }: NovaRNCFormProps) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
-      await RncService.createRnc(values);
+      const rncData: CreateNonConformity = {
+        projectId: values.projectId,
+        responsibleRncId: values.responsibleRncId,
+        description: values.description,
+        serviceOrderId: values.serviceOrderId,
+        responsibleIdentification: values.responsibleIdentification,
+        dateOccurrence: values.dateOccurrence,
+      };
+
+      await RncService.createRnc(rncData);
 
       toast({
         title: 'RNC criada com sucesso',
