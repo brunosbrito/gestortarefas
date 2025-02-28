@@ -1,4 +1,3 @@
-
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, Users, Package, Image, Eye } from 'lucide-react';
@@ -27,7 +26,12 @@ import {
 import { Obra } from '@/interfaces/ObrasInterface';
 import ObrasService from '@/services/ObrasService';
 import { DetalhesRNCDialog } from './DetalhesRNCDialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
 const NaoConformidades = () => {
@@ -39,7 +43,9 @@ const NaoConformidades = () => {
   const [mostrarFinalizadas, setMostrarFinalizadas] = useState<
     'todas' | 'em_andamento'
   >('todas');
-  const [rncSelecionada, setRncSelecionada] = useState<NonConformity | null>(null);
+  const [rncSelecionada, setRncSelecionada] = useState<NonConformity | null>(
+    null
+  );
   const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
   const [showMaoObraDialog, setShowMaoObraDialog] = useState(false);
   const [showMateriaisDialog, setShowMateriaisDialog] = useState(false);
@@ -137,9 +143,12 @@ const NaoConformidades = () => {
               <SelectValue placeholder="Selecione um projeto" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os projetos</SelectItem>
+              <SelectItem value="all">Todos os projetos</SelectItem>
               {projetos.map((projeto) => (
-                <SelectItem key={projeto.id} value={projeto.id?.toString() || ''}>
+                <SelectItem
+                  key={projeto.id}
+                  value={projeto.id ? projeto.id.toString() : 'unknown'}
+                >
                   {projeto.name}
                 </SelectItem>
               ))}
@@ -155,7 +164,7 @@ const NaoConformidades = () => {
                   RNC #{rnc.id}
                 </CardTitle>
                 <CardDescription>
-                  OS: {rnc.serviceOrder.description} |{' '}
+                  OS: {rnc.serviceOrder?.description} |{' '}
                   {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
                     locale: ptBR,
                   })}
@@ -164,7 +173,7 @@ const NaoConformidades = () => {
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm text-construction-600">
-                    <strong>Responsável:</strong> {rnc.responsibleRNC.name}
+                    {/* <strong>Responsável:</strong> {rnc.responsibleRNC.name} */}
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Identificado por:</strong>{' '}
@@ -176,16 +185,16 @@ const NaoConformidades = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2 flex-wrap">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => handleRncClick(rnc)}
                 >
                   <Eye className="w-4 h-4 mr-1" />
                   Visualizar
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -195,8 +204,8 @@ const NaoConformidades = () => {
                   <Users className="w-4 h-4 mr-1" />
                   Mão de Obra
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -206,8 +215,8 @@ const NaoConformidades = () => {
                   <Package className="w-4 h-4 mr-1" />
                   Materiais
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -247,7 +256,10 @@ const NaoConformidades = () => {
         </Dialog>
 
         {/* Diálogo para Materiais */}
-        <Dialog open={showMateriaisDialog} onOpenChange={setShowMateriaisDialog}>
+        <Dialog
+          open={showMateriaisDialog}
+          onOpenChange={setShowMateriaisDialog}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Materiais - RNC #{rncSelecionada?.id}</DialogTitle>
