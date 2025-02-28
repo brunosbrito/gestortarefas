@@ -1,6 +1,7 @@
+
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, Users, Package, Image, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaRNCDialog } from './NovaRNCDialog';
 import RncService from '@/services/NonConformityService';
@@ -11,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
@@ -131,17 +133,13 @@ const NaoConformidades = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rncsFiltradas.map((rnc) => (
-            <Card
-              key={rnc.id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleRncClick(rnc)}
-            >
+            <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-construction-800">
                   RNC #{rnc.id}
                 </CardTitle>
                 <CardDescription>
-                  OS: {rnc.serviceOrder?.description} |{' '}
+                  OS: {rnc.serviceOrder.name} |{' '}
                   {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
                     locale: ptBR,
                   })}
@@ -150,7 +148,7 @@ const NaoConformidades = () => {
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm text-construction-600">
-                    {/* <strong>Responsável:</strong> {rnc.responsibleRNC.name} */}
+                    <strong>Responsável:</strong> {rnc.responsibleRNC.name}
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Identificado por:</strong>{' '}
@@ -161,6 +159,49 @@ const NaoConformidades = () => {
                   </p>
                 </div>
               </CardContent>
+              <CardFooter className="flex gap-2 flex-wrap">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleRncClick(rnc)}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  Visualizar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Adicionar lógica para mão de obra
+                  }}
+                >
+                  <Users className="w-4 h-4 mr-1" />
+                  Mão de Obra
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Adicionar lógica para materiais
+                  }}
+                >
+                  <Package className="w-4 h-4 mr-1" />
+                  Materiais
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Adicionar lógica para imagens
+                  }}
+                >
+                  <Image className="w-4 h-4 mr-1" />
+                  Imagens
+                </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>
