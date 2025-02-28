@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -31,17 +30,18 @@ export function DetalhesRNCDialog({
   const handleGeneratePDF = async () => {
     try {
       const doc = await PdfService.generateRncPdf(rnc);
+      console.log(doc);
       doc.save(`RNC-${rnc.id}.pdf`);
-      
+
       toast({
-        title: "PDF gerado com sucesso",
-        description: "O documento foi baixado para o seu computador.",
+        title: 'PDF gerado com sucesso',
+        description: 'O documento foi baixado para o seu computador.',
       });
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Erro ao gerar PDF",
-        description: "Ocorreu um erro ao gerar o documento.",
+        variant: 'destructive',
+        title: 'Erro ao gerar PDF',
+        description: 'Ocorreu um erro ao gerar o documento.',
       });
     }
   };
@@ -76,7 +76,7 @@ export function DetalhesRNCDialog({
                   })}
                 </p>
                 <p className="text-sm">
-                  <span className="font-medium">Projeto:</span> {rnc.project.name}
+                  {/* <span className="font-medium">Projeto:</span> {rnc.project.name} */}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Ordem de Serviço:</span>{' '}
@@ -84,7 +84,7 @@ export function DetalhesRNCDialog({
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Responsável:</span>{' '}
-                  {rnc.responsibleRNC.name}
+                  {/* {rnc.responsibleRNC.name} */}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Identificado por:</span>{' '}
