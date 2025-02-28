@@ -34,7 +34,9 @@ const NaoConformidades = () => {
   const [mostrarFinalizadas, setMostrarFinalizadas] = useState<
     'todas' | 'em_andamento'
   >('todas');
-  const [rncSelecionada, setRncSelecionada] = useState<NonConformity | null>(null);
+  const [rncSelecionada, setRncSelecionada] = useState<NonConformity | null>(
+    null
+  );
   const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
 
   const getAllRnc = async () => {
@@ -129,8 +131,8 @@ const NaoConformidades = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rncsFiltradas.map((rnc) => (
-            <Card 
-              key={rnc.id} 
+            <Card
+              key={rnc.id}
               className="hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleRncClick(rnc)}
             >
@@ -139,7 +141,7 @@ const NaoConformidades = () => {
                   RNC #{rnc.id}
                 </CardTitle>
                 <CardDescription>
-                  OS: {rnc.serviceOrder.name} |{' '}
+                  OS: {rnc.serviceOrder?.description} |{' '}
                   {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
                     locale: ptBR,
                   })}
@@ -148,7 +150,7 @@ const NaoConformidades = () => {
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm text-construction-600">
-                    <strong>Responsável:</strong> {rnc.responsibleRNC.name}
+                    {/* <strong>Responsável:</strong> {rnc.responsibleRNC.name} */}
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Identificado por:</strong>{' '}

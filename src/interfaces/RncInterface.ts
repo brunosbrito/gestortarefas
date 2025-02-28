@@ -52,5 +52,5 @@ export interface Project {
 
 export interface ServiceOrder {
   id: string;
-  name: string;
+  description: string;
 }
