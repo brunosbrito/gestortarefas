@@ -1,3 +1,4 @@
+
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, Users, Package, Image, Eye } from 'lucide-react';
@@ -26,8 +27,11 @@ import {
 import { Obra } from '@/interfaces/ObrasInterface';
 import ObrasService from '@/services/ObrasService';
 import { DetalhesRNCDialog } from './DetalhesRNCDialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const NaoConformidades = () => {
+  const { toast } = useToast();
   const [showNovaRNCDialog, setShowNovaRNCDialog] = useState(false);
   const [dadosRnc, setDadosRnc] = useState<NonConformity[]>([]);
   const [projetos, setProjetos] = useState<Obra[]>([]);
@@ -35,10 +39,11 @@ const NaoConformidades = () => {
   const [mostrarFinalizadas, setMostrarFinalizadas] = useState<
     'todas' | 'em_andamento'
   >('todas');
-  const [rncSelecionada, setRncSelecionada] = useState<NonConformity | null>(
-    null
-  );
+  const [rncSelecionada, setRncSelecionada] = useState<NonConformity | null>(null);
   const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
+  const [showMaoObraDialog, setShowMaoObraDialog] = useState(false);
+  const [showMateriaisDialog, setShowMateriaisDialog] = useState(false);
+  const [showImagensDialog, setShowImagensDialog] = useState(false);
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
@@ -72,6 +77,21 @@ const NaoConformidades = () => {
   const handleRncClick = (rnc: NonConformity) => {
     setRncSelecionada(rnc);
     setShowDetalhesDialog(true);
+  };
+
+  const handleMaoObraClick = (rnc: NonConformity) => {
+    setRncSelecionada(rnc);
+    setShowMaoObraDialog(true);
+  };
+
+  const handleMateriaisClick = (rnc: NonConformity) => {
+    setRncSelecionada(rnc);
+    setShowMateriaisDialog(true);
+  };
+
+  const handleImagensClick = (rnc: NonConformity) => {
+    setRncSelecionada(rnc);
+    setShowImagensDialog(true);
   };
 
   return (
@@ -117,12 +137,9 @@ const NaoConformidades = () => {
               <SelectValue placeholder="Selecione um projeto" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os projetos</SelectItem>
+              <SelectItem value="">Todos os projetos</SelectItem>
               {projetos.map((projeto) => (
-                <SelectItem
-                  key={projeto.id}
-                  value={projeto.id?.toString() || ''}
-                >
+                <SelectItem key={projeto.id} value={projeto.id?.toString() || ''}>
                   {projeto.name}
                 </SelectItem>
               ))}
@@ -172,7 +189,7 @@ const NaoConformidades = () => {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Adicionar lógica para mão de obra
+                    handleMaoObraClick(rnc);
                   }}
                 >
                   <Users className="w-4 h-4 mr-1" />
@@ -183,7 +200,7 @@ const NaoConformidades = () => {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Adicionar lógica para materiais
+                    handleMateriaisClick(rnc);
                   }}
                 >
                   <Package className="w-4 h-4 mr-1" />
@@ -194,7 +211,7 @@ const NaoConformidades = () => {
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Adicionar lógica para imagens
+                    handleImagensClick(rnc);
                   }}
                 >
                   <Image className="w-4 h-4 mr-1" />
@@ -215,6 +232,45 @@ const NaoConformidades = () => {
           open={showDetalhesDialog}
           onOpenChange={setShowDetalhesDialog}
         />
+
+        {/* Diálogo para Mão de Obra */}
+        <Dialog open={showMaoObraDialog} onOpenChange={setShowMaoObraDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Mão de Obra - RNC #{rncSelecionada?.id}</DialogTitle>
+            </DialogHeader>
+            {/* Adicionar componente de gestão de mão de obra aqui */}
+            <div className="p-4">
+              <p>Funcionalidade em desenvolvimento</p>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo para Materiais */}
+        <Dialog open={showMateriaisDialog} onOpenChange={setShowMateriaisDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Materiais - RNC #{rncSelecionada?.id}</DialogTitle>
+            </DialogHeader>
+            {/* Adicionar componente de gestão de materiais aqui */}
+            <div className="p-4">
+              <p>Funcionalidade em desenvolvimento</p>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo para Imagens */}
+        <Dialog open={showImagensDialog} onOpenChange={setShowImagensDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Imagens - RNC #{rncSelecionada?.id}</DialogTitle>
+            </DialogHeader>
+            {/* Adicionar componente de gestão de imagens aqui */}
+            <div className="p-4">
+              <p>Funcionalidade em desenvolvimento</p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
