@@ -1,7 +1,6 @@
-
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Users, Package, Image, Eye, Edit } from 'lucide-react';
+import { Plus, Filter, Users, Package, Image, Eye, Edit, ClipboardCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaRNCDialog } from './NovaRNCDialog';
 import RncService from '@/services/NonConformityService';
@@ -37,6 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MaoObraForm } from './components/MaoObraForm';
 import { MateriaisForm } from './components/MateriaisForm';
 import { ImagensForm } from './components/ImagensForm';
+import { AcaoCorretivaForm } from './components/AcaoCorretivaForm';
 
 const NaoConformidades = () => {
   const { toast } = useToast();
@@ -55,6 +55,7 @@ const NaoConformidades = () => {
   const [showMateriaisDialog, setShowMateriaisDialog] = useState(false);
   const [showImagensDialog, setShowImagensDialog] = useState(false);
   const [editandoRnc, setEditandoRnc] = useState<NonConformity | null>(null);
+  const [showAcaoCorretivaDialog, setShowAcaoCorretivaDialog] = useState(false);
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
@@ -109,6 +110,11 @@ const NaoConformidades = () => {
     e.stopPropagation();
     setEditandoRnc(rnc);
     setShowNovaRNCDialog(true);
+  };
+
+  const handleAcaoCorretivaClick = (rnc: NonConformity) => {
+    setRncSelecionada(rnc);
+    setShowAcaoCorretivaDialog(true);
   };
 
   return (
@@ -245,6 +251,17 @@ const NaoConformidades = () => {
                   <Image className="w-4 h-4 mr-1" />
                   Imagens
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAcaoCorretivaClick(rnc);
+                  }}
+                >
+                  <ClipboardCheck className="w-4 h-4 mr-1" />
+                  Ação Corretiva
+                </Button>
               </CardFooter>
             </Card>
           ))}
@@ -299,6 +316,20 @@ const NaoConformidades = () => {
               <ImagensForm 
                 rncId={rncSelecionada.id} 
                 onClose={() => setShowImagensDialog(false)} 
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showAcaoCorretivaDialog} onOpenChange={setShowAcaoCorretivaDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Ação Corretiva - RNC #{rncSelecionada?.id}</DialogTitle>
+            </DialogHeader>
+            {rncSelecionada && (
+              <AcaoCorretivaForm 
+                rncId={rncSelecionada.id} 
+                onClose={() => setShowAcaoCorretivaDialog(false)} 
               />
             )}
           </DialogContent>
