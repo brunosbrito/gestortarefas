@@ -13,13 +13,23 @@ class PdfService {
       format: 'a4'
     });
 
+    // Definição das cores
+    const colors = {
+      primary: '#003366',      // Azul escuro
+      secondary: '#FF7F0E',    // Laranja
+      warning: '#FFD700',      // Amarelo
+      border: '#B0B0B0',       // Cinza concreto
+      lightBg: '#E0E0E0',      // Cinza claro
+      text: '#000000'          // Preto
+    };
+
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     let yPos = 20;
 
     // Função helper para adicionar texto
-    const addText = (text: string, y: number, fontSize = 12, align: 'left' | 'center' = 'left', color = '#000000') => {
+    const addText = (text: string, y: number, fontSize = 12, align: 'left' | 'center' = 'left', color = colors.text) => {
       doc.setFontSize(fontSize);
       doc.setTextColor(color);
       if (align === 'center') {
@@ -30,16 +40,19 @@ class PdfService {
       return y + (fontSize / 3) + 2;
     };
 
-    // Adicionar cabeçalho com bordas
-    doc.setDrawColor(128, 128, 128);
+    // Adicionar cabeçalho com bordas e cor de fundo
+    doc.setFillColor(colors.lightBg);
+    doc.setDrawColor(colors.border);
     doc.setLineWidth(0.5);
-    doc.rect(margin, 10, pageWidth - 2 * margin, 25);
+    doc.rect(margin, 10, pageWidth - 2 * margin, 25, 'FD'); // 'FD' preenche e desenha a borda
 
     // Título do documento
     doc.setFont('helvetica', 'bold');
-    yPos = addText('REGISTRO DE NÃO CONFORMIDADE', 25, 16, 'center', '#003366');
+    yPos = addText('REGISTRO DE NÃO CONFORMIDADE', 25, 16, 'center', colors.primary);
     
     // Linha separadora
+    doc.setDrawColor(colors.secondary);
+    doc.setLineWidth(1);
     doc.line(margin, yPos + 5, pageWidth - margin, yPos + 5);
     yPos += 15;
 
@@ -51,10 +64,12 @@ class PdfService {
     // Coluna da esquerda
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
+    doc.setTextColor(colors.primary);
     doc.text('Informações da RNC:', startLeftCol, yPos);
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
+    doc.setTextColor(colors.text);
     yPos += 7;
     doc.text(`RNC #${rnc.id}`, startLeftCol, yPos);
     yPos += 7;
@@ -73,16 +88,19 @@ class PdfService {
     // Avança o yPos para depois das colunas
     yPos += 20;
 
-    // Seção de Descrição
-    doc.setDrawColor(128, 128, 128);
+    // Seção de Descrição com cor de fundo
+    doc.setFillColor(colors.lightBg);
+    doc.setDrawColor(colors.border);
     doc.setLineWidth(0.5);
-    doc.rect(margin, yPos, pageWidth - 2 * margin, 40);
+    doc.rect(margin, yPos, pageWidth - 2 * margin, 40, 'FD');
 
     doc.setFont('helvetica', 'bold');
+    doc.setTextColor(colors.primary);
     yPos += 7;
     doc.text('Descrição:', margin + 2, yPos);
     
     doc.setFont('helvetica', 'normal');
+    doc.setTextColor(colors.text);
     yPos += 7;
     const descriptionLines = doc.splitTextToSize(rnc.description, pageWidth - (2 * margin) - 4);
     doc.text(descriptionLines, margin + 2, yPos);
@@ -92,11 +110,13 @@ class PdfService {
     // Seção de Mão de Obra e Materiais em colunas
     if ((rnc.workforce && rnc.workforce.length > 0) || (rnc.materials && rnc.materials.length > 0)) {
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.primary);
       
       if (rnc.workforce && rnc.workforce.length > 0) {
         doc.text('Mão de Obra:', startLeftCol, yPos);
         yPos += 7;
         doc.setFont('helvetica', 'normal');
+        doc.setTextColor(colors.text);
         rnc.workforce.forEach(worker => {
           doc.text(`• ${worker.name}`, startLeftCol + 5, yPos);
           yPos += 6;
@@ -106,9 +126,11 @@ class PdfService {
       let materialsY = yPos - (rnc.workforce?.length || 0) * 6;
       if (rnc.materials && rnc.materials.length > 0) {
         doc.setFont('helvetica', 'bold');
+        doc.setTextColor(colors.primary);
         doc.text('Materiais:', startRightCol, materialsY);
         materialsY += 7;
         doc.setFont('helvetica', 'normal');
+        doc.setTextColor(colors.text);
         rnc.materials.forEach(material => {
           doc.text(`• ${material.name}`, startRightCol + 5, materialsY);
           materialsY += 6;
@@ -127,6 +149,7 @@ class PdfService {
         // Título da seção de imagens
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
+        doc.setTextColor(colors.primary);
         doc.text('Registros Fotográficos', pageWidth / 2, yPos, { align: 'center' });
         yPos += 15;
 
@@ -168,7 +191,6 @@ class PdfService {
                     currentX = margin * 2 + maxWidth;
                   }
 
-                  // Se não houver espaço suficiente para a próxima imagem
                   if (yPos + maxHeight > pageHeight - margin) {
                     doc.addPage();
                     yPos = 20;
@@ -206,12 +228,13 @@ class PdfService {
 
     // Seção de assinaturas
     yPos = pageHeight - 40;
-    doc.setDrawColor(0);
+    doc.setDrawColor(colors.border);
     doc.setLineWidth(0.5);
     
     // Linha para assinatura do responsável
     doc.line(margin, yPos, pageWidth/2 - 10, yPos);
     doc.setFontSize(10);
+    doc.setTextColor(colors.text);
     doc.text('Assinatura do Responsável', margin, yPos + 5);
     
     // Linha para assinatura do líder
@@ -219,10 +242,11 @@ class PdfService {
     doc.text('Assinatura do Líder', pageWidth/2 + 10, yPos + 5);
 
     // Adiciona rodapé com número da página em todas as páginas
-    const pageCount = doc.internal.pages.length - 1; // Corrigido: usando pages.length - 1
+    const pageCount = doc.internal.pages.length - 1;
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
+      doc.setTextColor(colors.text);
       doc.text(
         `Página ${i} de ${pageCount}`,
         pageWidth / 2,
