@@ -9,52 +9,33 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Dispatch, SetStateAction } from "react";
 
 const formSchema = z.object({
   material: z.string().min(1, "Material é obrigatório"),
-  quantidade: z.string().min(1, "Quantidade é obrigatória"),
-  unidade: z.string().min(1, "Unidade é obrigatória"),
 });
 
 interface MateriaisFormProps {
-  rncId: string;
-  onClose: () => void;
+  materials: string[];
+  onMaterialsChange: Dispatch<SetStateAction<string[]>>;
+  onNext: () => void;
+  onBack: () => void;
 }
 
-export function MateriaisForm({ rncId, onClose }: MateriaisFormProps) {
-  const { toast } = useToast();
-
+export function MateriaisForm({ materials, onMaterialsChange, onNext, onBack }: MateriaisFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       material: "",
-      quantidade: "",
-      unidade: "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      // TODO: Implementar a lógica de salvamento
-      console.log("Dados do material:", values);
-      
-      toast({
-        title: "Material adicionado",
-        description: "Os dados foram salvos com sucesso.",
-      });
-      
-      onClose();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar os dados.",
-      });
-    }
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    onMaterialsChange([...materials, values.material]);
+    form.reset();
   };
 
   return (
@@ -74,42 +55,30 @@ export function MateriaisForm({ rncId, onClose }: MateriaisFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="quantidade"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Quantidade</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="Digite a quantidade" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="unidade"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Unidade</FormLabel>
-              <FormControl>
-                <Input placeholder="Ex: kg, m², un" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancelar
+        <div className="space-x-2">
+          <Button type="button" variant="outline" onClick={onBack}>
+            Voltar
           </Button>
           <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Salvar
+            Adicionar
+          </Button>
+          <Button type="button" onClick={onNext} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            Próximo
           </Button>
         </div>
+
+        {materials.length > 0 && (
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Materiais adicionados:</h3>
+            <ul className="space-y-2">
+              {materials.map((material, index) => (
+                <li key={index} className="p-2 bg-gray-100 rounded">
+                  {material}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </form>
     </Form>
   );

@@ -9,52 +9,42 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { CreateWorkforce } from "@/interfaces/RncInterface";
+import { Dispatch, SetStateAction } from "react";
 
 const formSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
-  funcao: z.string().min(1, "Função é obrigatória"),
-  horas: z.string().min(1, "Horas trabalhadas é obrigatório"),
+  name: z.string().min(1, "Nome é obrigatório"),
+  role: z.string().min(1, "Função é obrigatória"),
+  entryExit: z.string().min(1, "Horário entrada/saída é obrigatório"),
+  interval: z.string().min(1, "Intervalo é obrigatório"),
+  hours: z.string().min(1, "Horas trabalhadas é obrigatório"),
 });
 
 interface MaoObraFormProps {
-  rncId: string;
-  onClose: () => void;
+  workforce: CreateWorkforce[];
+  onWorkforceChange: Dispatch<SetStateAction<CreateWorkforce[]>>;
+  onNext: () => void;
+  onBack: () => void;
 }
 
-export function MaoObraForm({ rncId, onClose }: MaoObraFormProps) {
-  const { toast } = useToast();
-
+export function MaoObraForm({ workforce, onWorkforceChange, onNext, onBack }: MaoObraFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome: "",
-      funcao: "",
-      horas: "",
+      name: "",
+      role: "",
+      entryExit: "",
+      interval: "",
+      hours: "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      // TODO: Implementar a lógica de salvamento
-      console.log("Dados da mão de obra:", values);
-      
-      toast({
-        title: "Mão de obra adicionada",
-        description: "Os dados foram salvos com sucesso.",
-      });
-      
-      onClose();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar os dados.",
-      });
-    }
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    onWorkforceChange([...workforce, values]);
+    form.reset();
   };
 
   return (
@@ -62,7 +52,7 @@ export function MaoObraForm({ rncId, onClose }: MaoObraFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="nome"
+          name="name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome do Funcionário</FormLabel>
@@ -76,7 +66,7 @@ export function MaoObraForm({ rncId, onClose }: MaoObraFormProps) {
 
         <FormField
           control={form.control}
-          name="funcao"
+          name="role"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Função</FormLabel>
@@ -90,26 +80,70 @@ export function MaoObraForm({ rncId, onClose }: MaoObraFormProps) {
 
         <FormField
           control={form.control}
-          name="horas"
+          name="entryExit"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Horas Trabalhadas</FormLabel>
+              <FormLabel>Horário Entrada/Saída</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="Digite as horas" {...field} />
+                <Input placeholder="Ex: 07:30 - 17:30" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancelar
+        <FormField
+          control={form.control}
+          name="interval"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Intervalo</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: 01:00" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="hours"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horas Trabalhadas</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: 09:00" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="space-x-2">
+          <Button type="button" variant="outline" onClick={onBack}>
+            Voltar
           </Button>
           <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Salvar
+            Adicionar
+          </Button>
+          <Button type="button" onClick={onNext} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            Próximo
           </Button>
         </div>
+
+        {workforce.length > 0 && (
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Mão de obra adicionada:</h3>
+            <ul className="space-y-2">
+              {workforce.map((worker, index) => (
+                <li key={index} className="p-2 bg-gray-100 rounded">
+                  {worker.name} - {worker.role}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </form>
     </Form>
   );
