@@ -6,6 +6,14 @@ export interface CreateNonConformity {
   serviceOrderId: string;
   responsibleIdentification: string;
   dateOccurrence: string;
+  contractNumber: string;
+  contractDuration: number;
+  elapsedTime: number;
+  remainingTime: number;
+  location: string;
+  clientName: string;
+  workSchedule: WorkSchedule;
+  workforce: CreateWorkforce[];
 }
 
 export interface NonConformity {
@@ -18,12 +26,32 @@ export interface NonConformity {
   dateConclusion?: string;
   createdAt: string;
   updatedAt: string;
+  contractNumber: string;
+  contractDuration: number;
+  elapsedTime: number;
+  remainingTime: number;
+  location: string;
+  clientName: string;
+  workSchedule: WorkSchedule;
   images: RncImage[];
   workforce: Workforce[];
   materials: Material[];
   responsibleRNC: User;
   project: Project;
   serviceOrder: ServiceOrder;
+}
+
+export interface WorkSchedule {
+  entryExit: string;
+  interval: string;
+}
+
+export interface CreateWorkforce {
+  name: string;
+  role: string;
+  entryExit: string;
+  interval: string;
+  hours: string;
 }
 
 export interface RncImage {
@@ -34,6 +62,10 @@ export interface RncImage {
 export interface Workforce {
   id: string;
   name: string;
+  role: string;
+  entryExit: string;
+  interval: string;
+  hours: string;
 }
 
 export interface Material {
