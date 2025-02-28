@@ -36,16 +36,6 @@ const formSchema = z.object({
   serviceOrderId: z.string().min(1, 'Ordem de serviço é obrigatória'),
   responsibleIdentification: z.string().min(1, 'Responsável pela identificação é obrigatório'),
   dateOccurrence: z.string().min(1, 'Data da ocorrência é obrigatória'),
-  contractNumber: z.string().min(1, 'Número do contrato é obrigatório'),
-  contractDuration: z.number().min(1, 'Duração do contrato é obrigatória'),
-  elapsedTime: z.number().min(0, 'Tempo decorrido deve ser maior ou igual a zero'),
-  remainingTime: z.number().min(0, 'Tempo restante deve ser maior ou igual a zero'),
-  location: z.string().min(1, 'Local é obrigatório'),
-  clientName: z.string().min(1, 'Nome do cliente é obrigatório'),
-  workSchedule: z.object({
-    entryExit: z.string().min(1, 'Horário de entrada/saída é obrigatório'),
-    interval: z.string().min(1, 'Intervalo é obrigatório'),
-  }),
 });
 
 interface NovaRNCFormProps {
@@ -67,16 +57,6 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
       serviceOrderId: initialData.serviceOrder?.id.toString() || '',
       responsibleIdentification: initialData.responsibleIdentification || '',
       dateOccurrence: initialData.dateOccurrence?.split('T')[0] || new Date().toISOString().split('T')[0],
-      contractNumber: initialData.contractNumber || '',
-      contractDuration: initialData.contractDuration || 0,
-      elapsedTime: initialData.elapsedTime || 0,
-      remainingTime: initialData.remainingTime || 0,
-      location: initialData.location || '',
-      clientName: initialData.clientName || '',
-      workSchedule: {
-        entryExit: initialData.workSchedule?.entryExit || '',
-        interval: initialData.workSchedule?.interval || '',
-      },
     } : {
       projectId: '',
       responsibleRncId: '',
@@ -84,16 +64,6 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
       serviceOrderId: '',
       responsibleIdentification: '',
       dateOccurrence: new Date().toISOString().split('T')[0],
-      contractNumber: '',
-      contractDuration: 0,
-      elapsedTime: 0,
-      remainingTime: 0,
-      location: '',
-      clientName: '',
-      workSchedule: {
-        entryExit: '',
-        interval: '',
-      },
     },
   });
 
@@ -240,151 +210,19 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="dateOccurrence"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data da Ocorrência</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="contractNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número do Contrato</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ex: 101-221" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="contractDuration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prazo Contratual (dias)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="elapsedTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prazo Decorrido (dias)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="remainingTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prazo a Vencer (dias)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Local</FormLabel>
-                <FormControl>
-                  <Input placeholder="Local da ocorrência" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="clientName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cliente</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nome do cliente" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="workSchedule.entryExit"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Horário de Entrada/Saída</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ex: 07:30 - 17:30" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="workSchedule.interval"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Intervalo</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ex: 01:00" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="dateOccurrence"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Data da Ocorrência</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
