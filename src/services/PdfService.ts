@@ -61,8 +61,8 @@ class PdfService {
       yPos += 5;
     }
 
-    // Imagens
-    if (rnc.images && rnc.images.length > 0) {
+    // Verifica se há imagens antes de tentar adicioná-las
+    if (rnc.images && rnc.images.length > 0 && rnc.images.some(img => img.url)) {
       try {
         // Adiciona uma nova página para as imagens
         doc.addPage();
@@ -78,6 +78,10 @@ class PdfService {
         // Carrega e adiciona cada imagem
         for (let i = 0; i < rnc.images.length; i++) {
           const image = rnc.images[i];
+          
+          // Verifica se a imagem tem URL
+          if (!image.url) continue;
+          
           console.log('Tentando adicionar imagem:', image.url);
           
           try {
