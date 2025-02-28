@@ -1,19 +1,14 @@
 
 import API_URL from '@/config';
-import { NonConformity } from '@/interfaces/RncInterface';
+import { CreateNonConformity, NonConformity } from '@/interfaces/RncInterface';
 import axios from 'axios';
 
 const URL = `${API_URL}/non-conformities/`;
-const token = localStorage.getItem('authToken');
 
 class RncService {
-  async createRnc(formData: FormData) {
+  async createRnc(data: CreateNonConformity) {
     try {
-      const response = await axios.post(URL, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(URL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar RNC:', error);
