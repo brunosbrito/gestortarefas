@@ -42,7 +42,7 @@ export function DetalhesRNCDialog({
                   })}
                 </p>
                 <p className="text-sm">
-                  <span className="font-medium">Projeto:</span> {rnc.project.name}
+                  {/* <span className="font-medium">Projeto:</span> {rnc.project.name} */}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Ordem de Serviço:</span>{' '}
@@ -50,7 +50,7 @@ export function DetalhesRNCDialog({
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Responsável:</span>{' '}
-                  {rnc.responsibleRNC.name}
+                  {/* {rnc.responsibleRNC.name} */}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Identificado por:</span>{' '}
