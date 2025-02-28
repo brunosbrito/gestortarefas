@@ -63,44 +63,66 @@ class PdfService {
 
     // Imagens
     if (rnc.images && rnc.images.length > 0) {
-      // Adiciona uma nova página para as imagens
-      doc.addPage();
-      yPos = 20;
-      
-      yPos = addText('Imagens:', yPos, 14, 'center');
-      yPos += 10;
+      try {
+        // Adiciona uma nova página para as imagens
+        doc.addPage();
+        yPos = 20;
+        
+        yPos = addText('Imagens:', yPos, 14, 'center');
+        yPos += 10;
 
-      // Define o tamanho máximo para cada imagem
-      const maxWidth = pageWidth - 2 * margin;
-      const maxHeight = 80;
+        // Define o tamanho máximo para cada imagem
+        const maxWidth = pageWidth - 2 * margin;
+        const maxHeight = 80;
 
-      // Adiciona cada imagem
-      for (const image of rnc.images) {
-        try {
-          // Adiciona a imagem
-          doc.addImage(
-            image.url,
-            'JPEG',
-            margin,
-            yPos,
-            maxWidth,
-            maxHeight,
-            undefined,
-            'MEDIUM'
-          );
+        // Carrega e adiciona cada imagem
+        for (let i = 0; i < rnc.images.length; i++) {
+          const image = rnc.images[i];
+          console.log('Tentando adicionar imagem:', image.url);
           
-          // Atualiza a posição Y para a próxima imagem
-          yPos += maxHeight + 10;
-
-          // Se não houver espaço suficiente para a próxima imagem, adiciona uma nova página
-          if (yPos + maxHeight > doc.internal.pageSize.getHeight() - margin) {
-            doc.addPage();
-            yPos = 20;
+          try {
+            // Adiciona a imagem
+            await new Promise((resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = 'Anonymous';
+              img.onload = () => {
+                try {
+                  doc.addImage(
+                    img,
+                    'JPEG',
+                    margin,
+                    yPos,
+                    maxWidth,
+                    maxHeight,
+                    undefined,
+                    'MEDIUM'
+                  );
+                  yPos += maxHeight + 10;
+                  
+                  // Se não houver espaço suficiente para a próxima imagem, adiciona uma nova página
+                  if (yPos + maxHeight > doc.internal.pageSize.getHeight() - margin) {
+                    doc.addPage();
+                    yPos = 20;
+                  }
+                  resolve(true);
+                } catch (error) {
+                  console.error('Erro ao adicionar imagem ao PDF:', error);
+                  reject(error);
+                }
+              };
+              img.onerror = (error) => {
+                console.error('Erro ao carregar imagem:', error);
+                reject(error);
+              };
+              img.src = image.url;
+            });
+          } catch (error) {
+            console.error(`Erro ao processar imagem ${i + 1}:`, error);
+            continue;
           }
-        } catch (error) {
-          console.error('Erro ao adicionar imagem:', error);
-          // Continua com as próximas imagens mesmo se houver erro
         }
+      } catch (error) {
+        console.error('Erro ao processar seção de imagens:', error);
       }
       
       // Retorna para a última página para as assinaturas
