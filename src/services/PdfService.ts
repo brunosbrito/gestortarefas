@@ -61,8 +61,59 @@ class PdfService {
       yPos += 5;
     }
 
+    // Imagens
+    if (rnc.images && rnc.images.length > 0) {
+      // Adiciona uma nova página para as imagens
+      doc.addPage();
+      yPos = 20;
+      
+      yPos = addText('Imagens:', yPos, 14, 'center');
+      yPos += 10;
+
+      // Define o tamanho máximo para cada imagem
+      const maxWidth = pageWidth - 2 * margin;
+      const maxHeight = 80;
+
+      // Adiciona cada imagem
+      for (const image of rnc.images) {
+        try {
+          // Adiciona a imagem
+          doc.addImage(
+            image.url,
+            'JPEG',
+            margin,
+            yPos,
+            maxWidth,
+            maxHeight,
+            undefined,
+            'MEDIUM'
+          );
+          
+          // Atualiza a posição Y para a próxima imagem
+          yPos += maxHeight + 10;
+
+          // Se não houver espaço suficiente para a próxima imagem, adiciona uma nova página
+          if (yPos + maxHeight > doc.internal.pageSize.getHeight() - margin) {
+            doc.addPage();
+            yPos = 20;
+          }
+        } catch (error) {
+          console.error('Erro ao adicionar imagem:', error);
+          // Continua com as próximas imagens mesmo se houver erro
+        }
+      }
+      
+      // Retorna para a última página para as assinaturas
+      doc.addPage();
+      yPos = doc.internal.pageSize.getHeight() - 60;
+    } else {
+      // Se não houver imagens, ajusta a posição para as assinaturas
+      yPos = Math.min(yPos, doc.internal.pageSize.getHeight() - 60);
+    }
+
     // Assinaturas
-    yPos = doc.internal.pageSize.getHeight() - 60;
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.5);
     
     // Linha para assinatura do responsável
     doc.line(margin, yPos, pageWidth/2 - 10, yPos);
