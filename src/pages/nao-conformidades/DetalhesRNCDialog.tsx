@@ -38,6 +38,8 @@ export function DetalhesRNCDialog({
         description: 'O documento foi baixado para o seu computador.',
       });
     } catch (error) {
+      console.error('Erro ao gerar PDF:', error); // <-- Adicionado para depuração
+
       toast({
         variant: 'destructive',
         title: 'Erro ao gerar PDF',
