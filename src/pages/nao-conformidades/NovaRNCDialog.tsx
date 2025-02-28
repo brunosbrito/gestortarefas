@@ -1,9 +1,8 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NovaRNCForm } from './NovaRNCForm';
 import { MaoObraForm } from './components/MaoObraForm';
 import { MateriaisForm } from './components/MateriaisForm';
@@ -26,6 +25,7 @@ import * as z from "zod";
 interface NovaRNCDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  rncParaEditar?: NonConformity | null;
 }
 
 const correctiveActionSchema = z.object({
@@ -33,25 +33,34 @@ const correctiveActionSchema = z.object({
   responsibleAction: z.string().min(1, "Responsável pela ação é obrigatório"),
 });
 
-export function NovaRNCDialog({ open, onOpenChange }: NovaRNCDialogProps) {
+export function NovaRNCDialog({ open, onOpenChange, rncParaEditar }: NovaRNCDialogProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<string>('info');
   const [rncData, setRncData] = useState<any>(null);
   const [workforce, setWorkforce] = useState<CreateWorkforce[]>([]);
   const [materials, setMaterials] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
-  const [tempRncId] = useState<string>('temp-id');
+  const [tempRncId] = useState<string>(rncParaEditar?.id || 'temp-id');
+
+  useEffect(() => {
+    if (rncParaEditar && open) {
+      setRncData(rncParaEditar);
+      setWorkforce(rncParaEditar.workforce || []);
+      setMaterials(rncParaEditar.materials?.map(m => m.name) || []);
+      setImages([]);
+      setStep('info');
+    }
+  }, [rncParaEditar, open]);
 
   const correctiveForm = useForm<z.infer<typeof correctiveActionSchema>>({
     resolver: zodResolver(correctiveActionSchema),
     defaultValues: {
-      correctiveAction: "",
-      responsibleAction: "",
+      correctiveAction: rncParaEditar?.correctiveAction || "",
+      responsibleAction: rncParaEditar?.responsibleAction || "",
     },
   });
 
   const handleSuccess = (correctiveData: z.infer<typeof correctiveActionSchema>) => {
-    // Aqui você combinaria todos os dados e enviaria para a API
     const finalData = {
       ...rncData,
       workforce,
@@ -59,12 +68,21 @@ export function NovaRNCDialog({ open, onOpenChange }: NovaRNCDialogProps) {
       images,
       ...correctiveData
     };
-    console.log('Dados finais:', finalData);
-
-    toast({
-      title: 'RNC criada com sucesso',
-      description: 'A RNC foi criada e está pronta para revisão.',
-    });
+    
+    if (rncParaEditar) {
+      console.log('Atualizando RNC:', finalData);
+      toast({
+        title: 'RNC atualizada com sucesso',
+        description: 'As alterações foram salvas com sucesso.',
+      });
+    } else {
+      console.log('Criando nova RNC:', finalData);
+      toast({
+        title: 'RNC criada com sucesso',
+        description: 'A RNC foi criada e está pronta para revisão.',
+      });
+    }
+    
     onOpenChange(false);
   };
 
@@ -72,7 +90,9 @@ export function NovaRNCDialog({ open, onOpenChange }: NovaRNCDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nova RNC</DialogTitle>
+          <DialogTitle>
+            {rncParaEditar ? 'Editar RNC' : 'Nova RNC'}
+          </DialogTitle>
         </DialogHeader>
 
         <Tabs value={step} onValueChange={setStep} className="w-full">

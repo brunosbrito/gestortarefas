@@ -1,6 +1,7 @@
+
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Users, Package, Image, Eye } from 'lucide-react';
+import { Plus, Filter, Users, Package, Image, Eye, Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaRNCDialog } from './NovaRNCDialog';
 import RncService from '@/services/NonConformityService';
@@ -53,6 +54,7 @@ const NaoConformidades = () => {
   const [showMaoObraDialog, setShowMaoObraDialog] = useState(false);
   const [showMateriaisDialog, setShowMateriaisDialog] = useState(false);
   const [showImagensDialog, setShowImagensDialog] = useState(false);
+  const [editandoRnc, setEditandoRnc] = useState<NonConformity | null>(null);
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
@@ -103,6 +105,12 @@ const NaoConformidades = () => {
     setShowImagensDialog(true);
   };
 
+  const handleEditClick = (rnc: NonConformity, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditandoRnc(rnc);
+    setShowNovaRNCDialog(true);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -111,7 +119,10 @@ const NaoConformidades = () => {
             RNC - Registro de Não Conformidade
           </h1>
           <Button
-            onClick={() => setShowNovaRNCDialog(true)}
+            onClick={() => {
+              setEditandoRnc(null);
+              setShowNovaRNCDialog(true);
+            }}
             className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -163,8 +174,16 @@ const NaoConformidades = () => {
           {rncsFiltradas.map((rnc) => (
             <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-construction-800">
-                  RNC #{rnc.id}
+                <CardTitle className="text-lg font-semibold text-construction-800 flex justify-between items-center">
+                  <span>RNC #{rnc.id}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => handleEditClick(rnc, e)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                 </CardTitle>
                 <CardDescription>
                   OS: {rnc.serviceOrder?.description} |{' '}
@@ -175,9 +194,6 @@ const NaoConformidades = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm text-construction-600">
-                    {/* <strong>Responsável:</strong> {rnc.responsibleRNC.name} */}
-                  </p>
                   <p className="text-sm text-construction-600">
                     <strong>Identificado por:</strong>{' '}
                     {rnc.responsibleIdentification}
@@ -237,6 +253,7 @@ const NaoConformidades = () => {
         <NovaRNCDialog
           open={showNovaRNCDialog}
           onOpenChange={setShowNovaRNCDialog}
+          rncParaEditar={editandoRnc}
         />
 
         <DetalhesRNCDialog
@@ -245,7 +262,6 @@ const NaoConformidades = () => {
           onOpenChange={setShowDetalhesDialog}
         />
 
-        {/* Diálogo para Mão de Obra */}
         <Dialog open={showMaoObraDialog} onOpenChange={setShowMaoObraDialog}>
           <DialogContent>
             <DialogHeader>
@@ -260,11 +276,7 @@ const NaoConformidades = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Diálogo para Materiais */}
-        <Dialog
-          open={showMateriaisDialog}
-          onOpenChange={setShowMateriaisDialog}
-        >
+        <Dialog open={showMateriaisDialog} onOpenChange={setShowMateriaisDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Materiais - RNC #{rncSelecionada?.id}</DialogTitle>
@@ -278,7 +290,6 @@ const NaoConformidades = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Diálogo para Imagens */}
         <Dialog open={showImagensDialog} onOpenChange={setShowImagensDialog}>
           <DialogContent>
             <DialogHeader>
