@@ -12,20 +12,20 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 
 const formSchema = z.object({
   material: z.string().min(1, "Material é obrigatório"),
 });
 
 interface MateriaisFormProps {
-  materials: string[];
-  onMaterialsChange: Dispatch<SetStateAction<string[]>>;
-  onNext: () => void;
-  onBack: () => void;
+  rncId: string;
+  onClose: () => void;
 }
 
-export function MateriaisForm({ materials, onMaterialsChange, onNext, onBack }: MateriaisFormProps) {
+export function MateriaisForm({ rncId, onClose }: MateriaisFormProps) {
+  const [materials, setMaterials] = useState<string[]>([]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,7 +34,7 @@ export function MateriaisForm({ materials, onMaterialsChange, onNext, onBack }: 
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    onMaterialsChange([...materials, values.material]);
+    setMaterials([...materials, values.material]);
     form.reset();
   };
 
@@ -56,14 +56,14 @@ export function MateriaisForm({ materials, onMaterialsChange, onNext, onBack }: 
         />
 
         <div className="space-x-2">
-          <Button type="button" variant="outline" onClick={onBack}>
+          <Button type="button" variant="outline" onClick={onClose}>
             Voltar
           </Button>
           <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
             Adicionar
           </Button>
-          <Button type="button" onClick={onNext} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Próximo
+          <Button type="button" onClick={onClose} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            Finalizar
           </Button>
         </div>
 

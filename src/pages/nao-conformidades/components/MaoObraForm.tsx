@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CreateWorkforce } from "@/interfaces/RncInterface";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -24,13 +24,13 @@ const formSchema = z.object({
 });
 
 interface MaoObraFormProps {
-  workforce: CreateWorkforce[];
-  onWorkforceChange: Dispatch<SetStateAction<CreateWorkforce[]>>;
-  onNext: () => void;
-  onBack: () => void;
+  rncId: string;
+  onClose: () => void;
 }
 
-export function MaoObraForm({ workforce, onWorkforceChange, onNext, onBack }: MaoObraFormProps) {
+export function MaoObraForm({ rncId, onClose }: MaoObraFormProps) {
+  const [workforce, setWorkforce] = useState<CreateWorkforce[]>([]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,7 +43,14 @@ export function MaoObraForm({ workforce, onWorkforceChange, onNext, onBack }: Ma
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    onWorkforceChange([...workforce, values]);
+    const newWorker: CreateWorkforce = {
+      name: values.name,
+      role: values.role,
+      entryExit: values.entryExit,
+      interval: values.interval,
+      hours: values.hours,
+    };
+    setWorkforce([...workforce, newWorker]);
     form.reset();
   };
 
@@ -121,14 +128,14 @@ export function MaoObraForm({ workforce, onWorkforceChange, onNext, onBack }: Ma
         />
 
         <div className="space-x-2">
-          <Button type="button" variant="outline" onClick={onBack}>
+          <Button type="button" variant="outline" onClick={onClose}>
             Voltar
           </Button>
           <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
             Adicionar
           </Button>
-          <Button type="button" onClick={onNext} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Próximo
+          <Button type="button" onClick={onClose} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            Finalizar
           </Button>
         </div>
 

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 
 const formSchema = z.object({
   image: z.any(),
@@ -20,13 +20,13 @@ const formSchema = z.object({
 });
 
 interface ImagensFormProps {
-  images: File[];
-  onImagesChange: Dispatch<SetStateAction<File[]>>;
-  onBack: () => void;
-  onSubmit: () => void;
+  rncId: string;
+  onClose: () => void;
 }
 
-export function ImagensForm({ images, onImagesChange, onBack, onSubmit }: ImagensFormProps) {
+export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
+  const [images, setImages] = useState<File[]>([]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,7 +37,7 @@ export function ImagensForm({ images, onImagesChange, onBack, onSubmit }: Imagen
 
   const handleImageAdd = (values: z.infer<typeof formSchema>) => {
     if (values.image?.[0]) {
-      onImagesChange([...images, values.image[0]]);
+      setImages([...images, values.image[0]]);
       form.reset();
     }
   };
@@ -79,7 +79,7 @@ export function ImagensForm({ images, onImagesChange, onBack, onSubmit }: Imagen
         />
 
         <div className="space-x-2">
-          <Button type="button" variant="outline" onClick={onBack}>
+          <Button type="button" variant="outline" onClick={onClose}>
             Voltar
           </Button>
           <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
@@ -87,7 +87,7 @@ export function ImagensForm({ images, onImagesChange, onBack, onSubmit }: Imagen
           </Button>
           <Button 
             type="button" 
-            onClick={onSubmit}
+            onClick={onClose}
             className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
             disabled={images.length === 0}
           >
