@@ -19,15 +19,17 @@ export function NovaRNCDialog({ open, onOpenChange }: NovaRNCDialogProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<string>('info');
   const [rncData, setRncData] = useState<any>(null);
-  const [workforce, setWorkforce] = useState<CreateWorkforce[]>([]);
-  const [materials, setMaterials] = useState<string[]>([]);
-  const [images, setImages] = useState<File[]>([]);
+  const [tempRncId, setTempRncId] = useState<string>('temp-id'); // ID temporário para os formulários
 
   const handleSuccess = () => {
     toast({
       title: 'RNC criada com sucesso',
       description: 'A RNC foi criada e está pronta para revisão.',
     });
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
     onOpenChange(false);
   };
 
@@ -57,38 +59,22 @@ export function NovaRNCDialog({ open, onOpenChange }: NovaRNCDialogProps) {
 
           <TabsContent value="workforce">
             <MaoObraForm
-              workforce={workforce}
-              onWorkforceChange={setWorkforce}
-              onNext={() => setStep('materials')}
-              onBack={() => setStep('info')}
+              rncId={tempRncId}
+              onClose={() => setStep('materials')}
             />
           </TabsContent>
 
           <TabsContent value="materials">
             <MateriaisForm
-              materials={materials}
-              onMaterialsChange={setMaterials}
-              onNext={() => setStep('images')}
-              onBack={() => setStep('workforce')}
+              rncId={tempRncId}
+              onClose={() => setStep('images')}
             />
           </TabsContent>
 
           <TabsContent value="images">
             <ImagensForm
-              images={images}
-              onImagesChange={setImages}
-              onBack={() => setStep('materials')}
-              onSubmit={() => {
-                // Aqui você combinaria todos os dados e enviaria para a API
-                const finalData = {
-                  ...rncData,
-                  workforce,
-                  materials,
-                  images
-                };
-                console.log('Dados finais:', finalData);
-                handleSuccess();
-              }}
+              rncId={tempRncId}
+              onClose={handleSuccess}
             />
           </TabsContent>
         </Tabs>
