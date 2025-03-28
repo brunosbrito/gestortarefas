@@ -1,3 +1,4 @@
+
 import API_URL from '@/config';
 import axios from 'axios';
 
@@ -26,7 +27,11 @@ export const getAllActivities = async () => {
   }
 };
 
-export const getActivitiesByServiceOrderId = async (serviceOrderId: string) => {
+export const getActivitiesByServiceOrderId = async (serviceOrderId: string | undefined) => {
+  if (!serviceOrderId) {
+    throw new Error('Service Order ID is required');
+  }
+  
   try {
     const response = await axios.get(
       `${API_URL}/activities/service-order/${serviceOrderId}`

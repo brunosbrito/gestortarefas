@@ -47,10 +47,19 @@ const Atividades = () => {
 
   const getByServiceOrderId = async () => {
     try {
+      if (!serviceOrderId) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar atividades",
+          description: "ID da ordem de serviço não encontrado",
+        });
+        return;
+      }
+      
       const data = await getActivitiesByServiceOrderId(serviceOrderId);
       setAtividades(data);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao carregar atividades:", error);
       toast({
         variant: "destructive",
         title: "Erro ao carregar atividades",
@@ -60,7 +69,9 @@ const Atividades = () => {
   };
 
   useEffect(() => {
-    getByServiceOrderId();
+    if (serviceOrderId) {
+      getByServiceOrderId();
+    }
     
     const fetchObra = async () => {
       if (projectId) {
@@ -79,7 +90,7 @@ const Atividades = () => {
     };
     
     fetchObra();
-  }, [projectId, serviceOrderId]);
+  }, [projectId, serviceOrderId, toast]);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
