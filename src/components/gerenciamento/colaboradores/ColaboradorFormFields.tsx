@@ -40,8 +40,13 @@ export const ColaboradorFormFields = ({ form }: ColaboradorFormFieldsProps) => {
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     
-    // Remove tudo exceto números e vírgula
-    value = value.replace(/[^\d,]/g, '');
+    // Permitir dígitos e vírgula
+    if (!/^[\d,]*$/.test(value)) {
+      return;
+    }
+    
+    // Remove formatação anterior
+    value = value.replace(/\./g, '');
     
     // Garante apenas uma vírgula
     const commaCount = (value.match(/,/g) || []).length;
@@ -50,21 +55,11 @@ export const ColaboradorFormFields = ({ form }: ColaboradorFormFieldsProps) => {
       value = parts[0] + ',' + parts.slice(1).join('');
     }
 
-    // Formata para moeda brasileira
-    let numValue = value.replace(',', '.');
-    if (numValue) {
-      const floatValue = parseFloat(numValue);
-      if (!isNaN(floatValue)) {
-        setFormattedValue(floatValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-        form.setValue("pricePerHour", value.replace(',', '.'), { shouldValidate: true });
-      } else {
-        setFormattedValue(value);
-        form.setValue("pricePerHour", "", { shouldValidate: true });
-      }
-    } else {
-      setFormattedValue("");
-      form.setValue("pricePerHour", "", { shouldValidate: true });
-    }
+    setFormattedValue(value);
+    
+    // Salva o valor sem formatação no formulário
+    const cleanValue = value.replace(',', '.');
+    form.setValue("pricePerHour", cleanValue, { shouldValidate: true });
   };
 
   return (
@@ -100,7 +95,7 @@ export const ColaboradorFormFields = ({ form }: ColaboradorFormFieldsProps) => {
       <FormField
         control={form.control}
         name="pricePerHour"
-        render={({ field }) => (
+        render={() => (
           <FormItem>
             <FormLabel>Valor por Hora</FormLabel>
             <FormControl>
