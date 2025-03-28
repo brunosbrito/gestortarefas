@@ -123,9 +123,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
                 <TableCell>{colaborador.name}</TableCell>
                 <TableCell>{colaborador.role}</TableCell>
                 <TableCell>
-                  {typeof colaborador.pricePerHour === 'number' && !isNaN(colaborador.pricePerHour)
-                    ? formatCurrency(colaborador.pricePerHour)
-                    : 'R$ 0,00'}
+                  {formatCurrency(+colaborador.pricePerHour)}
                 </TableCell>
                 <TableCell className="flex space-x-2">
                   <Button
