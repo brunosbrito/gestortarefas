@@ -12,7 +12,13 @@ interface StatusListProps {
   onDelete?: () => void;
 }
 
-export const StatusList = ({ status, atividades, droppableId, onMoveAtividade, onDelete }: StatusListProps) => {
+export const StatusList = ({ 
+  status, 
+  atividades, 
+  droppableId, 
+  onMoveAtividade, 
+  onDelete 
+}: StatusListProps) => {
   const atividadesFiltradas = atividades.filter((a) => a.status === status);
 
   return (
