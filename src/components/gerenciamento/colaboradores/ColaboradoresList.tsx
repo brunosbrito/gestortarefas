@@ -104,6 +104,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Cargo</TableHead>
+              <TableHead>Valor por Hora</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -112,20 +113,28 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
               <TableRow key={colaborador.id}>
                 <TableCell>{colaborador.name}</TableCell>
                 <TableCell>{colaborador.role}</TableCell>
+                <TableCell>
+                  {typeof colaborador.pricePerHour === 'number' && !isNaN(colaborador.pricePerHour)
+                    ? colaborador.pricePerHour
+                      .toFixed(2)
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                      .replace(".", ",")
+                    : 'R$ 0,00'}
+                </TableCell>
                 <TableCell className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="icon"
                     onClick={() => handleEditClick(colaborador)}
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline"  
-                    size="icon" 
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => handleDeleteClick(colaborador)}
                   >
-                    <Trash2 className="h-4 w-4" color="red"/>
+                    <Trash2 className="h-4 w-4" color="red" />
                   </Button>
                 </TableCell>
               </TableRow>
