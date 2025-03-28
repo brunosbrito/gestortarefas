@@ -1,3 +1,4 @@
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,11 @@ export const NovoColaboradorForm = ({
   const { toast } = useToast();
   const form = useForm<ColaboradorFormValues>({
     resolver: zodResolver(colaboradorFormSchema),
+    defaultValues: {
+      name: "",
+      role: "",
+      pricePerHour: ""
+    }
   });
 
   const onSubmit = async (data: ColaboradorFormValues) => {
@@ -27,6 +33,7 @@ export const NovoColaboradorForm = ({
       await ColaboradorService.createColaborador({
         name: data.name,
         role: data.role,
+        pricePerHour: parseFloat(data.pricePerHour)
       });
 
       toast({
@@ -34,7 +41,7 @@ export const NovoColaboradorForm = ({
         description: 'O colaborador foi adicionado com sucesso.',
       });
       form.reset();
-      onSuccess();
+      if (onSuccess) onSuccess();
     } catch (error) {
       toast({
         variant: 'destructive',

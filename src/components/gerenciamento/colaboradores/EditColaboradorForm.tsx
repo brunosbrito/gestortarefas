@@ -1,3 +1,4 @@
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import {
   colaboradorFormSchema,
   ColaboradorFormValues,
 } from './ColaboradorFormFields';
+import { useEffect } from 'react';
 
 interface EditColaboradorFormProps {
   colaborador: Colaborador;
@@ -26,8 +28,21 @@ export const EditColaboradorForm = ({
     defaultValues: {
       name: colaborador.name,
       role: colaborador.role,
+      pricePerHour: colaborador.pricePerHour !== undefined 
+        ? colaborador.pricePerHour.toString() 
+        : "0"
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      name: colaborador.name,
+      role: colaborador.role,
+      pricePerHour: colaborador.pricePerHour !== undefined 
+        ? colaborador.pricePerHour.toString() 
+        : "0"
+    });
+  }, [colaborador, form]);
 
   const onSubmit = async (data: ColaboradorFormValues) => {
     try {
@@ -35,6 +50,7 @@ export const EditColaboradorForm = ({
         id: colaborador.id,
         name: data.name,
         role: data.role,
+        pricePerHour: parseFloat(data.pricePerHour)
       };
 
       await ColaboradorService.updateColaborador(

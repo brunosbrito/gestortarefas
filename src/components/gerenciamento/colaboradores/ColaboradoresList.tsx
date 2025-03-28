@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import {
   Table,
@@ -96,6 +97,14 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
     getColaboradores();
   };
 
+  const formatCurrency = (value: number): string => {
+    return value.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL',
+      minimumFractionDigits: 2
+    });
+  };
+
   return (
     <>
       <div className="rounded-md border">
@@ -115,10 +124,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
                 <TableCell>{colaborador.role}</TableCell>
                 <TableCell>
                   {typeof colaborador.pricePerHour === 'number' && !isNaN(colaborador.pricePerHour)
-                    ? colaborador.pricePerHour
-                      .toFixed(2)
-                      .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                      .replace(".", ",")
+                    ? formatCurrency(colaborador.pricePerHour)
                     : 'R$ 0,00'}
                 </TableCell>
                 <TableCell className="flex space-x-2">
