@@ -57,6 +57,9 @@ const OrdensServico = () => {
 
   const getServiceOrders = async () => {
     const serviceOrders = await getServiceOrderByProjectId(projectId);
+
+    serviceOrders.sort((a, b) => b.serviceOrderNumber - a.serviceOrderNumber);
+
     setObra(serviceOrders.projectId);
     setOrdensServico(serviceOrders || []);
   };
