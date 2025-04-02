@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Building2, ClipboardList, Activity, Users } from 'lucide-react';
 import { StatsSummary } from './dashboard/StatsSummary';
@@ -9,6 +10,12 @@ import { dataMacroTask, dataProcess } from '@/services/StatisticsService';
 import { getAllActivities } from '@/services/ActivityService';
 import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import ObrasService from '@/services/ObrasService';
+import { TaskProcessFilter } from './dashboard/TaskProcessFilter';
+import { FilteredServiceOrderTable } from './dashboard/FilteredServiceOrderTable';
+import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
+import { DashboardFilters, FilteredActivity, FilteredServiceOrder } from '@/interfaces/DashboardFilters';
+import { getFilteredActivities, getFilteredServiceOrders } from '@/services/DashboardService';
+import { Separator } from './ui/separator';
 
 // Cores para os gráficos
 const CORES = [
@@ -28,14 +35,19 @@ const Dashboard = () => {
   const [totalProjetos, setTotalProjetos] = useState<Number>(0);
   const [totalServiceOrder, setTotalServiceOrder] = useState<Number>(0);
   const [isLoading, setIsLoading] = useState(true);
-
-
+  const [filters, setFilters] = useState<DashboardFilters>({
+    macroTaskId: null,
+    processId: null,
+    period: null
+  });
+  const [filteredServiceOrders, setFilteredServiceOrders] = useState<FilteredServiceOrder[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<FilteredActivity[]>([]);
+  const [isFilteredDataLoading, setIsFilteredDataLoading] = useState(false);
 
   const TotalActivities = async () => {
     const activities = await getAllActivities();
     setTotalActivities(activities.length)
   }
-
 
   const TotalProjects = async  () => {
     const projects = await ObrasService.getAllObras();
@@ -46,7 +58,6 @@ const Dashboard = () => {
     const serviceOrder = await getAllServiceOrders();
     setTotalServiceOrder(serviceOrder.length)
   }
-
   
   useEffect(() => {
     const getMacroTask = async () => {
@@ -77,6 +88,31 @@ const Dashboard = () => {
     TotalProjects();
     TotalServiceOrder();
   }, []);
+
+  useEffect(() => {
+    const loadFilteredData = async () => {
+      setIsFilteredDataLoading(true);
+      try {
+        const [serviceOrders, activities] = await Promise.all([
+          getFilteredServiceOrders(filters.macroTaskId, filters.processId),
+          getFilteredActivities(filters.macroTaskId, filters.processId)
+        ]);
+        
+        setFilteredServiceOrders(serviceOrders);
+        setFilteredActivities(activities);
+      } catch (error) {
+        console.error("Erro ao carregar dados filtrados:", error);
+      } finally {
+        setIsFilteredDataLoading(false);
+      }
+    };
+
+    loadFilteredData();
+  }, [filters]);
+
+  const handleFilterChange = (newFilters: DashboardFilters) => {
+    setFilters(newFilters);
+  };
 
   const stats = [
     {
@@ -115,22 +151,31 @@ const Dashboard = () => {
         {macroTaskStatistic && (
           <MacroTasksChart
             macroTasks={macroTaskStatistic}
-
           />
         )}
 
         {processStatistic && (
           <ProcessHoursChart processes={processStatistic} />
         )}
+      </div>
 
-        {/* 
+      <Separator className="my-8" />
 
-        {statistics?.collaborators && (
-          <CollaboratorsChart collaborators={statistics.collaborators} />
-        )} */}
+      <TaskProcessFilter onFilterChange={handleFilterChange} currentFilters={filters} />
+      
+      <div className="grid grid-cols-1 gap-6">
+        <FilteredServiceOrderTable 
+          serviceOrders={filteredServiceOrders} 
+          loading={isFilteredDataLoading} 
+        />
+        
+        <FilteredActivitiesTable 
+          activities={filteredActivities} 
+          loading={isFilteredDataLoading} 
+        />
       </div>
     </div>
   );
 };
 
-export default Dashboard
+export default Dashboard;
