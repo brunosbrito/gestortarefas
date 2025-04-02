@@ -18,6 +18,8 @@ interface MacroTasksChartProps {
 }
 
 export const MacroTasksChart = ({ macroTasks, formatarPorcentagem }: MacroTasksChartProps) => {
+  const hasData = macroTasks.length > 0;
+
   return (
     <Card className="p-6">
       <div className="flex items-center mb-4">
@@ -25,35 +27,41 @@ export const MacroTasksChart = ({ macroTasks, formatarPorcentagem }: MacroTasksC
         <h3 className="text-lg font-semibold">Atividades por Tarefa Macro</h3>
       </div>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={macroTasks}>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  return (
-                    <div className="bg-white p-2 border border-gray-200 rounded shadow-md">
-                      <p className="font-medium">{payload[0].payload.name}</p>
-                      <p>Atividades: {payload[0].payload.activityCount}</p>
-                      <p>Horas Previstas: {payload[0].payload.estimatedHours}h</p>
-                      <p>Horas Trabalhadas: {payload[0].payload.actualHours}h</p>
-                      <p>Diferença: {formatarPorcentagem(payload[0].payload.hoursDifference)}%</p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend />
-            <Bar
-              dataKey="activityCount"
-              name="Quantidade de Atividades"
-              fill="#FF7F0E"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        {!hasData ? (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            Nenhum dado disponível para o período selecionado
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={macroTasks}>
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-white p-2 border border-gray-200 rounded shadow-md">
+                        <p className="font-medium">{payload[0].payload.name}</p>
+                        <p>Atividades: {payload[0].payload.activityCount}</p>
+                        <p>Horas Previstas: {payload[0].payload.estimatedHours}h</p>
+                        <p>Horas Trabalhadas: {payload[0].payload.actualHours}h</p>
+                        <p>Diferença: {formatarPorcentagem(payload[0].payload.hoursDifference)}%</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Legend />
+              <Bar
+                dataKey="activityCount"
+                name="Quantidade de Atividades"
+                fill="#FF7F0E"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </Card>
   );

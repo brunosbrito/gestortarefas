@@ -9,6 +9,8 @@ import { CollaboratorsChart } from './dashboard/charts/CollaboratorsChart';
 import { LoadingSpinner } from './dashboard/LoadingSpinner';
 import { ActivityStatistics } from '@/interfaces/ActivityStatistics';
 import { getActivityStatistics } from '@/services/StatisticsService';
+import { PeriodFilter, PeriodFilterType } from './dashboard/PeriodFilter';
+import { filterDataByPeriod } from '@/utils/dateFilter';
 
 // Cores para os gráficos
 const CORES = [
@@ -23,7 +25,9 @@ const CORES = [
 
 const Dashboard = () => {
   const [statistics, setStatistics] = useState<ActivityStatistics | null>(null);
+  const [filteredStatistics, setFilteredStatistics] = useState<ActivityStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilterType>('todos');
 
   // Estatísticas do painel
   const stats = [
@@ -31,25 +35,25 @@ const Dashboard = () => {
       title: 'Total de Obras',
       value: '12',
       icon: Building2,
-      color: 'bg-blue-500',
+      color: 'bg-[#FF7F0E]',
     },
     {
       title: 'Ordens de Serviço',
       value: '48',
       icon: ClipboardList,
-      color: 'bg-green-500',
+      color: 'bg-[#003366]',
     },
     {
       title: 'Atividades',
       value: '156',
       icon: Activity,
-      color: 'bg-purple-500',
+      color: 'bg-[#F7C948]',
     },
     {
       title: 'Usuários',
       value: '24',
       icon: Users,
-      color: 'bg-orange-500',
+      color: 'bg-[#B0B0B0]',
     },
   ];
 
@@ -59,6 +63,7 @@ const Dashboard = () => {
       try {
         const data = await getActivityStatistics();
         setStatistics(data);
+        setFilteredStatistics(data);
       } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
       } finally {
@@ -69,34 +74,62 @@ const Dashboard = () => {
     loadStatistics();
   }, []);
 
+  // Efeito para filtrar os dados quando o período muda
+  useEffect(() => {
+    if (!statistics) return;
+
+    if (periodFilter === 'todos') {
+      setFilteredStatistics(statistics);
+      return;
+    }
+
+    const filtered: ActivityStatistics = {
+      macroTasks: filterDataByPeriod(statistics.macroTasks, periodFilter),
+      processes: filterDataByPeriod(statistics.processes, periodFilter),
+      collaborators: filterDataByPeriod(statistics.collaborators, periodFilter)
+    };
+
+    setFilteredStatistics(filtered);
+  }, [periodFilter, statistics]);
+
+  const handlePeriodFilterChange = (period: PeriodFilterType) => {
+    setPeriodFilter(period);
+  };
+
   const formatarPorcentagem = (valor: number) => `${valor.toFixed(1)}%`;
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF7F0E]"></div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <StatsSummary stats={stats} />
+      
+      <PeriodFilter onFilterChange={handlePeriodFilterChange} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {statistics?.macroTasks && (
+        {filteredStatistics?.macroTasks && (
           <MacroTasksChart 
-            macroTasks={statistics.macroTasks} 
+            macroTasks={filteredStatistics.macroTasks} 
             formatarPorcentagem={formatarPorcentagem} 
           />
         )}
 
-        {statistics?.processes && (
-          <ProcessHoursChart processes={statistics.processes} />
+        {filteredStatistics?.processes && (
+          <ProcessHoursChart processes={filteredStatistics.processes} />
         )}
 
-        {statistics?.processes && (
-          <KPIVariationChart processes={statistics.processes} CORES={CORES} />
+        {filteredStatistics?.processes && (
+          <KPIVariationChart processes={filteredStatistics.processes} CORES={CORES} />
         )}
 
-        {statistics?.collaborators && (
-          <CollaboratorsChart collaborators={statistics.collaborators} />
+        {filteredStatistics?.collaborators && (
+          <CollaboratorsChart collaborators={filteredStatistics.collaborators} />
         )}
       </div>
     </div>
