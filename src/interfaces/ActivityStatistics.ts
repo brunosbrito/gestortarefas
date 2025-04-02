@@ -6,6 +6,7 @@ export interface MacroTaskStatistic {
   estimatedHours: number;
   actualHours: number;
   hoursDifference: number;
+  createdAt?: Date;
 }
 
 export interface ProcessStatistic {
@@ -15,6 +16,7 @@ export interface ProcessStatistic {
   estimatedHours: number;
   actualHours: number;
   hoursDifference: number;
+  createdAt?: Date;
 }
 
 export interface CollaboratorStatistic {
@@ -23,5 +25,6 @@ export interface CollaboratorStatistic {
   activityCount: number;
   hoursWorked: number;
   role: string;
+  createdAt?: Date;
 }
 

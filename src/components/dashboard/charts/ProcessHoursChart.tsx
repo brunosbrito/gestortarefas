@@ -34,6 +34,8 @@ const CustomXAxisTick = (props: any) => {
 };
 
 export const ProcessHoursChart = ({ processes }: ProcessHoursChartProps) => {
+  const hasData = processes.length > 0;
+  
   return (
     <Card className="p-6">
       <div className="flex items-center mb-4">

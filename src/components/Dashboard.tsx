@@ -29,8 +29,7 @@ const Dashboard = () => {
   const [totalServiceOrder, setTotalServiceOrder] = useState<Number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estatísticas do painel
-  
+
 
   const TotalActivities = async () => {
     const activities = await getAllActivities();
@@ -72,8 +71,6 @@ const Dashboard = () => {
       }
     };
 
-
-
     getMacroTask();
     getProcess();
     TotalActivities();
@@ -92,18 +89,22 @@ const Dashboard = () => {
       title: 'Ordens de Serviço',
       value: totalServiceOrder.toString(),
       icon: ClipboardList,
-      color: 'bg-green-500',
+      color: 'bg-[#003366]',
     },
     {
       title: 'Atividades',
       value: totalActivities.toString(),
       icon: Activity,
-      color: 'bg-purple-500',
+      color: 'bg-[#F7C948]',
     },
   ];
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF7F0E]"></div>
+      </div>
+    );
   }
 
   return (
