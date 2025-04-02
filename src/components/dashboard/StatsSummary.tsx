@@ -1,15 +1,8 @@
 
-import { StatsCard } from './StatsCard';
-
-interface StatItem {
-  title: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-}
+import { StatsCard, StatsCardProps } from './StatsCard';
 
 interface StatsSummaryProps {
-  stats: StatItem[];
+  stats: StatsCardProps[];
 }
 
 export const StatsSummary = ({ stats }: StatsSummaryProps) => {

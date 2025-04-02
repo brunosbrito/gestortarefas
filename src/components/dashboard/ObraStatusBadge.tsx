@@ -1,6 +1,7 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Check, Pause } from "lucide-react";
-import { ObraDetalhes } from "../Dashboard";
+import { ObraDetalhes } from "@/interfaces/ObraDetalhes";
 
 export const getStatusBadge = (status: ObraDetalhes["status"]) => {
   switch (status) {

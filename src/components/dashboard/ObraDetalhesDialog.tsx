@@ -1,7 +1,8 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Timer, Activity, ClipboardList } from "lucide-react";
-import { ObraDetalhes } from "../Dashboard";
+import { ObraDetalhes } from "@/interfaces/ObraDetalhes";
 
 interface ObraDetalhesDialogProps {
   obra: ObraDetalhes | null;
