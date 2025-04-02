@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import { Building2, ClipboardList, Activity, Users } from 'lucide-react';
 import { StatsSummary } from './dashboard/StatsSummary';
 import { MacroTasksChart } from './dashboard/charts/MacroTasksChart';
 import { ProcessHoursChart } from './dashboard/charts/ProcessHoursChart';
-import { KPIVariationChart } from './dashboard/charts/KPIVariationChart';
-import { CollaboratorsChart } from './dashboard/charts/CollaboratorsChart';
 import { LoadingSpinner } from './dashboard/LoadingSpinner';
-import { ActivityStatistics } from '@/interfaces/ActivityStatistics';
-import { getActivityStatistics } from '@/services/StatisticsService';
+import { MacroTaskStatistic, ProcessStatistic } from '@/interfaces/ActivityStatistics';
+import { dataMacroTask, dataProcess } from '@/services/StatisticsService';
+import { getAllActivities } from '@/services/ActivityService';
+import { getAllServiceOrders } from '@/services/ServiceOrderService';
+import ObrasService from '@/services/ObrasService';
 
 // Cores para os gráficos
 const CORES = [
@@ -22,54 +22,85 @@ const CORES = [
 ];
 
 const Dashboard = () => {
-  const [statistics, setStatistics] = useState<ActivityStatistics | null>(null);
+  const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
+  const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
+  const [totalActivities, setTotalActivities] = useState<Number>(0);
+  const [totalProjetos, setTotalProjetos] = useState<Number>(0);
+  const [totalServiceOrder, setTotalServiceOrder] = useState<Number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // Estatísticas do painel
-  const stats = [
-    {
-      title: 'Total de Obras',
-      value: '12',
-      icon: Building2,
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'Ordens de Serviço',
-      value: '48',
-      icon: ClipboardList,
-      color: 'bg-green-500',
-    },
-    {
-      title: 'Atividades',
-      value: '156',
-      icon: Activity,
-      color: 'bg-purple-500',
-    },
-    {
-      title: 'Usuários',
-      value: '24',
-      icon: Users,
-      color: 'bg-orange-500',
-    },
-  ];
+  
 
-  // Buscar estatísticas das atividades
+  const TotalActivities = async () => {
+    const activities = await getAllActivities();
+    setTotalActivities(activities.length)
+  }
+
+
+  const TotalProjects = async  () => {
+    const projects = await ObrasService.getAllObras();
+    setTotalProjetos(projects.length)
+  }
+
+  const TotalServiceOrder = async () => {
+    const serviceOrder = await getAllServiceOrders();
+    setTotalServiceOrder(serviceOrder.length)
+  }
+
+  
   useEffect(() => {
-    const loadStatistics = async () => {
+    const getMacroTask = async () => {
       try {
-        const data = await getActivityStatistics();
-        setStatistics(data);
+        const dadosMacroTask = await dataMacroTask();
+        setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
       } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
+        console.error("Erro ao buscar as atividades", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadStatistics();
+    const getProcess = async () => {
+      try {
+        const dadosProcesso = await dataProcess();
+        setProcessStatistic(dadosProcesso as ProcessStatistic[]);
+      } catch (error) {
+        console.error("Erro ao buscar as atividades", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+
+
+    getMacroTask();
+    getProcess();
+    TotalActivities();
+    TotalProjects();
+    TotalServiceOrder();
   }, []);
 
-  const formatarPorcentagem = (valor: number) => `${valor.toFixed(1)}%`;
+  const stats = [
+    {
+      title: 'Fabrica/Obra',
+      value: totalProjetos.toString(),
+      icon: Building2,
+      color: 'bg-green-500',
+    },
+    {
+      title: 'Ordens de Serviço',
+      value: totalServiceOrder.toString(),
+      icon: ClipboardList,
+      color: 'bg-green-500',
+    },
+    {
+      title: 'Atividades',
+      value: totalActivities.toString(),
+      icon: Activity,
+      color: 'bg-purple-500',
+    },
+  ];
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -80,27 +111,25 @@ const Dashboard = () => {
       <StatsSummary stats={stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {statistics?.macroTasks && (
-          <MacroTasksChart 
-            macroTasks={statistics.macroTasks} 
-            formatarPorcentagem={formatarPorcentagem} 
+        {macroTaskStatistic && (
+          <MacroTasksChart
+            macroTasks={macroTaskStatistic}
+
           />
         )}
 
-        {statistics?.processes && (
-          <ProcessHoursChart processes={statistics.processes} />
+        {processStatistic && (
+          <ProcessHoursChart processes={processStatistic} />
         )}
 
-        {statistics?.processes && (
-          <KPIVariationChart processes={statistics.processes} CORES={CORES} />
-        )}
+        {/* 
 
         {statistics?.collaborators && (
           <CollaboratorsChart collaborators={statistics.collaborators} />
-        )}
+        )} */}
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default Dashboard

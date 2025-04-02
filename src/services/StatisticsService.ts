@@ -1,40 +1,97 @@
+import API_URL from '@/config';
+import axios from 'axios';
 
-import { ActivityStatistics } from "@/interfaces/ActivityStatistics";
+const parseTimeToHours = (timeString: string | null | undefined): number => {
+  if (!timeString || typeof timeString !== 'string') {
+    console.warn("Valor inválido para timeString:", timeString);
+    return 0; // Retorna 0 horas se o valor for inválido
+  }
 
-// Dados de exemplo para desenvolvimento
-const mockStatistics: ActivityStatistics = {
-  macroTasks: [
-    { id: 1, name: "Estrutura", activityCount: 24, estimatedHours: 120, actualHours: 132, hoursDifference: 10 },
-    { id: 2, name: "Alvenaria", activityCount: 18, estimatedHours: 90, actualHours: 85, hoursDifference: -5.5 },
-    { id: 3, name: "Elétrica", activityCount: 15, estimatedHours: 60, actualHours: 72, hoursDifference: 20 },
-    { id: 4, name: "Hidráulica", activityCount: 12, estimatedHours: 48, actualHours: 45, hoursDifference: -6.25 },
-    { id: 5, name: "Acabamento", activityCount: 20, estimatedHours: 100, actualHours: 115, hoursDifference: 15 },
-  ],
-  processes: [
-    { id: 1, name: "Planejamento", activityCount: 10, estimatedHours: 50, actualHours: 45, hoursDifference: -10 },
-    { id: 2, name: "Execução", activityCount: 60, estimatedHours: 300, actualHours: 330, hoursDifference: 10 },
-    { id: 3, name: "Controle", activityCount: 12, estimatedHours: 48, actualHours: 52, hoursDifference: 8.3 },
-    { id: 4, name: "Finalização", activityCount: 8, estimatedHours: 20, actualHours: 22, hoursDifference: 10 },
-  ],
-  collaborators: [
-    { id: 1, name: "João Silva", activityCount: 28, hoursWorked: 140, role: "Engenheiro" },
-    { id: 2, name: "Maria Oliveira", activityCount: 22, hoursWorked: 110, role: "Arquiteta" },
-    { id: 3, name: "Pedro Santos", activityCount: 35, hoursWorked: 175, role: "Mestre de Obras" },
-    { id: 4, name: "Ana Costa", activityCount: 18, hoursWorked: 90, role: "Técnica" },
-    { id: 5, name: "Carlos Ferreira", activityCount: 26, hoursWorked: 130, role: "Eletricista" },
-  ]
+  const match = timeString.match(/(\d+)h(?:\s*(\d+)min)?/);
+  if (!match) {
+    console.warn("Formato inválido para timeString:", timeString);
+    return 0;
+  }
+
+  const hours = parseInt(match[1], 10) || 0;
+  const minutes = match[2] ? parseInt(match[2], 10) / 60 : 0;
+  
+  return hours + minutes;
 };
 
-// Função para buscar estatísticas das atividades
-export const getActivityStatistics = async (): Promise<ActivityStatistics> => {
-  // Em um ambiente de produção, aqui você faria uma chamada à API
-  // return await api.get('/statistics/activities');
-  
-  // Para desenvolvimento, retornamos os dados mockados
-  return new Promise((resolve) => {
-    // Simulando um delay de requisição
-    setTimeout(() => {
-      resolve(mockStatistics);
-    }, 500);
-  });
+
+export const dataMacroTask = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/activities`);
+    const activities = response.data.filter(x => x.status == 'Concluídas');
+
+    // Agrupar por macroTask
+    const groupedData = activities.reduce((acc, activity) => {
+      const { macroTask, estimatedTime, totalTime } = activity;
+
+      if (!acc[macroTask]) {
+        acc[macroTask] = {
+          macroTask,
+          activityCount: 0,
+          estimatedHours: 0,
+          actualHours: 0,
+          hoursDifference: 0,
+        };
+      }
+
+      const estimatedHours = parseTimeToHours(estimatedTime);
+      const actualHours = totalTime;
+
+      acc[macroTask].activityCount += 1;
+      acc[macroTask].estimatedHours += Math.round(estimatedHours);
+      acc[macroTask].actualHours += Math.round(actualHours);
+      acc[macroTask].hoursDifference = Math.round((acc[macroTask].actualHours / acc[macroTask].estimatedHours) * 100) ;
+
+      return acc;
+    }, {});
+
+    // Convertendo para um array
+    return Object.values(groupedData);
+  } catch (error) {
+    console.error('Error fetching activities', error);
+    throw error;
+  }
+};
+
+export const dataProcess = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/activities`);
+    const activities = response.data.filter(x => x.status == 'Concluídas');
+
+    // Agrupar por process
+    const groupedData = activities.reduce((acc, activity) => {
+      const { process, estimatedTime, totalTime } = activity;
+
+      if (!acc[process]) {
+        acc[process] = {
+          process,
+          activityCount: 0,
+          estimatedHours: 0,
+          actualHours: 0,
+          hoursDifference: 0,
+        };
+      }
+
+      const estimatedHours = parseTimeToHours(estimatedTime);
+      const actualHours = totalTime;
+
+      acc[process].activityCount += 1;
+      acc[process].estimatedHours += Math.round(estimatedHours);
+      acc[process].actualHours += Math.round(actualHours);
+      acc[process].hoursDifference = Math.round((acc[process].actualHours / acc[process].estimatedHours) * 100) ;
+
+      return acc;
+    }, {});
+
+    // Convertendo para um array
+    return Object.values(groupedData);
+  } catch (error) {
+    console.error('Error fetching activities', error);
+    throw error;
+  }
 };

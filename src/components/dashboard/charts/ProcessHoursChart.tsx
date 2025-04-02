@@ -1,14 +1,13 @@
-
 import { Card } from '@/components/ui/card';
-import { Clock } from 'lucide-react';
+import { HardDrive } from 'lucide-react';
 import { 
   BarChart, 
   Bar, 
   XAxis, 
   YAxis, 
   Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  Text
 } from 'recharts';
 import { ProcessStatistic } from '@/interfaces/ActivityStatistics';
 
@@ -16,42 +15,64 @@ interface ProcessHoursChartProps {
   processes: ProcessStatistic[];
 }
 
+// Componente customizado para exibir os rótulos no eixo X inclinados
+const CustomXAxisTick = (props: any) => {
+  const { x, y, payload } = props;
+  const truncatedText = payload.value.length > 10 ? `${payload.value.substring(0, 10)}...` : payload.value;
+
+  return (
+    <Text
+      x={x}
+      y={y + 20} // Ajusta a posição abaixo do eixo
+      textAnchor="end"
+      fontSize={10}
+      transform={`rotate(-30, ${x}, ${y})`} // Rotaciona o texto
+    >
+      {truncatedText}
+    </Text>
+  );
+};
+
 export const ProcessHoursChart = ({ processes }: ProcessHoursChartProps) => {
   return (
     <Card className="p-6">
       <div className="flex items-center mb-4">
-        <Clock className="w-5 h-5 mr-2 text-[#003366]" />
-        <h3 className="text-lg font-semibold">Horas por Processo</h3>
+        <HardDrive className="w-5 h-5 mr-2 text-[#003366]" />
+        <h3 className="text-lg font-semibold">Atividades por Processo</h3>
       </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={processes}>
-            <XAxis dataKey="name" />
+          <BarChart margin={{ top: 20, right: 30, left: 20, bottom: 50 }} data={processes}>
+            {/* Eixo X com labels inclinados */}
+            <XAxis
+              dataKey="process" // Alterado para o campo correto
+              tick={<CustomXAxisTick />}
+              interval={0} // Garante que todos os labels apareçam
+            />
             <YAxis />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
+                  const difference = payload[0].payload.hoursDifference;
+                  const differenceColor = difference > 100 ? "text-red-500" : "text-green-500";
+
                   return (
                     <div className="bg-white p-2 border border-gray-200 rounded shadow-md">
-                      <p className="font-medium">{payload[0].payload.name}</p>
+                      <p className="font-medium">{payload[0].payload.process}</p>
+                      <p>Atividades: {payload[0].payload.activityCount}</p>
                       <p>Horas Previstas: {payload[0].payload.estimatedHours}h</p>
                       <p>Horas Trabalhadas: {payload[0].payload.actualHours}h</p>
+                      <p className={differenceColor}>Diferença: {difference}%</p>
                     </div>
                   );
                 }
                 return null;
               }}
             />
-            <Legend />
+
             <Bar
-              dataKey="estimatedHours"
-              name="Horas Previstas"
-              fill="#B0B0B0"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              dataKey="actualHours"
-              name="Horas Trabalhadas"
+              dataKey="activityCount"
+              name="Quantidade de Atividades"
               fill="#003366"
               radius={[4, 4, 0, 0]}
             />
