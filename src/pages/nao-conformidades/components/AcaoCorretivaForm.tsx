@@ -109,11 +109,15 @@ export function AcaoCorretivaForm({ rncId, onClose }: AcaoCorretivaFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {colaboradores.map((colaborador) => (
-                    <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
-                      {colaborador.name}
-                    </SelectItem>
-                  ))}
+                  {colaboradores.length > 0 ? (
+                    colaboradores.map((colaborador) => (
+                      <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                        {colaborador.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="sem_responsavel">Sem colaboradores disponíveis</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />

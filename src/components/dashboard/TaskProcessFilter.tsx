@@ -40,12 +40,12 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
   }, []);
 
   const handleMacroTaskChange = (value: string) => {
-    const macroTaskId = value === '' ? null : parseInt(value);
+    const macroTaskId = value === 'todos' ? null : parseInt(value);
     onFilterChange({ ...currentFilters, macroTaskId });
   };
 
   const handleProcessChange = (value: string) => {
-    const processId = value === '' ? null : parseInt(value);
+    const processId = value === 'todos' ? null : parseInt(value);
     onFilterChange({ ...currentFilters, processId });
   };
 
@@ -61,7 +61,7 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
           <div>
             <label htmlFor="macroTask" className="block text-sm mb-1">Tarefa Macro</label>
             <Select 
-              value={currentFilters.macroTaskId?.toString() || ''} 
+              value={currentFilters.macroTaskId?.toString() || 'todos'} 
               onValueChange={handleMacroTaskChange}
               disabled={isLoading}
             >
@@ -69,7 +69,7 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
                 <SelectValue placeholder="Todas Tarefas Macro" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas Tarefas Macro</SelectItem>
+                <SelectItem value="todos">Todas Tarefas Macro</SelectItem>
                 {macroTasks.map(task => (
                   <SelectItem key={task.id} value={task.id.toString()}>
                     {task.name}
@@ -81,7 +81,7 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
           <div>
             <label htmlFor="process" className="block text-sm mb-1">Processo</label>
             <Select 
-              value={currentFilters.processId?.toString() || ''} 
+              value={currentFilters.processId?.toString() || 'todos'} 
               onValueChange={handleProcessChange}
               disabled={isLoading}
             >
@@ -89,7 +89,7 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
                 <SelectValue placeholder="Todos Processos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos Processos</SelectItem>
+                <SelectItem value="todos">Todos Processos</SelectItem>
                 {processes.map(process => (
                   <SelectItem key={process.id} value={process.id.toString()}>
                     {process.name}

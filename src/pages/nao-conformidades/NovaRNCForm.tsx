@@ -145,11 +145,15 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {os.map((o) => (
-                      <SelectItem key={o.id} value={o.id.toString()}>
-                        {o.serviceOrderNumber} - {o.description}
-                      </SelectItem>
-                    ))}
+                    {os.length > 0 ? (
+                      os.map((o) => (
+                        <SelectItem key={o.id} value={o.id.toString()}>
+                          {o.serviceOrderNumber} - {o.description}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="sem_os">Sem ordens de serviço disponíveis</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -172,11 +176,15 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {colaboradores.map((c) => (
-                      <SelectItem key={c.id} value={c.id.toString()}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
+                    {colaboradores.length > 0 ? (
+                      colaboradores.map((c) => (
+                        <SelectItem key={c.id} value={c.id.toString()}>
+                          {c.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="sem_colaborador">Sem colaboradores disponíveis</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -197,11 +205,15 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {colaboradores.map((c) => (
-                      <SelectItem key={c.id} value={c.id.toString()}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
+                    {colaboradores.length > 0 ? (
+                      colaboradores.map((c) => (
+                        <SelectItem key={c.id} value={c.id.toString()}>
+                          {c.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="sem_identificador">Sem colaboradores disponíveis</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />

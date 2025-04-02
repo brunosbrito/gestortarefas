@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -174,7 +175,7 @@ export const PontoForm = ({
                 <FormLabel>Obra</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  defaultValue={field.value || ''}
                 >
                   <FormControl>
                     <SelectTrigger>
