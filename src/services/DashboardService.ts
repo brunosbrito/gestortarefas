@@ -19,11 +19,17 @@ export const getFilteredServiceOrders = async (macroTaskId?: number | null, proc
       let matchProcess = true;
       
       if (macroTaskId) {
-        matchMacroTask = activity.macroTaskId === macroTaskId;
+        matchMacroTask = activity.macroTask && 
+          (typeof activity.macroTask === 'object' && 'id' in activity.macroTask 
+            ? activity.macroTask.id === macroTaskId
+            : false);
       }
       
       if (processId) {
-        matchProcess = activity.processId === processId;
+        matchProcess = activity.process && 
+          (typeof activity.process === 'object' && 'id' in activity.process 
+            ? activity.process.id === processId 
+            : false);
       }
       
       return matchMacroTask && matchProcess;
@@ -75,11 +81,17 @@ export const getFilteredActivities = async (macroTaskId?: number | null, process
         let matchProcess = true;
         
         if (macroTaskId) {
-          matchMacroTask = activity.macroTaskId === macroTaskId;
+          matchMacroTask = activity.macroTask && 
+            (typeof activity.macroTask === 'object' && 'id' in activity.macroTask 
+              ? activity.macroTask.id === macroTaskId 
+              : false);
         }
         
         if (processId) {
-          matchProcess = activity.processId === processId;
+          matchProcess = activity.process && 
+            (typeof activity.process === 'object' && 'id' in activity.process 
+              ? activity.process.id === processId 
+              : false);
         }
         
         return matchMacroTask && matchProcess;
@@ -88,8 +100,12 @@ export const getFilteredActivities = async (macroTaskId?: number | null, process
         id: activity.id,
         description: activity.description,
         status: activity.status || 'Não especificado',
-        macroTask: activity.macroTask?.name || 'Não especificado',
-        process: activity.process?.name || 'Não especificado',
+        macroTask: typeof activity.macroTask === 'object' && activity.macroTask?.name 
+          ? activity.macroTask.name 
+          : 'Não especificado',
+        process: typeof activity.process === 'object' && activity.process?.name 
+          ? activity.process.name 
+          : 'Não especificado',
         serviceOrderNumber: activity.orderServiceId 
           ? soNumberMap[activity.orderServiceId.toString()] || 'N/A' 
           : 'N/A',

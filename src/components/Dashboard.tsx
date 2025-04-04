@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Building2, ClipboardList, Activity, Users } from 'lucide-react';
 import { StatsSummary } from './dashboard/StatsSummary';
@@ -64,15 +65,10 @@ const Dashboard = () => {
     const statusCount = activities.reduce((counts: any, activity) => {
       const status = activity.status || 'Não especificado';
       
-      if (status === 'Planejado' || status === 'Planejadas') {
-        counts.planejadas++;
-      } else if (status === 'Em andamento' || status === 'Em execução') {
-        counts.emExecucao++;
-      } else if (status === 'Concluída' || status === 'Concluídas') {
-        counts.concluidas++;
-      } else if (status === 'Paralizada' || status === 'Paralizadas') {
-        counts.paralizadas++;
-      }
+      if (status === 'Planejadas') counts.planejadas++;
+      else if (status === 'Em execução') counts.emExecucao++;
+      else if (status === 'Concluídas') counts.concluidas++;
+      else if (status === 'Paralizadas') counts.paralizadas++;
       
       return counts;
     }, { planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
