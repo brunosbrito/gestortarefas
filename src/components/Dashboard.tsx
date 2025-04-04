@@ -16,6 +16,8 @@ import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
 import { DashboardFilters, FilteredActivity, FilteredServiceOrder } from '@/interfaces/DashboardFilters';
 import { getFilteredActivities, getFilteredServiceOrders } from '@/services/DashboardService';
 import { Separator } from './ui/separator';
+import { PeriodFilter, PeriodFilterType } from './dashboard/PeriodFilter';
+import { ActivityStatusCards } from './dashboard/ActivityStatusCards';
 
 // Cores para os gráficos
 const CORES = [
@@ -31,9 +33,9 @@ const CORES = [
 const Dashboard = () => {
   const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
-  const [totalActivities, setTotalActivities] = useState<Number>(0);
-  const [totalProjetos, setTotalProjetos] = useState<Number>(0);
-  const [totalServiceOrder, setTotalServiceOrder] = useState<Number>(0);
+  const [totalActivities, setTotalActivities] = useState<number>(0);
+  const [totalProjetos, setTotalProjetos] = useState<number>(0);
+  const [totalServiceOrder, setTotalServiceOrder] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<DashboardFilters>({
     macroTaskId: null,
@@ -43,20 +45,45 @@ const Dashboard = () => {
   const [filteredServiceOrders, setFilteredServiceOrders] = useState<FilteredServiceOrder[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<FilteredActivity[]>([]);
   const [isFilteredDataLoading, setIsFilteredDataLoading] = useState(false);
+  const [activitiesByStatus, setActivitiesByStatus] = useState<{
+    planejadas: number;
+    emExecucao: number;
+    concluidas: number;
+    paralizadas: number;
+  }>({
+    planejadas: 0,
+    emExecucao: 0,
+    concluidas: 0,
+    paralizadas: 0
+  });
 
   const TotalActivities = async () => {
     const activities = await getAllActivities();
-    setTotalActivities(activities.length)
+    setTotalActivities(activities.length);
+    
+    // Contar atividades por status
+    const statusCount = activities.reduce((counts: any, activity) => {
+      const status = activity.status || 'Não especificado';
+      
+      if (status === 'Planejadas') counts.planejadas++;
+      else if (status === 'Em execução') counts.emExecucao++;
+      else if (status === 'Concluídas') counts.concluidas++;
+      else if (status === 'Paralizadas') counts.paralizadas++;
+      
+      return counts;
+    }, { planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
+    
+    setActivitiesByStatus(statusCount);
   }
 
-  const TotalProjects = async  () => {
+  const TotalProjects = async () => {
     const projects = await ObrasService.getAllObras();
-    setTotalProjetos(projects.length)
+    setTotalProjetos(projects.length);
   }
 
   const TotalServiceOrder = async () => {
     const serviceOrder = await getAllServiceOrders();
-    setTotalServiceOrder(serviceOrder.length)
+    setTotalServiceOrder(serviceOrder.length);
   }
   
   useEffect(() => {
@@ -114,6 +141,10 @@ const Dashboard = () => {
     setFilters(newFilters);
   };
 
+  const handlePeriodChange = (period: PeriodFilterType) => {
+    setFilters(prev => ({ ...prev, period }));
+  };
+
   const stats = [
     {
       title: 'Fabrica/Obra',
@@ -146,6 +177,10 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <StatsSummary stats={stats} />
+      
+      <ActivityStatusCards activitiesByStatus={activitiesByStatus} />
+
+      <PeriodFilter onFilterChange={handlePeriodChange} defaultValue="todos" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {macroTaskStatistic && (

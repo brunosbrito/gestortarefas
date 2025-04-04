@@ -19,14 +19,17 @@ export const getFilteredServiceOrders = async (macroTaskId?: number | null, proc
       let matchProcess = true;
       
       if (macroTaskId) {
-        // Suponha que precisamos buscar a tarefa macro pelo ID para comparar com o nome na atividade
-        // Isso é uma simulação, já que não temos acesso direto ao ID da tarefa macro na atividade
-        matchMacroTask = activity.macroTask ? true : false; // Lógica simplificada
+        matchMacroTask = activity.macroTask && 
+          (typeof activity.macroTask === 'object' && 'id' in activity.macroTask 
+            ? activity.macroTask.id === macroTaskId
+            : false);
       }
       
       if (processId) {
-        // Similar ao acima
-        matchProcess = activity.process ? true : false; // Lógica simplificada
+        matchProcess = activity.process && 
+          (typeof activity.process === 'object' && 'id' in activity.process 
+            ? activity.process.id === processId 
+            : false);
       }
       
       return matchMacroTask && matchProcess;
@@ -78,12 +81,17 @@ export const getFilteredActivities = async (macroTaskId?: number | null, process
         let matchProcess = true;
         
         if (macroTaskId) {
-          // Na prática, precisaríamos comparar o ID, mas aqui estamos simulando
-          matchMacroTask = activity.macroTask ? true : false;
+          matchMacroTask = activity.macroTask && 
+            (typeof activity.macroTask === 'object' && 'id' in activity.macroTask 
+              ? activity.macroTask.id === macroTaskId 
+              : false);
         }
         
         if (processId) {
-          matchProcess = activity.process ? true : false;
+          matchProcess = activity.process && 
+            (typeof activity.process === 'object' && 'id' in activity.process 
+              ? activity.process.id === processId 
+              : false);
         }
         
         return matchMacroTask && matchProcess;
@@ -91,11 +99,17 @@ export const getFilteredActivities = async (macroTaskId?: number | null, process
       .map(activity => ({
         id: activity.id,
         description: activity.description,
-        status: activity.status,
-        macroTask: activity.macroTask || 'Não especificado',
-        process: activity.process || 'Não especificado',
-        serviceOrderNumber: activity.orderServiceId ? soNumberMap[activity.orderServiceId.toString()] || 'N/A' : 'N/A',
-        projectName: activity.projectId ? 'Projeto #' + activity.projectId : 'N/A'
+        status: activity.status || 'Não especificado',
+        macroTask: typeof activity.macroTask === 'object' && activity.macroTask?.name 
+          ? activity.macroTask.name 
+          : 'Não especificado',
+        process: typeof activity.process === 'object' && activity.process?.name 
+          ? activity.process.name 
+          : 'Não especificado',
+        serviceOrderNumber: activity.orderServiceId 
+          ? soNumberMap[activity.orderServiceId.toString()] || 'N/A' 
+          : 'N/A',
+        projectName: activity.project?.name || 'N/A'
       }));
     
     return filteredActivities;
