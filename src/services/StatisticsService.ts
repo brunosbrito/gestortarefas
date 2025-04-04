@@ -20,7 +20,6 @@ const parseTimeToHours = (timeString: string | null | undefined): number => {
   return hours + minutes;
 };
 
-
 export const dataMacroTask = async () => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
@@ -28,7 +27,7 @@ export const dataMacroTask = async () => {
 
     // Agrupar por macroTaskId
     const groupedData = activities.reduce((acc: any, activity: any) => {
-      const macroTaskId = activity.macroTaskId;
+      const macroTaskId = activity.macroTask.id;
       const macroTaskName = activity.macroTask?.name || 'Não especificado';
       
       if (!macroTaskId) return acc;
@@ -83,7 +82,7 @@ export const dataProcess = async () => {
 
     // Agrupar por processId
     const groupedData = activities.reduce((acc: any, activity: any) => {
-      const processId = activity.processId;
+      const processId = activity.process.id;
       const processName = activity.process?.name || 'Não especificado';
       
       if (!processId) return acc;

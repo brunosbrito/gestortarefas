@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
@@ -6,7 +5,6 @@ import { TarefaMacro } from '@/interfaces/TarefaMacroInterface';
 import { Processo } from '@/interfaces/ProcessoInterface';
 import TarefaMacroService from '@/services/TarefaMacroService';
 import ProcessService from '@/services/ProcessService';
-import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import { Filter } from 'lucide-react';
 import { DashboardFilters } from '@/interfaces/DashboardFilters';
 
@@ -18,27 +16,19 @@ interface TaskProcessFilterProps {
 export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProcessFilterProps) => {
   const [macroTasks, setMacroTasks] = useState<TarefaMacro[]>([]);
   const [processes, setProcesses] = useState<Processo[]>([]);
-  const [serviceOrders, setServiceOrders] = useState<{id: string, serviceOrderNumber: string}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [macroTaskResponse, processResponse, serviceOrdersResponse] = await Promise.all([
+        const [macroTaskResponse, processResponse] = await Promise.all([
           TarefaMacroService.getAll(),
-          ProcessService.getAll(),
-          getAllServiceOrders()
+          ProcessService.getAll()
         ]);
-        
+
         setMacroTasks(macroTaskResponse.data);
         setProcesses(processResponse.data);
-        setServiceOrders(
-          serviceOrdersResponse.map((so: any) => ({ 
-            id: so.id, 
-            serviceOrderNumber: so.serviceOrderNumber 
-          }))
-        );
       } catch (error) {
         console.error("Erro ao buscar dados para filtros:", error);
       } finally {
@@ -59,11 +49,6 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
     onFilterChange({ ...currentFilters, processId });
   };
 
-  const handleServiceOrderChange = (value: string) => {
-    const serviceOrderId = value === 'todos' ? null : value;
-    onFilterChange({ ...currentFilters, serviceOrderId });
-  };
-
   return (
     <Card className="p-4 mb-4">
       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -71,8 +56,8 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
           <Filter className="h-5 w-5 text-[#FF7F0E]" />
           <h3 className="font-medium">Filtrar por:</h3>
         </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
           <div>
             <label htmlFor="macroTask" className="block text-sm mb-1">Tarefa Macro</label>
             <Select 
@@ -108,26 +93,6 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
                 {processes.map(process => (
                   <SelectItem key={process.id} value={process.id.toString()}>
                     {process.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label htmlFor="serviceOrder" className="block text-sm mb-1">Ordem de Serviço</label>
-            <Select 
-              value={currentFilters.serviceOrderId || 'todos'} 
-              onValueChange={handleServiceOrderChange}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="serviceOrder" className="w-full">
-                <SelectValue placeholder="Todas Ordens de Serviço" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todas Ordens de Serviço</SelectItem>
-                {serviceOrders.map(so => (
-                  <SelectItem key={so.id} value={so.id}>
-                    {so.serviceOrderNumber}
                   </SelectItem>
                 ))}
               </SelectContent>

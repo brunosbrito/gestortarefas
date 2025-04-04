@@ -11,6 +11,8 @@ export const filterDataByPeriod = <T extends { createdAt?: string | Date | undef
   }
 
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Garante que estamos comparando apenas a data, sem horário
+
   let startDate: Date;
 
   switch (periodFilter) {
@@ -28,17 +30,22 @@ export const filterDataByPeriod = <T extends { createdAt?: string | Date | undef
   }
 
   return data.filter(item => {
-    if (!item.createdAt) return true;
-    
-    const itemDate = typeof item.createdAt === 'string' 
-      ? new Date(item.createdAt) 
-      : item.createdAt;
-    
-    if (!(itemDate instanceof Date) || isNaN(itemDate.getTime())) {
-      console.warn("Data inválida:", item.createdAt);
-      return true;
+    if (!item.createdAt) return false;
+
+    let itemDate: Date;
+    if (typeof item.createdAt === 'string') {
+      itemDate = new Date(item.createdAt);
+    } else {
+      itemDate = item.createdAt;
     }
-    
-    return isAfter(itemDate, startDate);
+
+    if (isNaN(itemDate.getTime())) {
+      console.warn("Data inválida:", item.createdAt);
+      return false;
+    }
+
+    itemDate.setHours(0, 0, 0, 0); // Remove a influência do horário
+
+    return itemDate >= startDate;
   });
 };

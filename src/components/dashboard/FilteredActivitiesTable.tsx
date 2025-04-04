@@ -26,6 +26,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
   };
 
   if (loading) {
+    console.log(activities)
     return (
       <Card className="p-6">
         <div className="flex items-center mb-4">
@@ -54,7 +55,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
               <TableHead>Tarefa Macro</TableHead>
               <TableHead>Processo</TableHead>
               <TableHead>OS</TableHead>
-              <TableHead>Projeto</TableHead>
+              <TableHead>Fábrica/Obra</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -64,7 +65,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
                 <TableCell>{activity.description}</TableCell>
                 <TableCell>{activity.macroTask}</TableCell>
                 <TableCell>{activity.process}</TableCell>
-                <TableCell>{activity.serviceOrderNumber}</TableCell>
+                <TableCell>{activity.serviceOrder.serviceOrderNumber}</TableCell>
                 <TableCell>{activity.projectName}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className={getStatusColor(activity.status)}>
