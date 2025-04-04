@@ -1,3 +1,4 @@
+
 import API_URL from '@/config';
 import axios from 'axios';
 
@@ -23,15 +24,21 @@ const parseTimeToHours = (timeString: string | null | undefined): number => {
 export const dataMacroTask = async () => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
-    const activities = response.data.filter(x => x.status == 'Concluídas');
+    const activities = response.data.filter(x => x.status === 'Concluídas');
 
-    // Agrupar por macroTask
+    // Agrupar por macroTaskId
     const groupedData = activities.reduce((acc, activity) => {
-      const { macroTask, estimatedTime, totalTime } = activity;
-
-      if (!acc[macroTask]) {
-        acc[macroTask] = {
-          macroTask,
+      const macroTaskId = activity.macroTaskId;
+      const macroTaskName = activity.macroTask?.name || 'Não especificado';
+      
+      if (!macroTaskId) return acc;
+      
+      const key = macroTaskId.toString();
+      
+      if (!acc[key]) {
+        acc[key] = {
+          macroTaskId,
+          macroTask: macroTaskName,
           activityCount: 0,
           estimatedHours: 0,
           actualHours: 0,
@@ -39,13 +46,15 @@ export const dataMacroTask = async () => {
         };
       }
 
-      const estimatedHours = parseTimeToHours(estimatedTime);
-      const actualHours = totalTime;
+      const estimatedHours = parseTimeToHours(activity.estimatedTime);
+      const actualHours = activity.totalTime || 0;
 
-      acc[macroTask].activityCount += 1;
-      acc[macroTask].estimatedHours += Math.round(estimatedHours);
-      acc[macroTask].actualHours += Math.round(actualHours);
-      acc[macroTask].hoursDifference = Math.round((acc[macroTask].actualHours / acc[macroTask].estimatedHours) * 100) ;
+      acc[key].activityCount += 1;
+      acc[key].estimatedHours += Math.round(estimatedHours);
+      acc[key].actualHours += Math.round(actualHours);
+      acc[key].hoursDifference = acc[key].estimatedHours > 0 
+        ? Math.round((acc[key].actualHours / acc[key].estimatedHours) * 100)
+        : 0;
 
       return acc;
     }, {});
@@ -61,15 +70,21 @@ export const dataMacroTask = async () => {
 export const dataProcess = async () => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
-    const activities = response.data.filter(x => x.status == 'Concluídas');
+    const activities = response.data.filter(x => x.status === 'Concluídas');
 
-    // Agrupar por process
+    // Agrupar por processId
     const groupedData = activities.reduce((acc, activity) => {
-      const { process, estimatedTime, totalTime } = activity;
-
-      if (!acc[process]) {
-        acc[process] = {
-          process,
+      const processId = activity.processId;
+      const processName = activity.process?.name || 'Não especificado';
+      
+      if (!processId) return acc;
+      
+      const key = processId.toString();
+      
+      if (!acc[key]) {
+        acc[key] = {
+          processId,
+          process: processName,
           activityCount: 0,
           estimatedHours: 0,
           actualHours: 0,
@@ -77,13 +92,15 @@ export const dataProcess = async () => {
         };
       }
 
-      const estimatedHours = parseTimeToHours(estimatedTime);
-      const actualHours = totalTime;
+      const estimatedHours = parseTimeToHours(activity.estimatedTime);
+      const actualHours = activity.totalTime || 0;
 
-      acc[process].activityCount += 1;
-      acc[process].estimatedHours += Math.round(estimatedHours);
-      acc[process].actualHours += Math.round(actualHours);
-      acc[process].hoursDifference = Math.round((acc[process].actualHours / acc[process].estimatedHours) * 100) ;
+      acc[key].activityCount += 1;
+      acc[key].estimatedHours += Math.round(estimatedHours);
+      acc[key].actualHours += Math.round(actualHours);
+      acc[key].hoursDifference = acc[key].estimatedHours > 0 
+        ? Math.round((acc[key].actualHours / acc[key].estimatedHours) * 100)
+        : 0;
 
       return acc;
     }, {});

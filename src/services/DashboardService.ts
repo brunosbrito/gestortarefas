@@ -5,10 +5,38 @@ import { FilteredActivity, FilteredServiceOrder } from '@/interfaces/DashboardFi
 import { getAllServiceOrders } from './ServiceOrderService';
 import { getAllActivities } from './ActivityService';
 
-export const getFilteredServiceOrders = async (macroTaskId?: number | null, processId?: number | null): Promise<FilteredServiceOrder[]> => {
+export const getFilteredServiceOrders = async (
+  macroTaskId?: number | null, 
+  processId?: number | null,
+  serviceOrderId?: string | null
+): Promise<FilteredServiceOrder[]> => {
   try {
     // Busca todas as ordens de serviço
     const serviceOrders = await getAllServiceOrders();
+    
+    // Se um serviceOrderId específico foi fornecido, filtra diretamente
+    if (serviceOrderId) {
+      const filteredSO = serviceOrders
+        .filter(so => so.id === serviceOrderId)
+        .map(so => ({
+          id: so.id,
+          serviceOrderNumber: so.serviceOrderNumber,
+          description: so.description,
+          projectName: so.projectId?.name || 'Sem projeto',
+          status: so.status,
+          activityCount: 0 // Será atualizado abaixo
+        }));
+      
+      // Busca atividades para contar
+      const activities = await getAllActivities();
+      const activityCount = activities.filter(a => a.orderServiceId === serviceOrderId).length;
+      
+      if (filteredSO.length > 0) {
+        filteredSO[0].activityCount = activityCount;
+      }
+      
+      return filteredSO;
+    }
     
     // Busca todas as atividades
     const activities = await getAllActivities();
@@ -19,17 +47,11 @@ export const getFilteredServiceOrders = async (macroTaskId?: number | null, proc
       let matchProcess = true;
       
       if (macroTaskId) {
-        matchMacroTask = activity.macroTask && 
-          (typeof activity.macroTask === 'object' && 'id' in activity.macroTask 
-            ? activity.macroTask.id === macroTaskId
-            : false);
+        matchMacroTask = activity.macroTaskId === macroTaskId;
       }
       
       if (processId) {
-        matchProcess = activity.process && 
-          (typeof activity.process === 'object' && 'id' in activity.process 
-            ? activity.process.id === processId 
-            : false);
+        matchProcess = activity.processId === processId;
       }
       
       return matchMacroTask && matchProcess;
@@ -63,7 +85,11 @@ export const getFilteredServiceOrders = async (macroTaskId?: number | null, proc
   }
 };
 
-export const getFilteredActivities = async (macroTaskId?: number | null, processId?: number | null): Promise<FilteredActivity[]> => {
+export const getFilteredActivities = async (
+  macroTaskId?: number | null, 
+  processId?: number | null,
+  serviceOrderId?: string | null
+): Promise<FilteredActivity[]> => {
   try {
     const activities = await getAllActivities();
     const serviceOrders = await getAllServiceOrders();
@@ -79,22 +105,21 @@ export const getFilteredActivities = async (macroTaskId?: number | null, process
       .filter(activity => {
         let matchMacroTask = true;
         let matchProcess = true;
+        let matchServiceOrder = true;
         
         if (macroTaskId) {
-          matchMacroTask = activity.macroTask && 
-            (typeof activity.macroTask === 'object' && 'id' in activity.macroTask 
-              ? activity.macroTask.id === macroTaskId 
-              : false);
+          matchMacroTask = activity.macroTaskId === macroTaskId;
         }
         
         if (processId) {
-          matchProcess = activity.process && 
-            (typeof activity.process === 'object' && 'id' in activity.process 
-              ? activity.process.id === processId 
-              : false);
+          matchProcess = activity.processId === processId;
         }
         
-        return matchMacroTask && matchProcess;
+        if (serviceOrderId) {
+          matchServiceOrder = activity.orderServiceId === serviceOrderId;
+        }
+        
+        return matchMacroTask && matchProcess && matchServiceOrder;
       })
       .map(activity => ({
         id: activity.id,
@@ -103,12 +128,15 @@ export const getFilteredActivities = async (macroTaskId?: number | null, process
         macroTask: typeof activity.macroTask === 'object' && activity.macroTask?.name 
           ? activity.macroTask.name 
           : 'Não especificado',
+        macroTaskId: activity.macroTaskId,
         process: typeof activity.process === 'object' && activity.process?.name 
           ? activity.process.name 
           : 'Não especificado',
+        processId: activity.processId,
         serviceOrderNumber: activity.orderServiceId 
           ? soNumberMap[activity.orderServiceId.toString()] || 'N/A' 
           : 'N/A',
+        serviceOrderId: activity.orderServiceId,
         projectName: activity.project?.name || 'N/A'
       }));
     

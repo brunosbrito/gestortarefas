@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Building2, ClipboardList, Activity, Users } from 'lucide-react';
+import { Building2, ClipboardList, Activity } from 'lucide-react';
 import { StatsSummary } from './dashboard/StatsSummary';
 import { MacroTasksChart } from './dashboard/charts/MacroTasksChart';
 import { ProcessHoursChart } from './dashboard/charts/ProcessHoursChart';
@@ -11,7 +11,6 @@ import { getAllActivities } from '@/services/ActivityService';
 import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import ObrasService from '@/services/ObrasService';
 import { TaskProcessFilter } from './dashboard/TaskProcessFilter';
-import { FilteredServiceOrderTable } from './dashboard/FilteredServiceOrderTable';
 import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
 import { DashboardFilters, FilteredActivity, FilteredServiceOrder } from '@/interfaces/DashboardFilters';
 import { getFilteredActivities, getFilteredServiceOrders } from '@/services/DashboardService';
@@ -40,9 +39,9 @@ const Dashboard = () => {
   const [filters, setFilters] = useState<DashboardFilters>({
     macroTaskId: null,
     processId: null,
+    serviceOrderId: null,
     period: null
   });
-  const [filteredServiceOrders, setFilteredServiceOrders] = useState<FilteredServiceOrder[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<FilteredActivity[]>([]);
   const [isFilteredDataLoading, setIsFilteredDataLoading] = useState(false);
   const [activitiesByStatus, setActivitiesByStatus] = useState<{
@@ -65,10 +64,10 @@ const Dashboard = () => {
     const statusCount = activities.reduce((counts: any, activity) => {
       const status = activity.status || 'Não especificado';
       
-      if (status === 'Planejadas') counts.planejadas++;
-      else if (status === 'Em execução') counts.emExecucao++;
-      else if (status === 'Concluídas') counts.concluidas++;
-      else if (status === 'Paralizadas') counts.paralizadas++;
+      if (status.includes('Planejada')) counts.planejadas++;
+      else if (status.includes('Em execução')) counts.emExecucao++;
+      else if (status.includes('Concluída')) counts.concluidas++;
+      else if (status.includes('Paralizada')) counts.paralizadas++;
       
       return counts;
     }, { planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
@@ -120,12 +119,13 @@ const Dashboard = () => {
     const loadFilteredData = async () => {
       setIsFilteredDataLoading(true);
       try {
-        const [serviceOrders, activities] = await Promise.all([
-          getFilteredServiceOrders(filters.macroTaskId, filters.processId),
-          getFilteredActivities(filters.macroTaskId, filters.processId)
-        ]);
+        // Busca as atividades filtradas diretamente
+        const activities = await getFilteredActivities(
+          filters.macroTaskId, 
+          filters.processId,
+          filters.serviceOrderId
+        );
         
-        setFilteredServiceOrders(serviceOrders);
         setFilteredActivities(activities);
       } catch (error) {
         console.error("Erro ao carregar dados filtrados:", error);
@@ -199,11 +199,6 @@ const Dashboard = () => {
       <TaskProcessFilter onFilterChange={handleFilterChange} currentFilters={filters} />
       
       <div className="grid grid-cols-1 gap-6">
-        <FilteredServiceOrderTable 
-          serviceOrders={filteredServiceOrders} 
-          loading={isFilteredDataLoading} 
-        />
-        
         <FilteredActivitiesTable 
           activities={filteredActivities} 
           loading={isFilteredDataLoading} 

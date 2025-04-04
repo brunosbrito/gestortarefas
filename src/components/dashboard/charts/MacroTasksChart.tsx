@@ -1,3 +1,4 @@
+
 import { Card } from '@/components/ui/card';
 import { HardDrive } from 'lucide-react';
 import {
@@ -60,6 +61,7 @@ export const MacroTasksChart = ({ macroTasks }: MacroTasksChartProps) => {
                   return (
                     <div className="bg-white p-2 border border-gray-200 rounded shadow-md">
                       <p className="font-medium">{payload[0].payload.macroTask}</p>
+                      <p>ID: {payload[0].payload.macroTaskId}</p>
                       <p>Atividades: {payload[0].payload.activityCount}</p>
                       <p>Horas Previstas: {payload[0].payload.estimatedHours}h</p>
                       <p>Horas Trabalhadas: {payload[0].payload.actualHours}h</p>

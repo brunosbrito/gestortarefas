@@ -1,6 +1,6 @@
 
 export interface MacroTaskStatistic {
-  id: number;
+  macroTaskId?: number;
   macroTask: string;
   activityCount: number;
   estimatedHours: number;
@@ -10,7 +10,7 @@ export interface MacroTaskStatistic {
 }
 
 export interface ProcessStatistic {
-  id: number;
+  processId?: number;
   process: string;
   activityCount: number;
   estimatedHours: number;
@@ -27,4 +27,3 @@ export interface CollaboratorStatistic {
   role: string;
   createdAt?: Date;
 }
-
