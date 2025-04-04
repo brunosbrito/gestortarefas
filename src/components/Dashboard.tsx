@@ -5,18 +5,20 @@ import { StatsSummary } from './dashboard/StatsSummary';
 import { MacroTasksChart } from './dashboard/charts/MacroTasksChart';
 import { ProcessHoursChart } from './dashboard/charts/ProcessHoursChart';
 import { LoadingSpinner } from './dashboard/LoadingSpinner';
-import { MacroTaskStatistic, ProcessStatistic } from '@/interfaces/ActivityStatistics';
+import { CollaboratorsChart } from './dashboard/charts/CollaboratorsChart';
+import { MacroTaskStatistic, ProcessStatistic, CollaboratorStatistic } from '@/interfaces/ActivityStatistics';
 import { dataMacroTask, dataProcess } from '@/services/StatisticsService';
 import { getAllActivities } from '@/services/ActivityService';
 import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import ObrasService from '@/services/ObrasService';
 import { TaskProcessFilter } from './dashboard/TaskProcessFilter';
 import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
-import { DashboardFilters, FilteredActivity, FilteredServiceOrder } from '@/interfaces/DashboardFilters';
-import { getFilteredActivities, getFilteredServiceOrders } from '@/services/DashboardService';
+import { DashboardFilters, FilteredActivity } from '@/interfaces/DashboardFilters';
+import { getFilteredActivities } from '@/services/DashboardService';
 import { Separator } from './ui/separator';
 import { PeriodFilter, PeriodFilterType } from './dashboard/PeriodFilter';
 import { ActivityStatusCards } from './dashboard/ActivityStatusCards';
+import { filterDataByPeriod } from '@/utils/dateFilter';
 
 // Cores para os gráficos
 const CORES = [
@@ -32,6 +34,7 @@ const CORES = [
 const Dashboard = () => {
   const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
+  const [collaboratorStatistic, setCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
   const [totalActivities, setTotalActivities] = useState<number>(0);
   const [totalProjetos, setTotalProjetos] = useState<number>(0);
   const [totalServiceOrder, setTotalServiceOrder] = useState<number>(0);
@@ -40,10 +43,11 @@ const Dashboard = () => {
     macroTaskId: null,
     processId: null,
     serviceOrderId: null,
-    period: null
+    period: 'todos'
   });
   const [filteredActivities, setFilteredActivities] = useState<FilteredActivity[]>([]);
   const [isFilteredDataLoading, setIsFilteredDataLoading] = useState(false);
+  const [allActivities, setAllActivities] = useState<any[]>([]);
   const [activitiesByStatus, setActivitiesByStatus] = useState<{
     planejadas: number;
     emExecucao: number;
@@ -56,77 +60,106 @@ const Dashboard = () => {
     paralizadas: 0
   });
 
-  const TotalActivities = async () => {
-    const activities = await getAllActivities();
-    setTotalActivities(activities.length);
-    
-    // Contar atividades por status
-    const statusCount = activities.reduce((counts: any, activity) => {
+  // Função para carregar todas as atividades e calcular estatísticas
+  const loadAllData = async () => {
+    setIsLoading(true);
+    try {
+      const activities = await getAllActivities();
+      setAllActivities(activities);
+      
+      // Contar total de atividades
+      setTotalActivities(activities.length);
+      
+      // Contar atividades por status
+      countActivitiesByStatus(activities);
+      
+      // Carregar outros dados
+      const projects = await ObrasService.getAllObras();
+      setTotalProjetos(projects.length);
+      
+      const serviceOrders = await getAllServiceOrders();
+      setTotalServiceOrder(serviceOrders.length);
+      
+      // Carregar estatísticas para os gráficos
+      const dadosMacroTask = await dataMacroTask();
+      setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
+      
+      const dadosProcesso = await dataProcess();
+      setProcessStatistic(dadosProcesso as ProcessStatistic[]);
+    } catch (error) {
+      console.error("Erro ao carregar dados", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para contar atividades por status
+  const countActivitiesByStatus = (activities: any[]) => {
+    const statusCounts = activities.reduce((counts: any, activity) => {
       const status = activity.status || 'Não especificado';
       
-      if (status.includes('Planejada')) counts.planejadas++;
-      else if (status.includes('Em execução')) counts.emExecucao++;
-      else if (status.includes('Concluída')) counts.concluidas++;
-      else if (status.includes('Paralizada')) counts.paralizadas++;
+      // Conta baseada nos status da atividade
+      if (status.toLowerCase().includes('planejada')) counts.planejadas++;
+      else if (status.toLowerCase().includes('execução')) counts.emExecucao++;
+      else if (status.toLowerCase().includes('concluída')) counts.concluidas++;
+      else if (status.toLowerCase().includes('paralizada')) counts.paralizadas++;
       
       return counts;
     }, { planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
     
-    setActivitiesByStatus(statusCount);
-  }
+    setActivitiesByStatus(statusCounts);
+  };
 
-  const TotalProjects = async () => {
-    const projects = await ObrasService.getAllObras();
-    setTotalProjetos(projects.length);
-  }
-
-  const TotalServiceOrder = async () => {
-    const serviceOrder = await getAllServiceOrders();
-    setTotalServiceOrder(serviceOrder.length);
-  }
-  
+  // Carregar todos os dados ao montar o componente
   useEffect(() => {
-    const getMacroTask = async () => {
-      try {
-        const dadosMacroTask = await dataMacroTask();
-        setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
-      } catch (error) {
-        console.error("Erro ao buscar as atividades", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const getProcess = async () => {
-      try {
-        const dadosProcesso = await dataProcess();
-        setProcessStatistic(dadosProcesso as ProcessStatistic[]);
-      } catch (error) {
-        console.error("Erro ao buscar as atividades", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getMacroTask();
-    getProcess();
-    TotalActivities();
-    TotalProjects();
-    TotalServiceOrder();
+    loadAllData();
   }, []);
 
+  // Aplicar filtro de período a todos os dados
+  useEffect(() => {
+    if (allActivities.length === 0) return;
+
+    // Filtrar atividades por período
+    const filteredByPeriod = filterDataByPeriod(allActivities, filters.period as PeriodFilterType);
+    
+    // Atualizar contagem de atividades por status com base no período
+    countActivitiesByStatus(filteredByPeriod);
+    
+    // Atualizar total de atividades com base no período
+    setTotalActivities(filteredByPeriod.length);
+    
+    // Filtrar estatísticas por período
+    if (macroTaskStatistic.length > 0) {
+      const filteredMacroTask = filterDataByPeriod(macroTaskStatistic, filters.period as PeriodFilterType);
+      setMacroTaskStatistic(filteredMacroTask);
+    }
+    
+    if (processStatistic.length > 0) {
+      const filteredProcess = filterDataByPeriod(processStatistic, filters.period as PeriodFilterType);
+      setProcessStatistic(filteredProcess);
+    }
+    
+  }, [filters.period, allActivities]);
+
+  // Carregar dados filtrados quando os filtros mudam
   useEffect(() => {
     const loadFilteredData = async () => {
       setIsFilteredDataLoading(true);
       try {
-        // Busca as atividades filtradas diretamente
+        // Busca as atividades filtradas com todos os filtros aplicados
         const activities = await getFilteredActivities(
           filters.macroTaskId, 
           filters.processId,
           filters.serviceOrderId
         );
         
-        setFilteredActivities(activities);
+        // Aplicar filtro de período às atividades já filtradas
+        const periodFilteredActivities = filterDataByPeriod(
+          activities, 
+          filters.period as PeriodFilterType
+        );
+        
+        setFilteredActivities(periodFilteredActivities);
       } catch (error) {
         console.error("Erro ao carregar dados filtrados:", error);
       } finally {
@@ -138,7 +171,7 @@ const Dashboard = () => {
   }, [filters]);
 
   const handleFilterChange = (newFilters: DashboardFilters) => {
-    setFilters(newFilters);
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const handlePeriodChange = (period: PeriodFilterType) => {
@@ -176,11 +209,11 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      <PeriodFilter onFilterChange={handlePeriodChange} defaultValue={filters.period as PeriodFilterType} />
+      
       <StatsSummary stats={stats} />
       
       <ActivityStatusCards activitiesByStatus={activitiesByStatus} />
-
-      <PeriodFilter onFilterChange={handlePeriodChange} defaultValue="todos" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {macroTaskStatistic && (

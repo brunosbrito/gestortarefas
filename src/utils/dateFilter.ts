@@ -2,11 +2,11 @@
 import { addDays, isAfter } from 'date-fns';
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
 
-export const filterDataByPeriod = <T extends { createdAt?: string | Date }>(
+export const filterDataByPeriod = <T extends { createdAt?: string | Date | undefined }>(
   data: T[], 
   periodFilter: PeriodFilterType
 ): T[] => {
-  if (!data || periodFilter === 'todos') {
+  if (!data || data.length === 0 || periodFilter === 'todos') {
     return data;
   }
 
@@ -33,6 +33,11 @@ export const filterDataByPeriod = <T extends { createdAt?: string | Date }>(
     const itemDate = typeof item.createdAt === 'string' 
       ? new Date(item.createdAt) 
       : item.createdAt;
+    
+    if (!(itemDate instanceof Date) || isNaN(itemDate.getTime())) {
+      console.warn("Data inválida:", item.createdAt);
+      return true;
+    }
     
     return isAfter(itemDate, startDate);
   });

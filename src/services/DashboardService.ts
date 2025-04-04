@@ -4,11 +4,14 @@ import axios from 'axios';
 import { FilteredActivity, FilteredServiceOrder } from '@/interfaces/DashboardFilters';
 import { getAllServiceOrders } from './ServiceOrderService';
 import { getAllActivities } from './ActivityService';
+import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
+import { filterDataByPeriod } from '@/utils/dateFilter';
 
 export const getFilteredServiceOrders = async (
   macroTaskId?: number | null, 
   processId?: number | null,
-  serviceOrderId?: string | null
+  serviceOrderId?: string | null,
+  period?: PeriodFilterType
 ): Promise<FilteredServiceOrder[]> => {
   try {
     // Busca todas as ordens de serviço
@@ -24,7 +27,8 @@ export const getFilteredServiceOrders = async (
           description: so.description,
           projectName: so.projectId?.name || 'Sem projeto',
           status: so.status,
-          activityCount: 0 // Será atualizado abaixo
+          activityCount: 0, // Será atualizado abaixo
+          createdAt: so.createdAt
         }));
       
       // Busca atividades para contar
@@ -33,6 +37,11 @@ export const getFilteredServiceOrders = async (
       
       if (filteredSO.length > 0) {
         filteredSO[0].activityCount = activityCount;
+      }
+      
+      // Aplica filtro de período se necessário
+      if (period && period !== 'todos') {
+        return filterDataByPeriod(filteredSO, period);
       }
       
       return filteredSO;
@@ -75,8 +84,14 @@ export const getFilteredServiceOrders = async (
         description: so.description,
         projectName: so.projectId?.name || 'Sem projeto',
         status: so.status,
-        activityCount: activityCountByOS[so.id] || 0
+        activityCount: activityCountByOS[so.id] || 0,
+        createdAt: so.createdAt
       }));
+    
+    // Aplica filtro de período se necessário
+    if (period && period !== 'todos') {
+      return filterDataByPeriod(filteredServiceOrders, period);
+    }
     
     return filteredServiceOrders;
   } catch (error) {
@@ -88,7 +103,8 @@ export const getFilteredServiceOrders = async (
 export const getFilteredActivities = async (
   macroTaskId?: number | null, 
   processId?: number | null,
-  serviceOrderId?: string | null
+  serviceOrderId?: string | null,
+  period?: PeriodFilterType
 ): Promise<FilteredActivity[]> => {
   try {
     const activities = await getAllActivities();
@@ -137,8 +153,14 @@ export const getFilteredActivities = async (
           ? soNumberMap[activity.orderServiceId.toString()] || 'N/A' 
           : 'N/A',
         serviceOrderId: activity.orderServiceId,
-        projectName: activity.project?.name || 'N/A'
+        projectName: activity.project?.name || 'N/A',
+        createdAt: activity.createdAt
       }));
+    
+    // Aplica filtro de período se necessário
+    if (period && period !== 'todos') {
+      return filterDataByPeriod(filteredActivities, period);
+    }
     
     return filteredActivities;
   } catch (error) {

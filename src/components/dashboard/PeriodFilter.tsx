@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { CalendarDays } from 'lucide-react';
 
 export type PeriodFilterType = '7dias' | '1mes' | '3meses' | 'todos';
 
@@ -23,10 +24,13 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = 'todos' }: PeriodF
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Filtrar por Período:</h3>
+        <div className="flex items-center">
+          <CalendarDays className="w-5 h-5 mr-2 text-[#FF7F0E]" />
+          <h3 className="text-sm font-medium text-gray-700">Filtrar por Período:</h3>
+        </div>
         <ToggleGroup 
           type="single" 
-          defaultValue={selectedPeriod} 
+          value={selectedPeriod}
           onValueChange={handleValueChange}
           className="justify-end"
         >

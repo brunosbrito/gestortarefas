@@ -24,10 +24,10 @@ const parseTimeToHours = (timeString: string | null | undefined): number => {
 export const dataMacroTask = async () => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
-    const activities = response.data.filter(x => x.status === 'Concluídas');
+    const activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Agrupar por macroTaskId
-    const groupedData = activities.reduce((acc, activity) => {
+    const groupedData = activities.reduce((acc: any, activity: any) => {
       const macroTaskId = activity.macroTaskId;
       const macroTaskName = activity.macroTask?.name || 'Não especificado';
       
@@ -43,6 +43,7 @@ export const dataMacroTask = async () => {
           estimatedHours: 0,
           actualHours: 0,
           hoursDifference: 0,
+          createdAt: new Date(activity.createdAt) // Adiciona data de criação para filtro
         };
       }
 
@@ -55,6 +56,14 @@ export const dataMacroTask = async () => {
       acc[key].hoursDifference = acc[key].estimatedHours > 0 
         ? Math.round((acc[key].actualHours / acc[key].estimatedHours) * 100)
         : 0;
+      
+      // Usa a data mais recente se existir múltiplas atividades
+      if (activity.createdAt) {
+        const activityDate = new Date(activity.createdAt);
+        if (!acc[key].createdAt || activityDate > acc[key].createdAt) {
+          acc[key].createdAt = activityDate;
+        }
+      }
 
       return acc;
     }, {});
@@ -70,10 +79,10 @@ export const dataMacroTask = async () => {
 export const dataProcess = async () => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
-    const activities = response.data.filter(x => x.status === 'Concluídas');
+    const activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Agrupar por processId
-    const groupedData = activities.reduce((acc, activity) => {
+    const groupedData = activities.reduce((acc: any, activity: any) => {
       const processId = activity.processId;
       const processName = activity.process?.name || 'Não especificado';
       
@@ -89,6 +98,7 @@ export const dataProcess = async () => {
           estimatedHours: 0,
           actualHours: 0,
           hoursDifference: 0,
+          createdAt: new Date(activity.createdAt) // Adiciona data de criação para filtro
         };
       }
 
@@ -101,6 +111,14 @@ export const dataProcess = async () => {
       acc[key].hoursDifference = acc[key].estimatedHours > 0 
         ? Math.round((acc[key].actualHours / acc[key].estimatedHours) * 100)
         : 0;
+      
+      // Usa a data mais recente se existir múltiplas atividades
+      if (activity.createdAt) {
+        const activityDate = new Date(activity.createdAt);
+        if (!acc[key].createdAt || activityDate > acc[key].createdAt) {
+          acc[key].createdAt = activityDate;
+        }
+      }
 
       return acc;
     }, {});
@@ -110,5 +128,65 @@ export const dataProcess = async () => {
   } catch (error) {
     console.error('Error fetching activities', error);
     throw error;
+  }
+};
+
+export const dataCollaborators = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/activities`);
+    const activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+
+    // Agrupar por colaboradorId
+    const groupedData = activities.reduce((acc: any, activity: any) => {
+      // Verifica se tem equipe atribuída
+      if (!activity.team || !Array.isArray(activity.team)) return acc;
+      
+      // Processa cada membro da equipe
+      activity.team.forEach((member: any) => {
+        const id = member.id;
+        const name = member.name || 'Não especificado';
+        const role = member.role || 'Não especificado';
+        
+        if (!id) return;
+        
+        const key = id.toString();
+        
+        if (!acc[key]) {
+          acc[key] = {
+            id,
+            name,
+            role,
+            activityCount: 0,
+            hoursWorked: 0,
+            createdAt: new Date(activity.createdAt)
+          };
+        }
+        
+        acc[key].activityCount += 1;
+        
+        // Calcula horas trabalhadas, considerando a distribuição por membro
+        const totalHours = activity.totalTime || 0;
+        const teamSize = activity.team.length;
+        const hoursPerMember = teamSize > 0 ? totalHours / teamSize : 0;
+        
+        acc[key].hoursWorked += Math.round(hoursPerMember);
+        
+        // Atualiza a data mais recente
+        if (activity.createdAt) {
+          const activityDate = new Date(activity.createdAt);
+          if (!acc[key].createdAt || activityDate > acc[key].createdAt) {
+            acc[key].createdAt = activityDate;
+          }
+        }
+      });
+      
+      return acc;
+    }, {});
+
+    // Convertendo para um array
+    return Object.values(groupedData);
+  } catch (error) {
+    console.error('Error fetching collaborator data', error);
+    return [];
   }
 };

@@ -1,9 +1,11 @@
 
+import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
+
 export interface DashboardFilters {
   macroTaskId?: number | null;
   processId?: number | null;
   serviceOrderId?: string | null;
-  period?: string | null;
+  period?: PeriodFilterType | string | null;
 }
 
 export interface FilteredServiceOrder {
@@ -13,6 +15,7 @@ export interface FilteredServiceOrder {
   projectName: string;
   status: string;
   activityCount: number;
+  createdAt?: string | Date;
 }
 
 export interface FilteredActivity {
@@ -26,4 +29,5 @@ export interface FilteredActivity {
   serviceOrderNumber: string;
   serviceOrderId?: string;
   projectName: string;
+  createdAt?: string | Date;
 }
