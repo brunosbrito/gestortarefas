@@ -42,9 +42,9 @@ const Dashboard = () => {
   // Aplicar filtro de período a todos os dados
   useEffect(() => {
     if (filters.period) {
-      applyPeriodFilter(filters.period as any);
+      applyPeriodFilter(filters.period as any, filters.obraId, filters.serviceOrderId);
     }
-  }, [filters.period]);
+  }, [filters.period, filters.obraId, filters.serviceOrderId]);
 
   const stats = [
     {
@@ -73,7 +73,10 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <PeriodFilter onFilterChange={handlePeriodChange} defaultValue={filters.period as any} />
+      <PeriodFilter 
+        onFilterChange={handlePeriodChange} 
+        defaultValue={filters.period as any} 
+      />
       
       <StatsSummary stats={stats} />
       

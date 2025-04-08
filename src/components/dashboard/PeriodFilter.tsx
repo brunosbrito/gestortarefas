@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarDays, Folder, FileText } from "lucide-react";
 import ObrasService from "@/services/ObrasService";
-import { getAllServiceOrders } from "@/services/ServiceOrderService";
+import { getServiceOrderByProjectId, getAllServiceOrders } from "@/services/ServiceOrderService";
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
 
 export type PeriodFilterType = "7dias" | "1mes" | "3meses" | "todos";
@@ -17,7 +18,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilterType>(defaultValue);
   const [selectedObra, setSelectedObra] = useState<string | null>(null);
   const [selectedOrdemServico, setSelectedOrdemServico] = useState<string | null>(null);
-  const [obras, setObras] = useState<{ id: string; name: string; ordensServico: ServiceOrder[] }[]>([]);
+  const [obras, setObras] = useState<{ id: string; name: string; }[]>([]);
   const [ordensServico, setOrdensServico] = useState<ServiceOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,10 +28,6 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
         setIsLoading(true);
         const response = await ObrasService.getAllObras();
         setObras(response);
-
-        // Carrega todas as ordens de serviço para o filtro geral
-        const todasOrdens = await getAllServiceOrders();
-        setOrdensServico(todasOrdens);
       } catch (error) {
         console.error("Erro ao buscar obras:", error);
       } finally {
@@ -49,20 +46,28 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     }
   };
 
-  const handleObraChange = (value: string) => {
-    const obraId = value === "todas" ? null : value;
-    setSelectedObra(obraId);
-    setSelectedOrdemServico(null); // Resetando a OS ao mudar a obra
-  
-    if (obraId) {
-      // Filtra as ordens de serviço que pertencem à obra selecionada
-      setOrdensServico(ordensServico.filter((os) => os.projectId?.id === parseInt(obraId)));
-    } else {
-      // Se for "Todas as Obras", exibe todas as ordens de serviço disponíveis
-      setOrdensServico(ordensServico ?? []);
+  const handleObraChange = async (value: string) => {
+    try {
+      setIsLoading(true);
+      const obraId = value === "todas" ? null : value;
+      setSelectedObra(obraId);
+      setSelectedOrdemServico(null); // Resetando a OS ao mudar a obra
+      
+      if (obraId) {
+        // Carrega ordens de serviço específicas da obra selecionada
+        const osData = await getServiceOrderByProjectId(obraId);
+        setOrdensServico(osData);
+      } else {
+        // Se selecionar "Todas as Obras", limpa as ordens de serviço
+        setOrdensServico([]);
+      }
+      
+      onFilterChange(selectedPeriod, obraId, null);
+    } catch (error) {
+      console.error("Erro ao carregar ordens de serviço:", error);
+    } finally {
+      setIsLoading(false);
     }
-  
-    onFilterChange(selectedPeriod, obraId, null);
   };
 
   const handleOrdemServicoChange = (value: string) => {
@@ -113,20 +118,30 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
             <FileText className="w-4 h-4 mr-2 text-[#FF7F0E]" />
             Ordem de Serviço
           </label>
-          <Select value={selectedOrdemServico || "todas"} onValueChange={handleOrdemServicoChange} disabled={isLoading}>
+          <Select 
+            value={selectedOrdemServico || "todas"} 
+            onValueChange={handleOrdemServicoChange} 
+            disabled={isLoading || !selectedObra}
+          >
             <SelectTrigger id="ordemServico" className="w-full sm:w-52">
-              <SelectValue placeholder="Todas as Ordens" />
+              <SelectValue placeholder={selectedObra ? "Todas as Ordens" : "Selecione uma obra primeiro"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todas">Todas as Ordens</SelectItem>
-              {ordensServico.length > 0 ? (
-                ordensServico.map((ordem) => (
-                  <SelectItem key={ordem.id} value={ordem.id}>
-                    {ordem.description}
-                  </SelectItem>
-                ))
+              {selectedObra ? (
+                <>
+                  <SelectItem value="todas">Todas as Ordens</SelectItem>
+                  {ordensServico.length > 0 ? (
+                    ordensServico.map((ordem) => (
+                      <SelectItem key={ordem.id} value={ordem.id.toString()}>
+                        {ordem.description}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 p-2">Nenhuma ordem disponível</p>
+                  )}
+                </>
               ) : (
-                <p className="text-sm text-gray-500 p-2">Nenhuma ordem disponível</p>
+                <p className="text-sm text-gray-500 p-2">Selecione uma obra primeiro</p>
               )}
             </SelectContent>
           </Select>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { DashboardFilters, FilteredActivity } from '@/interfaces/DashboardFilters';
 import { getFilteredActivities } from '@/services/DashboardService';
@@ -9,7 +10,7 @@ export const useDashboardFilters = () => {
     macroTaskId: null,
     processId: null,
     serviceOrderId: null,
-    obraId: null, // ✅ Adicionado filtro por obra
+    obraId: null,
     period: 'todos'
   });
   const [filteredActivities, setFilteredActivities] = useState<FilteredActivity[]>([]);
@@ -19,15 +20,15 @@ export const useDashboardFilters = () => {
     const loadFilteredData = async () => {
       setIsFilteredDataLoading(true);
       try {
-        // ✅ Busca atividades considerando macroTaskId, processId, obraId e serviceOrderId
+        // Busca atividades considerando todos os filtros
         const activities = await getFilteredActivities(
           filters.macroTaskId, 
           filters.processId,
-          filters.obraId, // ✅ Filtro de obra
-          filters.serviceOrderId // ✅ Filtro de OS
+          filters.obraId,
+          filters.serviceOrderId
         );
 
-        // ✅ Aplica o filtro de período às atividades carregadas
+        // Aplica o filtro de período às atividades carregadas
         const periodFilteredActivities = filterDataByPeriod(
           activities, 
           filters.period as PeriodFilterType
@@ -36,6 +37,7 @@ export const useDashboardFilters = () => {
         setFilteredActivities(periodFilteredActivities);
       } catch (error) {
         console.error("Erro ao carregar dados filtrados:", error);
+        setFilteredActivities([]);
       } finally {
         setIsFilteredDataLoading(false);
       }
