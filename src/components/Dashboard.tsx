@@ -36,13 +36,20 @@ const Dashboard = () => {
 
   // Carregar todos os dados ao montar o componente
   useEffect(() => {
+    console.log("Carregando dados iniciais do dashboard");
     loadAllData();
   }, []);
 
   // Aplicar filtro de período a todos os dados
   useEffect(() => {
     if (filters.period) {
-      console.log("Aplicando filtro de período em Dashboard:", filters.period, filters.obraId, filters.serviceOrderId);
+      console.log("Aplicando filtro de período em Dashboard:", 
+        filters.period, 
+        filters.obraId, 
+        filters.serviceOrderId
+      );
+      
+      // Aplicamos o filtro de período aos dados estatísticos
       applyPeriodFilter(
         filters.period as any,
         filters.obraId,
@@ -88,14 +95,28 @@ const Dashboard = () => {
       <ActivityStatusCards activitiesByStatus={activitiesByStatus} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {macroTaskStatistic && (
+        {macroTaskStatistic && macroTaskStatistic.length > 0 ? (
           <MacroTasksChart
             macroTasks={macroTaskStatistic}
           />
+        ) : (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4">Atividades por Tarefa Macro</h3>
+            <div className="flex items-center justify-center h-60 text-gray-400">
+              Nenhum dado disponível para os filtros selecionados
+            </div>
+          </div>
         )}
 
-        {processStatistic && (
+        {processStatistic && processStatistic.length > 0 ? (
           <ProcessHoursChart processes={processStatistic} />
+        ) : (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4">Atividades por Processo</h3>
+            <div className="flex items-center justify-center h-60 text-gray-400">
+              Nenhum dado disponível para os filtros selecionados
+            </div>
+          </div>
         )}
       </div>
 

@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { DashboardFilters, FilteredActivity } from '@/interfaces/DashboardFilters';
 import { getFilteredActivities } from '@/services/DashboardService';
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
-import { filterDataByPeriod } from '@/utils/dateFilter';
 
 export const useDashboardFilters = () => {
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -20,7 +19,7 @@ export const useDashboardFilters = () => {
     const loadFilteredData = async () => {
       setIsFilteredDataLoading(true);
       try {
-        console.log("Aplicando filtros:", filters);
+        console.log("Aplicando filtros:", JSON.stringify(filters));
         
         // Busca atividades considerando todos os filtros
         const activities = await getFilteredActivities(
@@ -45,7 +44,7 @@ export const useDashboardFilters = () => {
   }, [filters]);
 
   const handleFilterChange = (newFilters: Partial<DashboardFilters>) => {
-    console.log("Atualizando filtros:", newFilters);
+    console.log("Atualizando filtros:", JSON.stringify(newFilters));
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 

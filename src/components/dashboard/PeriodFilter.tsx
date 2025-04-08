@@ -28,6 +28,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
         setIsLoading(true);
         const response = await ObrasService.getAllObras();
         setObras(response);
+        console.log("Obras carregadas:", response.length);
       } catch (error) {
         console.error("Erro ao buscar obras:", error);
       } finally {
@@ -40,6 +41,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
 
   const handlePeriodChange = (value: string) => {
     if (value) {
+      console.log("Período alterado para:", value);
       const period = value as PeriodFilterType;
       setSelectedPeriod(period);
       // Mantem os filtros de obra e ordem de serviço ao mudar o período
@@ -51,6 +53,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     try {
       setIsLoading(true);
       const obraId = value === "todas" ? null : value;
+      console.log(`Obra selecionada: ${obraId} (valor original: ${value})`);
       setSelectedObra(obraId);
       setSelectedOrdemServico(null); // Resetando a OS ao mudar a obra
       
@@ -76,7 +79,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
 
   const handleOrdemServicoChange = (value: string) => {
     const ordemServicoId = value === "todas" ? null : value;
-    console.log("Ordem de serviço selecionada:", ordemServicoId);
+    console.log("Ordem de serviço selecionada:", ordemServicoId, "valor original:", value);
     setSelectedOrdemServico(ordemServicoId);
     
     // Aplicar todos os filtros: período, obra e ordem de serviço
@@ -140,7 +143,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
                   {ordensServico.length > 0 ? (
                     ordensServico.map((ordem) => (
                       <SelectItem key={ordem.id} value={ordem.id.toString()}>
-                        {ordem.description}
+                        {ordem.serviceOrderNumber + " - " + ordem.description.substring(0, 20)}
                       </SelectItem>
                     ))
                   ) : (

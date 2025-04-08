@@ -19,6 +19,8 @@ export interface ActivityStatusCounts {
 export const useDashboardData = () => {
   const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
+  const [originalMacroTaskStatistic, setOriginalMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
+  const [originalProcessStatistic, setOriginalProcessStatistic] = useState<ProcessStatistic[]>([]);
   const [totalActivities, setTotalActivities] = useState<number>(0);
   const [totalProjetos, setTotalProjetos] = useState<number>(0);
   const [totalServiceOrder, setTotalServiceOrder] = useState<number>(0);
@@ -35,8 +37,11 @@ export const useDashboardData = () => {
   const loadAllData = async () => {
     setIsLoading(true);
     try {
+      console.log("Carregando dados do dashboard...");
+      
       const activities = await getAllActivities();
       setAllActivities(activities);
+      console.log("Atividades carregadas:", activities.length);
       
       // Contar total de atividades
       setTotalActivities(activities.length);
@@ -47,16 +52,22 @@ export const useDashboardData = () => {
       // Carregar outros dados
       const projects = await ObrasService.getAllObras();
       setTotalProjetos(projects.length);
+      console.log("Projetos carregados:", projects.length);
       
       const serviceOrders = await getAllServiceOrders();
       setTotalServiceOrder(serviceOrders.length);
+      console.log("Ordens de serviço carregadas:", serviceOrders.length);
       
       // Carregar estatísticas para os gráficos
       const dadosMacroTask = await dataMacroTask();
       setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
+      setOriginalMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
+      console.log("Estatísticas de tarefas macro carregadas:", dadosMacroTask.length);
       
       const dadosProcesso = await dataProcess();
       setProcessStatistic(dadosProcesso as ProcessStatistic[]);
+      setOriginalProcessStatistic(dadosProcesso as ProcessStatistic[]);
+      console.log("Estatísticas de processos carregadas:", dadosProcesso.length);
     } catch (error) {
       console.error("Erro ao carregar dados", error);
     } finally {
@@ -81,28 +92,99 @@ export const useDashboardData = () => {
     setActivitiesByStatus(statusCounts);
   };
 
-  // Aplicar filtro de período aos dados - modificado para aceitar 3 parâmetros
+  // Aplicar filtro de período aos dados
   const applyPeriodFilter = (period: PeriodFilterType, obraId?: number | null, serviceOrderId?: number | null) => {
-    if (allActivities.length === 0) return;
+    console.log("applyPeriodFilter chamado com:", { period, obraId, serviceOrderId });
+    
+    if (allActivities.length === 0) {
+      console.log("Sem atividades para filtrar");
+      return;
+    }
 
-    // Filtrar atividades por período
-    const filteredByPeriod = filterDataByPeriod(allActivities, period);
+    // Filtrar atividades por período e outros filtros
+    let filteredActivities = [...allActivities];
     
-    // Atualizar contagem de atividades por status com base no período
-    countActivitiesByStatus(filteredByPeriod);
-    
-    // Atualizar total de atividades com base no período
-    setTotalActivities(filteredByPeriod.length);
-    
-    // Filtrar estatísticas por período
-    if (macroTaskStatistic.length > 0) {
-      const filteredMacroTask = filterDataByPeriod(macroTaskStatistic, period);
-      setMacroTaskStatistic(filteredMacroTask);
+    // Aplicar filtro por obra se necessário
+    if (obraId !== null && obraId !== undefined) {
+      console.log("Filtrando por obra ID:", obraId);
+      filteredActivities = filteredActivities.filter(activity => {
+        if (!activity.project) return false;
+        
+        const activityProjectId = Number(activity.project.id);
+        const match = activityProjectId === obraId;
+        return match;
+      });
+      console.log("Atividades após filtro de obra:", filteredActivities.length);
     }
     
-    if (processStatistic.length > 0) {
-      const filteredProcess = filterDataByPeriod(processStatistic, period);
-      setProcessStatistic(filteredProcess);
+    // Aplicar filtro por ordem de serviço se necessário
+    if (serviceOrderId !== null && serviceOrderId !== undefined) {
+      console.log("Filtrando por ordem de serviço ID:", serviceOrderId);
+      filteredActivities = filteredActivities.filter(activity => {
+        if (!activity.serviceOrder) return false;
+        
+        const activityServiceOrderId = Number(activity.serviceOrder.id);
+        const match = activityServiceOrderId === serviceOrderId;
+        return match;
+      });
+      console.log("Atividades após filtro de ordem de serviço:", filteredActivities.length);
+    }
+    
+    // Aplicar filtro de período por último
+    if (period && period !== 'todos') {
+      console.log("Aplicando filtro de período:", period);
+      filteredActivities = filterDataByPeriod(filteredActivities, period);
+      console.log("Atividades após filtro de período:", filteredActivities.length);
+    }
+    
+    // Atualizar contagem de atividades por status
+    countActivitiesByStatus(filteredActivities);
+    
+    // Atualizar total de atividades
+    setTotalActivities(filteredActivities.length);
+    
+    // Filtrar estatísticas de tarefas macro
+    if (originalMacroTaskStatistic.length > 0) {
+      console.log("Aplicando filtros às estatísticas de tarefas macro");
+      
+      // Se for "todos", restaurar os dados originais
+      if (period === 'todos' && !obraId && !serviceOrderId) {
+        setMacroTaskStatistic([...originalMacroTaskStatistic]);
+      } else {
+        // Caso contrário, aplicar filtros
+        let filteredMacroTask = [...originalMacroTaskStatistic];
+        
+        // Aplicar filtro de período apenas se necessário
+        if (period && period !== 'todos') {
+          filteredMacroTask = filterDataByPeriod(filteredMacroTask, period);
+        }
+        
+        setMacroTaskStatistic(filteredMacroTask);
+      }
+      
+      console.log("Estatísticas de tarefas macro após filtros:", macroTaskStatistic.length);
+    }
+    
+    // Filtrar estatísticas de processos
+    if (originalProcessStatistic.length > 0) {
+      console.log("Aplicando filtros às estatísticas de processos");
+      
+      // Se for "todos", restaurar os dados originais
+      if (period === 'todos' && !obraId && !serviceOrderId) {
+        setProcessStatistic([...originalProcessStatistic]);
+      } else {
+        // Caso contrário, aplicar filtros
+        let filteredProcess = [...originalProcessStatistic];
+        
+        // Aplicar filtro de período apenas se necessário
+        if (period && period !== 'todos') {
+          filteredProcess = filterDataByPeriod(filteredProcess, period);
+        }
+        
+        setProcessStatistic(filteredProcess);
+      }
+      
+      console.log("Estatísticas de processos após filtros:", processStatistic.length);
     }
   };
 

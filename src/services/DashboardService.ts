@@ -14,8 +14,8 @@ export const getFilteredActivities = async (
 ): Promise<FilteredActivity[]> => {
   try {
     const activities = await getAllActivities();
-    console.log('Atividades totais:', activities.length);
-    console.log('Filtros aplicados:', { macroTaskId, processId, obraId, serviceOrderId, period });
+    console.log('Atividades totais antes da filtragem:', activities.length);
+    console.log('Filtros aplicados:', JSON.stringify({ macroTaskId, processId, obraId, serviceOrderId, period }));
 
     // Filtra as atividades com base nos parâmetros fornecidos
     let filteredActivities = activities
@@ -25,25 +25,42 @@ export const getFilteredActivities = async (
         let matchObra = true;
         let matchServiceOrder = true;
 
+        // Filtro por Tarefa Macro
         if (macroTaskId !== null && macroTaskId !== undefined) {
           matchMacroTask = activity.macroTask?.id === macroTaskId;
+          console.log(`Filtro MacroTask: ${activity.macroTask?.id} === ${macroTaskId} = ${matchMacroTask}`);
         }
 
+        // Filtro por Processo
         if (processId !== null && processId !== undefined) {
           matchProcess = activity.process?.id === processId;
+          console.log(`Filtro Process: ${activity.process?.id} === ${processId} = ${matchProcess}`);
         }
 
+        // Filtro por Obra/Projeto
         if (obraId !== null && obraId !== undefined) {
-          console.log(`Comparando obraId: ${obraId} com project.id: ${activity.project?.id}`);
-          matchObra = activity.project?.id === obraId;
+          if (!activity.project) {
+            matchObra = false;
+          } else {
+            const activityProjectId = Number(activity.project.id);
+            matchObra = activityProjectId === obraId;
+            console.log(`Filtro Obra: ${activityProjectId} === ${obraId} = ${matchObra}`);
+          }
         }
 
+        // Filtro por Ordem de Serviço
         if (serviceOrderId !== null && serviceOrderId !== undefined) {
-          console.log(`Comparando serviceOrderId: ${serviceOrderId} com serviceOrder.id: ${activity.serviceOrder?.id}`);
-          matchServiceOrder = Number(activity.serviceOrder?.id) === serviceOrderId;
+          if (!activity.serviceOrder) {
+            matchServiceOrder = false;
+          } else {
+            const activityServiceOrderId = Number(activity.serviceOrder.id);
+            matchServiceOrder = activityServiceOrderId === serviceOrderId;
+            console.log(`Filtro OS: ${activityServiceOrderId} === ${serviceOrderId} = ${matchServiceOrder}`);
+          }
         }
 
-        return matchMacroTask && matchProcess && matchObra && matchServiceOrder;
+        const shouldInclude = matchMacroTask && matchProcess && matchObra && matchServiceOrder;
+        return shouldInclude;
       })
       .map(activity => ({
         id: activity.id,
@@ -59,12 +76,13 @@ export const getFilteredActivities = async (
         serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A', id: null }
       }));
     
-    console.log('Atividades filtradas após aplicar todos os filtros:', filteredActivities.length);
+    console.log('Atividades filtradas após aplicar filtros básicos:', filteredActivities.length);
 
     // Aplica filtro de período se necessário
     if (period && period !== 'todos') {
+      const beforePeriodFilter = filteredActivities.length;
       filteredActivities = filterDataByPeriod(filteredActivities, period);
-      console.log('Atividades filtradas após aplicar filtro de período:', filteredActivities.length);
+      console.log(`Atividades filtradas após aplicar filtro de período: ${filteredActivities.length} (redução de ${beforePeriodFilter - filteredActivities.length})`);
     }
 
     return filteredActivities;
