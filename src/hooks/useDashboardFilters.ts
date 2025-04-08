@@ -22,10 +22,10 @@ export const useDashboardFilters = () => {
       try {
         // Busca atividades considerando todos os filtros
         const activities = await getFilteredActivities(
-          filters.macroTaskId, 
-          filters.processId,
-          filters.obraId,
-          filters.serviceOrderId
+          filters.macroTaskId !== undefined ? filters.macroTaskId : null, 
+          filters.processId !== undefined ? filters.processId : null,
+          filters.obraId !== undefined ? filters.obraId : null,
+          filters.serviceOrderId !== undefined ? filters.serviceOrderId : null
         );
 
         // Aplica o filtro de período às atividades carregadas

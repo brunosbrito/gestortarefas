@@ -42,7 +42,11 @@ const Dashboard = () => {
   // Aplicar filtro de período a todos os dados
   useEffect(() => {
     if (filters.period) {
-      applyPeriodFilter(filters.period as any, filters.obraId, filters.serviceOrderId);
+      applyPeriodFilter(
+        filters.period as any, 
+        filters.obraId, 
+        filters.serviceOrderId
+      );
     }
   }, [filters.period, filters.obraId, filters.serviceOrderId]);
 

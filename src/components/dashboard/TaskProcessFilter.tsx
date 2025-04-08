@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Filter } from 'lucide-react';
 import { DashboardFilters } from '@/interfaces/DashboardFilters';
 
 interface TaskProcessFilterProps {
-  onFilterChange: (filters: DashboardFilters) => void;
+  onFilterChange: (filters: Partial<DashboardFilters>) => void;
   currentFilters: DashboardFilters;
 }
 
@@ -41,12 +42,12 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
 
   const handleMacroTaskChange = (value: string) => {
     const macroTaskId = value === 'todos' ? null : parseInt(value);
-    onFilterChange({ ...currentFilters, macroTaskId });
+    onFilterChange({ macroTaskId });
   };
 
   const handleProcessChange = (value: string) => {
     const processId = value === 'todos' ? null : parseInt(value);
-    onFilterChange({ ...currentFilters, processId });
+    onFilterChange({ processId });
   };
 
   return (

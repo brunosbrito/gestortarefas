@@ -14,6 +14,8 @@ export const getFilteredActivities = async (
 ): Promise<FilteredActivity[]> => {
   try {
     const activities = await getAllActivities();
+    console.log('Atividades totais:', activities.length);
+    console.log('Filtros aplicados:', { macroTaskId, processId, obraId, serviceOrderId, period });
 
     // Filtra as atividades com base nos parâmetros fornecidos
     const filteredActivities = activities
@@ -23,19 +25,19 @@ export const getFilteredActivities = async (
         let matchObra = true;
         let matchServiceOrder = true;
 
-        if (macroTaskId) {
+        if (macroTaskId !== null && macroTaskId !== undefined) {
           matchMacroTask = activity.macroTask?.id === macroTaskId;
         }
 
-        if (processId) {
+        if (processId !== null && processId !== undefined) {
           matchProcess = activity.process?.id === processId;
         }
 
-        if (obraId) {
+        if (obraId !== null && obraId !== undefined) {
           matchObra = activity.project?.id === obraId;
         }
 
-        if (serviceOrderId) {
+        if (serviceOrderId !== null && serviceOrderId !== undefined) {
           matchServiceOrder = activity.serviceOrder?.id === serviceOrderId;
         }
 
@@ -52,8 +54,10 @@ export const getFilteredActivities = async (
         projectName: activity.project?.name || 'N/A',
         projectId: activity.project?.id || null,
         createdAt: activity.createdAt,
-        serviceOrder: activity.serviceOrder
+        serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A' }
       }));
+    
+    console.log('Atividades filtradas:', filteredActivities.length);
 
     // Aplica filtro de período se necessário
     if (period && period !== 'todos') {
