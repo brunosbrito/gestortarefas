@@ -18,7 +18,7 @@ export const getFilteredActivities = async (
     console.log('Filtros aplicados:', { macroTaskId, processId, obraId, serviceOrderId, period });
 
     // Filtra as atividades com base nos parâmetros fornecidos
-    const filteredActivities = activities
+    let filteredActivities = activities
       .filter(activity => {
         let matchMacroTask = true;
         let matchProcess = true;
@@ -34,11 +34,13 @@ export const getFilteredActivities = async (
         }
 
         if (obraId !== null && obraId !== undefined) {
+          console.log(`Comparando obraId: ${obraId} com project.id: ${activity.project?.id}`);
           matchObra = activity.project?.id === obraId;
         }
 
         if (serviceOrderId !== null && serviceOrderId !== undefined) {
-          matchServiceOrder = activity.serviceOrder?.id === serviceOrderId;
+          console.log(`Comparando serviceOrderId: ${serviceOrderId} com serviceOrder.id: ${activity.serviceOrder?.id}`);
+          matchServiceOrder = Number(activity.serviceOrder?.id) === serviceOrderId;
         }
 
         return matchMacroTask && matchProcess && matchObra && matchServiceOrder;
@@ -54,14 +56,15 @@ export const getFilteredActivities = async (
         projectName: activity.project?.name || 'N/A',
         projectId: activity.project?.id || null,
         createdAt: activity.createdAt,
-        serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A' }
+        serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A', id: null }
       }));
     
-    console.log('Atividades filtradas:', filteredActivities.length);
+    console.log('Atividades filtradas após aplicar todos os filtros:', filteredActivities.length);
 
     // Aplica filtro de período se necessário
     if (period && period !== 'todos') {
-      return filterDataByPeriod(filteredActivities, period);
+      filteredActivities = filterDataByPeriod(filteredActivities, period);
+      console.log('Atividades filtradas após aplicar filtro de período:', filteredActivities.length);
     }
 
     return filteredActivities;

@@ -20,21 +20,19 @@ export const useDashboardFilters = () => {
     const loadFilteredData = async () => {
       setIsFilteredDataLoading(true);
       try {
+        console.log("Aplicando filtros:", filters);
+        
         // Busca atividades considerando todos os filtros
         const activities = await getFilteredActivities(
-          filters.macroTaskId !== undefined ? filters.macroTaskId : null, 
-          filters.processId !== undefined ? filters.processId : null,
-          filters.obraId !== undefined ? filters.obraId : null,
-          filters.serviceOrderId !== undefined ? filters.serviceOrderId : null
-        );
-
-        // Aplica o filtro de período às atividades carregadas
-        const periodFilteredActivities = filterDataByPeriod(
-          activities, 
+          filters.macroTaskId, 
+          filters.processId,
+          filters.obraId,
+          filters.serviceOrderId,
           filters.period as PeriodFilterType
         );
 
-        setFilteredActivities(periodFilteredActivities);
+        console.log("Atividades filtradas:", activities.length);
+        setFilteredActivities(activities);
       } catch (error) {
         console.error("Erro ao carregar dados filtrados:", error);
         setFilteredActivities([]);
@@ -47,15 +45,22 @@ export const useDashboardFilters = () => {
   }, [filters]);
 
   const handleFilterChange = (newFilters: Partial<DashboardFilters>) => {
+    console.log("Atualizando filtros:", newFilters);
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const handlePeriodChange = (period: PeriodFilterType, obraId?: string | null, serviceOrderId?: string | null) => {
+    console.log("Filtro de período alterado:", { period, obraId, serviceOrderId });
+    
+    // Convertendo IDs de string para number, se existirem
+    const numericObraId = obraId ? Number(obraId) : null;
+    const numericServiceOrderId = serviceOrderId ? Number(serviceOrderId) : null;
+    
     setFilters(prev => ({
       ...prev,
       period,
-      obraId: obraId ? Number(obraId) : null,
-      serviceOrderId: serviceOrderId ? Number(serviceOrderId) : null
+      obraId: numericObraId,
+      serviceOrderId: numericServiceOrderId
     }));
   };
 

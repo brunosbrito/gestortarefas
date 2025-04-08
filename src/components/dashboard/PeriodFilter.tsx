@@ -42,6 +42,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     if (value) {
       const period = value as PeriodFilterType;
       setSelectedPeriod(period);
+      // Mantem os filtros de obra e ordem de serviço ao mudar o período
       onFilterChange(period, selectedObra, selectedOrdemServico);
     }
   };
@@ -54,14 +55,17 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
       setSelectedOrdemServico(null); // Resetando a OS ao mudar a obra
       
       if (obraId) {
+        console.log("Buscando ordens de serviço para a obra:", obraId);
         // Carrega ordens de serviço específicas da obra selecionada
         const osData = await getServiceOrderByProjectId(obraId);
+        console.log("Ordens de serviço carregadas:", osData.length);
         setOrdensServico(osData);
       } else {
         // Se selecionar "Todas as Obras", limpa as ordens de serviço
         setOrdensServico([]);
       }
       
+      // Aplicar filtro apenas com a obra, sem ordem de serviço
       onFilterChange(selectedPeriod, obraId, null);
     } catch (error) {
       console.error("Erro ao carregar ordens de serviço:", error);
@@ -72,7 +76,10 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
 
   const handleOrdemServicoChange = (value: string) => {
     const ordemServicoId = value === "todas" ? null : value;
+    console.log("Ordem de serviço selecionada:", ordemServicoId);
     setSelectedOrdemServico(ordemServicoId);
+    
+    // Aplicar todos os filtros: período, obra e ordem de serviço
     onFilterChange(selectedPeriod, selectedObra, ordemServicoId);
   };
 
@@ -104,7 +111,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
             <SelectContent>
               <SelectItem value="todas">Todas as Obras</SelectItem>
               {obras.map((obra) => (
-                <SelectItem key={obra.id} value={obra.id}>
+                <SelectItem key={obra.id} value={obra.id.toString()}>
                   {obra.name}
                 </SelectItem>
               ))}
