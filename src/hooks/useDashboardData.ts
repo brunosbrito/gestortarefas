@@ -81,8 +81,8 @@ export const useDashboardData = () => {
     setActivitiesByStatus(statusCounts);
   };
 
-  // Aplicar filtro de período aos dados
-  const applyPeriodFilter = (period: PeriodFilterType) => {
+  // Aplicar filtro de período aos dados - modificado para aceitar 3 parâmetros
+  const applyPeriodFilter = (period: PeriodFilterType, obraId?: number | null, serviceOrderId?: number | null) => {
     if (allActivities.length === 0) return;
 
     // Filtrar atividades por período
