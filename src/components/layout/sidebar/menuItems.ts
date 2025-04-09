@@ -9,6 +9,7 @@ import {
   Factory,
   Mountain,
   AlertOctagon,
+  Briefcase ,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -62,6 +63,12 @@ export const navItems: MenuItem[] = [
         label: 'Processos',
         path: '/gerenciamento/processos',
       },
+      {
+        icon: Briefcase,
+        label: 'Valor por Cargo',
+        path: '/gerenciamento/valor-por-cargo',
+      }
+      
     ],
   },
   {
