@@ -62,16 +62,15 @@ export const MacroTasksChart = ({ macroTasks }: MacroTasksChartProps) => {
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const difference = payload[0].payload.hoursDifference;
-                    const differenceColor = difference > 100 ? "text-red-500" : "text-green-500";
+                    const differenceColor = difference > 0 ? "text-red-500" : "text-green-500";
 
                     return (
                       <div className="bg-white p-2 border border-gray-200 rounded shadow-md">
                         <p className="font-medium">{payload[0].payload.macroTask}</p>
-                        <p>ID: {payload[0].payload.macroTaskId}</p>
                         <p>Atividades: {payload[0].payload.activityCount}</p>
                         <p>Horas Previstas: {payload[0].payload.estimatedHours}h</p>
                         <p>Horas Trabalhadas: {payload[0].payload.actualHours}h</p>
-                        <p className={differenceColor}>Diferença: {difference}%</p>
+                        <p className={differenceColor}>KPI H. Previstas / H. Trabalhadas: {difference}%</p>
                       </div>
                     );
                   }

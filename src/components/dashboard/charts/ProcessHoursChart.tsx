@@ -62,7 +62,7 @@ export const ProcessHoursChart = ({ processes }: ProcessHoursChartProps) => {
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const difference = payload[0].payload.hoursDifference;
-                    const differenceColor = difference > 100 ? "text-red-500" : "text-green-500";
+                    const differenceColor = difference > 0 ? "text-red-500" : "text-green-500";
 
                     return (
                       <div className="bg-white p-2 border border-gray-200 rounded shadow-md">

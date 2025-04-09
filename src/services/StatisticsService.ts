@@ -51,8 +51,8 @@ export const dataMacroTask = async () => {
       acc[key].estimatedHours += Math.round(estimatedHours);
       acc[key].actualHours += Math.round(actualHours);
       acc[key].hoursDifference = acc[key].estimatedHours > 0 
-        ? Math.round((acc[key].actualHours / acc[key].estimatedHours) * 100)
-        : 0;
+  ? Math.round(((acc[key].actualHours - acc[key].estimatedHours) / acc[key].estimatedHours) * 100)
+  : 0;
       
       // Usa a data mais recente se existir múltiplas atividades
       if (activity.createdAt) {
@@ -105,8 +105,8 @@ export const dataProcess = async () => {
       acc[key].estimatedHours += Math.round(estimatedHours);
       acc[key].actualHours += Math.round(actualHours);
       acc[key].hoursDifference = acc[key].estimatedHours > 0 
-        ? Math.round((acc[key].actualHours / acc[key].estimatedHours) * 100)
-        : 0;
+      ? Math.round(((acc[key].actualHours - acc[key].estimatedHours) / acc[key].estimatedHours) * 100)
+      : 0;
       
       // Usa a data mais recente se existir múltiplas atividades
       if (activity.createdAt) {
