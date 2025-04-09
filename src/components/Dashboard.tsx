@@ -122,7 +122,7 @@ const Dashboard = () => {
         )}
       </div>
       
-      <div className="grid grid-cols-1 gap-6">
+      {/* <div className="grid grid-cols-1 gap-6">
         {collaboratorStatistic && collaboratorStatistic.length > 0 ? (
           <CollaboratorsChart collaborators={collaboratorStatistic} />
         ) : (
@@ -133,7 +133,7 @@ const Dashboard = () => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       <Separator className="my-8" />
 
