@@ -1,5 +1,4 @@
 
-import axios from 'axios';
 import { FilteredActivity } from '@/interfaces/DashboardFilters';
 import { getAllActivities } from './ActivityService';
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
@@ -14,8 +13,6 @@ export const getFilteredActivities = async (
 ): Promise<FilteredActivity[]> => {
   try {
     const activities = await getAllActivities();
-    console.log('Atividades totais antes da filtragem:', activities.length);
-    console.log('Filtros aplicados:', { macroTaskId, processId, obraId, serviceOrderId, period });
 
     // Filtra as atividades com base nos parâmetros fornecidos
     let filteredActivities = activities
@@ -28,13 +25,11 @@ export const getFilteredActivities = async (
         // Filtro por Tarefa Macro
         if (macroTaskId !== null && macroTaskId !== undefined) {
           matchMacroTask = activity.macroTask?.id === macroTaskId;
-          console.log(`Filtro MacroTask para atividade ${activity.id}: ${activity.macroTask?.id} === ${macroTaskId} = ${matchMacroTask}`);
         }
 
         // Filtro por Processo
         if (processId !== null && processId !== undefined) {
           matchProcess = activity.process?.id === processId;
-          console.log(`Filtro Process para atividade ${activity.id}: ${activity.process?.id} === ${processId} = ${matchProcess}`);
         }
 
         // Filtro por Obra/Projeto
@@ -47,7 +42,6 @@ export const getFilteredActivities = async (
               : activity.project.id;
               
             matchObra = activityProjectId === obraId;
-            console.log(`Filtro Obra para atividade ${activity.id}: ${activityProjectId} === ${obraId} = ${matchObra}`);
           }
         }
 
@@ -61,7 +55,6 @@ export const getFilteredActivities = async (
               : activity.serviceOrder.id;
               
             matchServiceOrder = activityServiceOrderId === serviceOrderId;
-            console.log(`Filtro OS para atividade ${activity.id}: ${activityServiceOrderId} === ${serviceOrderId} = ${matchServiceOrder}`);
           }
         }
 
@@ -81,19 +74,14 @@ export const getFilteredActivities = async (
         createdAt: activity.createdAt,
         serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A', id: null }
       }));
-    
-    console.log('Atividades filtradas após aplicar filtros básicos:', filteredActivities.length);
 
     // Aplica filtro de período se necessário
     if (period && period !== 'todos') {
-      const beforePeriodFilter = filteredActivities.length;
       filteredActivities = filterDataByPeriod(filteredActivities, period);
-      console.log(`Atividades filtradas após aplicar filtro de período: ${filteredActivities.length} (redução de ${beforePeriodFilter - filteredActivities.length})`);
     }
 
     return filteredActivities;
   } catch (error) {
-    console.error('Erro ao buscar atividades filtradas:', error);
     return [];
   }
 };

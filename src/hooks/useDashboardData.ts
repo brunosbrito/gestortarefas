@@ -39,11 +39,8 @@ export const useDashboardData = () => {
   const loadAllData = async () => {
     setIsLoading(true);
     try {
-      console.log("Carregando dados do dashboard...");
-      
       const activities = await getAllActivities();
       setAllActivities(activities);
-      console.log("Atividades carregadas:", activities.length);
       
       // Contar total de atividades
       setTotalActivities(activities.length);
@@ -54,30 +51,26 @@ export const useDashboardData = () => {
       // Carregar outros dados
       const projects = await ObrasService.getAllObras();
       setTotalProjetos(projects.length);
-      console.log("Projetos carregados:", projects.length);
       
       const serviceOrders = await getAllServiceOrders();
       setTotalServiceOrder(serviceOrders.length);
-      console.log("Ordens de serviço carregadas:", serviceOrders.length);
       
       // Carregar estatísticas para os gráficos
       const dadosMacroTask = await dataMacroTask();
       setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
       setOriginalMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
-      console.log("Estatísticas de tarefas macro carregadas:", dadosMacroTask.length);
       
       const dadosProcesso = await dataProcess();
       setProcessStatistic(dadosProcesso as ProcessStatistic[]);
       setOriginalProcessStatistic(dadosProcesso as ProcessStatistic[]);
-      console.log("Estatísticas de processos carregadas:", dadosProcesso.length);
       
       // Carregar dados dos colaboradores
       const dadosColaboradores = await dataCollaborators();
       setCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
       setOriginalCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
-      console.log("Estatísticas de colaboradores carregadas:", dadosColaboradores.length);
     } catch (error) {
-      console.error("Erro ao carregar dados", error);
+      // Resetar os dados em caso de erro
+      resetDashboardData();
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +78,11 @@ export const useDashboardData = () => {
 
   // Função para contar atividades por status
   const countActivitiesByStatus = (activities: any[]) => {
+    if (!activities || activities.length === 0) {
+      setActivitiesByStatus({ planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
+      return;
+    }
+    
     const statusCounts = activities.reduce((counts: ActivityStatusCounts, activity) => {
       const status = activity.status || 'Não especificado';
       
@@ -100,12 +98,19 @@ export const useDashboardData = () => {
     setActivitiesByStatus(statusCounts);
   };
 
+  // Função para resetar dados do dashboard quando não há dados
+  const resetDashboardData = () => {
+    setTotalActivities(0);
+    setActivitiesByStatus({ planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
+    setMacroTaskStatistic([]);
+    setProcessStatistic([]);
+    setCollaboratorStatistic([]);
+  };
+
   // Aplicar filtro de período aos dados
   const applyPeriodFilter = (period: PeriodFilterType, obraId?: number | null, serviceOrderId?: number | null) => {
-    console.log("applyPeriodFilter chamado com:", { period, obraId, serviceOrderId });
-    
     if (allActivities.length === 0) {
-      console.log("Sem atividades para filtrar");
+      resetDashboardData();
       return;
     }
 
@@ -114,7 +119,6 @@ export const useDashboardData = () => {
     
     // Aplicar filtro por obra se necessário
     if (obraId !== null && obraId !== undefined) {
-      console.log("Filtrando por obra ID:", obraId);
       filteredActivities = filteredActivities.filter(activity => {
         if (!activity.project) return false;
         
@@ -122,16 +126,12 @@ export const useDashboardData = () => {
           ? Number(activity.project.id) 
           : activity.project.id;
           
-        const match = activityProjectId === obraId;
-        console.log(`Atividade ${activity.id}, projeto ${activityProjectId} === ${obraId} = ${match}`);
-        return match;
+        return activityProjectId === obraId;
       });
-      console.log("Atividades após filtro de obra:", filteredActivities.length);
     }
     
     // Aplicar filtro por ordem de serviço se necessário
     if (serviceOrderId !== null && serviceOrderId !== undefined) {
-      console.log("Filtrando por ordem de serviço ID:", serviceOrderId);
       filteredActivities = filteredActivities.filter(activity => {
         if (!activity.serviceOrder) return false;
         
@@ -139,11 +139,14 @@ export const useDashboardData = () => {
           ? Number(activity.serviceOrder.id) 
           : activity.serviceOrder.id;
           
-        const match = activityServiceOrderId === serviceOrderId;
-        console.log(`Atividade ${activity.id}, OS ${activityServiceOrderId} === ${serviceOrderId} = ${match}`);
-        return match;
+        return activityServiceOrderId === serviceOrderId;
       });
-      console.log("Atividades após filtro de ordem de serviço:", filteredActivities.length);
+    }
+    
+    // Se não encontrou atividades após aplicar os filtros, zera tudo
+    if (filteredActivities.length === 0) {
+      resetDashboardData();
+      return;
     }
     
     // Atualizar contagem de atividades por status
@@ -154,8 +157,6 @@ export const useDashboardData = () => {
     
     // Filtrar estatísticas de tarefas macro
     if (originalMacroTaskStatistic.length > 0) {
-      console.log("Aplicando filtros às estatísticas de tarefas macro");
-      
       // Se for "todos" e não houver outros filtros, restaurar os dados originais
       if (period === 'todos' && !obraId && !serviceOrderId) {
         setMacroTaskStatistic([...originalMacroTaskStatistic]);
@@ -167,16 +168,13 @@ export const useDashboardData = () => {
           filteredMacroTask = filterDataByPeriod(filteredMacroTask, period);
         }
         
-        setMacroTaskStatistic(filteredMacroTask);
+        // Se não há dados após filtragem, define como array vazio
+        setMacroTaskStatistic(filteredMacroTask.length > 0 ? filteredMacroTask : []);
       }
-      
-      console.log("Estatísticas de tarefas macro após filtros:", macroTaskStatistic.length);
     }
     
     // Filtrar estatísticas de processos
     if (originalProcessStatistic.length > 0) {
-      console.log("Aplicando filtros às estatísticas de processos");
-      
       // Se for "todos" e não houver outros filtros, restaurar os dados originais
       if (period === 'todos' && !obraId && !serviceOrderId) {
         setProcessStatistic([...originalProcessStatistic]);
@@ -188,16 +186,13 @@ export const useDashboardData = () => {
           filteredProcess = filterDataByPeriod(filteredProcess, period);
         }
         
-        setProcessStatistic(filteredProcess);
+        // Se não há dados após filtragem, define como array vazio
+        setProcessStatistic(filteredProcess.length > 0 ? filteredProcess : []);
       }
-      
-      console.log("Estatísticas de processos após filtros:", processStatistic.length);
     }
     
     // Filtrar estatísticas de colaboradores
     if (originalCollaboratorStatistic.length > 0) {
-      console.log("Aplicando filtros às estatísticas de colaboradores");
-      
       // Se for "todos" e não houver outros filtros, restaurar os dados originais
       if (period === 'todos' && !obraId && !serviceOrderId) {
         setCollaboratorStatistic([...originalCollaboratorStatistic]);
@@ -209,10 +204,9 @@ export const useDashboardData = () => {
           filteredCollaborators = filterDataByPeriod(filteredCollaborators, period);
         }
         
-        setCollaboratorStatistic(filteredCollaborators);
+        // Se não há dados após filtragem, define como array vazio
+        setCollaboratorStatistic(filteredCollaborators.length > 0 ? filteredCollaborators : []);
       }
-      
-      console.log("Estatísticas de colaboradores após filtros:", collaboratorStatistic.length);
     }
   };
 

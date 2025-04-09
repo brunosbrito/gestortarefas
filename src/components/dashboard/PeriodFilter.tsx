@@ -28,9 +28,8 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
         setIsLoading(true);
         const response = await ObrasService.getAllObras();
         setObras(response);
-        console.log("Obras carregadas:", response.length);
       } catch (error) {
-        console.error("Erro ao buscar obras:", error);
+        setObras([]);
       } finally {
         setIsLoading(false);
       }
@@ -41,7 +40,6 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
 
   const handlePeriodChange = (value: string) => {
     if (value) {
-      console.log("Período alterado para:", value);
       const period = value as PeriodFilterType;
       setSelectedPeriod(period);
       // Mantem os filtros de obra e ordem de serviço ao mudar o período
@@ -53,15 +51,12 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     try {
       setIsLoading(true);
       const obraId = value === "todas" ? null : value;
-      console.log(`Obra selecionada: ${obraId} (valor original: ${value})`);
       setSelectedObra(obraId);
       setSelectedOrdemServico(null); // Resetando a OS ao mudar a obra
       
       if (obraId) {
-        console.log("Buscando ordens de serviço para a obra:", obraId);
         // Carrega ordens de serviço específicas da obra selecionada
         const osData = await getServiceOrderByProjectId(obraId);
-        console.log("Ordens de serviço carregadas:", osData.length);
         setOrdensServico(osData);
       } else {
         // Se selecionar "Todas as Obras", limpa as ordens de serviço
@@ -71,7 +66,8 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
       // Aplicar filtro apenas com a obra, sem ordem de serviço
       onFilterChange(selectedPeriod, obraId, null);
     } catch (error) {
-      console.error("Erro ao carregar ordens de serviço:", error);
+      setOrdensServico([]);
+      onFilterChange(selectedPeriod, obraId, null);
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +75,6 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
 
   const handleOrdemServicoChange = (value: string) => {
     const ordemServicoId = value === "todas" ? null : value;
-    console.log("Ordem de serviço selecionada:", ordemServicoId, "valor original:", value);
     setSelectedOrdemServico(ordemServicoId);
     
     // Aplicar todos os filtros: período, obra e ordem de serviço

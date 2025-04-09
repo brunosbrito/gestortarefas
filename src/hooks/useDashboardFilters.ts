@@ -19,8 +19,6 @@ export const useDashboardFilters = () => {
     const loadFilteredData = async () => {
       setIsFilteredDataLoading(true);
       try {
-        console.log("Aplicando filtros:", JSON.stringify(filters));
-        
         // Busca atividades considerando todos os filtros
         const activities = await getFilteredActivities(
           filters.macroTaskId, 
@@ -30,10 +28,8 @@ export const useDashboardFilters = () => {
           filters.period as PeriodFilterType
         );
 
-        console.log("Atividades filtradas:", activities.length);
         setFilteredActivities(activities);
       } catch (error) {
-        console.error("Erro ao carregar dados filtrados:", error);
         setFilteredActivities([]);
       } finally {
         setIsFilteredDataLoading(false);
@@ -44,13 +40,10 @@ export const useDashboardFilters = () => {
   }, [filters]);
 
   const handleFilterChange = (newFilters: Partial<DashboardFilters>) => {
-    console.log("Atualizando filtros:", JSON.stringify(newFilters));
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const handlePeriodChange = (period: PeriodFilterType, obraId?: string | null, serviceOrderId?: string | null) => {
-    console.log("Filtro de período alterado:", { period, obraId, serviceOrderId });
-    
     // Convertendo IDs de string para number, se existirem
     const numericObraId = obraId && obraId !== "null" ? Number(obraId) : null;
     const numericServiceOrderId = serviceOrderId && serviceOrderId !== "null" ? Number(serviceOrderId) : null;

@@ -4,13 +4,11 @@ import axios from 'axios';
 
 const parseTimeToHours = (timeString: string | null | undefined): number => {
   if (!timeString || typeof timeString !== 'string') {
-    console.warn("Valor inválido para timeString:", timeString);
     return 0; // Retorna 0 horas se o valor for inválido
   }
 
   const match = timeString.match(/(\d+)h(?:\s*(\d+)min)?/);
   if (!match) {
-    console.warn("Formato inválido para timeString:", timeString);
     return 0;
   }
 
@@ -70,8 +68,7 @@ export const dataMacroTask = async () => {
     // Convertendo para um array
     return Object.values(groupedData);
   } catch (error) {
-    console.error('Error fetching activities', error);
-    throw error;
+    return [];
   }
 };
 
@@ -125,8 +122,7 @@ export const dataProcess = async () => {
     // Convertendo para um array
     return Object.values(groupedData);
   } catch (error) {
-    console.error('Error fetching activities', error);
-    throw error;
+    return [];
   }
 };
 
@@ -185,7 +181,6 @@ export const dataCollaborators = async () => {
     // Convertendo para um array
     return Object.values(groupedData);
   } catch (error) {
-    console.error('Error fetching collaborator data', error);
     return [];
   }
 };
