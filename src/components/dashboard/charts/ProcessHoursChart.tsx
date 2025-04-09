@@ -71,7 +71,7 @@ export const ProcessHoursChart = ({ processes }: ProcessHoursChartProps) => {
                         <p>Atividades: {payload[0].payload.activityCount}</p>
                         <p>Horas Previstas: {payload[0].payload.estimatedHours}h</p>
                         <p>Horas Trabalhadas: {payload[0].payload.actualHours}h</p>
-                        <p className={differenceColor}>Diferença: {difference}%</p>
+                        <p className={differenceColor}>KPI H. Previstas / H. Trabalhadas: {difference}%</p>
                       </div>
                     );
                   }
