@@ -10,7 +10,9 @@ export const useDashboardFilters = () => {
     processId: null,
     serviceOrderId: null,
     obraId: null,
-    period: 'todos'
+    period: 'todos',
+    startDate: null,
+    endDate: null
   });
   const [filteredActivities, setFilteredActivities] = useState<FilteredActivity[]>([]);
   const [isFilteredDataLoading, setIsFilteredDataLoading] = useState(false);
@@ -25,7 +27,9 @@ export const useDashboardFilters = () => {
           filters.processId,
           filters.obraId,
           filters.serviceOrderId,
-          filters.period as PeriodFilterType
+          filters.period as PeriodFilterType,
+          filters.startDate,
+          filters.endDate
         );
 
         setFilteredActivities(activities);
@@ -43,7 +47,13 @@ export const useDashboardFilters = () => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
-  const handlePeriodChange = (period: PeriodFilterType, obraId?: string | null, serviceOrderId?: string | null) => {
+  const handlePeriodChange = (
+    period: PeriodFilterType, 
+    obraId?: string | null, 
+    serviceOrderId?: string | null,
+    startDate?: Date | null,
+    endDate?: Date | null
+  ) => {
     // Convertendo IDs de string para number, se existirem
     const numericObraId = obraId && obraId !== "null" ? Number(obraId) : null;
     const numericServiceOrderId = serviceOrderId && serviceOrderId !== "null" ? Number(serviceOrderId) : null;
@@ -52,7 +62,9 @@ export const useDashboardFilters = () => {
       ...prev,
       period,
       obraId: numericObraId,
-      serviceOrderId: numericServiceOrderId
+      serviceOrderId: numericServiceOrderId,
+      startDate: period === 'personalizado' ? startDate : null,
+      endDate: period === 'personalizado' ? endDate : null
     }));
   };
 

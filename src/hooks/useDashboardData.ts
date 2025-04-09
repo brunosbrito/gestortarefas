@@ -108,7 +108,13 @@ export const useDashboardData = () => {
   };
 
   // Aplicar filtro de período aos dados
-  const applyPeriodFilter = (period: PeriodFilterType, obraId?: number | null, serviceOrderId?: number | null) => {
+  const applyPeriodFilter = (
+    period: PeriodFilterType, 
+    obraId?: number | null, 
+    serviceOrderId?: number | null,
+    startDate?: Date | null,
+    endDate?: Date | null
+  ) => {
     if (allActivities.length === 0) {
       resetDashboardData();
       return;
@@ -158,14 +164,20 @@ export const useDashboardData = () => {
     // Filtrar estatísticas de tarefas macro
     if (originalMacroTaskStatistic.length > 0) {
       // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId) {
+      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
         setMacroTaskStatistic([...originalMacroTaskStatistic]);
       } else {
         // Caso contrário, aplicar filtro de período
         let filteredMacroTask = [...originalMacroTaskStatistic];
         
         if (period && period !== 'todos') {
-          filteredMacroTask = filterDataByPeriod(filteredMacroTask, period);
+          if (period === 'personalizado' && (startDate || endDate)) {
+            // Filtro com datas personalizadas
+            filteredMacroTask = filterDataByPeriod(filteredMacroTask, period, startDate, endDate);
+          } else {
+            // Filtro com períodos predefinidos
+            filteredMacroTask = filterDataByPeriod(filteredMacroTask, period);
+          }
         }
         
         // Se não há dados após filtragem, define como array vazio
@@ -176,14 +188,20 @@ export const useDashboardData = () => {
     // Filtrar estatísticas de processos
     if (originalProcessStatistic.length > 0) {
       // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId) {
+      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
         setProcessStatistic([...originalProcessStatistic]);
       } else {
         // Caso contrário, aplicar filtro de período
         let filteredProcess = [...originalProcessStatistic];
         
         if (period && period !== 'todos') {
-          filteredProcess = filterDataByPeriod(filteredProcess, period);
+          if (period === 'personalizado' && (startDate || endDate)) {
+            // Filtro com datas personalizadas
+            filteredProcess = filterDataByPeriod(filteredProcess, period, startDate, endDate);
+          } else {
+            // Filtro com períodos predefinidos
+            filteredProcess = filterDataByPeriod(filteredProcess, period);
+          }
         }
         
         // Se não há dados após filtragem, define como array vazio
@@ -194,14 +212,20 @@ export const useDashboardData = () => {
     // Filtrar estatísticas de colaboradores
     if (originalCollaboratorStatistic.length > 0) {
       // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId) {
+      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
         setCollaboratorStatistic([...originalCollaboratorStatistic]);
       } else {
         // Caso contrário, aplicar filtro de período
         let filteredCollaborators = [...originalCollaboratorStatistic];
         
         if (period && period !== 'todos') {
-          filteredCollaborators = filterDataByPeriod(filteredCollaborators, period);
+          if (period === 'personalizado' && (startDate || endDate)) {
+            // Filtro com datas personalizadas
+            filteredCollaborators = filterDataByPeriod(filteredCollaborators, period, startDate, endDate);
+          } else {
+            // Filtro com períodos predefinidos
+            filteredCollaborators = filterDataByPeriod(filteredCollaborators, period);
+          }
         }
         
         // Se não há dados após filtragem, define como array vazio

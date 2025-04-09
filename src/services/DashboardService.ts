@@ -9,7 +9,9 @@ export const getFilteredActivities = async (
   processId?: number | null,
   obraId?: number | null,
   serviceOrderId?: number | null,
-  period?: PeriodFilterType
+  period?: PeriodFilterType,
+  startDate?: Date | null,
+  endDate?: Date | null
 ): Promise<FilteredActivity[]> => {
   try {
     const activities = await getAllActivities();
@@ -75,9 +77,15 @@ export const getFilteredActivities = async (
         serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A', id: null }
       }));
 
-    // Aplica filtro de período se necessário
-    if (period && period !== 'todos') {
-      filteredActivities = filterDataByPeriod(filteredActivities, period);
+    // Aplica filtro de período ou datas personalizadas se necessário
+    if (period) {
+      if (period === 'personalizado' && (startDate || endDate)) {
+        // Usa datas personalizadas
+        filteredActivities = filterDataByPeriod(filteredActivities, period, startDate, endDate);
+      } else if (period !== 'todos') {
+        // Usa períodos predefinidos
+        filteredActivities = filterDataByPeriod(filteredActivities, period);
+      }
     }
 
     return filteredActivities;

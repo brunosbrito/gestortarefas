@@ -38,27 +38,22 @@ const Dashboard = () => {
 
   // Carregar todos os dados ao montar o componente
   useEffect(() => {
-    console.log("Carregando dados iniciais do dashboard");
     loadAllData();
   }, []);
 
   // Aplicar filtro de período a todos os dados
   useEffect(() => {
     if (filters.period) {
-      console.log("Aplicando filtro de período em Dashboard:", 
-        filters.period, 
-        filters.obraId, 
-        filters.serviceOrderId
-      );
-      
       // Aplicamos o filtro de período aos dados estatísticos
       applyPeriodFilter(
         filters.period as any,
         filters.obraId,
-        filters.serviceOrderId
+        filters.serviceOrderId,
+        filters.startDate,
+        filters.endDate
       );
     }
-  }, [filters.period, filters.obraId, filters.serviceOrderId]);
+  }, [filters.period, filters.obraId, filters.serviceOrderId, filters.startDate, filters.endDate]);
 
   const stats = [
     {

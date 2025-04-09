@@ -1,16 +1,19 @@
+
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
 import { ServiceOrder } from './ServiceOrderInterface';
 
 export interface DashboardFilters {
   macroTaskId?: number | null;
   processId?: number | null;
-  serviceOrderId?: number | null; // ✅ Agora é number | null
+  serviceOrderId?: number | null;
   period?: PeriodFilterType | string | null;
   obraId?: number | null;
+  startDate?: Date | null;
+  endDate?: Date | null;
 }
 
 export interface FilteredServiceOrder {
-  id: number | string; // ✅ Pode ser number ou string para maior compatibilidade
+  id: number | string;
   serviceOrderNumber: string;
   description: string;
   projectName: string;
@@ -28,7 +31,7 @@ export interface FilteredActivity {
   process: string;
   processId?: number;
   serviceOrder: ServiceOrder;
-  serviceOrderId?: number; // ✅ Agora é number para manter a consistência
+  serviceOrderId?: number;
   projectName: string;
   createdAt?: string | Date;
 }
