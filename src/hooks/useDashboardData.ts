@@ -1,22 +1,13 @@
 
-import { useState, useEffect } from 'react';
-import { getAllActivities } from '@/services/ActivityService';
-import { getAllServiceOrders } from '@/services/ServiceOrderService';
-import ObrasService from '@/services/ObrasService';
-import { dataMacroTask, dataProcess, dataCollaborators } from '@/services/StatisticsService';
+import { useState } from 'react';
 import { MacroTaskStatistic, ProcessStatistic, CollaboratorStatistic } from '@/interfaces/ActivityStatistics';
+import { ActivityStatusCounts, DashboardData } from '@/interfaces/DashboardDataTypes';
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
 import { filterDataByPeriod } from '@/utils/dateFilter';
+import { loadDashboardData } from '@/services/DashboardDataService';
+import { countActivitiesByStatus, filterActivitiesByObra, filterActivitiesByServiceOrder } from '@/utils/dashboardUtils';
 
-// Tipo para status de atividades
-export interface ActivityStatusCounts {
-  planejadas: number;
-  emExecucao: number;
-  concluidas: number;
-  paralizadas: number;
-}
-
-export const useDashboardData = () => {
+export const useDashboardData = (): DashboardData => {
   const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
   const [collaboratorStatistic, setCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
@@ -39,65 +30,29 @@ export const useDashboardData = () => {
   const loadAllData = async () => {
     setIsLoading(true);
     try {
-      console.log("Carregando dados do dashboard...");
+      const dashboardData = await loadDashboardData();
       
-      const activities = await getAllActivities();
-      setAllActivities(activities);
-      console.log("Atividades carregadas:", activities.length);
+      // Atualizar estados com os dados carregados
+      setAllActivities(dashboardData.activities);
+      setTotalActivities(dashboardData.activities.length);
+      setActivitiesByStatus(dashboardData.statusCounts);
+      setTotalProjetos(dashboardData.projects.length);
+      setTotalServiceOrder(dashboardData.serviceOrders.length);
       
-      // Contar total de atividades
-      setTotalActivities(activities.length);
+      // Atualizar estatísticas dos gráficos
+      setMacroTaskStatistic(dashboardData.dadosMacroTask as MacroTaskStatistic[]);
+      setOriginalMacroTaskStatistic(dashboardData.dadosMacroTask as MacroTaskStatistic[]);
       
-      // Contar atividades por status
-      countActivitiesByStatus(activities);
+      setProcessStatistic(dashboardData.dadosProcesso as ProcessStatistic[]);
+      setOriginalProcessStatistic(dashboardData.dadosProcesso as ProcessStatistic[]);
       
-      // Carregar outros dados
-      const projects = await ObrasService.getAllObras();
-      setTotalProjetos(projects.length);
-      console.log("Projetos carregados:", projects.length);
-      
-      const serviceOrders = await getAllServiceOrders();
-      setTotalServiceOrder(serviceOrders.length);
-      console.log("Ordens de serviço carregadas:", serviceOrders.length);
-      
-      // Carregar estatísticas para os gráficos
-      const dadosMacroTask = await dataMacroTask();
-      setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
-      setOriginalMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
-      console.log("Estatísticas de tarefas macro carregadas:", dadosMacroTask.length);
-      
-      const dadosProcesso = await dataProcess();
-      setProcessStatistic(dadosProcesso as ProcessStatistic[]);
-      setOriginalProcessStatistic(dadosProcesso as ProcessStatistic[]);
-      console.log("Estatísticas de processos carregadas:", dadosProcesso.length);
-      
-      // Carregar dados dos colaboradores
-      const dadosColaboradores = await dataCollaborators();
-      setCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
-      setOriginalCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
-      console.log("Estatísticas de colaboradores carregadas:", dadosColaboradores.length);
+      setCollaboratorStatistic(dashboardData.dadosColaboradores as CollaboratorStatistic[]);
+      setOriginalCollaboratorStatistic(dashboardData.dadosColaboradores as CollaboratorStatistic[]);
     } catch (error) {
       console.error("Erro ao carregar dados", error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Função para contar atividades por status
-  const countActivitiesByStatus = (activities: any[]) => {
-    const statusCounts = activities.reduce((counts: ActivityStatusCounts, activity) => {
-      const status = activity.status || 'Não especificado';
-      
-      // Conta baseada nos status da atividade
-      if (status.toLowerCase().includes('planejada')) counts.planejadas++;
-      else if (status.toLowerCase().includes('execução')) counts.emExecucao++;
-      else if (status.toLowerCase().includes('concluída')) counts.concluidas++;
-      else if (status.toLowerCase().includes('paralizada')) counts.paralizadas++;
-      
-      return counts;
-    }, { planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
-    
-    setActivitiesByStatus(statusCounts);
   };
 
   // Aplicar filtro de período aos dados
@@ -115,39 +70,20 @@ export const useDashboardData = () => {
     // Aplicar filtro por obra se necessário
     if (obraId !== null && obraId !== undefined) {
       console.log("Filtrando por obra ID:", obraId);
-      filteredActivities = filteredActivities.filter(activity => {
-        if (!activity.project) return false;
-        
-        const activityProjectId = typeof activity.project.id === 'string' 
-          ? Number(activity.project.id) 
-          : activity.project.id;
-          
-        const match = activityProjectId === obraId;
-        console.log(`Atividade ${activity.id}, projeto ${activityProjectId} === ${obraId} = ${match}`);
-        return match;
-      });
+      filteredActivities = filterActivitiesByObra(filteredActivities, obraId);
       console.log("Atividades após filtro de obra:", filteredActivities.length);
     }
     
     // Aplicar filtro por ordem de serviço se necessário
     if (serviceOrderId !== null && serviceOrderId !== undefined) {
       console.log("Filtrando por ordem de serviço ID:", serviceOrderId);
-      filteredActivities = filteredActivities.filter(activity => {
-        if (!activity.serviceOrder) return false;
-        
-        const activityServiceOrderId = typeof activity.serviceOrder.id === 'string' 
-          ? Number(activity.serviceOrder.id) 
-          : activity.serviceOrder.id;
-          
-        const match = activityServiceOrderId === serviceOrderId;
-        console.log(`Atividade ${activity.id}, OS ${activityServiceOrderId} === ${serviceOrderId} = ${match}`);
-        return match;
-      });
+      filteredActivities = filterActivitiesByServiceOrder(filteredActivities, serviceOrderId);
       console.log("Atividades após filtro de ordem de serviço:", filteredActivities.length);
     }
     
     // Atualizar contagem de atividades por status
-    countActivitiesByStatus(filteredActivities);
+    const newStatusCounts = countActivitiesByStatus(filteredActivities);
+    setActivitiesByStatus(newStatusCounts);
     
     // Atualizar total de atividades
     setTotalActivities(filteredActivities.length);
@@ -227,6 +163,10 @@ export const useDashboardData = () => {
     isLoading,
     loadAllData,
     applyPeriodFilter,
-    countActivitiesByStatus
+    countActivitiesByStatus,
+    originalMacroTaskStatistic,
+    originalProcessStatistic,
+    originalCollaboratorStatistic,
+    allActivities
   };
 };
