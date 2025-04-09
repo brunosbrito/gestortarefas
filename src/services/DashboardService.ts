@@ -15,7 +15,7 @@ export const getFilteredActivities = async (
   try {
     const activities = await getAllActivities();
     console.log('Atividades totais antes da filtragem:', activities.length);
-    console.log('Filtros aplicados:', JSON.stringify({ macroTaskId, processId, obraId, serviceOrderId, period }));
+    console.log('Filtros aplicados:', { macroTaskId, processId, obraId, serviceOrderId, period });
 
     // Filtra as atividades com base nos parâmetros fornecidos
     let filteredActivities = activities
@@ -28,13 +28,13 @@ export const getFilteredActivities = async (
         // Filtro por Tarefa Macro
         if (macroTaskId !== null && macroTaskId !== undefined) {
           matchMacroTask = activity.macroTask?.id === macroTaskId;
-          console.log(`Filtro MacroTask: ${activity.macroTask?.id} === ${macroTaskId} = ${matchMacroTask}`);
+          console.log(`Filtro MacroTask para atividade ${activity.id}: ${activity.macroTask?.id} === ${macroTaskId} = ${matchMacroTask}`);
         }
 
         // Filtro por Processo
         if (processId !== null && processId !== undefined) {
           matchProcess = activity.process?.id === processId;
-          console.log(`Filtro Process: ${activity.process?.id} === ${processId} = ${matchProcess}`);
+          console.log(`Filtro Process para atividade ${activity.id}: ${activity.process?.id} === ${processId} = ${matchProcess}`);
         }
 
         // Filtro por Obra/Projeto
@@ -42,9 +42,12 @@ export const getFilteredActivities = async (
           if (!activity.project) {
             matchObra = false;
           } else {
-            const activityProjectId = Number(activity.project.id);
+            const activityProjectId = typeof activity.project.id === 'string' 
+              ? Number(activity.project.id) 
+              : activity.project.id;
+              
             matchObra = activityProjectId === obraId;
-            console.log(`Filtro Obra: ${activityProjectId} === ${obraId} = ${matchObra}`);
+            console.log(`Filtro Obra para atividade ${activity.id}: ${activityProjectId} === ${obraId} = ${matchObra}`);
           }
         }
 
@@ -53,9 +56,12 @@ export const getFilteredActivities = async (
           if (!activity.serviceOrder) {
             matchServiceOrder = false;
           } else {
-            const activityServiceOrderId = Number(activity.serviceOrder.id);
+            const activityServiceOrderId = typeof activity.serviceOrder.id === 'string' 
+              ? Number(activity.serviceOrder.id) 
+              : activity.serviceOrder.id;
+              
             matchServiceOrder = activityServiceOrderId === serviceOrderId;
-            console.log(`Filtro OS: ${activityServiceOrderId} === ${serviceOrderId} = ${matchServiceOrder}`);
+            console.log(`Filtro OS para atividade ${activity.id}: ${activityServiceOrderId} === ${serviceOrderId} = ${matchServiceOrder}`);
           }
         }
 

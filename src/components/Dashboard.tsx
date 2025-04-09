@@ -4,6 +4,7 @@ import { Building2, ClipboardList, Activity } from 'lucide-react';
 import { StatsSummary } from './dashboard/StatsSummary';
 import { MacroTasksChart } from './dashboard/charts/MacroTasksChart';
 import { ProcessHoursChart } from './dashboard/charts/ProcessHoursChart';
+import { CollaboratorsChart } from './dashboard/charts/CollaboratorsChart';
 import { LoadingSpinner } from './dashboard/LoadingSpinner';
 import { TaskProcessFilter } from './dashboard/TaskProcessFilter';
 import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
@@ -17,6 +18,7 @@ const Dashboard = () => {
   const {
     macroTaskStatistic,
     processStatistic,
+    collaboratorStatistic,
     totalActivities,
     totalProjetos,
     totalServiceOrder,
@@ -113,6 +115,19 @@ const Dashboard = () => {
         ) : (
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold mb-4">Atividades por Processo</h3>
+            <div className="flex items-center justify-center h-60 text-gray-400">
+              Nenhum dado disponível para os filtros selecionados
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6">
+        {collaboratorStatistic && collaboratorStatistic.length > 0 ? (
+          <CollaboratorsChart collaborators={collaboratorStatistic} />
+        ) : (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4">Contribuição por Colaborador</h3>
             <div className="flex items-center justify-center h-60 text-gray-400">
               Nenhum dado disponível para os filtros selecionados
             </div>

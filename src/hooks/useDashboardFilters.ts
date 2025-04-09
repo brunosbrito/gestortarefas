@@ -52,8 +52,8 @@ export const useDashboardFilters = () => {
     console.log("Filtro de período alterado:", { period, obraId, serviceOrderId });
     
     // Convertendo IDs de string para number, se existirem
-    const numericObraId = obraId ? Number(obraId) : null;
-    const numericServiceOrderId = serviceOrderId ? Number(serviceOrderId) : null;
+    const numericObraId = obraId && obraId !== "null" ? Number(obraId) : null;
+    const numericServiceOrderId = serviceOrderId && serviceOrderId !== "null" ? Number(serviceOrderId) : null;
     
     setFilters(prev => ({
       ...prev,

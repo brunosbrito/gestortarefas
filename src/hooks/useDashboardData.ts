@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { getAllActivities } from '@/services/ActivityService';
 import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import ObrasService from '@/services/ObrasService';
-import { dataMacroTask, dataProcess } from '@/services/StatisticsService';
-import { MacroTaskStatistic, ProcessStatistic } from '@/interfaces/ActivityStatistics';
+import { dataMacroTask, dataProcess, dataCollaborators } from '@/services/StatisticsService';
+import { MacroTaskStatistic, ProcessStatistic, CollaboratorStatistic } from '@/interfaces/ActivityStatistics';
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
 import { filterDataByPeriod } from '@/utils/dateFilter';
 
@@ -19,8 +19,10 @@ export interface ActivityStatusCounts {
 export const useDashboardData = () => {
   const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
+  const [collaboratorStatistic, setCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
   const [originalMacroTaskStatistic, setOriginalMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [originalProcessStatistic, setOriginalProcessStatistic] = useState<ProcessStatistic[]>([]);
+  const [originalCollaboratorStatistic, setOriginalCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
   const [totalActivities, setTotalActivities] = useState<number>(0);
   const [totalProjetos, setTotalProjetos] = useState<number>(0);
   const [totalServiceOrder, setTotalServiceOrder] = useState<number>(0);
@@ -68,6 +70,12 @@ export const useDashboardData = () => {
       setProcessStatistic(dadosProcesso as ProcessStatistic[]);
       setOriginalProcessStatistic(dadosProcesso as ProcessStatistic[]);
       console.log("Estatísticas de processos carregadas:", dadosProcesso.length);
+      
+      // Carregar dados dos colaboradores
+      const dadosColaboradores = await dataCollaborators();
+      setCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
+      setOriginalCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
+      console.log("Estatísticas de colaboradores carregadas:", dadosColaboradores.length);
     } catch (error) {
       console.error("Erro ao carregar dados", error);
     } finally {
@@ -110,8 +118,12 @@ export const useDashboardData = () => {
       filteredActivities = filteredActivities.filter(activity => {
         if (!activity.project) return false;
         
-        const activityProjectId = Number(activity.project.id);
+        const activityProjectId = typeof activity.project.id === 'string' 
+          ? Number(activity.project.id) 
+          : activity.project.id;
+          
         const match = activityProjectId === obraId;
+        console.log(`Atividade ${activity.id}, projeto ${activityProjectId} === ${obraId} = ${match}`);
         return match;
       });
       console.log("Atividades após filtro de obra:", filteredActivities.length);
@@ -123,18 +135,15 @@ export const useDashboardData = () => {
       filteredActivities = filteredActivities.filter(activity => {
         if (!activity.serviceOrder) return false;
         
-        const activityServiceOrderId = Number(activity.serviceOrder.id);
+        const activityServiceOrderId = typeof activity.serviceOrder.id === 'string' 
+          ? Number(activity.serviceOrder.id) 
+          : activity.serviceOrder.id;
+          
         const match = activityServiceOrderId === serviceOrderId;
+        console.log(`Atividade ${activity.id}, OS ${activityServiceOrderId} === ${serviceOrderId} = ${match}`);
         return match;
       });
       console.log("Atividades após filtro de ordem de serviço:", filteredActivities.length);
-    }
-    
-    // Aplicar filtro de período por último
-    if (period && period !== 'todos') {
-      console.log("Aplicando filtro de período:", period);
-      filteredActivities = filterDataByPeriod(filteredActivities, period);
-      console.log("Atividades após filtro de período:", filteredActivities.length);
     }
     
     // Atualizar contagem de atividades por status
@@ -147,14 +156,13 @@ export const useDashboardData = () => {
     if (originalMacroTaskStatistic.length > 0) {
       console.log("Aplicando filtros às estatísticas de tarefas macro");
       
-      // Se for "todos", restaurar os dados originais
+      // Se for "todos" e não houver outros filtros, restaurar os dados originais
       if (period === 'todos' && !obraId && !serviceOrderId) {
         setMacroTaskStatistic([...originalMacroTaskStatistic]);
       } else {
-        // Caso contrário, aplicar filtros
+        // Caso contrário, aplicar filtro de período
         let filteredMacroTask = [...originalMacroTaskStatistic];
         
-        // Aplicar filtro de período apenas se necessário
         if (period && period !== 'todos') {
           filteredMacroTask = filterDataByPeriod(filteredMacroTask, period);
         }
@@ -169,14 +177,13 @@ export const useDashboardData = () => {
     if (originalProcessStatistic.length > 0) {
       console.log("Aplicando filtros às estatísticas de processos");
       
-      // Se for "todos", restaurar os dados originais
+      // Se for "todos" e não houver outros filtros, restaurar os dados originais
       if (period === 'todos' && !obraId && !serviceOrderId) {
         setProcessStatistic([...originalProcessStatistic]);
       } else {
-        // Caso contrário, aplicar filtros
+        // Caso contrário, aplicar filtro de período
         let filteredProcess = [...originalProcessStatistic];
         
-        // Aplicar filtro de período apenas se necessário
         if (period && period !== 'todos') {
           filteredProcess = filterDataByPeriod(filteredProcess, period);
         }
@@ -186,11 +193,33 @@ export const useDashboardData = () => {
       
       console.log("Estatísticas de processos após filtros:", processStatistic.length);
     }
+    
+    // Filtrar estatísticas de colaboradores
+    if (originalCollaboratorStatistic.length > 0) {
+      console.log("Aplicando filtros às estatísticas de colaboradores");
+      
+      // Se for "todos" e não houver outros filtros, restaurar os dados originais
+      if (period === 'todos' && !obraId && !serviceOrderId) {
+        setCollaboratorStatistic([...originalCollaboratorStatistic]);
+      } else {
+        // Caso contrário, aplicar filtro de período
+        let filteredCollaborators = [...originalCollaboratorStatistic];
+        
+        if (period && period !== 'todos') {
+          filteredCollaborators = filterDataByPeriod(filteredCollaborators, period);
+        }
+        
+        setCollaboratorStatistic(filteredCollaborators);
+      }
+      
+      console.log("Estatísticas de colaboradores após filtros:", collaboratorStatistic.length);
+    }
   };
 
   return {
     macroTaskStatistic,
     processStatistic,
+    collaboratorStatistic,
     totalActivities,
     totalProjetos,
     totalServiceOrder,
