@@ -77,15 +77,9 @@ export const getFilteredActivities = async (
         serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A', id: null }
       }));
 
-    // Aplica filtro de período ou datas personalizadas se necessário
-    if (period) {
-      if (period === 'personalizado' && (startDate || endDate)) {
-        // Usa datas personalizadas
-        filteredActivities = filterDataByPeriod(filteredActivities, period, startDate, endDate);
-      } else if (period !== 'todos') {
-        // Usa períodos predefinidos
-        filteredActivities = filterDataByPeriod(filteredActivities, period);
-      }
+    // Aplica filtro de datas personalizadas
+    if (period === 'personalizado' && (startDate || endDate)) {
+      filteredActivities = filterDataByPeriod(filteredActivities, period, startDate, endDate);
     }
 
     return filteredActivities;

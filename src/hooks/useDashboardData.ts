@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { getAllActivities } from '@/services/ActivityService';
 import { getAllServiceOrders } from '@/services/ServiceOrderService';
 import ObrasService from '@/services/ObrasService';
-import { dataMacroTask, dataProcess, dataCollaborators } from '@/services/StatisticsService';
-import { MacroTaskStatistic, ProcessStatistic, CollaboratorStatistic } from '@/interfaces/ActivityStatistics';
+import { dataMacroTask, dataProcess } from '@/services/StatisticsService';
+import { MacroTaskStatistic, ProcessStatistic } from '@/interfaces/ActivityStatistics';
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
 import { filterDataByPeriod } from '@/utils/dateFilter';
 
@@ -19,10 +19,8 @@ export interface ActivityStatusCounts {
 export const useDashboardData = () => {
   const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
-  const [collaboratorStatistic, setCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
   const [originalMacroTaskStatistic, setOriginalMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [originalProcessStatistic, setOriginalProcessStatistic] = useState<ProcessStatistic[]>([]);
-  const [originalCollaboratorStatistic, setOriginalCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
   const [totalActivities, setTotalActivities] = useState<number>(0);
   const [totalProjetos, setTotalProjetos] = useState<number>(0);
   const [totalServiceOrder, setTotalServiceOrder] = useState<number>(0);
@@ -63,11 +61,6 @@ export const useDashboardData = () => {
       const dadosProcesso = await dataProcess();
       setProcessStatistic(dadosProcesso as ProcessStatistic[]);
       setOriginalProcessStatistic(dadosProcesso as ProcessStatistic[]);
-      
-      // Carregar dados dos colaboradores
-      const dadosColaboradores = await dataCollaborators();
-      setCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
-      setOriginalCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
     } catch (error) {
       // Resetar os dados em caso de erro
       resetDashboardData();
@@ -104,7 +97,6 @@ export const useDashboardData = () => {
     setActivitiesByStatus({ planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
     setMacroTaskStatistic([]);
     setProcessStatistic([]);
-    setCollaboratorStatistic([]);
   };
 
   // Aplicar filtro de período aos dados
@@ -149,6 +141,11 @@ export const useDashboardData = () => {
       });
     }
     
+    // Aplicar filtro de data se tiver data de início ou fim
+    if (startDate || endDate) {
+      filteredActivities = filterDataByPeriod(filteredActivities, 'personalizado', startDate, endDate);
+    }
+    
     // Se não encontrou atividades após aplicar os filtros, zera tudo
     if (filteredActivities.length === 0) {
       resetDashboardData();
@@ -163,81 +160,34 @@ export const useDashboardData = () => {
     
     // Filtrar estatísticas de tarefas macro
     if (originalMacroTaskStatistic.length > 0) {
-      // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
-        setMacroTaskStatistic([...originalMacroTaskStatistic]);
-      } else {
-        // Caso contrário, aplicar filtro de período
-        let filteredMacroTask = [...originalMacroTaskStatistic];
-        
-        if (period && period !== 'todos') {
-          if (period === 'personalizado' && (startDate || endDate)) {
-            // Filtro com datas personalizadas
-            filteredMacroTask = filterDataByPeriod(filteredMacroTask, period, startDate, endDate);
-          } else {
-            // Filtro com períodos predefinidos
-            filteredMacroTask = filterDataByPeriod(filteredMacroTask, period);
-          }
-        }
-        
-        // Se não há dados após filtragem, define como array vazio
-        setMacroTaskStatistic(filteredMacroTask.length > 0 ? filteredMacroTask : []);
+      // Aplicar filtro de data às estatísticas de tarefas macro
+      let filteredMacroTask = [...originalMacroTaskStatistic];
+      
+      if (startDate || endDate) {
+        filteredMacroTask = filterDataByPeriod(filteredMacroTask, 'personalizado', startDate, endDate);
       }
+      
+      // Se não há dados após filtragem, define como array vazio
+      setMacroTaskStatistic(filteredMacroTask.length > 0 ? filteredMacroTask : []);
     }
     
     // Filtrar estatísticas de processos
     if (originalProcessStatistic.length > 0) {
-      // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
-        setProcessStatistic([...originalProcessStatistic]);
-      } else {
-        // Caso contrário, aplicar filtro de período
-        let filteredProcess = [...originalProcessStatistic];
-        
-        if (period && period !== 'todos') {
-          if (period === 'personalizado' && (startDate || endDate)) {
-            // Filtro com datas personalizadas
-            filteredProcess = filterDataByPeriod(filteredProcess, period, startDate, endDate);
-          } else {
-            // Filtro com períodos predefinidos
-            filteredProcess = filterDataByPeriod(filteredProcess, period);
-          }
-        }
-        
-        // Se não há dados após filtragem, define como array vazio
-        setProcessStatistic(filteredProcess.length > 0 ? filteredProcess : []);
+      // Aplicar filtro de data às estatísticas de processos
+      let filteredProcess = [...originalProcessStatistic];
+      
+      if (startDate || endDate) {
+        filteredProcess = filterDataByPeriod(filteredProcess, 'personalizado', startDate, endDate);
       }
-    }
-    
-    // Filtrar estatísticas de colaboradores
-    if (originalCollaboratorStatistic.length > 0) {
-      // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
-        setCollaboratorStatistic([...originalCollaboratorStatistic]);
-      } else {
-        // Caso contrário, aplicar filtro de período
-        let filteredCollaborators = [...originalCollaboratorStatistic];
-        
-        if (period && period !== 'todos') {
-          if (period === 'personalizado' && (startDate || endDate)) {
-            // Filtro com datas personalizadas
-            filteredCollaborators = filterDataByPeriod(filteredCollaborators, period, startDate, endDate);
-          } else {
-            // Filtro com períodos predefinidos
-            filteredCollaborators = filterDataByPeriod(filteredCollaborators, period);
-          }
-        }
-        
-        // Se não há dados após filtragem, define como array vazio
-        setCollaboratorStatistic(filteredCollaborators.length > 0 ? filteredCollaborators : []);
-      }
+      
+      // Se não há dados após filtragem, define como array vazio
+      setProcessStatistic(filteredProcess.length > 0 ? filteredProcess : []);
     }
   };
 
   return {
     macroTaskStatistic,
     processStatistic,
-    collaboratorStatistic,
     totalActivities,
     totalProjetos,
     totalServiceOrder,

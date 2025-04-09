@@ -12,46 +12,8 @@ export const filterDataByPeriod = <T extends { createdAt?: string | Date | undef
     return data;
   }
 
-  // Retornar todos os dados se o filtro for "todos" e não há datas personalizadas
-  if (periodFilter === 'todos' && !startDate && !endDate) {
-    return data;
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Garante que estamos comparando apenas a data, sem horário
-
-  let filterStartDate: Date | null = null;
-  let filterEndDate: Date | null = null;
-
-  // Se é um período personalizado com datas definidas
-  if (periodFilter === 'personalizado' && startDate && endDate) {
-    filterStartDate = new Date(startDate);
-    filterStartDate.setHours(0, 0, 0, 0);
-    
-    filterEndDate = new Date(endDate);
-    filterEndDate.setHours(23, 59, 59, 999); // Final do dia
-  } else {
-    // Caso contrário, usa os períodos predefinidos
-    switch (periodFilter) {
-      case '7dias':
-        filterStartDate = addDays(today, -7);
-        filterEndDate = today;
-        break;
-      case '1mes':
-        filterStartDate = addDays(today, -30);
-        filterEndDate = today;
-        break;
-      case '3meses':
-        filterStartDate = addDays(today, -90);
-        filterEndDate = today;
-        break;
-      default:
-        return data; // Se não há filtro definido, retorna todos os dados
-    }
-  }
-
   // Se não temos datas para filtrar, retorna todos os dados
-  if (!filterStartDate && !filterEndDate) {
+  if (!startDate && !endDate) {
     return data;
   }
 
@@ -73,19 +35,24 @@ export const filterDataByPeriod = <T extends { createdAt?: string | Date | undef
     itemDate.setHours(0, 0, 0, 0);
 
     // Filtra por ambas as datas se temos as duas
-    if (filterStartDate && filterEndDate) {
-      return (isAfter(itemDate, filterStartDate) || isEqual(itemDate, filterStartDate)) && 
-             (isBefore(itemDate, filterEndDate) || isEqual(itemDate, filterEndDate));
+    if (startDate && endDate) {
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999); // Final do dia
+
+      return (isAfter(itemDate, startDate) || isEqual(itemDate, startDate)) && 
+             (isBefore(itemDate, endDate) || isEqual(itemDate, endDate));
     }
     
     // Filtra apenas pela data de início se só temos ela
-    if (filterStartDate) {
-      return isAfter(itemDate, filterStartDate) || isEqual(itemDate, filterStartDate);
+    if (startDate) {
+      startDate.setHours(0, 0, 0, 0);
+      return isAfter(itemDate, startDate) || isEqual(itemDate, startDate);
     }
     
     // Filtra apenas pela data final se só temos ela
-    if (filterEndDate) {
-      return isBefore(itemDate, filterEndDate) || isEqual(itemDate, filterEndDate);
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999); // Final do dia
+      return isBefore(itemDate, endDate) || isEqual(itemDate, endDate);
     }
 
     return true;

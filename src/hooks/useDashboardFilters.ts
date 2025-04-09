@@ -10,7 +10,7 @@ export const useDashboardFilters = () => {
     processId: null,
     serviceOrderId: null,
     obraId: null,
-    period: 'todos',
+    period: 'personalizado',
     startDate: null,
     endDate: null
   });
@@ -63,8 +63,8 @@ export const useDashboardFilters = () => {
       period,
       obraId: numericObraId,
       serviceOrderId: numericServiceOrderId,
-      startDate: period === 'personalizado' ? startDate : null,
-      endDate: period === 'personalizado' ? endDate : null
+      startDate: startDate,
+      endDate: endDate
     }));
   };
 

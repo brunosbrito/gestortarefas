@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarDays, Folder, FileText, Calendar } from "lucide-react";
+import { Folder, FileText, Calendar } from "lucide-react";
 import ObrasService from "@/services/ObrasService";
 import { getServiceOrderByProjectId } from "@/services/ServiceOrderService";
 import { ServiceOrder } from "@/interfaces/ServiceOrderInterface";
@@ -12,7 +11,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-export type PeriodFilterType = "7dias" | "1mes" | "3meses" | "todos" | "personalizado";
+export type PeriodFilterType = "personalizado";
 
 interface PeriodFilterProps {
   onFilterChange: (
@@ -22,11 +21,9 @@ interface PeriodFilterProps {
     startDate?: Date | null,
     endDate?: Date | null
   ) => void;
-  defaultValue?: PeriodFilterType;
 }
 
-export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodFilterProps) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilterType>(defaultValue);
+export const PeriodFilter = ({ onFilterChange }: PeriodFilterProps) => {
   const [selectedObra, setSelectedObra] = useState<string | null>(null);
   const [selectedOrdemServico, setSelectedOrdemServico] = useState<string | null>(null);
   const [obras, setObras] = useState<{ id: string; name: string; }[]>([]);
@@ -51,28 +48,6 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     fetchObras();
   }, []);
 
-  const handlePeriodChange = (value: string) => {
-    if (value) {
-      const period = value as PeriodFilterType;
-      setSelectedPeriod(period);
-      
-      // Resetar datas customizadas se escolher outro período
-      if (period !== 'personalizado') {
-        setStartDate(null);
-        setEndDate(null);
-      }
-      
-      // Mantem os filtros de obra e ordem de serviço ao mudar o período
-      onFilterChange(
-        period, 
-        selectedObra, 
-        selectedOrdemServico, 
-        period === 'personalizado' ? startDate : null, 
-        period === 'personalizado' ? endDate : null
-      );
-    }
-  };
-
   const handleObraChange = async (value: string) => {
     try {
       setIsLoading(true);
@@ -89,22 +64,22 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
         setOrdensServico([]);
       }
       
-      // Aplicar filtro com a obra e período personalizado se selecionado
+      // Aplicar filtro com a obra selecionada
       onFilterChange(
-        selectedPeriod, 
+        'personalizado', 
         obraId, 
         null, 
-        selectedPeriod === 'personalizado' ? startDate : null, 
-        selectedPeriod === 'personalizado' ? endDate : null
+        startDate, 
+        endDate
       );
     } catch (error) {
       setOrdensServico([]);
       onFilterChange(
-        selectedPeriod, 
+        'personalizado', 
         obraId, 
         null, 
-        selectedPeriod === 'personalizado' ? startDate : null, 
-        selectedPeriod === 'personalizado' ? endDate : null
+        startDate, 
+        endDate
       );
     } finally {
       setIsLoading(false);
@@ -115,117 +90,98 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     const ordemServicoId = value === "todas" ? null : value;
     setSelectedOrdemServico(ordemServicoId);
     
-    // Aplicar todos os filtros: período, obra, ordem de serviço e datas personalizadas
+    // Aplicar todos os filtros: obra, ordem de serviço e datas personalizadas
     onFilterChange(
-      selectedPeriod, 
+      'personalizado', 
       selectedObra, 
       ordemServicoId, 
-      selectedPeriod === 'personalizado' ? startDate : null, 
-      selectedPeriod === 'personalizado' ? endDate : null
+      startDate, 
+      endDate
     );
   };
 
-  // Nova função para lidar com a aplicação de datas personalizadas
+  // Função para lidar com a aplicação de datas personalizadas
   const handleApplyCustomDates = () => {
-    if (selectedPeriod === 'personalizado') {
-      onFilterChange(selectedPeriod, selectedObra, selectedOrdemServico, startDate, endDate);
-    }
+    onFilterChange('personalizado', selectedObra, selectedOrdemServico, startDate, endDate);
   };
 
   return (
     <div className="mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        {/* Filtro por Período */}
-        <div className="flex items-center">
-          <CalendarDays className="w-5 h-5 mr-2 text-[#FF7F0E]" />
-          <h3 className="text-sm font-medium text-gray-700">Filtrar por Período:</h3>
+      {/* Seletores de data */}
+      <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+        {/* Seletor de Data Inicial */}
+        <div className="w-full sm:w-auto">
+          <label className="block text-sm mb-1 flex items-center">
+            <Calendar className="w-4 h-4 mr-2 text-[#FF7F0E]" />
+            Data Inicial
+          </label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[200px] justify-start text-left font-normal",
+                  !startDate && "text-muted-foreground"
+                )}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {startDate ? format(startDate, "dd/MM/yyyy") : <span>Selecione a data</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={startDate || undefined}
+                onSelect={setStartDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
-        <ToggleGroup type="single" value={selectedPeriod} onValueChange={handlePeriodChange} className="flex-wrap">
-          <ToggleGroupItem value="7dias" className="text-xs border-gray-200 hover:bg-[#FF7F0E]/10 data-[state=on]:bg-[#FF7F0E]/20">7 dias</ToggleGroupItem>
-          <ToggleGroupItem value="1mes" className="text-xs border-gray-200 hover:bg-[#FF7F0E]/10 data-[state=on]:bg-[#FF7F0E]/20">1 mês</ToggleGroupItem>
-          <ToggleGroupItem value="3meses" className="text-xs border-gray-200 hover:bg-[#FF7F0E]/10 data-[state=on]:bg-[#FF7F0E]/20">3 meses</ToggleGroupItem>
-          <ToggleGroupItem value="todos" className="text-xs border-gray-200 hover:bg-[#FF7F0E]/10 data-[state=on]:bg-[#FF7F0E]/20">Todos</ToggleGroupItem>
-          <ToggleGroupItem value="personalizado" className="text-xs border-gray-200 hover:bg-[#FF7F0E]/10 data-[state=on]:bg-[#FF7F0E]/20">Personalizado</ToggleGroupItem>
-        </ToggleGroup>
+        
+        {/* Seletor de Data Final */}
+        <div className="w-full sm:w-auto">
+          <label className="block text-sm mb-1 flex items-center">
+            <Calendar className="w-4 h-4 mr-2 text-[#FF7F0E]" />
+            Data Final
+          </label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[200px] justify-start text-left font-normal",
+                  !endDate && "text-muted-foreground"
+                )}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {endDate ? format(endDate, "dd/MM/yyyy") : <span>Selecione a data</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={endDate || undefined}
+                onSelect={setEndDate}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        
+        {/* Botão de Aplicar */}
+        <div className="flex items-end">
+          <Button 
+            onClick={handleApplyCustomDates}
+            className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/80 text-white"
+            disabled={!startDate && !endDate}
+          >
+            Aplicar Filtro
+          </Button>
+        </div>
       </div>
-
-      {/* Seletores de data - aparecem apenas quando personalizado estiver selecionado */}
-      {selectedPeriod === 'personalizado' && (
-        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
-          {/* Seletor de Data Inicial */}
-          <div className="w-full sm:w-auto">
-            <label className="block text-sm mb-1 flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-[#FF7F0E]" />
-              Data Inicial
-            </label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full sm:w-[200px] justify-start text-left font-normal",
-                    !startDate && "text-muted-foreground"
-                  )}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "dd/MM/yyyy") : <span>Selecione a data</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={startDate || undefined}
-                  onSelect={setStartDate}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          {/* Seletor de Data Final */}
-          <div className="w-full sm:w-auto">
-            <label className="block text-sm mb-1 flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-[#FF7F0E]" />
-              Data Final
-            </label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full sm:w-[200px] justify-start text-left font-normal",
-                    !endDate && "text-muted-foreground"
-                  )}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "dd/MM/yyyy") : <span>Selecione a data</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={endDate || undefined}
-                  onSelect={setEndDate}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          {/* Botão de Aplicar */}
-          <div className="flex items-end">
-            <Button 
-              onClick={handleApplyCustomDates}
-              className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/80 text-white"
-              disabled={!startDate || !endDate}
-            >
-              Aplicar Datas
-            </Button>
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         {/* Filtro por Obra */}
