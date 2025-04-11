@@ -27,20 +27,14 @@ export const EditColaboradorForm = ({
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
       name: colaborador.name,
-      role: colaborador.role,
-      pricePerHour: colaborador.pricePerHour !== undefined 
-        ? colaborador.pricePerHour.toString() 
-        : "0"
+      role: colaborador.role
     },
   });
 
   useEffect(() => {
     form.reset({
       name: colaborador.name,
-      role: colaborador.role,
-      pricePerHour: colaborador.pricePerHour !== undefined 
-        ? colaborador.pricePerHour.toString() 
-        : "0"
+      role: colaborador.role
     });
   }, [colaborador, form]);
 
@@ -49,8 +43,7 @@ export const EditColaboradorForm = ({
       const updatedColaborador: Colaborador = {
         id: colaborador.id,
         name: data.name,
-        role: data.role,
-        pricePerHour: parseFloat(data.pricePerHour)
+        role: data.role
       };
 
       await ColaboradorService.updateColaborador(

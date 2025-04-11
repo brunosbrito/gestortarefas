@@ -23,8 +23,7 @@ export const NovoColaboradorForm = ({
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
       name: "",
-      role: "",
-      pricePerHour: ""
+      role: ""
     }
   });
 
@@ -32,8 +31,7 @@ export const NovoColaboradorForm = ({
     try {
       await ColaboradorService.createColaborador({
         name: data.name,
-        role: data.role,
-        pricePerHour: parseFloat(data.pricePerHour)
+        role: data.role
       });
 
       toast({
