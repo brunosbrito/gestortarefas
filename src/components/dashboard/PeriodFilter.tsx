@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,11 +56,13 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
       const period = value as PeriodFilterType;
       setSelectedPeriod(period);
       
+      // Resetar datas customizadas se escolher outro período
       if (period !== 'personalizado') {
         setStartDate(null);
         setEndDate(null);
       }
       
+      // Mantem os filtros de obra e ordem de serviço ao mudar o período
       onFilterChange(
         period, 
         selectedObra, 
@@ -73,20 +76,23 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
   const handleObraChange = async (value: string) => {
     try {
       setIsLoading(true);
-      const obraIdValue = value === "todas" ? null : value;
-      setSelectedObra(obraIdValue);
-      setSelectedOrdemServico(null);
+      const obraId = value === "todas" ? null : value;
+      setSelectedObra(obraId);
+      setSelectedOrdemServico(null); // Resetando a OS ao mudar a obra
       
-      if (obraIdValue) {
-        const osData = await getServiceOrderByProjectId(obraIdValue);
+      if (obraId) {
+        // Carrega ordens de serviço específicas da obra selecionada
+        const osData = await getServiceOrderByProjectId(obraId);
         setOrdensServico(osData);
       } else {
+        // Se selecionar "Todas as Obras", limpa as ordens de serviço
         setOrdensServico([]);
       }
       
+      // Aplicar filtro com a obra e período personalizado se selecionado
       onFilterChange(
         selectedPeriod, 
-        obraIdValue, 
+        obraId, 
         null, 
         selectedPeriod === 'personalizado' ? startDate : null, 
         selectedPeriod === 'personalizado' ? endDate : null
@@ -95,7 +101,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
       setOrdensServico([]);
       onFilterChange(
         selectedPeriod, 
-        obraIdValue, 
+        obraId, 
         null, 
         selectedPeriod === 'personalizado' ? startDate : null, 
         selectedPeriod === 'personalizado' ? endDate : null
@@ -109,6 +115,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     const ordemServicoId = value === "todas" ? null : value;
     setSelectedOrdemServico(ordemServicoId);
     
+    // Aplicar todos os filtros: período, obra, ordem de serviço e datas personalizadas
     onFilterChange(
       selectedPeriod, 
       selectedObra, 
@@ -118,6 +125,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
     );
   };
 
+  // Nova função para lidar com a aplicação de datas personalizadas
   const handleApplyCustomDates = () => {
     if (selectedPeriod === 'personalizado') {
       onFilterChange(selectedPeriod, selectedObra, selectedOrdemServico, startDate, endDate);
@@ -127,6 +135,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
   return (
     <div className="mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        {/* Filtro por Período */}
         <div className="flex items-center">
           <CalendarDays className="w-5 h-5 mr-2 text-[#FF7F0E]" />
           <h3 className="text-sm font-medium text-gray-700">Filtrar por Período:</h3>
@@ -140,8 +149,10 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
         </ToggleGroup>
       </div>
 
+      {/* Seletores de data - aparecem apenas quando personalizado estiver selecionado */}
       {selectedPeriod === 'personalizado' && (
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+          {/* Seletor de Data Inicial */}
           <div className="w-full sm:w-auto">
             <label className="block text-sm mb-1 flex items-center">
               <Calendar className="w-4 h-4 mr-2 text-[#FF7F0E]" />
@@ -172,6 +183,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
             </Popover>
           </div>
           
+          {/* Seletor de Data Final */}
           <div className="w-full sm:w-auto">
             <label className="block text-sm mb-1 flex items-center">
               <Calendar className="w-4 h-4 mr-2 text-[#FF7F0E]" />
@@ -202,6 +214,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
             </Popover>
           </div>
           
+          {/* Botão de Aplicar */}
           <div className="flex items-end">
             <Button 
               onClick={handleApplyCustomDates}
@@ -215,6 +228,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        {/* Filtro por Obra */}
         <div className="w-full sm:w-auto">
           <label htmlFor="obra" className="block text-sm mb-1 flex items-center">
             <Folder className="w-4 h-4 mr-2 text-[#FF7F0E]" />
@@ -235,6 +249,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
           </Select>
         </div>
 
+        {/* Filtro por Ordem de Serviço */}
         <div className="w-full sm:w-auto">
           <label htmlFor="ordemServico" className="block text-sm mb-1 flex items-center">
             <FileText className="w-4 h-4 mr-2 text-[#FF7F0E]" />
