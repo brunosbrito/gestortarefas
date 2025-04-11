@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Colaboradores from './pages/gerenciamento/colaboradores';
 import TarefasMacro from './pages/gerenciamento/tarefas-macro';
 import Processos from './pages/gerenciamento/processos';
+import ValorPorCargo from './pages/gerenciamento/valor-por-cargo';
 import Fabricas from './pages/Fabricas';
 import Mineradoras from './pages/Mineradoras';
 import NaoConformidades from './pages/nao-conformidades';
@@ -38,6 +39,7 @@ function App() {
         />
         <Route path="/gerenciamento/tarefas-macro" element={<TarefasMacro />} />
         <Route path="/gerenciamento/processos" element={<Processos />} />
+        <Route path="/gerenciamento/valor-por-cargo" element={<ValorPorCargo />} />
       </Routes>
       <Toaster />
     </Router>
