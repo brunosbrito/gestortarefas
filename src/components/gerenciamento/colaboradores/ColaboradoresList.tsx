@@ -97,14 +97,6 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
     getColaboradores();
   };
 
-  const formatCurrency = (value: number): string => {
-    return value.toLocaleString('pt-BR', { 
-      style: 'currency', 
-      currency: 'BRL',
-      minimumFractionDigits: 2
-    });
-  };
-
   return (
     <>
       <div className="rounded-md border">
@@ -113,7 +105,6 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Cargo</TableHead>
-              <TableHead>Valor por Hora</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -122,9 +113,6 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
               <TableRow key={colaborador.id}>
                 <TableCell>{colaborador.name}</TableCell>
                 <TableCell>{colaborador.role}</TableCell>
-                <TableCell>
-                  {formatCurrency(+colaborador.pricePerHour)}
-                </TableCell>
                 <TableCell className="flex space-x-2">
                   <Button
                     variant="outline"
