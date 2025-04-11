@@ -45,13 +45,21 @@ export function ValorPorCargoForm({ valorParaEditar, onSuccess }: ValorPorCargoF
     setIsSubmitting(true);
     try {
       if (valorParaEditar) {
-        await valuePerPositionService.update(valorParaEditar.id, data);
+        // Para atualização, garantimos que os campos obrigatórios estejam presentes
+        await valuePerPositionService.update(valorParaEditar.id, {
+          position: data.position,
+          value: data.value
+        });
         toast({
           title: "Valor atualizado",
           description: "O valor por cargo foi atualizado com sucesso.",
         });
       } else {
-        await valuePerPositionService.create(data);
+        // Para criação, passamos todos os campos obrigatórios
+        await valuePerPositionService.create({
+          position: data.position,
+          value: data.value
+        });
         toast({
           title: "Valor criado",
           description: "O valor por cargo foi criado com sucesso.",
@@ -115,7 +123,7 @@ export function ValorPorCargoForm({ valorParaEditar, onSuccess }: ValorPorCargoF
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/80 text-white">
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {valorParaEditar ? "Atualizar" : "Salvar"}
           </Button>

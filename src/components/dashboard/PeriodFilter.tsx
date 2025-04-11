@@ -76,13 +76,13 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
   const handleObraChange = async (value: string) => {
     try {
       setIsLoading(true);
-      const obraId = value === "todas" ? null : value;
-      setSelectedObra(obraId);
+      const obraIdValue = value === "todas" ? null : value;
+      setSelectedObra(obraIdValue);
       setSelectedOrdemServico(null); // Resetando a OS ao mudar a obra
       
-      if (obraId) {
+      if (obraIdValue) {
         // Carrega ordens de serviço específicas da obra selecionada
-        const osData = await getServiceOrderByProjectId(obraId);
+        const osData = await getServiceOrderByProjectId(obraIdValue);
         setOrdensServico(osData);
       } else {
         // Se selecionar "Todas as Obras", limpa as ordens de serviço
@@ -92,7 +92,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
       // Aplicar filtro com a obra e período personalizado se selecionado
       onFilterChange(
         selectedPeriod, 
-        obraId, 
+        obraIdValue, 
         null, 
         selectedPeriod === 'personalizado' ? startDate : null, 
         selectedPeriod === 'personalizado' ? endDate : null
@@ -101,7 +101,7 @@ export const PeriodFilter = ({ onFilterChange, defaultValue = "todos" }: PeriodF
       setOrdensServico([]);
       onFilterChange(
         selectedPeriod, 
-        obraId, 
+        obraIdValue, 
         null, 
         selectedPeriod === 'personalizado' ? startDate : null, 
         selectedPeriod === 'personalizado' ? endDate : null
