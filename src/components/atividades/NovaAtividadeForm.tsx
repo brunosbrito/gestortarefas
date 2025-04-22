@@ -30,6 +30,8 @@ import ColaboradorService from '@/services/ColaboradorService';
 import { Activity } from '@/interfaces/AtividadeInterface';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import { TarefaMacro } from '@/interfaces/TarefaMacroInterface';
+import { Processo } from '@/interfaces/ProcessoInterface';
 
 type UnidadeTempo = 'minutos' | 'horas';
 
@@ -74,17 +76,19 @@ export function NovaAtividadeForm({
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>('');
   const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
-  const [tarefasMacro, setTarefasMacro] = useState([]);
-  const [processos, setProcessos] = useState([]);
-  const [colaboradores, setColaboradores] = useState([]);
+  const [tarefasMacro, setTarefasMacro] = useState<TarefaMacro[]>([]);
+  const [processos, setProcessos] = useState<Processo[]>([]);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+  const [macroTaskName, setMacroTaskName] = useState<string>('');
+  const [processName, setProcessName] = useState<string>('');
 
   const defaultValues: Partial<z.infer<typeof formSchema>> = {
-    macroTask: atividadeInicial?.macroTask || '',
-    process: atividadeInicial?.process || '',
+    macroTask: '',
+    process: '',
     description: atividadeInicial?.description || '',
     quantity: atividadeInicial?.quantity || 0,
     timePerUnit: atividadeInicial?.timePerUnit || 0,
-    unidadeTempo: 'minutos',
+    unidadeTempo: atividadeInicial?.unidadeTempo as UnidadeTempo || 'minutos',
     collaborators: atividadeInicial?.collaborators?.map((c) => c.id) || [],
     observation: atividadeInicial?.observation || '',
     imagem: undefined,
@@ -106,6 +110,11 @@ export function NovaAtividadeForm({
     try {
       const tarefasMacro = await TarefaMacroService.getAll();
       setTarefasMacro(tarefasMacro.data);
+      
+      if (editMode && atividadeInicial?.macroTask) {
+        setMacroTaskName(atividadeInicial.macroTask);
+        form.setValue('macroTask', atividadeInicial.macroTask);
+      }
     } catch (error) {
       console.error('Error fetching tarefas macro', error);
     }
@@ -115,6 +124,11 @@ export function NovaAtividadeForm({
     try {
       const processos = await ProcessService.getAll();
       setProcessos(processos.data);
+      
+      if (editMode && atividadeInicial?.process) {
+        setProcessName(atividadeInicial.process);
+        form.setValue('process', atividadeInicial.process);
+      }
     } catch (error) {
       console.error('Error fetching processos', error);
     }
@@ -199,14 +213,12 @@ export function NovaAtividadeForm({
           description: 'A atividade foi atualizada com sucesso.',
         });
 
-        // Chama o callback onSuccess após atualizar
         if (onSuccess) {
           onSuccess();
         }
       } else {
         const formData = new FormData();
 
-        // Adicionar dados básicos
         formData.append('macroTask', data.macroTask);
         formData.append('process', data.process);
         formData.append('description', data.description);
@@ -224,12 +236,10 @@ export function NovaAtividadeForm({
           (Number(localStorage.getItem('userId')) || 0).toString()
         );
 
-        // Adicionar array de colaboradores
         data.collaborators.forEach((collaboratorId, index) => {
           formData.append(`collaborators[${index}]`, collaboratorId.toString());
         });
 
-        // Adicionar arquivos se existirem
         if (data.imagem instanceof File) {
           formData.append('imagem', data.imagem);
         }
@@ -243,7 +253,6 @@ export function NovaAtividadeForm({
           description: 'A atividade foi criada com sucesso.',
         });
 
-        // Chama o callback onSuccess após criar
         if (onSuccess) {
           onSuccess();
         }
@@ -302,7 +311,11 @@ export function NovaAtividadeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tarefa Macro</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a tarefa macro" />
@@ -327,7 +340,11 @@ export function NovaAtividadeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Processo</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o processo" />
@@ -453,8 +470,7 @@ export function NovaAtividadeForm({
           control={form.control}
           name="collaborators"
           render={({ field }) => {
-            // Caso esteja no modo de edição, preenche `field.value` com os colaboradores selecionados anteriormente
-            const selectedCollaborators = field.value || []; // Aqui você assume que o valor vem previamente carregado
+            const selectedCollaborators = field.value || [];
 
             return (
               <FormItem>
@@ -464,7 +480,7 @@ export function NovaAtividadeForm({
                     selectedCollaborators?.length
                       ? selectedCollaborators[0].toString()
                       : ''
-                  } // Mostra o primeiro colaborador como selecionado
+                  }
                   onValueChange={(value) => {
                     const numericValue = Number(value);
                     const currentValues = selectedCollaborators;
@@ -528,23 +544,6 @@ export function NovaAtividadeForm({
             );
           }}
         />
-
-        {/* 
-        {editMode && (
-          <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data início</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )} */}
 
         <FormField
           control={form.control}
