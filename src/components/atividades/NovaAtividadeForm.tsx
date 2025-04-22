@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -79,12 +80,38 @@ export function NovaAtividadeForm({
   const [tarefasMacro, setTarefasMacro] = useState<TarefaMacro[]>([]);
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
-  const [macroTaskName, setMacroTaskName] = useState<string>('');
-  const [processName, setProcessName] = useState<string>('');
+  const [macroTaskSelectedValue, setMacroTaskSelectedValue] = useState<string>('');
+  const [processSelectedValue, setProcessSelectedValue] = useState<string>('');
+
+  // Função para determinar o valor inicial da tarefa macro
+  const determinarValorInicialTarefaMacro = () => {
+    if (!atividadeInicial) return '';
+    
+    if (typeof atividadeInicial.macroTask === 'object' && atividadeInicial.macroTask?.name) {
+      return atividadeInicial.macroTask.name;
+    }
+    
+    return typeof atividadeInicial.macroTask === 'string' 
+      ? atividadeInicial.macroTask 
+      : '';
+  };
+
+  // Função para determinar o valor inicial do processo
+  const determinarValorInicialProcesso = () => {
+    if (!atividadeInicial) return '';
+    
+    if (typeof atividadeInicial.process === 'object' && atividadeInicial.process?.name) {
+      return atividadeInicial.process.name;
+    }
+    
+    return typeof atividadeInicial.process === 'string' 
+      ? atividadeInicial.process 
+      : '';
+  };
 
   const defaultValues: Partial<z.infer<typeof formSchema>> = {
-    macroTask: '',
-    process: '',
+    macroTask: determinarValorInicialTarefaMacro(),
+    process: determinarValorInicialProcesso(),
     description: atividadeInicial?.description || '',
     quantity: atividadeInicial?.quantity || 0,
     timePerUnit: atividadeInicial?.timePerUnit || 0,
@@ -111,9 +138,11 @@ export function NovaAtividadeForm({
       const tarefasMacro = await TarefaMacroService.getAll();
       setTarefasMacro(tarefasMacro.data);
       
-      if (editMode && atividadeInicial?.macroTask) {
-        setMacroTaskName(atividadeInicial.macroTask);
-        form.setValue('macroTask', atividadeInicial.macroTask);
+      // Define o valor selecionado da tarefa macro
+      const valorInicial = determinarValorInicialTarefaMacro();
+      if (valorInicial) {
+        setMacroTaskSelectedValue(valorInicial);
+        form.setValue('macroTask', valorInicial);
       }
     } catch (error) {
       console.error('Error fetching tarefas macro', error);
@@ -125,9 +154,11 @@ export function NovaAtividadeForm({
       const processos = await ProcessService.getAll();
       setProcessos(processos.data);
       
-      if (editMode && atividadeInicial?.process) {
-        setProcessName(atividadeInicial.process);
-        form.setValue('process', atividadeInicial.process);
+      // Define o valor selecionado do processo
+      const valorInicial = determinarValorInicialProcesso();
+      if (valorInicial) {
+        setProcessSelectedValue(valorInicial);
+        form.setValue('process', valorInicial);
       }
     } catch (error) {
       console.error('Error fetching processos', error);
@@ -312,9 +343,11 @@ export function NovaAtividadeForm({
             <FormItem>
               <FormLabel>Tarefa Macro</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
-                value={field.value}
-                defaultValue={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  setMacroTaskSelectedValue(value);
+                }} 
+                value={macroTaskSelectedValue || field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -341,9 +374,11 @@ export function NovaAtividadeForm({
             <FormItem>
               <FormLabel>Processo</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
-                value={field.value}
-                defaultValue={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  setProcessSelectedValue(value);
+                }}
+                value={processSelectedValue || field.value}
               >
                 <FormControl>
                   <SelectTrigger>

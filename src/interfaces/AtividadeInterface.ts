@@ -1,3 +1,7 @@
+
+import { TarefaMacro } from "./TarefaMacroInterface";
+import { Processo } from "./ProcessoInterface";
+
 export interface Activity {
   id: number;
   description: string;
@@ -7,8 +11,8 @@ export interface Activity {
   imageDescription?: string;
   fileUrl?: string;
   fileDescription?: string;
-  macroTask?: string;
-  process?: string;
+  macroTask?: string | TarefaMacro;
+  process?: string | Processo;
   timePerUnit?: number;
   quantity?: number;
   estimatedTime?: string;

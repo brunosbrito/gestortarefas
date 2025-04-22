@@ -2,14 +2,16 @@
 import { Colaborador } from './ColaboradorInterface';
 import { ServiceOrder } from './ServiceOrderInterface';
 import { User } from './UserInterface';
+import { Processo } from './ProcessoInterface';
+import { TarefaMacro } from './TarefaMacroInterface';
 
 export interface AtividadeStatus {
   id: number;
   description: string;
   startDate: string;
   endDate: string | null;
-  macroTask: string;
-  process: string;
+  macroTask: string | TarefaMacro;
+  process: string | Processo;
   collaborators: Colaborador[];
   serviceOrder: ServiceOrder;
   estimatedTime: string;
