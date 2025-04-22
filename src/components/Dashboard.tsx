@@ -84,7 +84,7 @@ const Dashboard = () => {
     <div className="space-y-6">
       <PeriodFilter 
         onFilterChange={handlePeriodChange} 
-        defaultValue={filters.period as any} 
+        currentFilters={filters} 
       />
       
       <StatsSummary stats={stats} />

@@ -1,3 +1,4 @@
+
 import { Colaborador } from './ColaboradorInterface';
 import { ServiceOrder } from './ServiceOrderInterface';
 import { User } from './UserInterface';
@@ -33,6 +34,7 @@ export interface AtividadeStatus {
   quantity: number;
   completedQuantity: number;
   timePerUnit?: number;
+  unidadeTempo?: 'minutos' | 'horas';
   observation?: string;
   imageUrl?: string;
   imageDescription?: string;

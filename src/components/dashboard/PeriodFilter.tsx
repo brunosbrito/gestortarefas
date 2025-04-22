@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,6 +24,9 @@ import ObrasService from '@/services/ObrasService';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { Filter } from 'lucide-react';
 
+// Exportando o tipo PeriodFilterType para uso em outros lugares
+export type PeriodFilterType = 'todos' | '7dias' | '1mes' | '3meses' | 'personalizado';
+
 interface PeriodFilterProps {
   onFilterChange: (filters: Partial<DashboardFilters>) => void;
   currentFilters: DashboardFilters;
@@ -33,10 +37,10 @@ export const PeriodFilter = ({
   currentFilters,
 }: PeriodFilterProps) => {
   const [startDate, setStartDate] = useState<Date | undefined>(
-    currentFilters.startDate
+    currentFilters.startDate || undefined
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    currentFilters.endDate
+    currentFilters.endDate || undefined
   );
   const [obras, setObras] = useState<Obra[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,10 +92,10 @@ export const PeriodFilter = ({
   const handleObraChange = (value: string) => {
     try {
       const obraIdValue = value === 'todos' ? null : parseInt(value);
-      onFilterChange({ projectId: obraIdValue });
+      onFilterChange({ obraId: obraIdValue });
     } catch (error) {
       console.error('Erro ao converter o ID da obra:', error);
-      onFilterChange({ projectId: null });
+      onFilterChange({ obraId: null });
     }
   };
 
@@ -108,7 +112,7 @@ export const PeriodFilter = ({
               Obra
             </label>
             <Select
-              value={currentFilters.projectId?.toString() || 'todos'}
+              value={currentFilters.obraId?.toString() || 'todos'}
               onValueChange={handleObraChange}
               disabled={isLoading}
             >

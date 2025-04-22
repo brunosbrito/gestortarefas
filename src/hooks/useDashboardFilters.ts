@@ -47,24 +47,10 @@ export const useDashboardFilters = () => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
-  const handlePeriodChange = (
-    period: PeriodFilterType, 
-    obraId?: string | null, 
-    serviceOrderId?: string | null,
-    startDate?: Date | null,
-    endDate?: Date | null
-  ) => {
-    // Convertendo IDs de string para number, se existirem
-    const numericObraId = obraId && obraId !== "null" ? Number(obraId) : null;
-    const numericServiceOrderId = serviceOrderId && serviceOrderId !== "null" ? Number(serviceOrderId) : null;
-    
+  const handlePeriodChange = (filters: Partial<DashboardFilters>) => {
     setFilters(prev => ({
       ...prev,
-      period,
-      obraId: numericObraId,
-      serviceOrderId: numericServiceOrderId,
-      startDate: period === 'personalizado' ? startDate : null,
-      endDate: period === 'personalizado' ? endDate : null
+      ...filters
     }));
   };
 
