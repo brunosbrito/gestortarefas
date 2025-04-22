@@ -1,3 +1,4 @@
+
 import { AtividadeStatus } from "@/interfaces/AtividadeStatus";
 import { Button } from "../ui/button";
 import { Eye, FileText } from "lucide-react";
@@ -19,6 +20,20 @@ export function AtividadeInfoBasica({ atividade }: AtividadeInfoBasicaProps) {
     }
   };
 
+  // Função para formatar o nome da tarefa macro
+  const formatMacroTask = () => {
+    if (!atividade.macroTask) return "";
+    if (typeof atividade.macroTask === "string") return atividade.macroTask;
+    return atividade.macroTask.name;
+  };
+
+  // Função para formatar o nome do processo
+  const formatProcess = () => {
+    if (!atividade.process) return "";
+    if (typeof atividade.process === "string") return atividade.process;
+    return atividade.process.name;
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-construction-700">
@@ -31,11 +46,11 @@ export function AtividadeInfoBasica({ atividade }: AtividadeInfoBasicaProps) {
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Tarefa Macro</p>
-          <p className="text-base">{atividade.macroTask}</p>
+          <p className="text-base">{formatMacroTask()}</p>
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Processo</p>
-          <p className="text-base">{atividade.process}</p>
+          <p className="text-base">{formatProcess()}</p>
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Status</p>
