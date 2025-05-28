@@ -30,10 +30,10 @@ import ColaboradorService from '@/services/ColaboradorService';
 import { NonConformity } from '@/interfaces/RncInterface';
 
 const formSchema = z.object({
-  projectId: z.string().min(1, 'Projeto é obrigatório'),
-  responsibleRncId: z.string().min(1, 'Responsável pela RNC é obrigatório'),
+  project: z.string().min(1, 'Projeto é obrigatório'),
+  responsibleRnc: z.string().min(1, 'Responsável pela RNC é obrigatório'),
   description: z.string().min(1, 'Descrição é obrigatória'),
-  serviceOrderId: z.string().min(1, 'Ordem de serviço é obrigatória'),
+  serviceOrder: z.string().min(1, 'Ordem de serviço é obrigatória'),
   responsibleIdentification: z.string().min(1, 'Responsável pela identificação é obrigatório'),
   dateOccurrence: z.string().min(1, 'Data da ocorrência é obrigatória'),
 });
@@ -51,17 +51,19 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData ? {
-      projectId: initialData.project?.id.toString() || '',
-      responsibleRncId: initialData.responsibleRNC?.id.toString() || '',
+      project: initialData.project?.id.toString() || '',
+      responsibleRnc: initialData.responsibleRNC?.id.toString() || '',
       description: initialData.description || '',
-      serviceOrderId: initialData.serviceOrder?.id.toString() || '',
-      responsibleIdentification: initialData.responsibleIdentification || '',
+      serviceOrder: initialData.serviceOrder?.id.toString() || '',
+      responsibleIdentification: typeof initialData.responsibleIdentification === 'object'
+        ? initialData.responsibleIdentification.id.toString()
+        : initialData.responsibleIdentification || '',
       dateOccurrence: initialData.dateOccurrence?.split('T')[0] || new Date().toISOString().split('T')[0],
     } : {
-      projectId: '',
-      responsibleRncId: '',
+      project: '',
+      responsibleRnc: '',
       description: '',
-      serviceOrderId: '',
+      serviceOrder: '',
       responsibleIdentification: '',
       dateOccurrence: new Date().toISOString().split('T')[0],
     },
@@ -103,7 +105,7 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="projectId"
+            name="project"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Projeto</FormLabel>
@@ -134,7 +136,7 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
 
           <FormField
             control={form.control}
-            name="serviceOrderId"
+            name="serviceOrder"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Ordem de Serviço</FormLabel>
@@ -165,7 +167,7 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="responsibleRncId"
+            name="responsibleRnc"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Responsável pela RNC</FormLabel>

@@ -77,20 +77,20 @@ export function DetalhesRNCDialog({
                     locale: ptBR,
                   })}
                 </p>
-                <p className="text-sm">
-                  {/* <span className="font-medium">Projeto:</span> {rnc.project.name} */}
-                </p>
+                {/* <p className="text-sm">
+                  <span className="font-medium">Projeto:</span> {rnc.project.name}
+                </p> */}
                 <p className="text-sm">
                   <span className="font-medium">Ordem de Serviço:</span>{' '}
-                  {/* {rnc.serviceOrder.description} */}
+                  {rnc.serviceOrder.description} 
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Responsável:</span>{' '}
-                  {/* {rnc.responsibleRNC.name} */}
+                   {rnc.responsibleRNC.name} 
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Identificado por:</span>{' '}
-                  {rnc.responsibleIdentification}
+                  {rnc.responsibleIdentification.name}
                 </p>
               </div>
             </div>

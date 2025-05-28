@@ -10,9 +10,10 @@ interface NovaRNCDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rncParaEditar?: NonConformity | null;
+  onSaveSuccess?: () => void;
 }
 
-export function NovaRNCDialog({ open, onOpenChange, rncParaEditar }: NovaRNCDialogProps) {
+export function NovaRNCDialog({ open, onOpenChange, rncParaEditar, onSaveSuccess, }: NovaRNCDialogProps) {
   const { toast } = useToast();
 
   const handleSuccess = async (data: any) => {
@@ -30,7 +31,9 @@ export function NovaRNCDialog({ open, onOpenChange, rncParaEditar }: NovaRNCDial
           description: 'RNC criada. Você pode adicionar mão de obra, materiais, imagens e ação corretiva posteriormente.',
         });
       }
+      onSaveSuccess?.();
       onOpenChange(false);
+
     } catch (error) {
       console.error('Erro ao salvar RNC:', error);
       toast({

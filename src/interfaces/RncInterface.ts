@@ -1,3 +1,4 @@
+import { Colaborador } from "./ColaboradorInterface";
 
 export interface CreateNonConformity {
   projectId: string;
@@ -19,10 +20,10 @@ export interface CreateNonConformity {
 export interface NonConformity {
   id: string;
   description: string;
-  responsibleIdentification: string;
+  responsibleIdentification: Colaborador;
   dateOccurrence: string;
   correctiveAction?: string;
-  responsibleAction?: string;
+  responsibleAction?: Colaborador;
   dateConclusion?: string;
   createdAt: string;
   updatedAt: string;
@@ -36,7 +37,7 @@ export interface NonConformity {
   images: RncImage[];
   workforce: Workforce[];
   materials: Material[];
-  responsibleRNC: User;
+  responsibleRNC: Colaborador;
   project: Project;
   serviceOrder: ServiceOrder;
 }

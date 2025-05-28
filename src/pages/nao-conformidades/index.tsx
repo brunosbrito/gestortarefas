@@ -202,7 +202,7 @@ const NaoConformidades = () => {
                 <div className="space-y-2">
                   <p className="text-sm text-construction-600">
                     <strong>Identificado por:</strong>{' '}
-                    {rnc.responsibleIdentification}
+                    {rnc.responsibleIdentification.name}
                   </p>
                   <p className="text-sm text-construction-600">
                     <strong>Descrição:</strong> {rnc.description}
@@ -271,6 +271,9 @@ const NaoConformidades = () => {
           open={showNovaRNCDialog}
           onOpenChange={setShowNovaRNCDialog}
           rncParaEditar={editandoRnc}
+          onSaveSuccess={() => {
+          getAllRnc();
+          }}
         />
 
         <DetalhesRNCDialog
