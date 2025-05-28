@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
+import { uploadRncImage } from "@/services/rncImageService";
 
 const formSchema = z.object({
   image: z.any(),
@@ -35,12 +36,25 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
     },
   });
 
-  const handleImageAdd = (values: z.infer<typeof formSchema>) => {
-    if (values.image?.[0]) {
-      setImages([...images, values.image[0]]);
-      form.reset();
+  const handleImageAdd = async (values: z.infer<typeof formSchema>) => {
+
+    const file = values.image?.[0];
+    if (file) {
+
+
+      try {
+        await uploadRncImage({
+          file,
+          nonConformityId: rncId,
+        });
+        setImages([...images, file]);
+        form.reset();
+      } catch (error) {
+        // Handle error (optional: show a message to the user)
+        console.error("Erro ao enviar imagem:", error);
+      }
     }
-  };
+  }
 
   return (
     <Form {...form}>
@@ -48,7 +62,7 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
         <FormField
           control={form.control}
           name="image"
-          render={({ field: { onChange, ...field } }) => (
+          render={({ field: { onChange } }) => (
             <FormItem>
               <FormLabel>Imagem</FormLabel>
               <FormControl>
@@ -56,14 +70,12 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
                   type="file"
                   accept="image/*"
                   onChange={(e) => onChange(e.target.files)}
-                  {...field}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="description"
@@ -85,8 +97,8 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
           <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
             Adicionar Imagem
           </Button>
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             onClick={onClose}
             className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
             disabled={images.length === 0}

@@ -155,7 +155,7 @@ export function DetalhesRNCDialog({
                 {rnc.images.map((image) => (
                   <div key={image.id} className="relative aspect-square">
                     <img
-                      src={image.url}
+                      src={`https://api.gmxindustrial.com.br${image.url}`}
                       alt="Imagem da RNC"
                       className="object-cover rounded-lg w-full h-full"
                     />

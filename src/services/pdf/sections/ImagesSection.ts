@@ -1,4 +1,3 @@
-
 import { PdfContext, PdfSection } from '../types';
 import { NonConformity } from '@/interfaces/RncInterface';
 
@@ -12,7 +11,7 @@ export class ImagesSection implements PdfSection {
     let yPos = 20;
 
     doc.addPage();
-    
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(colors.primary);
@@ -35,7 +34,7 @@ export class ImagesSection implements PdfSection {
             try {
               doc.addImage(img, 'JPEG', currentX, yPos, maxWidth, maxHeight, undefined, 'MEDIUM');
               imagesInRow++;
-              
+
               if (imagesInRow === 2) {
                 currentX = margin;
                 yPos += maxHeight + 10;
@@ -58,7 +57,11 @@ export class ImagesSection implements PdfSection {
             }
           };
           img.onerror = reject;
-          img.src = image.url;
+
+          // Adiciona a base da URL se necessário
+          img.src = image.url.startsWith('http')
+            ? image.url
+            : `https://api.gmxindustrial.com.br${image.url}`;
         });
       } catch (error) {
         console.error('Erro ao processar imagem:', error);
