@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react";
 import { Colaborador } from "@/interfaces/ColaboradorInterface";
 import ColaboradorService from "@/services/ColaboradorService";
+import { NonConformity } from "@/interfaces/RncInterface";
 
 const acaoCorretivaSchema = z.object({
   correctiveAction: z.string().min(1, "Ação corretiva é obrigatória"),
@@ -29,18 +30,19 @@ const acaoCorretivaSchema = z.object({
 interface AcaoCorretivaFormProps {
   rncId: string;
   onClose: () => void;
+  rnc?: NonConformity;
 }
 
-export function AcaoCorretivaForm({ rncId, onClose }: AcaoCorretivaFormProps) {
+export function AcaoCorretivaForm({ rncId, onClose, rnc }: AcaoCorretivaFormProps) {
   const { toast } = useToast();
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
 
   const form = useForm<z.infer<typeof acaoCorretivaSchema>>({
     resolver: zodResolver(acaoCorretivaSchema),
     defaultValues: {
-      correctiveAction: "",
-      responsibleAction: "",
-      dateConclusion: "",
+      correctiveAction: rnc?.correctiveAction || "",
+      responsibleAction: rnc?.responsibleAction?.id?.toString() || "",
+      dateConclusion: rnc?.dateConclusion ? rnc.dateConclusion.split('T')[0] : "",
     },
   });
 
@@ -61,16 +63,18 @@ export function AcaoCorretivaForm({ rncId, onClose }: AcaoCorretivaFormProps) {
     try {
       await RncService.updateRnc(rncId, data);
       toast({
-        title: "Ação corretiva registrada",
-        description: "A ação corretiva foi registrada com sucesso.",
+        title: rnc?.correctiveAction ? "Ação corretiva atualizada" : "Ação corretiva registrada",
+        description: rnc?.correctiveAction 
+          ? "A ação corretiva foi atualizada com sucesso." 
+          : "A ação corretiva foi registrada com sucesso.",
       });
       onClose();
     } catch (error) {
-      console.error("Erro ao registrar ação corretiva:", error);
+      console.error("Erro ao salvar ação corretiva:", error);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Ocorreu um erro ao registrar a ação corretiva.",
+        description: "Ocorreu um erro ao salvar a ação corretiva.",
       });
     }
   };
@@ -140,7 +144,7 @@ export function AcaoCorretivaForm({ rncId, onClose }: AcaoCorretivaFormProps) {
         />
 
         <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-          Registrar Ação Corretiva
+          {rnc?.correctiveAction ? "Atualizar Ação Corretiva" : "Registrar Ação Corretiva"}
         </Button>
       </form>
     </Form>

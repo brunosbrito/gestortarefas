@@ -13,8 +13,34 @@ class PdfService {
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 10;
     let yPos = 10;
+
+    // Função para verificar se precisa de nova página
+    const checkPageBreak = (requiredHeight: number) => {
+      if (yPos + requiredHeight > pageHeight - margin) {
+        doc.addPage();
+        yPos = margin;
+        return true;
+      }
+      return false;
+    };
+
+    // Função para criar células da tabela com quebra de linha
+    const createTableCell = (text: string, x: number, y: number, width: number, height: number, isHeader = false) => {
+      doc.rect(x, y, width, height);
+      doc.setFont('helvetica', isHeader ? 'bold' : 'normal');
+      doc.setFontSize(9);
+      
+      // Quebra de linha automática
+      const lines = doc.splitTextToSize(text, width - 4);
+      const lineHeight = 4;
+      
+      lines.forEach((line: string, index: number) => {
+        doc.text(line, x + 2, y + 5 + (index * lineHeight));
+      });
+    };
 
     // Cabeçalho com data e número do relatório
     doc.setFontSize(10);
@@ -33,18 +59,12 @@ class PdfService {
     // Tabela do cabeçalho com logos
     const headerHeight = 25;
     doc.rect(margin, yPos, pageWidth - 2 * margin, headerHeight);
-    doc.line(margin, yPos, pageWidth - margin, yPos); // linha superior
-    doc.line(margin, yPos + headerHeight, pageWidth - margin, yPos + headerHeight); // linha inferior
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    doc.line(margin, yPos + headerHeight, pageWidth - margin, yPos + headerHeight);
     
-    // Divisões verticais para os logos
     const logoWidth = (pageWidth - 2 * margin) / 3;
     doc.line(margin + logoWidth, yPos, margin + logoWidth, yPos + headerHeight);
     doc.line(margin + 2 * logoWidth, yPos, margin + 2 * logoWidth, yPos + headerHeight);
-
-    // TODO: Adicionar logos quando disponíveis
-    // doc.addImage('logo1', 'PNG', margin + 5, yPos + 2, logoWidth - 10, headerHeight - 4);
-    // doc.addImage('logo2', 'PNG', margin + logoWidth + 5, yPos + 2, logoWidth - 10, headerHeight - 4);
-    // doc.addImage('logo3', 'PNG', margin + 2 * logoWidth + 5, yPos + 2, logoWidth - 10, headerHeight - 4);
 
     yPos += headerHeight + 10;
 
@@ -56,28 +76,20 @@ class PdfService {
 
     // Tabela de informações
     const infoTableData = [
-      ['Obra', 'KTM ENGENHARIA - VIADUTO METÁLICO - OBRA 101/221 - GOVERNADOR VALADARES'],
-      ['Local', 'ESTRADA DE ACESSO LINHA TRONCO LT-RH 47'],
-      ['Cliente', 'KTM ENGENHARIA'],
+      ['Obra', rnc.project?.name || 'KTM ENGENHARIA - VIADUTO METÁLICO - OBRA 101/221 - GOVERNADOR VALADARES'],
+      ['Local', rnc.location || 'ESTRADA DE ACESSO LINHA TRONCO LT-RH 47'],
+      ['Cliente', rnc.clientName || 'KTM ENGENHARIA'],
     ];
 
     const rightTableData = [
       ['Relatório nº', '1'],
       ['Data do relatório', format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', { locale: ptBR })],
       ['Dia da semana', format(new Date(rnc.dateOccurrence), 'EEEE', { locale: ptBR })],
-      ['Contrato', '101-221'],
-      ['Prazo contratual', '78 dias'],
-      ['Prazo decorrido', '50 dias'],
-      ['Prazo a vencer', '28 dias'],
+      ['Contrato', rnc.contractNumber || '101-221'],
+      ['Prazo contratual', rnc.contractDuration ? `${rnc.contractDuration} dias` : '78 dias'],
+      ['Prazo decorrido', rnc.elapsedTime ? `${rnc.elapsedTime} dias` : '50 dias'],
+      ['Prazo a vencer', rnc.remainingTime ? `${rnc.remainingTime} dias` : '28 dias'],
     ];
-
-    // Função helper para criar células da tabela
-    const createTableCell = (text: string, x: number, y: number, width: number, height: number, isHeader = false) => {
-      doc.rect(x, y, width, height);
-      doc.setFont('helvetica', isHeader ? 'bold' : 'normal');
-      doc.setFontSize(9);
-      doc.text(text, x + 2, y + 5);
-    };
 
     // Desenhar tabela da esquerda
     const leftTableWidth = (pageWidth - 2 * margin) * 0.7;
@@ -103,14 +115,15 @@ class PdfService {
     yPos = tableY + 10;
 
     // Tabela de horário de trabalho
+    checkPageBreak(20);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Horário de trabalho', margin, yPos);
     yPos += 5;
 
     const workHoursData = [
-      ['Entrada / Saída', '-'],
-      ['Intervalo', '-'],
+      ['Entrada / Saída', rnc.workSchedule?.entryExit || '-'],
+      ['Intervalo', rnc.workSchedule?.interval || '-'],
     ];
 
     workHoursData.forEach((row, index) => {
@@ -123,53 +136,59 @@ class PdfService {
     yPos += 10;
 
     // Seção de Mão de obra
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Mão de obra (3)', margin, yPos);
-    yPos += 5;
+    if (rnc.workforce && rnc.workforce.length > 0) {
+      checkPageBreak(30);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Mão de obra (${rnc.workforce.length})`, margin, yPos);
+      yPos += 5;
 
-    // Cabeçalho da tabela de mão de obra
-    const workforceHeaders = ['Nome', 'Função', 'Entrada / Saída', 'Intervalo', 'Horas'];
-    const workforceColWidths = [60, 50, 40, 30, 30];
-    let currentX = margin;
+      // Cabeçalho da tabela de mão de obra
+      const workforceHeaders = ['Nome', 'Função', 'Entrada / Saída', 'Intervalo', 'Horas'];
+      const workforceColWidths = [60, 50, 40, 30, 30];
+      let currentX = margin;
 
-    workforceHeaders.forEach((header, index) => {
-      createTableCell(header, currentX, yPos, workforceColWidths[index], 7, true);
-      currentX += workforceColWidths[index];
-    });
-
-    yPos += 7;
-
-    // Dados da tabela de mão de obra
-    rnc.workforce?.forEach((worker) => {
-      currentX = margin;
-      workforceColWidths.forEach((width, index) => {
-        let text = '';
-        switch (index) {
-          case 0:
-            text = worker.name;
-            break;
-          case 1:
-            text = 'Função'; // Adicionar função quando disponível na interface
-            break;
-          case 2:
-            text = '07:30 - 17:30';
-            break;
-          case 3:
-            text = '01:00';
-            break;
-          case 4:
-            text = '09:00';
-            break;
-        }
-        createTableCell(text, currentX, yPos, width, 7);
-        currentX += width;
+      workforceHeaders.forEach((header, index) => {
+        createTableCell(header, currentX, yPos, workforceColWidths[index], 7, true);
+        currentX += workforceColWidths[index];
       });
+
       yPos += 7;
-    });
+
+      // Dados da tabela de mão de obra
+      rnc.workforce.forEach((worker) => {
+        checkPageBreak(7);
+        currentX = margin;
+        workforceColWidths.forEach((width, index) => {
+          let text = '';
+          switch (index) {
+            case 0:
+              text = worker.name;
+              break;
+            case 1:
+              text = worker.role || 'Não informado';
+              break;
+            case 2:
+              text = worker.entryExit || '07:30 - 17:30';
+              break;
+            case 3:
+              text = worker.interval || '01:00';
+              break;
+            case 4:
+              text = worker.hours || '09:00';
+              break;
+          }
+          createTableCell(text, currentX, yPos, width, 7);
+          currentX += width;
+        });
+        yPos += 7;
+      });
+
+      yPos += 10;
+    }
 
     // Seção de Atividades
-    yPos += 10;
+    checkPageBreak(20);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Atividades (1)', margin, yPos);
@@ -178,22 +197,82 @@ class PdfService {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     const descriptionLines = doc.splitTextToSize(rnc.description, pageWidth - 2 * margin);
-    doc.text(descriptionLines, margin, yPos);
-    yPos += descriptionLines.length * 5;
+    
+    descriptionLines.forEach((line: string, index: number) => {
+      checkPageBreak(5);
+      doc.text(line, margin, yPos);
+      yPos += 5;
+    });
+
+    yPos += 10;
+
+    // Seção de Ação Corretiva
+    if (rnc.correctiveAction) {
+      checkPageBreak(20);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Ação Corretiva', margin, yPos);
+      yPos += 5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const actionLines = doc.splitTextToSize(rnc.correctiveAction, pageWidth - 2 * margin);
+      
+      actionLines.forEach((line: string, index: number) => {
+        checkPageBreak(5);
+        doc.text(line, margin, yPos);
+        yPos += 5;
+      });
+
+      if (rnc.responsibleAction) {
+        yPos += 5;
+        doc.setFont('helvetica', 'bold');
+        doc.text('Responsável pela Ação:', margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(rnc.responsibleAction.name, margin + 40, yPos);
+        yPos += 5;
+      }
+
+      if (rnc.dateConclusion) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Data de Conclusão:', margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(format(new Date(rnc.dateConclusion), 'dd/MM/yyyy', { locale: ptBR }), margin + 40, yPos);
+        yPos += 5;
+      }
+
+      yPos += 10;
+    }
+
+    // Seção de Materiais
+    if (rnc.materials && rnc.materials.length > 0) {
+      checkPageBreak(20);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Materiais (${rnc.materials.length})`, margin, yPos);
+      yPos += 5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      rnc.materials.forEach((material) => {
+        checkPageBreak(5);
+        doc.text(`• ${material.name}`, margin, yPos);
+        yPos += 5;
+      });
+
+      yPos += 10;
+    }
 
     // Seção de Fotos
     if (rnc.images && rnc.images.length > 0) {
-      yPos += 10;
+      checkPageBreak(20);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text(`Fotos (${rnc.images.length})`, margin, yPos);
       yPos += 10;
 
       for (const image of rnc.images) {
-        if (yPos + 60 > doc.internal.pageSize.getHeight() - margin) {
-          doc.addPage();
-          yPos = margin;
-        }
+        checkPageBreak(70);
 
         try {
           await new Promise((resolve, reject) => {
@@ -212,7 +291,6 @@ class PdfService {
             img.src = image.url;
           });
 
-          // Adicionar legenda
           yPos += 65;
           doc.setFontSize(8);
           doc.setFont('helvetica', 'normal');

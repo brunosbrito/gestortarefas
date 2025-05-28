@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,7 @@ export function DetalhesRNCDialog({
         description: 'O documento foi baixado para o seu computador.',
       });
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error); // <-- Adicionado para depuração
+      console.error('Erro ao gerar PDF:', error);
 
       toast({
         variant: 'destructive',
@@ -77,9 +78,6 @@ export function DetalhesRNCDialog({
                     locale: ptBR,
                   })}
                 </p>
-                {/* <p className="text-sm">
-                  <span className="font-medium">Projeto:</span> {rnc.project.name}
-                </p> */}
                 <p className="text-sm">
                   <span className="font-medium">Ordem de Serviço:</span>{' '}
                   {rnc.serviceOrder.description} 
@@ -100,6 +98,29 @@ export function DetalhesRNCDialog({
               <p className="text-sm whitespace-pre-wrap">{rnc.description}</p>
             </div>
           </div>
+
+          {rnc.correctiveAction && (
+            <div>
+              <h3 className="font-semibold mb-2">Ação Corretiva</h3>
+              <div className="space-y-2">
+                <p className="text-sm whitespace-pre-wrap">{rnc.correctiveAction}</p>
+                {rnc.responsibleAction && (
+                  <p className="text-sm">
+                    <span className="font-medium">Responsável:</span>{' '}
+                    {rnc.responsibleAction.name}
+                  </p>
+                )}
+                {rnc.dateConclusion && (
+                  <p className="text-sm">
+                    <span className="font-medium">Data de Conclusão:</span>{' '}
+                    {format(new Date(rnc.dateConclusion), 'dd/MM/yyyy', {
+                      locale: ptBR,
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {rnc.workforce && rnc.workforce.length > 0 && (
             <div>
