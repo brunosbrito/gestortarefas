@@ -1,3 +1,4 @@
+
 import { PdfContext, PdfSection } from '../types';
 import { NonConformity } from '@/interfaces/RncInterface';
 
@@ -22,6 +23,10 @@ export class ImagesSection implements PdfSection {
     const maxHeight = 70;
     let currentX = margin;
     let imagesInRow = 0;
+
+    const getImageUrl = (url: string) => {
+      return url.startsWith('http') ? url : `https://api.gmxindustrial.com.br${url}`;
+    };
 
     for (const image of rnc.images) {
       if (!image.url) continue;
@@ -58,10 +63,7 @@ export class ImagesSection implements PdfSection {
           };
           img.onerror = reject;
 
-          // Adiciona a base da URL se necessário
-          img.src = image.url.startsWith('http')
-            ? image.url
-            : `https://api.gmxindustrial.com.br${image.url}`;
+          img.src = getImageUrl(image.url);
         });
       } catch (error) {
         console.error('Erro ao processar imagem:', error);

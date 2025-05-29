@@ -1,3 +1,4 @@
+
 import { NonConformity } from '@/interfaces/RncInterface';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -41,8 +42,12 @@ interface CraftMyPdfData {
 class CraftMyPdfService {
   private static readonly API_URL = 'https://api.craftmypdf.com/v1/create';
   private static readonly API_KEY =
-    '4784MTU4OTU6MTU5NzU6SGZGeWlnMmk3NU1ZWDZvNg=';
-  private static readonly TEMPLATE_ID = '64777b23b9b8f6fe';
+    '4784MTU4OTU6MTU5NzU6SGZHeWlnMmk3NU1ZWDZvNg=';
+  private static readonly TEMPLATE_ID = '9df77b23bb4ca818';
+
+  private static getImageUrl(url: string): string {
+    return url.startsWith('http') ? url : `https://api.gmxindustrial.com.br${url}`;
+  }
 
   static async generateRncPdf(rnc: NonConformity): Promise<void> {
     try {
@@ -82,9 +87,7 @@ class CraftMyPdfService {
         imagens:
           rnc.images?.map((image, index) => ({
             key: index + 1,
-            url: image.url.startsWith('http')
-              ? image.url
-              : `https://api.gmxindustrial.com.br${image.url}`,
+            url: this.getImageUrl(image.url),
           })) || [],
         mao_obra:
           rnc.workforce?.map((worker, index) => {
@@ -122,7 +125,7 @@ class CraftMyPdfService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-KEY': '4784MTU4OTU6MTU5NzU6SGZGeWlnMmk3NU1ZWDZvNg=',
+          'X-API-KEY': this.API_KEY,
         },
         body: JSON.stringify({
           data,

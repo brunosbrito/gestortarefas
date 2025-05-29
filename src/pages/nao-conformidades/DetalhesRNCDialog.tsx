@@ -28,23 +28,17 @@ export function DetalhesRNCDialog({
 
   if (!rnc) return null;
 
+  const getImageUrl = (url: string) => {
+    return url.startsWith('http') ? url : `https://api.gmxindustrial.com.br${url}`;
+  };
+
   const handleGeneratePDF = async () => {
     try {
-      const pdfBlob = await CraftMyPdfService.generateRncPdf(rnc);
-      
-      // Criar URL do blob e fazer download
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `RNC-${rnc.id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      await CraftMyPdfService.generateRncPdf(rnc);
 
       toast({
         title: 'PDF gerado com sucesso',
-        description: 'O documento foi baixado para o seu computador.',
+        description: 'O documento foi aberto em uma nova aba.',
       });
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
@@ -163,7 +157,7 @@ export function DetalhesRNCDialog({
                 {rnc.images.map((image) => (
                   <div key={image.id} className="relative aspect-square">
                     <img
-                      src={`https://api.gmxindustrial.com.br${image.url}`}
+                      src={getImageUrl(image.url)}
                       alt="Imagem da RNC"
                       className="object-cover rounded-lg w-full h-full"
                     />
