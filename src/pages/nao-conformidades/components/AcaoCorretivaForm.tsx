@@ -61,9 +61,14 @@ export function AcaoCorretivaForm({ rnc, onClose, onUpdate }: AcaoCorretivaFormP
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Encontrar o colaborador selecionado
+      const selectedColaborador = colaboradores.find(
+        col => col.id.toString() === values.responsibleAction
+      );
+
       await NonConformityService.update(rnc.id, {
         correctiveAction: values.correctiveAction,
-        responsibleAction: values.responsibleAction,
+        responsibleAction: selectedColaborador,
         dateConclusion: values.dateConclusion,
       });
 

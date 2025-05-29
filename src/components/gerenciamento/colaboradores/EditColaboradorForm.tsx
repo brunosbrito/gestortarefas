@@ -40,15 +40,12 @@ export const EditColaboradorForm = ({
 
   const onSubmit = async (data: ColaboradorFormValues) => {
     try {
-      const updatedColaborador: Colaborador = {
-        id: colaborador.id,
-        name: data.name,
-        role: data.role
-      };
-
       await ColaboradorService.updateColaborador(
         colaborador.id,
-        updatedColaborador
+        {
+          name: data.name,
+          role: data.role
+        }
       );
       toast({
         title: 'Colaborador atualizado',
