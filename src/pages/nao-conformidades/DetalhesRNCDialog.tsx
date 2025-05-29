@@ -10,7 +10,7 @@ import { NonConformity } from '@/interfaces/RncInterface';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FileText } from 'lucide-react';
-import PdfService from '@/services/PdfService';
+import CraftMyPdfService from '@/services/CraftMyPdfService';
 import { useToast } from '@/hooks/use-toast';
 
 interface DetalhesRNCDialogProps {
@@ -30,9 +30,17 @@ export function DetalhesRNCDialog({
 
   const handleGeneratePDF = async () => {
     try {
-      const doc = await PdfService.generateRncPdf(rnc);
-      console.log(doc);
-      doc.save(`RNC-${rnc.id}.pdf`);
+      const pdfBlob = await CraftMyPdfService.generateRncPdf(rnc);
+      
+      // Criar URL do blob e fazer download
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `RNC-${rnc.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast({
         title: 'PDF gerado com sucesso',

@@ -10,78 +10,78 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import RncService from "@/services/NonConformityService";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
-import { Colaborador } from "@/interfaces/ColaboradorInterface";
-import ColaboradorService from "@/services/ColaboradorService";
+import { useQuery } from "@tanstack/react-query";
+import { ColaboradorService } from "@/services/ColaboradorService";
+import { NonConformityService } from "@/services/NonConformityService";
 import { NonConformity } from "@/interfaces/RncInterface";
+import { useToast } from "@/hooks/use-toast";
 
-const acaoCorretivaSchema = z.object({
+const formSchema = z.object({
   correctiveAction: z.string().min(1, "Ação corretiva é obrigatória"),
   responsibleAction: z.string().min(1, "Responsável é obrigatório"),
-  dateConclusion: z.string().optional(),
+  dateConclusion: z.string().min(1, "Data de conclusão é obrigatória"),
 });
 
 interface AcaoCorretivaFormProps {
-  rncId: string;
+  rnc: NonConformity;
   onClose: () => void;
-  rnc?: NonConformity;
+  onUpdate?: () => void;
 }
 
-export function AcaoCorretivaForm({ rncId, onClose, rnc }: AcaoCorretivaFormProps) {
+export function AcaoCorretivaForm({ rnc, onClose, onUpdate }: AcaoCorretivaFormProps) {
   const { toast } = useToast();
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
 
-  const form = useForm<z.infer<typeof acaoCorretivaSchema>>({
-    resolver: zodResolver(acaoCorretivaSchema),
+  const { data: colaboradores = [] } = useQuery({
+    queryKey: ['colaboradores'],
+    queryFn: ColaboradorService.getAll,
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      correctiveAction: rnc?.correctiveAction || "",
-      responsibleAction: rnc?.responsibleAction?.id?.toString() || "",
-      dateConclusion: rnc?.dateConclusion ? rnc.dateConclusion.split('T')[0] : "",
+      correctiveAction: rnc.correctiveAction || "",
+      responsibleAction: rnc.responsibleAction?.id?.toString() || "",
+      dateConclusion: rnc.dateConclusion ? new Date(rnc.dateConclusion).toISOString().split('T')[0] : "",
     },
   });
 
-  useEffect(() => {
-    const loadColaboradores = async () => {
-      try {
-        const response = await ColaboradorService.getAllColaboradores();
-        setColaboradores(response.data);
-      } catch (error) {
-        console.error("Erro ao carregar colaboradores:", error);
-      }
-    };
-
-    loadColaboradores();
-  }, []);
-
-  const onSubmit = async (data: z.infer<typeof acaoCorretivaSchema>) => {
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await RncService.updateRnc(rncId, data);
-      toast({
-        title: rnc?.correctiveAction ? "Ação corretiva atualizada" : "Ação corretiva registrada",
-        description: rnc?.correctiveAction 
-          ? "A ação corretiva foi atualizada com sucesso." 
-          : "A ação corretiva foi registrada com sucesso.",
+      await NonConformityService.update(rnc.id, {
+        correctiveAction: values.correctiveAction,
+        responsibleAction: values.responsibleAction,
+        dateConclusion: values.dateConclusion,
       });
+
+      toast({
+        title: "Ação corretiva atualizada",
+        description: "A ação corretiva foi salva com sucesso.",
+      });
+
+      onUpdate?.();
       onClose();
     } catch (error) {
-      console.error("Erro ao salvar ação corretiva:", error);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Ocorreu um erro ao salvar a ação corretiva.",
+        description: "Erro ao salvar ação corretiva.",
       });
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="correctiveAction"
@@ -91,7 +91,6 @@ export function AcaoCorretivaForm({ rncId, onClose, rnc }: AcaoCorretivaFormProp
               <FormControl>
                 <Textarea
                   placeholder="Descreva a ação corretiva..."
-                  className="min-h-[100px]"
                   {...field}
                 />
               </FormControl>
@@ -113,15 +112,11 @@ export function AcaoCorretivaForm({ rncId, onClose, rnc }: AcaoCorretivaFormProp
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {colaboradores.length > 0 ? (
-                    colaboradores.map((colaborador) => (
-                      <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
-                        {colaborador.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="sem_responsavel">Sem colaboradores disponíveis</SelectItem>
-                  )}
+                  {colaboradores.map((colaborador) => (
+                    <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                      {colaborador.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -143,9 +138,14 @@ export function AcaoCorretivaForm({ rncId, onClose, rnc }: AcaoCorretivaFormProp
           )}
         />
 
-        <Button type="submit" className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-          {rnc?.correctiveAction ? "Atualizar Ação Corretiva" : "Registrar Ação Corretiva"}
-        </Button>
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
+            Salvar
+          </Button>
+        </div>
       </form>
     </Form>
   );
