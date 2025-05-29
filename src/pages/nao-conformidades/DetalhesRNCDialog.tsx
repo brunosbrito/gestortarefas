@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -12,6 +11,8 @@ import { ptBR } from 'date-fns/locale';
 import { FileText } from 'lucide-react';
 import CraftMyPdfService from '@/services/CraftMyPdfService';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/dashboard/LoadingSpinner';
+import { useState } from 'react';
 
 interface DetalhesRNCDialogProps {
   rnc: NonConformity | null;
@@ -25,6 +26,7 @@ export function DetalhesRNCDialog({
   onOpenChange,
 }: DetalhesRNCDialogProps) {
   const { toast } = useToast();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   if (!rnc) return null;
 
@@ -33,6 +35,8 @@ export function DetalhesRNCDialog({
   };
 
   const handleGeneratePDF = async () => {
+    setIsGeneratingPdf(true);
+    
     try {
       await CraftMyPdfService.generateRncPdf(rnc);
 
@@ -48,6 +52,8 @@ export function DetalhesRNCDialog({
         title: 'Erro ao gerar PDF',
         description: 'Ocorreu um erro ao gerar o documento.',
       });
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -61,112 +67,131 @@ export function DetalhesRNCDialog({
             </DialogTitle>
             <Button
               onClick={handleGeneratePDF}
-              className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+              disabled={isGeneratingPdf}
+              className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90 disabled:opacity-50"
             >
-              <FileText className="w-4 h-4 mr-2" />
-              Gerar PDF
+              {isGeneratingPdf ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Gerando PDF...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Gerar PDF
+                </>
+              )}
             </Button>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-semibold mb-2">Informações Básicas</h3>
-              <div className="space-y-2">
-                <p className="text-sm">
-                  <span className="font-medium">Data da Ocorrência:</span>{' '}
-                  {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
-                    locale: ptBR,
-                  })}
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Ordem de Serviço:</span>{' '}
-                  {rnc.serviceOrder.description} 
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Responsável:</span>{' '}
-                   {rnc.responsibleRNC.name} 
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">Identificado por:</span>{' '}
-                  {rnc.responsibleIdentification.name}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Descrição</h3>
-              <p className="text-sm whitespace-pre-wrap">{rnc.description}</p>
-            </div>
+        {isGeneratingPdf && (
+          <div className="flex flex-col items-center justify-center py-8">
+            <LoadingSpinner />
+            <p className="mt-4 text-sm text-gray-600">Gerando PDF da RNC...</p>
           </div>
+        )}
 
-          {rnc.correctiveAction && (
-            <div>
-              <h3 className="font-semibold mb-2">Ação Corretiva</h3>
-              <div className="space-y-2">
-                <p className="text-sm whitespace-pre-wrap">{rnc.correctiveAction}</p>
-                {rnc.responsibleAction && (
+        {!isGeneratingPdf && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-semibold mb-2">Informações Básicas</h3>
+                <div className="space-y-2">
                   <p className="text-sm">
-                    <span className="font-medium">Responsável:</span>{' '}
-                    {rnc.responsibleAction.name}
-                  </p>
-                )}
-                {rnc.dateConclusion && (
-                  <p className="text-sm">
-                    <span className="font-medium">Data de Conclusão:</span>{' '}
-                    {format(new Date(rnc.dateConclusion), 'dd/MM/yyyy', {
+                    <span className="font-medium">Data da Ocorrência:</span>{' '}
+                    {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
                       locale: ptBR,
                     })}
                   </p>
-                )}
+                  <p className="text-sm">
+                    <span className="font-medium">Ordem de Serviço:</span>{' '}
+                    {rnc.serviceOrder.description} 
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Responsável:</span>{' '}
+                     {rnc.responsibleRNC.name} 
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Identificado por:</span>{' '}
+                    {rnc.responsibleIdentification.name}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Descrição</h3>
+                <p className="text-sm whitespace-pre-wrap">{rnc.description}</p>
               </div>
             </div>
-          )}
 
-          {rnc.workforce && rnc.workforce.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-2">Mão de Obra</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {rnc.workforce.map((worker) => (
-                  <li key={worker.id} className="text-sm">
-                    {worker.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {rnc.materials && rnc.materials.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-2">Materiais</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {rnc.materials.map((material) => (
-                  <li key={material.id} className="text-sm">
-                    {material.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {rnc.images && rnc.images.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-2">Imagens</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {rnc.images.map((image) => (
-                  <div key={image.id} className="relative aspect-square">
-                    <img
-                      src={getImageUrl(image.url)}
-                      alt="Imagem da RNC"
-                      className="object-cover rounded-lg w-full h-full"
-                    />
-                  </div>
-                ))}
+            {rnc.correctiveAction && (
+              <div>
+                <h3 className="font-semibold mb-2">Ação Corretiva</h3>
+                <div className="space-y-2">
+                  <p className="text-sm whitespace-pre-wrap">{rnc.correctiveAction}</p>
+                  {rnc.responsibleAction && (
+                    <p className="text-sm">
+                      <span className="font-medium">Responsável:</span>{' '}
+                      {rnc.responsibleAction.name}
+                    </p>
+                  )}
+                  {rnc.dateConclusion && (
+                    <p className="text-sm">
+                      <span className="font-medium">Data de Conclusão:</span>{' '}
+                      {format(new Date(rnc.dateConclusion), 'dd/MM/yyyy', {
+                        locale: ptBR,
+                      })}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+
+            {rnc.workforce && rnc.workforce.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Mão de Obra</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {rnc.workforce.map((worker) => (
+                    <li key={worker.id} className="text-sm">
+                      {worker.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {rnc.materials && rnc.materials.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Materiais</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {rnc.materials.map((material) => (
+                    <li key={material.id} className="text-sm">
+                      {material.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {rnc.images && rnc.images.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Imagens</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {rnc.images.map((image) => (
+                    <div key={image.id} className="relative aspect-square">
+                      <img
+                        src={getImageUrl(image.url)}
+                        alt="Imagem da RNC"
+                        className="object-cover rounded-lg w-full h-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
