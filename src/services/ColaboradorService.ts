@@ -29,6 +29,16 @@ class ColaboradorService {
     }
   }
 
+  async getAll() {
+    try {
+      const response = await axios.get(URL);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar colaboradores:', error);
+      throw error;
+    }
+  }
+
   async getColaboradorById(id: number) {
     try {
       const response = await axios.get(`${URL}:${id}`);
@@ -39,7 +49,7 @@ class ColaboradorService {
     }
   }
 
-  async updateColaborador(id: number, colaboradorData: Colaborador) {
+  async updateColaborador(id: number, colaboradorData: Partial<Colaborador>) {
     try {
       const response = await axios.put(`${URL}${id}`, colaboradorData);
       return response;

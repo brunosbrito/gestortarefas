@@ -16,6 +16,16 @@ class RncService {
     }
   }
 
+  async update(id: string, data: Partial<NonConformity>) {
+    try {
+      const response = await axios.put(`${URL}${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar RNC:', error);
+      throw error;
+    }
+  }
+
   async updateRnc(id: string, data: Partial<NonConformity>) {
     try {
       const response = await axios.put(`${URL}${id}`, data);

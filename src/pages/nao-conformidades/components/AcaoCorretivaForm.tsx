@@ -21,10 +21,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { ColaboradorService } from "@/services/ColaboradorService";
-import { NonConformityService } from "@/services/NonConformityService";
+import ColaboradorService from "@/services/ColaboradorService";
+import NonConformityService from "@/services/NonConformityService";
 import { NonConformity } from "@/interfaces/RncInterface";
 import { useToast } from "@/hooks/use-toast";
+import { Colaborador } from "@/interfaces/ColaboradorInterface";
 
 const formSchema = z.object({
   correctiveAction: z.string().min(1, "Ação corretiva é obrigatória"),
@@ -43,7 +44,10 @@ export function AcaoCorretivaForm({ rnc, onClose, onUpdate }: AcaoCorretivaFormP
 
   const { data: colaboradores = [] } = useQuery({
     queryKey: ['colaboradores'],
-    queryFn: ColaboradorService.getAll,
+    queryFn: async () => {
+      const response = await ColaboradorService.getAllColaboradores();
+      return response.data as Colaborador[];
+    },
   });
 
   const form = useForm<z.infer<typeof formSchema>>({

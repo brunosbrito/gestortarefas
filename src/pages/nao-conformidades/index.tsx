@@ -331,12 +331,12 @@ const NaoConformidades = () => {
             </DialogHeader>
             {rncSelecionada && (
               <AcaoCorretivaForm 
-                rncId={rncSelecionada.id} 
+                rnc={rncSelecionada}
                 onClose={() => {
                   setShowAcaoCorretivaDialog(false);
                   getAllRnc();
                 }}
-                rnc={rncSelecionada}
+                onUpdate={() => getAllRnc()}
               />
             )}
           </DialogContent>
