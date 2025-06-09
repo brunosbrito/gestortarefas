@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -80,32 +79,40 @@ export function NovaAtividadeForm({
   const [tarefasMacro, setTarefasMacro] = useState<TarefaMacro[]>([]);
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
-  const [macroTaskSelectedValue, setMacroTaskSelectedValue] = useState<string>('');
+  const [macroTaskSelectedValue, setMacroTaskSelectedValue] =
+    useState<string>('');
   const [processSelectedValue, setProcessSelectedValue] = useState<string>('');
 
   // Função para determinar o valor inicial da tarefa macro
+  // Função para determinar o valor inicial da tarefa macro
   const determinarValorInicialTarefaMacro = () => {
     if (!atividadeInicial) return '';
-    
-    if (typeof atividadeInicial.macroTask === 'object' && atividadeInicial.macroTask?.name) {
-      return atividadeInicial.macroTask.name;
+
+    if (
+      typeof atividadeInicial.macroTask === 'object' &&
+      atividadeInicial.macroTask?.id
+    ) {
+      return atividadeInicial.macroTask.id.toString();
     }
-    
-    return typeof atividadeInicial.macroTask === 'string' 
-      ? atividadeInicial.macroTask 
+
+    return typeof atividadeInicial.macroTask === 'number'
+      ? (atividadeInicial.macroTask as string | number).toString()
       : '';
   };
 
   // Função para determinar o valor inicial do processo
   const determinarValorInicialProcesso = () => {
     if (!atividadeInicial) return '';
-    
-    if (typeof atividadeInicial.process === 'object' && atividadeInicial.process?.name) {
-      return atividadeInicial.process.name;
+
+    if (
+      typeof atividadeInicial.process === 'object' &&
+      atividadeInicial.process?.id
+    ) {
+      return atividadeInicial.process.id.toString();
     }
-    
-    return typeof atividadeInicial.process === 'string' 
-      ? atividadeInicial.process 
+
+    return typeof atividadeInicial.process === 'number'
+      ? (atividadeInicial.process as string | number).toString()
       : '';
   };
 
@@ -115,7 +122,7 @@ export function NovaAtividadeForm({
     description: atividadeInicial?.description || '',
     quantity: atividadeInicial?.quantity || 0,
     timePerUnit: atividadeInicial?.timePerUnit || 0,
-    unidadeTempo: atividadeInicial?.unidadeTempo as UnidadeTempo || 'minutos',
+    unidadeTempo: (atividadeInicial?.unidadeTempo as UnidadeTempo) || 'minutos',
     collaborators: atividadeInicial?.collaborators?.map((c) => c.id) || [],
     observation: atividadeInicial?.observation || '',
     imagem: undefined,
@@ -137,7 +144,7 @@ export function NovaAtividadeForm({
     try {
       const tarefasMacro = await TarefaMacroService.getAll();
       setTarefasMacro(tarefasMacro.data);
-      
+
       // Define o valor selecionado da tarefa macro
       const valorInicial = determinarValorInicialTarefaMacro();
       if (valorInicial) {
@@ -153,7 +160,7 @@ export function NovaAtividadeForm({
     try {
       const processos = await ProcessService.getAll();
       setProcessos(processos.data);
-      
+
       // Define o valor selecionado do processo
       const valorInicial = determinarValorInicialProcesso();
       if (valorInicial) {
@@ -215,8 +222,8 @@ export function NovaAtividadeForm({
     try {
       if (editMode && atividadeInicial) {
         const activityData: any = {
-          macroTask: data.macroTask,
-          process: data.process,
+          macroTask: Number(data.macroTask),
+          process: Number(data.process),
           description: data.description,
           quantity: data.quantity,
           timePerUnit: data.timePerUnit,
@@ -250,8 +257,8 @@ export function NovaAtividadeForm({
       } else {
         const formData = new FormData();
 
-        formData.append('macroTask', data.macroTask);
-        formData.append('process', data.process);
+        formData.append('macroTask', Number(data.macroTask).toString());
+        formData.append('process', Number(data.process).toString());
         formData.append('description', data.description);
         formData.append('quantity', data.quantity.toString());
         formData.append('timePerUnit', data.timePerUnit.toString());
@@ -342,11 +349,11 @@ export function NovaAtividadeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tarefa Macro</FormLabel>
-              <Select 
+              <Select
                 onValueChange={(value) => {
                   field.onChange(value);
                   setMacroTaskSelectedValue(value);
-                }} 
+                }}
                 value={macroTaskSelectedValue || field.value}
               >
                 <FormControl>
@@ -356,7 +363,7 @@ export function NovaAtividadeForm({
                 </FormControl>
                 <SelectContent>
                   {tarefasMacro.map((tarefa) => (
-                    <SelectItem key={tarefa.id} value={tarefa.name}>
+                    <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
                       {tarefa.name}
                     </SelectItem>
                   ))}
@@ -373,7 +380,7 @@ export function NovaAtividadeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Processo</FormLabel>
-              <Select 
+              <Select
                 onValueChange={(value) => {
                   field.onChange(value);
                   setProcessSelectedValue(value);
@@ -387,7 +394,10 @@ export function NovaAtividadeForm({
                 </FormControl>
                 <SelectContent>
                   {processos.map((processo) => (
-                    <SelectItem key={processo.id} value={processo.name}>
+                    <SelectItem
+                      key={processo.id}
+                      value={processo.id.toString()}
+                    >
                       {processo.name}
                     </SelectItem>
                   ))}
