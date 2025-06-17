@@ -19,9 +19,10 @@ interface CraftMyPdfData {
   imagens: Array<{
     key: number;
     url: string;
+    descricao?: string;
   }>;
   mao_obra: Array<{
-    descricao: string;
+    name: string;
     unid: string;
     item: string;
     qtd: number;
@@ -29,7 +30,7 @@ interface CraftMyPdfData {
     total: string;
   }>;
   material: Array<{
-    descricao: string;
+    material: string;
     unid: string;
     item: string;
     qtd: number;
@@ -52,23 +53,18 @@ class CraftMyPdfService {
 
   static async generateRncPdf(rnc: NonConformity): Promise<void> {
     try {
-      // Calcular totais
       const totalMaoObra =
-        rnc.workforce?.reduce((total, worker) => {
-          const valor = parseFloat(worker.hours) * 20; // Valor exemplo por hora
-          return total + valor;
-        }, 0) || 0;
+        rnc.workforce?.reduce((total, w) => total + Number(w.total || 0), 0) ||
+        0;
 
       const totalMaterial =
-        rnc.materials?.reduce((total, material) => {
-          return total + 220; // Valor exemplo por material
-        }, 0) || 0;
+        rnc.materials?.reduce((total, m) => total + Number(m.total || 0), 0) ||
+        0;
 
       const totalGeral = totalMaoObra + totalMaterial;
 
-      // Preparar dados para a API
       const data: CraftMyPdfData = {
-        title: parseInt(rnc.id),
+        title: rnc.code || 0,
         date: format(new Date(), 'dd/MM HH:mm', { locale: ptBR }),
         Obra: rnc.project?.name || 'Não informado',
         descricao: rnc.description,
@@ -86,40 +82,29 @@ class CraftMyPdfService {
         TotalMaterial: totalMaterial.toFixed(2).replace('.', ','),
         TotalGeral: totalGeral.toFixed(2).replace('.', ','),
         imagens:
-          rnc.images?.map((image, index) => ({
+          rnc.images?.map((img, index) => ({
             key: index + 1,
-            url: this.getImageUrl(image.url),
+            url: this.getImageUrl(img.url),
+            descricao: img.description || '',
           })) || [],
         mao_obra:
-          rnc.workforce?.map((worker, index) => {
-            const valorHora = 20; // Valor exemplo por hora
-            const qtdHoras = parseFloat(worker.hours) || 0;
-            const total = valorHora * qtdHoras;
-
-            return {
-              descricao: worker.name,
-              unid: 'hrs',
-              item: (index + 1).toString(),
-              qtd: qtdHoras,
-              valor: valorHora.toFixed(2).replace('.', ','),
-              total: total.toFixed(2).replace('.', ','),
-            };
-          }) || [],
+          rnc.workforce?.map((w, index) => ({
+            name: w.name,
+            unid: 'h',
+            item: (index + 1).toString(),
+            qtd: Number(w.hours),
+            valor: Number(w.valueHour).toFixed(2).replace('.', ','),
+            total: Number(w.total).toFixed(2).replace('.', ','),
+          })) || [],
         material:
-          rnc.materials?.map((material, index) => {
-            const valorUnitario = 220; // Valor exemplo por material
-            const quantidade = 1;
-            const total = valorUnitario * quantidade;
-
-            return {
-              descricao: material.name,
-              unid: 'un',
-              item: (index + 1).toString(),
-              qtd: quantidade,
-              valor: valorUnitario.toFixed(2).replace('.', ','),
-              total: total.toFixed(2).replace('.', ','),
-            };
-          }) || [],
+          rnc.materials?.map((m, index) => ({
+            material: m.material,
+            unid: m.unidade,
+            item: (index + 1).toString(),
+            qtd: Number(m.quantidade),
+            valor: Number(m.preco).toFixed(2).replace('.', ','),
+            total: Number(m.total).toFixed(2).replace('.', ','),
+          })) || [],
       };
 
       const response = await fetch(this.API_URL, {
@@ -141,17 +126,14 @@ class CraftMyPdfService {
       }
 
       const result = await response.json();
-
       const pdfUrl = result.file;
 
       const link = document.createElement('a');
       link.href = pdfUrl;
-      link.target = '_blank'; // Abre em nova aba
+      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      console.log('PDF gerado com sucesso:', pdfUrl);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
       throw error;

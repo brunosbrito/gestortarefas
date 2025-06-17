@@ -1,6 +1,15 @@
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Users, Package, Image, Eye, Edit, ClipboardCheck } from 'lucide-react';
+import {
+  Plus,
+  Filter,
+  Users,
+  Package,
+  Image,
+  Eye,
+  Edit,
+  ClipboardCheck,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaRNCDialog } from './NovaRNCDialog';
 import RncService from '@/services/NonConformityService';
@@ -181,7 +190,7 @@ const NaoConformidades = () => {
             <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-construction-800 flex justify-between items-center">
-                  <span>RNC #{rnc.id}</span>
+                  <span>RNC #{String(rnc.code).padStart(3, '0')}</span>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -272,7 +281,7 @@ const NaoConformidades = () => {
           onOpenChange={setShowNovaRNCDialog}
           rncParaEditar={editandoRnc}
           onSaveSuccess={() => {
-          getAllRnc();
+            getAllRnc();
           }}
         />
 
@@ -285,26 +294,34 @@ const NaoConformidades = () => {
         <Dialog open={showMaoObraDialog} onOpenChange={setShowMaoObraDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Mão de Obra - RNC #{rncSelecionada?.id}</DialogTitle>
+              <DialogTitle>
+                Mão de Obra - RNC #
+                {String(rncSelecionada?.code).padStart(3, '0')}
+              </DialogTitle>
             </DialogHeader>
             {rncSelecionada && (
-              <MaoObraForm 
-                rncId={rncSelecionada.id} 
-                onClose={() => setShowMaoObraDialog(false)} 
+              <MaoObraForm
+                rnc={rncSelecionada.id}
+                onClose={() => setShowMaoObraDialog(false)}
               />
             )}
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showMateriaisDialog} onOpenChange={setShowMateriaisDialog}>
+        <Dialog
+          open={showMateriaisDialog}
+          onOpenChange={setShowMateriaisDialog}
+        >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Materiais - RNC #{rncSelecionada?.id}</DialogTitle>
+              <DialogTitle>
+                Materiais - RNC {String(rncSelecionada?.code).padStart(3, '0')}
+              </DialogTitle>
             </DialogHeader>
             {rncSelecionada && (
-              <MateriaisForm 
-                rncId={rncSelecionada.id} 
-                onClose={() => setShowMateriaisDialog(false)} 
+              <MateriaisForm
+                rnc={rncSelecionada.id}
+                onClose={() => setShowMateriaisDialog(false)}
               />
             )}
           </DialogContent>
@@ -313,24 +330,32 @@ const NaoConformidades = () => {
         <Dialog open={showImagensDialog} onOpenChange={setShowImagensDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Imagens - RNC #{rncSelecionada?.id}</DialogTitle>
+              <DialogTitle>
+                Imagens - RNC {String(rncSelecionada?.code).padStart(3, '0')}
+              </DialogTitle>
             </DialogHeader>
             {rncSelecionada && (
-              <ImagensForm 
-                rncId={rncSelecionada.id} 
-                onClose={() => setShowImagensDialog(false)} 
+              <ImagensForm
+                rncId={rncSelecionada.id}
+                onClose={() => setShowImagensDialog(false)}
               />
             )}
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showAcaoCorretivaDialog} onOpenChange={setShowAcaoCorretivaDialog}>
+        <Dialog
+          open={showAcaoCorretivaDialog}
+          onOpenChange={setShowAcaoCorretivaDialog}
+        >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Ação Corretiva - RNC #{rncSelecionada?.id}</DialogTitle>
+              <DialogTitle>
+                Ação Corretiva - RNC{' '}
+                {String(rncSelecionada?.code).padStart(3, '0')}
+              </DialogTitle>
             </DialogHeader>
             {rncSelecionada && (
-              <AcaoCorretivaForm 
+              <AcaoCorretivaForm
                 rnc={rncSelecionada}
                 onClose={() => {
                   setShowAcaoCorretivaDialog(false);

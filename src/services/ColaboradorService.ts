@@ -1,4 +1,3 @@
-
 import API_URL from '@/config';
 import {
   Colaborador,
@@ -22,7 +21,7 @@ class ColaboradorService {
   async getAllColaboradores() {
     try {
       const response = await axios.get(URL);
-      return response;
+      return response.data as Colaborador[];
     } catch (error) {
       console.error('Erro ao buscar colaboradores:', error);
       throw error;

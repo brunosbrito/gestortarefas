@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -32,12 +31,14 @@ export function DetalhesRNCDialog({
   if (!rnc) return null;
 
   const getImageUrl = (url: string) => {
-    return url.startsWith('http') ? url : `https://api.gmxindustrial.com.br${url}`;
+    return url.startsWith('http')
+      ? url
+      : `https://api.gmxindustrial.com.br${url}`;
   };
 
   const handleGeneratePDF = async () => {
     setIsGeneratingPdf(true);
-    
+
     try {
       await CraftMyPdfService.generateRncPdf(rnc);
 
@@ -103,51 +104,71 @@ export function DetalhesRNCDialog({
                 </h3>
                 <div className="space-y-3">
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">Data da Ocorrência:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Data da Ocorrência:
+                    </span>
                     <span className="text-sm text-gray-900">
-                      {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', { locale: ptBR })}
+                      {format(new Date(rnc.dateOccurrence), 'dd/MM/yyyy', {
+                        locale: ptBR,
+                      })}
                     </span>
                   </div>
-                  
+
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">Projeto:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Projeto:
+                    </span>
                     <span className="text-sm text-gray-900">
                       {rnc.project?.name || 'Não informado'}
                     </span>
                   </div>
 
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">Ordem de Serviço:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Ordem de Serviço:
+                    </span>
                     <span className="text-sm text-gray-900">
                       {rnc.serviceOrder?.description || 'Não informado'}
                     </span>
                   </div>
 
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">Responsável pela RNC:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Responsável pela RNC:
+                    </span>
                     <span className="text-sm text-gray-900">
                       {rnc.responsibleRNC?.name || 'Não informado'}
                     </span>
                   </div>
 
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">Identificado por:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Identificado por:
+                    </span>
                     <span className="text-sm text-gray-900">
                       {rnc.responsibleIdentification?.name || 'Não informado'}
                     </span>
                   </div>
 
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">Data de Criação:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Data de Criação:
+                    </span>
                     <span className="text-sm text-gray-900">
-                      {format(new Date(rnc.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      {format(new Date(rnc.createdAt), 'dd/MM/yyyy HH:mm', {
+                        locale: ptBR,
+                      })}
                     </span>
                   </div>
 
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700">Última Atualização:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Última Atualização:
+                    </span>
                     <span className="text-sm text-gray-900">
-                      {format(new Date(rnc.updatedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      {format(new Date(rnc.updatedAt), 'dd/MM/yyyy HH:mm', {
+                        locale: ptBR,
+                      })}
                     </span>
                   </div>
                 </div>
@@ -161,55 +182,83 @@ export function DetalhesRNCDialog({
                 <div className="space-y-3">
                   {rnc.contractNumber && (
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-700">Número do Contrato:</span>
-                      <span className="text-sm text-gray-900">{rnc.contractNumber}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Número do Contrato:
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {rnc.contractNumber}
+                      </span>
                     </div>
                   )}
 
                   {rnc.contractDuration && (
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-700">Duração do Contrato (dias):</span>
-                      <span className="text-sm text-gray-900">{rnc.contractDuration}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Duração do Contrato (dias):
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {rnc.contractDuration}
+                      </span>
                     </div>
                   )}
 
                   {rnc.elapsedTime !== undefined && (
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-700">Tempo Decorrido (dias):</span>
-                      <span className="text-sm text-gray-900">{rnc.elapsedTime}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Tempo Decorrido (dias):
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {rnc.elapsedTime}
+                      </span>
                     </div>
                   )}
 
                   {rnc.remainingTime !== undefined && (
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-700">Tempo Restante (dias):</span>
-                      <span className="text-sm text-gray-900">{rnc.remainingTime}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Tempo Restante (dias):
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {rnc.remainingTime}
+                      </span>
                     </div>
                   )}
 
                   {rnc.location && (
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-700">Localização:</span>
-                      <span className="text-sm text-gray-900">{rnc.location}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Localização:
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {rnc.location}
+                      </span>
                     </div>
                   )}
 
                   {rnc.clientName && (
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-700">Nome do Cliente:</span>
-                      <span className="text-sm text-gray-900">{rnc.clientName}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Nome do Cliente:
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {rnc.clientName}
+                      </span>
                     </div>
                   )}
 
                   {rnc.workSchedule && (
                     <div className="space-y-2">
-                      <span className="text-sm font-medium text-gray-700">Horário de Trabalho:</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Horário de Trabalho:
+                      </span>
                       <div className="pl-2 space-y-1">
                         <div className="text-sm text-gray-900">
-                          <span className="font-medium">Entrada/Saída:</span> {rnc.workSchedule.entryExit}
+                          <span className="font-medium">Entrada/Saída:</span>{' '}
+                          {rnc.workSchedule.entryExit}
                         </div>
                         <div className="text-sm text-gray-900">
-                          <span className="font-medium">Intervalo:</span> {rnc.workSchedule.interval}
+                          <span className="font-medium">Intervalo:</span>{' '}
+                          {rnc.workSchedule.interval}
                         </div>
                       </div>
                     </div>
@@ -224,7 +273,9 @@ export function DetalhesRNCDialog({
                 Descrição da Não Conformidade
               </h3>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm whitespace-pre-wrap text-gray-900">{rnc.description}</p>
+                <p className="text-sm whitespace-pre-wrap text-gray-900">
+                  {rnc.description}
+                </p>
               </div>
             </div>
 
@@ -236,22 +287,34 @@ export function DetalhesRNCDialog({
                 </h3>
                 <div className="bg-green-50 p-4 rounded-lg space-y-3">
                   <div>
-                    <span className="text-sm font-medium text-gray-700">Descrição da Ação:</span>
-                    <p className="text-sm whitespace-pre-wrap text-gray-900 mt-1">{rnc.correctiveAction}</p>
+                    <span className="text-sm font-medium text-gray-700">
+                      Descrição da Ação:
+                    </span>
+                    <p className="text-sm whitespace-pre-wrap text-gray-900 mt-1">
+                      {rnc.correctiveAction}
+                    </p>
                   </div>
-                  
+
                   {rnc.responsibleAction && (
                     <div>
-                      <span className="text-sm font-medium text-gray-700">Responsável pela Ação:</span>
-                      <p className="text-sm text-gray-900">{rnc.responsibleAction.name}</p>
+                      <span className="text-sm font-medium text-gray-700">
+                        Responsável pela Ação:
+                      </span>
+                      <p className="text-sm text-gray-900">
+                        {rnc.responsibleAction.name}
+                      </p>
                     </div>
                   )}
-                  
+
                   {rnc.dateConclusion && (
                     <div>
-                      <span className="text-sm font-medium text-gray-700">Data de Conclusão:</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Data de Conclusão:
+                      </span>
                       <p className="text-sm text-gray-900">
-                        {format(new Date(rnc.dateConclusion), 'dd/MM/yyyy', { locale: ptBR })}
+                        {format(new Date(rnc.dateConclusion), 'dd/MM/yyyy', {
+                          locale: ptBR,
+                        })}
                       </p>
                     </div>
                   )}
@@ -270,24 +333,35 @@ export function DetalhesRNCDialog({
                     <div key={worker.id} className="bg-blue-50 p-4 rounded-lg">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <span className="text-sm font-medium text-gray-700">Nome:</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            Nome:
+                          </span>
                           <p className="text-sm text-gray-900">{worker.name}</p>
                         </div>
+
                         <div>
-                          <span className="text-sm font-medium text-gray-700">Função:</span>
-                          <p className="text-sm text-gray-900">{worker.role}</p>
+                          <span className="text-sm font-medium text-gray-700">
+                            Horas Trabalhadas:
+                          </span>
+                          <p className="text-sm text-gray-900">
+                            {worker.hours}h
+                          </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-700">Entrada/Saída:</span>
-                          <p className="text-sm text-gray-900">{worker.entryExit}</p>
+                          <span className="text-sm font-medium text-gray-700">
+                            Valor por Hora (R$):
+                          </span>
+                          <p className="text-sm text-gray-900">
+                            {worker.valueHour.toString().replace('.', ',')}
+                          </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-700">Intervalo:</span>
-                          <p className="text-sm text-gray-900">{worker.interval}</p>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-700">Horas Trabalhadas:</span>
-                          <p className="text-sm text-gray-900">{worker.hours}h</p>
+                          <span className="text-sm font-medium text-gray-700">
+                            total (R$):
+                          </span>
+                          <p className="text-sm text-gray-900">
+                            {worker.total.toString().replace('.', ',')}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -302,12 +376,27 @@ export function DetalhesRNCDialog({
                 <h3 className="font-semibold text-lg text-[#003366] border-b border-[#E0E0E0] pb-2">
                   Materiais Utilizados
                 </h3>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <ul className="space-y-2">
+
+                <div className="bg-yellow-50 p-4 rounded-lg shadow-sm">
+                  <ul className="divide-y divide-gray-200">
                     {rnc.materials.map((material) => (
-                      <li key={material.id} className="flex items-center text-sm text-gray-900">
-                        <span className="w-2 h-2 bg-[#FF7F0E] rounded-full mr-3"></span>
-                        {material.name}
+                      <li
+                        key={material.id}
+                        className="py-2 flex flex-col md:flex-row md:justify-between md:items-center"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-[#FF7F0E] rounded-full" />
+                          <span className="font-medium text-gray-800">
+                            {material.material}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1 md:mt-0 md:text-right">
+                          {material.quantidade} {material.unidade} × R${' '}
+                          {Number(material.preco).toFixed(2)} ={' '}
+                          <strong>
+                            R$ {Number(material.total).toFixed(2)}
+                          </strong>
+                        </div>
                       </li>
                     ))}
                   </ul>

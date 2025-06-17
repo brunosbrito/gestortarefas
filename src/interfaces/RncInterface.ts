@@ -1,4 +1,5 @@
-import { Colaborador } from "./ColaboradorInterface";
+import { Colaborador } from './ColaboradorInterface';
+import { Material } from './MaterialInterface';
 
 export interface CreateNonConformity {
   projectId: string;
@@ -40,6 +41,7 @@ export interface NonConformity {
   responsibleRNC: Colaborador;
   project: Project;
   serviceOrder: ServiceOrder;
+  code: number;
 }
 
 export interface WorkSchedule {
@@ -48,14 +50,16 @@ export interface WorkSchedule {
 }
 
 export interface CreateWorkforce {
+  colaboradorId: number;
   name: string;
-  role: string;
-  entryExit: string;
-  interval: string;
-  hours: string;
+  hours: number;
+  total: number;
+  valueHour: number;
+  rnc: string;
 }
 
 export interface RncImage {
+  description: string;
   id: string;
   url: string;
 }
@@ -63,15 +67,9 @@ export interface RncImage {
 export interface Workforce {
   id: string;
   name: string;
-  role: string;
-  entryExit: string;
-  interval: string;
   hours: string;
-}
-
-export interface Material {
-  id: string;
-  name: string;
+  total: number;
+  valueHour: number;
 }
 
 export interface User {
