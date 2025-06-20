@@ -47,6 +47,12 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
     },
   });
 
+  const getImageUrl = (url: string) => {
+    return url.startsWith('http')
+      ? url
+      : `https://api.gmxindustrial.com.br${url}`;
+  };
+
   const handleImageAdd = async (values: z.infer<typeof formSchema>) => {
     const file = values.image?.[0];
     if (!file) return;
@@ -125,7 +131,7 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
                   className="relative bg-gray-100 rounded overflow-hidden shadow-sm"
                 >
                   <img
-                    src={`/uploads/${img.path}`} // ou URL completa se disponível
+                    src={getImageUrl(img.url)} // ou URL completa se disponível
                     alt={img.description}
                     className="w-full h-40 object-cover"
                   />

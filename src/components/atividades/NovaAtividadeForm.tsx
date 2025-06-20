@@ -175,7 +175,7 @@ export function NovaAtividadeForm({
   const getColaboradores = async () => {
     try {
       const colaboradores = await ColaboradorService.getAllColaboradores();
-      setColaboradores(colaboradores.data);
+      setColaboradores(colaboradores);
 
       if (editMode && atividadeInicial?.collaborators) {
         const colaboradoresIds = atividadeInicial.collaborators.map(

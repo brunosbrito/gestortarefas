@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -7,10 +6,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Edit2, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Edit2, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,16 +19,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { EditColaboradorForm } from "./EditColaboradorForm";
-import { Colaborador } from "@/interfaces/ColaboradorInterface";
-import ColaboradorService from "@/services/ColaboradorService";
+} from '@/components/ui/dialog';
+import { EditColaboradorForm } from './EditColaboradorForm';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import ColaboradorService from '@/services/ColaboradorService';
 
 interface ColaboradoresListProps {
   reload: boolean;
@@ -38,7 +37,8 @@ interface ColaboradoresListProps {
 export function ColaboradoresList({ reload }: ColaboradoresListProps) {
   const [listColaboradores, setListColaboradores] = useState<Colaborador[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
+  const [selectedColaborador, setSelectedColaborador] =
+    useState<Colaborador | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -46,11 +46,13 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
   const getColaboradores = async () => {
     try {
       const response = await ColaboradorService.getAllColaboradores();
-      setListColaboradores(response.data);
+      setListColaboradores(response);
       setError(null);
     } catch (err) {
       console.error('Erro ao buscar os colaboradores:', err);
-      setError('Não foi possível carregar os colaboradores. Tente novamente mais tarde.');
+      setError(
+        'Não foi possível carregar os colaboradores. Tente novamente mais tarde.'
+      );
     }
   };
 
@@ -74,17 +76,17 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
     try {
       await ColaboradorService.deleteColaborador(selectedColaborador.id);
       toast({
-        title: "Colaborador excluído",
-        description: "O colaborador foi excluído com sucesso.",
+        title: 'Colaborador excluído',
+        description: 'O colaborador foi excluído com sucesso.',
       });
       getColaboradores();
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Erro ao excluir colaborador",
-        description: "Não foi possível excluir o colaborador. Tente novamente.",
+        variant: 'destructive',
+        title: 'Erro ao excluir colaborador',
+        description: 'Não foi possível excluir o colaborador. Tente novamente.',
       });
-      console.error("Erro ao excluir o colaborador:", error);
+      console.error('Erro ao excluir o colaborador:', error);
     } finally {
       setIsDeleteDialogOpen(false);
       setSelectedColaborador(null);
@@ -135,13 +137,16 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
         </Table>
       </div>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o colaborador "{selectedColaborador?.name}"?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o colaborador "
+              {selectedColaborador?.name}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -45,7 +45,7 @@ const RegistroPonto = () => {
 
       setFuncionarios(funcionariosData);
       setObras(obrasData);
-      setColaboradores(colaboradoresData.data);
+      setColaboradores(colaboradoresData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados. Tente novamente.');

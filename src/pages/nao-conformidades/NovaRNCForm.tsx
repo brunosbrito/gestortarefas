@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -34,7 +33,9 @@ const formSchema = z.object({
   responsibleRnc: z.string().min(1, 'Responsável pela RNC é obrigatório'),
   description: z.string().min(1, 'Descrição é obrigatória'),
   serviceOrder: z.string().min(1, 'Ordem de serviço é obrigatória'),
-  responsibleIdentification: z.string().min(1, 'Responsável pela identificação é obrigatório'),
+  responsibleIdentification: z
+    .string()
+    .min(1, 'Responsável pela identificação é obrigatório'),
   dateOccurrence: z.string().min(1, 'Data da ocorrência é obrigatória'),
 });
 
@@ -50,23 +51,28 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData ? {
-      project: initialData.project?.id.toString() || '',
-      responsibleRnc: initialData.responsibleRNC?.id.toString() || '',
-      description: initialData.description || '',
-      serviceOrder: initialData.serviceOrder?.id.toString() || '',
-      responsibleIdentification: typeof initialData.responsibleIdentification === 'object'
-        ? initialData.responsibleIdentification.id.toString()
-        : initialData.responsibleIdentification || '',
-      dateOccurrence: initialData.dateOccurrence?.split('T')[0] || new Date().toISOString().split('T')[0],
-    } : {
-      project: '',
-      responsibleRnc: '',
-      description: '',
-      serviceOrder: '',
-      responsibleIdentification: '',
-      dateOccurrence: new Date().toISOString().split('T')[0],
-    },
+    defaultValues: initialData
+      ? {
+          project: initialData.project?.id.toString() || '',
+          responsibleRnc: initialData.responsibleRNC?.id.toString() || '',
+          description: initialData.description || '',
+          serviceOrder: initialData.serviceOrder?.id.toString() || '',
+          responsibleIdentification:
+            typeof initialData.responsibleIdentification === 'object'
+              ? initialData.responsibleIdentification.id.toString()
+              : initialData.responsibleIdentification || '',
+          dateOccurrence:
+            initialData.dateOccurrence?.split('T')[0] ||
+            new Date().toISOString().split('T')[0],
+        }
+      : {
+          project: '',
+          responsibleRnc: '',
+          description: '',
+          serviceOrder: '',
+          responsibleIdentification: '',
+          dateOccurrence: new Date().toISOString().split('T')[0],
+        },
   });
 
   useEffect(() => {
@@ -77,10 +83,12 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
           ColaboradorService.getAllColaboradores(),
         ]);
         setProjetos(projetosRes);
-        setColaboradores(colaboradoresRes.data);
+        setColaboradores(colaboradoresRes);
 
         if (initialData?.project?.id) {
-          const ordemServico = await getServiceOrderByProjectId(initialData.project.id.toString());
+          const ordemServico = await getServiceOrderByProjectId(
+            initialData.project.id.toString()
+          );
           setOs(ordemServico);
         }
       } catch (error) {
@@ -140,7 +148,10 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Ordem de Serviço</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a OS" />
@@ -154,7 +165,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="sem_os">Sem ordens de serviço disponíveis</SelectItem>
+                      <SelectItem value="sem_os">
+                        Sem ordens de serviço disponíveis
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -171,7 +184,10 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Responsável pela RNC</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o responsável" />
@@ -185,7 +201,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="sem_colaborador">Sem colaboradores disponíveis</SelectItem>
+                      <SelectItem value="sem_colaborador">
+                        Sem colaboradores disponíveis
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -200,7 +218,10 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Identificado por</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione quem identificou" />
@@ -214,7 +235,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="sem_identificador">Sem colaboradores disponíveis</SelectItem>
+                      <SelectItem value="sem_identificador">
+                        Sem colaboradores disponíveis
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>

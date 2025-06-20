@@ -65,7 +65,7 @@ export function DetalhesRNCDialog({
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle className="text-xl font-bold text-[#003366]">
-              RNC #{rnc.id}
+              RNC #{String(rnc.code).padStart(3, '0')}
             </DialogTitle>
             <Button
               onClick={handleGeneratePDF}
