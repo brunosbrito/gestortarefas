@@ -20,6 +20,7 @@ import {
   Save,
   Users,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
@@ -96,12 +97,17 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
     return matchSetor && matchNome;
   });
 
+  // Verificar se há colaboradores de produção presentes
+  const presentesProducao = registros.filter(r => r.presente && r.sector === 'PRODUCAO');
+  const presentesOutrosSetores = registros.filter(r => r.presente && r.sector !== 'PRODUCAO');
+  const obraObrigatoria = presentesProducao.length > 0;
+
   const validateProximaEtapa = () => {
     const errors: string[] = [];
     
-    // Validar se há obra selecionada
-    if (!obraGlobal || obraGlobal === 'none') {
-      errors.push('Selecione uma obra antes de prosseguir para as faltas');
+    // Validar se há obra selecionada apenas se houver colaboradores de produção presentes
+    if (obraObrigatoria && (!obraGlobal || obraGlobal === 'none')) {
+      errors.push(`Selecione uma obra - obrigatório para os ${presentesProducao.length} colaborador(es) de Produção`);
     }
 
     // Validar se há pelo menos um colaborador presente
@@ -163,8 +169,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         if (reg.id === id) {
           const updated = { ...reg, [field]: value };
 
-          // Se está marcando como presente e há obra global selecionada, atribuir automaticamente
-          if (field === 'presente' && value && obraGlobal && obraGlobal !== 'none') {
+          // Se está marcando como presente e há obra global selecionada, atribuir apenas para PRODUÇÃO
+          if (field === 'presente' && value && obraGlobal && obraGlobal !== 'none' && reg.sector === 'PRODUCAO') {
             updated.project = obraGlobal;
           }
 
@@ -261,6 +267,32 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         </Badge>
       </div>
 
+      {/* Informações sobre setores presentes */}
+      {etapa === 'presentes' && resumo.presentes > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="space-y-2">
+                <p className="font-medium text-blue-800">Resumo por Setor:</p>
+                <div className="flex gap-2 flex-wrap">
+                  {presentesProducao.length > 0 && (
+                    <Badge variant="secondary" className="bg-[#FFA500]/20 text-[#003366]">
+                      Produção: {presentesProducao.length} (obra obrigatória)
+                    </Badge>
+                  )}
+                  {presentesOutrosSetores.length > 0 && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      Outros setores: {presentesOutrosSetores.length} (obra opcional)
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Mensagens de validação */}
       {validationErrors.length > 0 && (
         <Card className="border-destructive bg-destructive/10">
@@ -300,8 +332,14 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
               <div className="relative">
                 <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
                 <Select value={obraGlobal} onValueChange={setObraGlobal}>
-                  <SelectTrigger className={`pl-10 ${!obraGlobal || obraGlobal === 'none' ? 'border-destructive' : ''}`}>
-                    <SelectValue placeholder="Selecionar obra (obrigatório)" />
+                  <SelectTrigger className={`pl-10 ${obraObrigatoria && (!obraGlobal || obraGlobal === 'none') ? 'border-destructive' : ''}`}>
+                    <SelectValue 
+                      placeholder={
+                        obraObrigatoria 
+                          ? "Selecionar obra (obrigatório para Produção)" 
+                          : "Selecionar obra (opcional)"
+                      } 
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">
@@ -340,7 +378,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                 <Building className="inline w-4 h-4 mr-1" />
                 Obra selecionada: <strong>{obraGlobalNome}</strong>
                 <span className="ml-2 text-muted-foreground">
-                  (será atribuída automaticamente aos novos presentes)
+                  (será atribuída automaticamente aos colaboradores de Produção)
                 </span>
               </p>
             </div>
@@ -416,14 +454,20 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                         <td className="p-3">
                           {registro.presente && (
                             <div className="text-sm">
-                              {registro.project ? (
-                                <Badge variant="secondary" className="bg-[#FFA500]/20 text-[#003366]">
-                                  {registro.project}
-                                </Badge>
+                              {registro.sector === 'PRODUCAO' ? (
+                                registro.project ? (
+                                  <Badge variant="secondary" className="bg-[#FFA500]/20 text-[#003366]">
+                                    {registro.project}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    Aguardando obra...
+                                  </span>
+                                )
                               ) : (
-                                <span className="text-muted-foreground">
-                                  Aguardando obra...
-                                </span>
+                                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                  Obra não obrigatória
+                                </Badge>
                               )}
                             </div>
                           )}
