@@ -42,6 +42,13 @@ interface ColaboradorRegistro extends Colaborador {
   reason?: string;
 }
 
+// Constantes para os setores
+const SETORES = {
+  PRODUCAO: 'PRODUCAO',
+  ADMINISTRATIVO: 'ADMINISTRATIVO', 
+  ENGENHARIA: 'ENGENHARIA'
+} as const;
+
 const getSetorLabel = (sector: string) => {
   switch (sector) {
     case 'PRODUCAO':
@@ -55,6 +62,11 @@ const getSetorLabel = (sector: string) => {
   }
 };
 
+// Função para comparação case-insensitive de setores
+const isProducao = (sector: string) => {
+  return sector?.toUpperCase() === 'PRODUCAO' || sector?.toLowerCase() === 'produção';
+};
+
 export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   colaboradores,
   obras,
@@ -64,6 +76,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 }) => {
   console.log('PontoLoteForm - obras recebidas:', obras);
   console.log('PontoLoteForm - colaboradores:', colaboradores);
+  console.log('PontoLoteForm - setores dos colaboradores:', colaboradores.map(c => ({ nome: c.name, setor: c.sector })));
   
   const [etapa, setEtapa] = useState<'presentes' | 'faltas'>('presentes');
   const [registros, setRegistros] = useState<ColaboradorRegistro[]>(
@@ -100,10 +113,16 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
     return matchSetor && matchNome;
   });
 
-  // Verificar se há colaboradores de produção presentes
-  const presentesProducao = registros.filter(r => r.presente && r.sector === 'PRODUCAO');
-  const presentesOutrosSetores = registros.filter(r => r.presente && r.sector !== 'PRODUCAO');
+  // Verificar se há colaboradores de produção presentes (usando função case-insensitive)
+  const presentesProducao = registros.filter(r => r.presente && isProducao(r.sector));
+  const presentesOutrosSetores = registros.filter(r => r.presente && !isProducao(r.sector));
   const obraObrigatoria = presentesProducao.length > 0;
+
+  console.log('Análise de setores:', {
+    presentesProducao: presentesProducao.map(p => ({ nome: p.name, setor: p.sector })),
+    presentesOutrosSetores: presentesOutrosSetores.map(p => ({ nome: p.name, setor: p.sector })),
+    obraObrigatoria
+  });
 
   const validateProximaEtapa = () => {
     const errors: string[] = [];
@@ -173,8 +192,9 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
           const updated = { ...reg, [field]: value };
 
           // Se está marcando como presente e há obra global selecionada, atribuir apenas para PRODUÇÃO
-          if (field === 'presente' && value && obraGlobal && obraGlobal !== 'none' && reg.sector === 'PRODUCAO') {
+          if (field === 'presente' && value && obraGlobal && obraGlobal !== 'none' && isProducao(reg.sector)) {
             updated.project = obraGlobal;
+            console.log(`Atribuindo obra "${obraGlobal}" para colaborador de Produção: ${reg.name}`);
           }
 
           // Se está desmarcando como presente, limpar projeto
@@ -460,7 +480,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                         <td className="p-3">
                           {registro.presente && (
                             <div className="text-sm">
-                              {registro.sector === 'PRODUCAO' ? (
+                              {isProducao(registro.sector) ? (
                                 registro.project ? (
                                   <Badge variant="secondary" className="bg-[#FFA500]/20 text-[#003366]">
                                     {registro.project}
