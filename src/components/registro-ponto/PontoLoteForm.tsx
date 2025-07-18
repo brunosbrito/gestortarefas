@@ -90,7 +90,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         const updated = { ...reg, [field]: value };
         
         // Se está marcando como presente e há obra global selecionada, atribuir automaticamente
-        if (field === 'presente' && value === true && obraGlobal && !reg.project) {
+        if (field === 'presente' && value === true && obraGlobal && obraGlobal !== 'none' && !reg.project) {
           updated.project = obraGlobal;
         }
         
@@ -185,7 +185,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                     <SelectValue placeholder="Selecionar obra para novos presentes" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma obra selecionada</SelectItem>
+                    <SelectItem value="none">Nenhuma obra selecionada</SelectItem>
                     {obras.map(obra => (
                       <SelectItem key={obra.id} value={obra.name}>
                         {obra.name}
