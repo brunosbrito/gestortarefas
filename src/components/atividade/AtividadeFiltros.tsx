@@ -1,10 +1,11 @@
 
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Filter, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Filter, X, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -30,6 +31,40 @@ export const AtividadeFiltrosComponent = ({
   colaboradores = [],
   isLoading = false
 }: AtividadeFiltrosProps) => {
+  const [filtrosTemp, setFiltrosTemp] = useState<AtividadeFiltros>(filtros);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: filtros.dataInicio ? new Date(filtros.dataInicio) : undefined,
+    to: filtros.dataFim ? new Date(filtros.dataFim) : undefined,
+  });
+
+  useEffect(() => {
+    setFiltrosTemp(filtros);
+    setDateRange({
+      from: filtros.dataInicio ? new Date(filtros.dataInicio) : undefined,
+      to: filtros.dataFim ? new Date(filtros.dataFim) : undefined,
+    });
+  }, [filtros]);
+
+  const handleAplicarFiltros = () => {
+    const novosDateFiltros = {
+      dataInicio: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
+      dataFim: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null,
+    };
+    onFiltroChange({ ...filtrosTemp, ...novosDateFiltros });
+  };
+
+  const handleLimparFiltros = () => {
+    setFiltrosTemp({
+      tarefaMacroId: null,
+      processoId: null,
+      colaboradorId: null,
+      status: null,
+      dataInicio: null,
+      dataFim: null
+    });
+    setDateRange({ from: undefined, to: undefined });
+    onLimparFiltros();
+  };
   return (
     <Card>
       <CardHeader>
@@ -44,8 +79,8 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Tarefa Macro</label>
             <Select
-              value={filtros.tarefaMacroId || 'all'}
-              onValueChange={(value) => onFiltroChange({ tarefaMacroId: value === 'all' ? null : value })}
+              value={filtrosTemp.tarefaMacroId || 'all'}
+              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, tarefaMacroId: value === 'all' ? null : value }))}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -66,8 +101,8 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Processo</label>
             <Select
-              value={filtros.processoId || 'all'}
-              onValueChange={(value) => onFiltroChange({ processoId: value === 'all' ? null : value })}
+              value={filtrosTemp.processoId || 'all'}
+              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, processoId: value === 'all' ? null : value }))}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -88,8 +123,8 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Colaborador</label>
             <Select
-              value={filtros.colaboradorId || 'all'}
-              onValueChange={(value) => onFiltroChange({ colaboradorId: value === 'all' ? null : value })}
+              value={filtrosTemp.colaboradorId || 'all'}
+              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, colaboradorId: value === 'all' ? null : value }))}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -110,8 +145,9 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Status</label>
             <Select
-              value={filtros.status || 'all'}
-              onValueChange={(value) => onFiltroChange({ status: value === 'all' ? null : value })}
+              value={filtrosTemp.status || 'all'}
+              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, status: value === 'all' ? null : value }))}
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
@@ -126,79 +162,41 @@ export const AtividadeFiltrosComponent = ({
             </Select>
           </div>
 
-          {/* Filtro Data Início */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Data Início</label>
+          {/* Filtro Data Range */}
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium">Período</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !filtros.dataInicio && "text-muted-foreground"
+                    !dateRange?.from && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filtros.dataInicio ? (
-                    format(new Date(filtros.dataInicio), "dd/MM/yyyy", { locale: ptBR })
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} -{" "}
+                        {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}
+                      </>
+                    ) : (
+                      format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })
+                    )
                   ) : (
-                    <span>Selecionar data início</span>
+                    <span>Selecionar período</span>
                   )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
-                  mode="single"
-                  selected={filtros.dataInicio ? new Date(filtros.dataInicio) : undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      onFiltroChange({ dataInicio: format(date, 'yyyy-MM-dd') });
-                    } else {
-                      onFiltroChange({ dataInicio: null });
-                    }
-                  }}
                   initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Filtro Data Fim */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Data Fim</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !filtros.dataFim && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filtros.dataFim ? (
-                    format(new Date(filtros.dataFim), "dd/MM/yyyy", { locale: ptBR })
-                  ) : (
-                    <span>Selecionar data fim</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={filtros.dataFim ? new Date(filtros.dataFim) : undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      onFiltroChange({ dataFim: format(date, 'yyyy-MM-dd') });
-                    } else {
-                      onFiltroChange({ dataFim: null });
-                    }
-                  }}
-                  disabled={(date) => 
-                    filtros.dataInicio ? date < new Date(filtros.dataInicio) : false
-                  }
-                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={1}
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
@@ -206,14 +204,21 @@ export const AtividadeFiltrosComponent = ({
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between">
           <Button
             variant="outline"
-            onClick={onLimparFiltros}
+            onClick={handleLimparFiltros}
             className="flex items-center gap-2"
           >
             <X className="w-4 h-4" />
             Limpar Filtros
+          </Button>
+          <Button
+            onClick={handleAplicarFiltros}
+            className="flex items-center gap-2 bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+          >
+            <Check className="w-4 h-4" />
+            Aplicar Filtros
           </Button>
         </div>
       </CardContent>
