@@ -23,7 +23,7 @@ export const navItems: MenuItem[] = [
   },
   {
     icon: ClipboardList,
-    label: 'Atividade',
+    label: 'Atividades',
     path: '/atividade',
   },
   {

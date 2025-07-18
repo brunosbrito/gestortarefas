@@ -1,12 +1,36 @@
-
 import { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { FilteredActivity } from '@/interfaces/DashboardFilters';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Activity, Clock, Users, TrendingUp } from 'lucide-react';
 
 interface FilteredActivitiesTableProps {
@@ -14,7 +38,10 @@ interface FilteredActivitiesTableProps {
   loading: boolean;
 }
 
-export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivitiesTableProps) => {
+export const FilteredActivitiesTable = ({
+  activities,
+  loading,
+}: FilteredActivitiesTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
@@ -28,6 +55,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
   // Reset página quando atividades mudam
   useEffect(() => {
     setCurrentPage(1);
+    console.log('Atividades atualizadas:', activities);
   }, [activities]);
 
   const getStatusColor = (status: string) => {
@@ -45,8 +73,13 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
   };
 
   const formatTime = (hours?: number) => {
-    if (!hours) return '-';
-    return `${hours}h`;
+    if (hours === undefined || hours === null) return '-';
+
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+
+    const formattedMinutes = m.toString().padStart(2, '0');
+    return `${h}h${formattedMinutes}`;
   };
 
   const formatTeam = (team?: string[]) => {
@@ -55,10 +88,34 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
     return `${team[0]} +${team.length - 1}`;
   };
 
-  const getEfficiencyColor = (efficiency?: number) => {
-    if (!efficiency) return 'text-gray-500';
-    if (efficiency >= 90) return 'text-green-600';
-    if (efficiency >= 70) return 'text-yellow-600';
+  const parseTempoEstimado = (tempo: string): number => {
+    const match = tempo.match(/(\d+)h(\d+)min/);
+    if (!match) return 0;
+
+    const horas = parseInt(match[1], 10);
+    const minutos = parseInt(match[2], 10);
+    return horas * 60 + minutos;
+  };
+
+  const CalculateEfficiency = (totalMin: number, tempoEstimadoStr: string) => {
+    const tempoEstimadoMin = parseTempoEstimado(tempoEstimadoStr);
+    const eficiencia = (totalMin / tempoEstimadoMin) * 100;
+    return eficiencia;
+  };
+
+  const getEfficiencyColor = (totalMin: number, tempoEstimadoStr: string) => {
+    const eficiencia = CalculateEfficiency(totalMin, tempoEstimadoStr);
+
+    // Condição para valor negativo ou 0
+    if (eficiencia <= 0) return 'text-gray-500';
+
+    // Gastou bem menos tempo
+    if (eficiencia > 0 && eficiencia <= 100) return 'text-green-600';
+
+    // Gastou tempo igual ou menos
+    if (eficiencia > 100) return 'text-red-600';
+
+    // Gastou mais tempo
     return 'text-red-600';
   };
 
@@ -92,15 +149,19 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
           <Activity className="w-5 h-5 mr-2 text-[#003366]" />
           <h3 className="text-lg font-semibold">Atividades</h3>
         </div>
-        
+
         {totalItems > 0 && (
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span>
-              Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de {totalItems} resultados
+              Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de{' '}
+              {totalItems} resultados
             </span>
             <div className="flex items-center gap-2">
               <span>Por página:</span>
-              <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={handleItemsPerPageChange}
+              >
                 <SelectTrigger className="w-20 h-8">
                   <SelectValue />
                 </SelectTrigger>
@@ -115,7 +176,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
           </div>
         )}
       </div>
-      
+
       {activities && activities.length > 0 ? (
         <div className="space-y-4">
           <div className="rounded-md border">
@@ -173,9 +234,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
                       <TableCell className="max-w-[150px]">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">
-                              {activity.macroTask}
-                            </div>
+                            <div className="truncate">{activity.macroTask}</div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{activity.macroTask}</p>
@@ -185,9 +244,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
                       <TableCell className="max-w-[120px]">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">
-                              {activity.process}
-                            </div>
+                            <div className="truncate">{activity.process}</div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{activity.process}</p>
@@ -210,10 +267,10 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
                         </Tooltip>
                       </TableCell>
                       <TableCell className="text-center text-sm">
-                        {formatTime(activity.totalTime)}
+                        {formatTime(activity.totalTime.toFixed(2))}
                       </TableCell>
                       <TableCell className="text-center text-sm">
-                        {formatTime(activity.estimatedTime)}
+                        {activity.estimatedTime}
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1 text-sm">
@@ -225,18 +282,34 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
                               </div>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>{activity.team?.join(', ') || 'Sem equipe definida'}</p>
+                              <p>
+                                {activity.team?.join(', ') ||
+                                  'Sem equipe definida'}
+                              </p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
                       </TableCell>
                       <TableCell className="text-center text-sm">
-                        <span className={getEfficiencyColor(activity.kpis?.efficiency)}>
-                          {activity.kpis?.efficiency ? `${activity.kpis.efficiency}%` : '-'}
+                        <span
+                          className={getEfficiencyColor(
+                            activity.totalTime || 0,
+                            activity.estimatedTime.toString()
+                          )}
+                        >
+                          {CalculateEfficiency(
+                            activity.totalTime || 0,
+                            activity.estimatedTime.toString()
+                          ).toFixed(2)}%
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`${getStatusColor(activity.status)} text-xs`}>
+                        <Badge
+                          variant="outline"
+                          className={`${getStatusColor(
+                            activity.status
+                          )} text-xs`}
+                        >
                           {activity.status}
                         </Badge>
                       </TableCell>
@@ -252,12 +325,18 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    <PaginationPrevious
+                      onClick={() =>
+                        handlePageChange(Math.max(1, currentPage - 1))
+                      }
+                      className={
+                        currentPage === 1
+                          ? 'pointer-events-none opacity-50'
+                          : 'cursor-pointer'
+                      }
                     />
                   </PaginationItem>
-                  
+
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNumber;
                     if (totalPages <= 5) {
@@ -269,7 +348,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
                     } else {
                       pageNumber = currentPage - 2 + i;
                     }
-                    
+
                     return (
                       <PaginationItem key={pageNumber}>
                         <PaginationLink
@@ -282,11 +361,17 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
                       </PaginationItem>
                     );
                   })}
-                  
+
                   <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    <PaginationNext
+                      onClick={() =>
+                        handlePageChange(Math.min(totalPages, currentPage + 1))
+                      }
+                      className={
+                        currentPage === totalPages
+                          ? 'pointer-events-none opacity-50'
+                          : 'cursor-pointer'
+                      }
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -296,7 +381,9 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
         </div>
       ) : (
         <div className="flex justify-center items-center h-40 bg-gray-50 rounded-md">
-          <p className="text-gray-500">Nenhuma atividade encontrada com os filtros selecionados</p>
+          <p className="text-gray-500">
+            Nenhuma atividade encontrada com os filtros selecionados
+          </p>
         </div>
       )}
     </Card>

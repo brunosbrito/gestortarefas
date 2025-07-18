@@ -1,11 +1,10 @@
-
 import { FilteredActivity } from '@/interfaces/DashboardFilters';
 import { getAllActivities } from './ActivityService';
 import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
 import { filterDataByPeriod } from '@/utils/dateFilter';
 
 export const getFilteredActivities = async (
-  macroTaskId?: number | null, 
+  macroTaskId?: number | null,
   processId?: number | null,
   obraId?: number | null,
   serviceOrderId?: number | null,
@@ -19,7 +18,7 @@ export const getFilteredActivities = async (
 
     // Filtra as atividades com base nos parâmetros fornecidos
     let filteredActivities = activities
-      .filter(activity => {
+      .filter((activity) => {
         let matchMacroTask = true;
         let matchProcess = true;
         let matchObra = true;
@@ -41,10 +40,11 @@ export const getFilteredActivities = async (
           if (!activity.project) {
             matchObra = false;
           } else {
-            const activityProjectId = typeof activity.project.id === 'string' 
-              ? Number(activity.project.id) 
-              : activity.project.id;
-              
+            const activityProjectId =
+              typeof activity.project.id === 'string'
+                ? Number(activity.project.id)
+                : activity.project.id;
+
             matchObra = activityProjectId === obraId;
           }
         }
@@ -54,10 +54,11 @@ export const getFilteredActivities = async (
           if (!activity.serviceOrder) {
             matchServiceOrder = false;
           } else {
-            const activityServiceOrderId = typeof activity.serviceOrder.id === 'string' 
-              ? Number(activity.serviceOrder.id) 
-              : activity.serviceOrder.id;
-              
+            const activityServiceOrderId =
+              typeof activity.serviceOrder.id === 'string'
+                ? Number(activity.serviceOrder.id)
+                : activity.serviceOrder.id;
+
             matchServiceOrder = activityServiceOrderId === serviceOrderId;
           }
         }
@@ -67,35 +68,36 @@ export const getFilteredActivities = async (
           if (!activity.collaborators || activity.collaborators.length === 0) {
             matchCollaborator = false;
           } else {
-            matchCollaborator = activity.collaborators.some(collaborator => {
-              const colabId = typeof collaborator.id === 'string' 
-                ? Number(collaborator.id) 
-                : collaborator.id;
+            matchCollaborator = activity.collaborators.some((collaborator) => {
+              const colabId =
+                typeof collaborator.id === 'string'
+                  ? Number(collaborator.id)
+                  : collaborator.id;
               return colabId === collaboratorId;
             });
           }
         }
 
-        const shouldInclude = matchMacroTask && matchProcess && matchObra && matchServiceOrder && matchCollaborator;
+        const shouldInclude =
+          matchMacroTask &&
+          matchProcess &&
+          matchObra &&
+          matchServiceOrder &&
+          matchCollaborator;
         return shouldInclude;
       })
-      .map(activity => {
+      .map((activity) => {
         // Calcular tempo total baseado nas horas trabalhadas
-        const totalTime = activity.hoursWorked && activity.hoursWorked.length > 0 
-          ? activity.hoursWorked.reduce((total, hour) => total + (hour.hoursWorked || 0), 0)
-          : 0;
+        const totalTime = activity.totalTime || 0;
 
         // Tempo estimado da atividade
-        const estimatedTime = activity.estimatedHours || 0;
+        const estimatedTime = activity.estimatedTime || 0;
 
         // Equipe da atividade
-        const team = activity.collaborators?.map(collab => collab.name) || [];
+        const team = activity.collaborators?.map((collab) => collab.name) || [];
 
         // Calcular KPIs
         const progress = activity.progress || 0;
-        const efficiency = estimatedTime > 0 && totalTime > 0 
-          ? Math.round((estimatedTime / totalTime) * 100)
-          : 0;
 
         return {
           id: activity.id,
@@ -110,12 +112,12 @@ export const getFilteredActivities = async (
           totalTime,
           estimatedTime,
           team,
-          kpis: {
-            efficiency: efficiency > 0 ? efficiency : undefined,
-            progress
-          },
+          progress,
           createdAt: activity.createdAt,
-          serviceOrder: activity.serviceOrder || { serviceOrderNumber: 'N/A', id: null }
+          serviceOrder: activity.serviceOrder || {
+            serviceOrderNumber: 'N/A',
+            id: null,
+          },
         };
       });
 
@@ -123,7 +125,12 @@ export const getFilteredActivities = async (
     if (period) {
       if (period === 'personalizado' && (startDate || endDate)) {
         // Usa datas personalizadas
-        filteredActivities = filterDataByPeriod(filteredActivities, period, startDate, endDate);
+        filteredActivities = filterDataByPeriod(
+          filteredActivities,
+          period,
+          startDate,
+          endDate
+        );
       } else if (period !== 'todos') {
         // Usa períodos predefinidos
         filteredActivities = filterDataByPeriod(filteredActivities, period);

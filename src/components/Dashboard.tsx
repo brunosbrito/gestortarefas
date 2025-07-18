@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Building2, ClipboardList, Activity } from 'lucide-react';
 import { StatsSummary } from './dashboard/StatsSummary';
@@ -25,7 +24,7 @@ const Dashboard = () => {
     activitiesByStatus,
     isLoading,
     loadAllData,
-    applyPeriodFilter
+    applyPeriodFilter,
   } = useDashboardData();
 
   const {
@@ -33,7 +32,7 @@ const Dashboard = () => {
     filteredActivities,
     isFilteredDataLoading,
     handleFilterChange,
-    handlePeriodChange
+    handlePeriodChange,
   } = useDashboardFilters();
 
   // Carregar todos os dados ao montar o componente
@@ -53,7 +52,13 @@ const Dashboard = () => {
         filters.endDate
       );
     }
-  }, [filters.period, filters.obraId, filters.serviceOrderId, filters.startDate, filters.endDate]);
+  }, [
+    filters.period,
+    filters.obraId,
+    filters.serviceOrderId,
+    filters.startDate,
+    filters.endDate,
+  ]);
 
   const stats = [
     {
@@ -82,23 +87,23 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <PeriodFilter 
-        onFilterChange={handlePeriodChange} 
-        currentFilters={filters} 
+      <PeriodFilter
+        onFilterChange={handlePeriodChange}
+        currentFilters={filters}
       />
-      
+
       <StatsSummary stats={stats} />
-      
+
       <ActivityStatusCards activitiesByStatus={activitiesByStatus} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {macroTaskStatistic && macroTaskStatistic.length > 0 ? (
-          <MacroTasksChart
-            macroTasks={macroTaskStatistic}
-          />
+          <MacroTasksChart macroTasks={macroTaskStatistic} />
         ) : (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Atividades por Tarefa Macro</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Atividades por Tarefa Macro
+            </h3>
             <div className="flex items-center justify-center h-60 text-gray-400">
               Nenhum dado disponível para os filtros selecionados
             </div>
@@ -109,14 +114,16 @@ const Dashboard = () => {
           <ProcessHoursChart processes={processStatistic} />
         ) : (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Atividades por Processo</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Atividades por Processo
+            </h3>
             <div className="flex items-center justify-center h-60 text-gray-400">
               Nenhum dado disponível para os filtros selecionados
             </div>
           </div>
         )}
       </div>
-      
+
       {/* <div className="grid grid-cols-1 gap-6">
         {collaboratorStatistic && collaboratorStatistic.length > 0 ? (
           <CollaboratorsChart collaborators={collaboratorStatistic} />
@@ -132,12 +139,15 @@ const Dashboard = () => {
 
       <Separator className="my-8" />
 
-      <TaskProcessFilter onFilterChange={handleFilterChange} currentFilters={filters} />
-      
+      <TaskProcessFilter
+        onFilterChange={handleFilterChange}
+        currentFilters={filters}
+      />
+
       <div className="grid grid-cols-1 gap-6">
-        <FilteredActivitiesTable 
-          activities={filteredActivities} 
-          loading={isFilteredDataLoading} 
+        <FilteredActivitiesTable
+          activities={filteredActivities}
+          loading={isFilteredDataLoading}
         />
       </div>
     </div>

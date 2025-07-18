@@ -37,9 +37,6 @@ export interface FilteredActivity {
   totalTime?: number;
   estimatedTime?: number;
   team?: string[];
-  kpis?: {
-    efficiency?: number;
-    progress?: number;
-  };
+  progress?: number;
   createdAt?: string | Date;
 }

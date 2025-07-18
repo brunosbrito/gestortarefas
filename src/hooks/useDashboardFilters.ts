@@ -57,6 +57,7 @@ export const useDashboardFilters = () => {
     }));
   };
 
+  console.log(filteredActivities, 'Atividades filtrasasadas');
   return {
     filters,
     filteredActivities,
