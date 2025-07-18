@@ -62,6 +62,9 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   onClose,
   turno,
 }) => {
+  console.log('PontoLoteForm - obras recebidas:', obras);
+  console.log('PontoLoteForm - colaboradores:', colaboradores);
+  
   const [etapa, setEtapa] = useState<'presentes' | 'faltas'>('presentes');
   const [registros, setRegistros] = useState<ColaboradorRegistro[]>(
     colaboradores
@@ -331,7 +334,10 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             {etapa === 'presentes' && (
               <div className="relative">
                 <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                <Select value={obraGlobal} onValueChange={setObraGlobal}>
+                <Select value={obraGlobal} onValueChange={(value) => {
+                  console.log('Obra selecionada:', value);
+                  setObraGlobal(value);
+                }}>
                   <SelectTrigger className={`pl-10 ${obraObrigatoria && (!obraGlobal || obraGlobal === 'none') ? 'border-destructive' : ''}`}>
                     <SelectValue 
                       placeholder={
