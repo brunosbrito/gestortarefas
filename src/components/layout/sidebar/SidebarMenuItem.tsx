@@ -1,6 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import { MenuItem } from "./types";
 
 interface SidebarMenuItemProps {
@@ -8,53 +8,65 @@ interface SidebarMenuItemProps {
   isExpanded: boolean;
   isActive: boolean;
   onToggle: () => void;
+  isCollapsed?: boolean;
 }
 
-export const SidebarMenuItem = ({ 
-  item, 
-  isExpanded, 
-  isActive,
-  onToggle 
-}: SidebarMenuItemProps) => {
-  const hasSubItems = item.subItems && item.subItems.length > 0;
+export const SidebarMenuItem = ({ item, isExpanded, isActive, onToggle, isCollapsed = false }: SidebarMenuItemProps) => {
+  const location = useLocation();
+
+  if (item.subItems && item.subItems.length > 0) {
+    return (
+      <div className="space-y-1">
+        <button
+          onClick={onToggle}
+          className={`flex items-center w-full p-3 text-left hover:bg-construction-100 rounded-lg transition-colors group ${
+            isActive ? 'bg-[#FF7F0E] text-white' : 'text-construction-700'
+          } ${isCollapsed ? 'justify-center' : 'justify-between'}`}
+          title={isCollapsed ? item.label : undefined}
+        >
+          <div className="flex items-center">
+            <item.icon className={`${isCollapsed ? 'w-5 h-5' : 'w-5 h-5 mr-3'} flex-shrink-0`} />
+            {!isCollapsed && <span className="font-medium">{item.label}</span>}
+          </div>
+          {!isCollapsed && (
+            <ChevronDown 
+              className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+            />
+          )}
+        </button>
+        
+        {isExpanded && !isCollapsed && (
+          <div className="ml-8 space-y-1 animate-accordion-down">
+            {item.subItems.map((child) => (
+              <Link
+                key={child.path}
+                to={child.path}
+                className={`flex items-center p-2 text-sm hover:bg-construction-100 rounded-lg transition-colors ${
+                  location.pathname === child.path 
+                    ? 'bg-[#FF7F0E] text-white' 
+                    : 'text-construction-600'
+                }`}
+              >
+                <child.icon className="w-4 h-4 mr-2" />
+                {child.label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-1">
-      <Link
-        to={item.path || "#"}
-        onClick={(e) => {
-          if (hasSubItems) {
-            e.preventDefault();
-            onToggle();
-          }
-        }}
-        className={`flex items-center w-full space-x-3 px-4 py-3 rounded-lg text-construction-600 hover:bg-construction-100 ${
-          isActive ? "bg-primary text-white" : ""
-        }`}
-      >
-        <item.icon size={20} />
-        <span className="flex-1">{item.label}</span>
-        {hasSubItems && (isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
-      </Link>
-      
-      {isExpanded && hasSubItems && (
-        <div className="pl-4 space-y-1">
-          {item.subItems.map((subItem) => (
-            <Link
-              key={subItem.path}
-              to={subItem.path}
-              className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
-                location.pathname === subItem.path
-                  ? "bg-primary text-white"
-                  : "text-construction-600 hover:bg-construction-100"
-              }`}
-            >
-              <subItem.icon size={18} />
-              <span>{subItem.label}</span>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
+    <Link
+      to={item.path}
+      className={`flex items-center p-3 hover:bg-construction-100 rounded-lg transition-colors group ${
+        isActive ? 'bg-[#FF7F0E] text-white' : 'text-construction-700'
+      } ${isCollapsed ? 'justify-center' : ''}`}
+      title={isCollapsed ? item.label : undefined}
+    >
+      <item.icon className={`${isCollapsed ? 'w-5 h-5' : 'w-5 h-5 mr-3'} flex-shrink-0`} />
+      {!isCollapsed && <span className="font-medium">{item.label}</span>}
+    </Link>
   );
 };

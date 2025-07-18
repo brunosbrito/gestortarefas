@@ -6,9 +6,10 @@ import { User } from "@/interfaces/UserInterface";
 
 interface SidebarProps {
   user: User;
+  isCollapsed?: boolean;
 }
 
-export const Sidebar = ({ user }: SidebarProps) => {
+export const Sidebar = ({ user, isCollapsed = false }: SidebarProps) => {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -36,7 +37,7 @@ export const Sidebar = ({ user }: SidebarProps) => {
   });
 
   return (
-    <nav className="flex-1 p-4 space-y-2">
+    <nav className={`flex-1 space-y-2 ${isCollapsed ? 'p-2' : 'p-4'}`}>
       {filteredNavItems.map((item) => (
         <SidebarMenuItem
           key={item.label}
@@ -44,6 +45,7 @@ export const Sidebar = ({ user }: SidebarProps) => {
           isExpanded={expandedItems.includes(item.label)}
           isActive={location.pathname === item.path}
           onToggle={() => toggleExpand(item.label)}
+          isCollapsed={isCollapsed}
         />
       ))}
     </nav>

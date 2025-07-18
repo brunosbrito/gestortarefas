@@ -7,9 +7,10 @@ import { toast } from '../ui/use-toast';
 
 interface HeaderProps {
   user: User;
+  isCollapsed?: boolean;
 }
 
-export const Header = ({ user }: HeaderProps) => {
+export const Header = ({ user, isCollapsed = false }: HeaderProps) => {
   const navigate = useNavigate();
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -26,42 +27,45 @@ export const Header = ({ user }: HeaderProps) => {
 
   if (!user) {
     return (
-      <div className="p-4 border-b border-construction-200">
-        <h1 className="text-2xl font-bold text-primary">Gestor de Tarefas</h1>
+      <div className="bg-gradient-to-r from-[#FF7F0E] to-[#FFA500] p-4 text-white">
+        <div className="flex items-center justify-center">
+          <h1 className="text-xl font-bold">Sistema de Gestão</h1>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="p-4 border-b border-construction-200">
-        <h1 className="text-2xl font-bold text-primary">Gestor de Tarefas</h1>
-      </div>
-
-      <div className="p-4 border-b border-construction-200">
-        <div className="flex items-center space-x-3">
-          <Avatar>
-            <AvatarFallback className="bg-primary text-white">
-              <UserCircle2 className="w-6 h-6" />
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm font-medium text-gray-900">{user.username}</p>
-            <p className="text-xs text-gray-500">
-              {user.role === 'admin' ? 'Administrador' : ''}
-            </p>
+    <header className="bg-gradient-to-r from-[#FF7F0E] to-[#FFA500] p-4 text-white">
+      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+        {!isCollapsed && (
+          <>
+            <div>
+              <h1 className="text-xl font-bold">Sistema de Gestão</h1>
+              <p className="text-sm opacity-90">Controle de Atividades</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm">Olá, {user.username}</span>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                size="sm"
+                className="text-[#FF7F0E] border-white hover:bg-white/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+          </>
+        )}
+        {isCollapsed && (
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-bold">{user.username.charAt(0).toUpperCase()}</span>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sair
-          </Button>
-        </div>
+        )}
       </div>
-    </>
+    </header>
   );
 };
