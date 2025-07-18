@@ -1,3 +1,4 @@
+
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,6 +8,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Card,
   CardHeader,
@@ -27,6 +39,7 @@ import {
   Hash,
   FileText,
   Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaOSForm } from '@/components/obras/os/NovaOSForm';
@@ -52,6 +65,8 @@ const OrdensServico = () => {
   const [selectedOS, setSelectedOS] = useState<ServiceOrder | null>(null);
   const [visualizarDialogOpen, setVisualizarDialogOpen] = useState(false);
   const [editarDialogOpen, setEditarDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [osToDelete, setOsToDelete] = useState<ServiceOrder | null>(null);
   const [obra, setObra] = useState<Obra | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -82,22 +97,27 @@ const OrdensServico = () => {
   };
 
   const handleRemoveOS = async (os: ServiceOrder) => {
-    if (window.confirm(`Tem certeza que deseja remover a OS-${os.serviceOrderNumber.toString().padStart(3, '0')}?`)) {
-      try {
-        await deleteServiceOrder(os.id);
-        await getServiceOrders();
-        toast({
-          title: 'Ordem de Serviço removida',
-          description: 'A OS foi removida com sucesso.',
-        });
-      } catch (error) {
-        toast({
-          title: 'Erro ao remover OS',
-          description: 'Ocorreu um erro ao remover a ordem de serviço.',
-          variant: 'destructive',
-        });
-      }
+    try {
+      await deleteServiceOrder(os.id);
+      await getServiceOrders();
+      toast({
+        title: 'Ordem de Serviço removida',
+        description: 'A OS foi removida com sucesso.',
+      });
+      setDeleteDialogOpen(false);
+      setOsToDelete(null);
+    } catch (error) {
+      toast({
+        title: 'Erro ao remover OS',
+        description: 'Ocorreu um erro ao remover a ordem de serviço.',
+        variant: 'destructive',
+      });
     }
+  };
+
+  const openDeleteDialog = (os: ServiceOrder) => {
+    setOsToDelete(os);
+    setDeleteDialogOpen(true);
   };
 
   return (
@@ -176,10 +196,10 @@ const OrdensServico = () => {
                   </span>
                 </div>
               </CardContent>
-              <CardFooter className="flex gap-2">
+              <CardFooter className="flex flex-col gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 hover:bg-[#FF7F0E]/10"
+                  className="w-full hover:bg-[#FF7F0E]/10"
                   onClick={() =>
                     navigate(`/obras/${os.projectId.id}/os/${os.id}/atividades`)
                   }
@@ -187,33 +207,35 @@ const OrdensServico = () => {
                   <Activity className="w-4 h-4 mr-2" />
                   Atividades
                 </Button>
-                <Button
-                  variant="outline"
-                  className="hover:bg-[#FF7F0E]/10"
-                  onClick={() => {
-                    setSelectedOS(os);
-                    setVisualizarDialogOpen(true);
-                  }}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hover:bg-[#FF7F0E]/10"
-                  onClick={() => {
-                    setSelectedOS(os);
-                    setEditarDialogOpen(true);
-                  }}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => handleRemoveOS(os)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    className="flex-1 hover:bg-[#FF7F0E]/10"
+                    onClick={() => {
+                      setSelectedOS(os);
+                      setVisualizarDialogOpen(true);
+                    }}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 hover:bg-[#FF7F0E]/10"
+                    onClick={() => {
+                      setSelectedOS(os);
+                      setEditarDialogOpen(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => openDeleteDialog(os)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}
@@ -232,6 +254,37 @@ const OrdensServico = () => {
           onOpenChange={setEditarDialogOpen}
           onSuccess={getServiceOrders}
         />
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                Confirmar Exclusão
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja remover a{' '}
+                <strong>
+                  OS-{osToDelete?.serviceOrderNumber.toString().padStart(3, '0')}
+                </strong>
+                ?
+                <br />
+                Esta ação não pode ser desfeita e todos os dados relacionados serão perdidos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setOsToDelete(null)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => osToDelete && handleRemoveOS(osToDelete)}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Remover OS
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
