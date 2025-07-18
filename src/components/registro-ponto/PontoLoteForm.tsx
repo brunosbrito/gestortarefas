@@ -57,8 +57,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   const cargos = Array.from(new Set(colaboradores.map(c => c.role)));
 
   const colaboradoresFiltrados = registros.filter(col => {
-    const matchSetor = !filtroSetor || col.sector === filtroSetor;
-    const matchCargo = !filtroCargo || col.role === filtroCargo;
+    const matchSetor = !filtroSetor || filtroSetor === 'todos' || col.sector === filtroSetor;
+    const matchCargo = !filtroCargo || filtroCargo === 'todos' || col.role === filtroCargo;
     return matchSetor && matchCargo;
   });
 
@@ -196,7 +196,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             <SelectValue placeholder="Filtrar por setor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os setores</SelectItem>
+            <SelectItem value="todos">Todos os setores</SelectItem>
             {setores.map(setor => (
               <SelectItem key={setor} value={setor!}>{setor}</SelectItem>
             ))}
@@ -208,7 +208,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             <SelectValue placeholder="Filtrar por cargo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos os cargos</SelectItem>
+            <SelectItem value="todos">Todos os cargos</SelectItem>
             {cargos.map(cargo => (
               <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>
             ))}
