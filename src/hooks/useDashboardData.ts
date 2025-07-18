@@ -28,6 +28,8 @@ export const useDashboardData = () => {
   const [totalServiceOrder, setTotalServiceOrder] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [allActivities, setAllActivities] = useState<any[]>([]);
+  const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [allServiceOrders, setAllServiceOrders] = useState<any[]>([]);
   const [activitiesByStatus, setActivitiesByStatus] = useState<ActivityStatusCounts>({
     planejadas: 0,
     emExecucao: 0,
@@ -39,21 +41,23 @@ export const useDashboardData = () => {
   const loadAllData = async () => {
     setIsLoading(true);
     try {
-      const activities = await getAllActivities();
-      setAllActivities(activities);
+      const [activities, projects, serviceOrders] = await Promise.all([
+        getAllActivities(),
+        ObrasService.getAllObras(),
+        getAllServiceOrders()
+      ]);
       
-      // Contar total de atividades
+      setAllActivities(activities);
+      setAllProjects(projects);
+      setAllServiceOrders(serviceOrders);
+      
+      // Contar totais iniciais
       setTotalActivities(activities.length);
+      setTotalProjetos(projects.length);
+      setTotalServiceOrder(serviceOrders.length);
       
       // Contar atividades por status
       countActivitiesByStatus(activities);
-      
-      // Carregar outros dados
-      const projects = await ObrasService.getAllObras();
-      setTotalProjetos(projects.length);
-      
-      const serviceOrders = await getAllServiceOrders();
-      setTotalServiceOrder(serviceOrders.length);
       
       // Carregar estatísticas para os gráficos
       const dadosMacroTask = await dataMacroTask();
@@ -69,6 +73,7 @@ export const useDashboardData = () => {
       setCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
       setOriginalCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
     } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
       // Resetar os dados em caso de erro
       resetDashboardData();
     } finally {
@@ -101,6 +106,8 @@ export const useDashboardData = () => {
   // Função para resetar dados do dashboard quando não há dados
   const resetDashboardData = () => {
     setTotalActivities(0);
+    setTotalProjetos(0);
+    setTotalServiceOrder(0);
     setActivitiesByStatus({ planejadas: 0, emExecucao: 0, concluidas: 0, paralizadas: 0 });
     setMacroTaskStatistic([]);
     setProcessStatistic([]);
@@ -122,6 +129,8 @@ export const useDashboardData = () => {
 
     // Filtrar atividades por período e outros filtros
     let filteredActivities = [...allActivities];
+    let filteredProjects = [...allProjects];
+    let filteredServiceOrders = [...allServiceOrders];
     
     // Aplicar filtro por obra se necessário
     if (obraId !== null && obraId !== undefined) {
@@ -133,6 +142,12 @@ export const useDashboardData = () => {
           : activity.project.id;
           
         return activityProjectId === obraId;
+      });
+
+      // Filtrar projetos também
+      filteredProjects = filteredProjects.filter(project => {
+        const projectId = typeof project.id === 'string' ? Number(project.id) : project.id;
+        return projectId === obraId;
       });
     }
     
@@ -147,6 +162,25 @@ export const useDashboardData = () => {
           
         return activityServiceOrderId === serviceOrderId;
       });
+
+      // Filtrar ordens de serviço também
+      filteredServiceOrders = filteredServiceOrders.filter(so => {
+        const soId = typeof so.id === 'string' ? Number(so.id) : so.id;
+        return soId === serviceOrderId;
+      });
+    }
+
+    // Aplicar filtro de período se necessário
+    if (period && period !== 'todos') {
+      if (period === 'personalizado' && (startDate || endDate)) {
+        filteredActivities = filterDataByPeriod(filteredActivities, period, startDate, endDate);
+        filteredProjects = filterDataByPeriod(filteredProjects, period, startDate, endDate);
+        filteredServiceOrders = filterDataByPeriod(filteredServiceOrders, period, startDate, endDate);
+      } else {
+        filteredActivities = filterDataByPeriod(filteredActivities, period);
+        filteredProjects = filterDataByPeriod(filteredProjects, period);
+        filteredServiceOrders = filterDataByPeriod(filteredServiceOrders, period);
+      }
     }
     
     // Se não encontrou atividades após aplicar os filtros, zera tudo
@@ -158,8 +192,10 @@ export const useDashboardData = () => {
     // Atualizar contagem de atividades por status
     countActivitiesByStatus(filteredActivities);
     
-    // Atualizar total de atividades
+    // Atualizar totais baseados nos dados filtrados
     setTotalActivities(filteredActivities.length);
+    setTotalProjetos(filteredProjects.length);
+    setTotalServiceOrder(filteredServiceOrders.length);
     
     // Filtrar estatísticas de tarefas macro
     if (originalMacroTaskStatistic.length > 0) {

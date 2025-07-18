@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { FilteredActivity } from '@/interfaces/DashboardFilters';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Activity } from 'lucide-react';
+import { Activity, Clock, Users, TrendingUp } from 'lucide-react';
 
 interface FilteredActivitiesTableProps {
   activities: FilteredActivity[];
@@ -23,6 +23,24 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
     } else {
       return 'bg-gray-100 text-gray-800 border-gray-300';
     }
+  };
+
+  const formatTime = (hours?: number) => {
+    if (!hours) return '-';
+    return `${hours}h`;
+  };
+
+  const formatTeam = (team?: string[]) => {
+    if (!team || team.length === 0) return '-';
+    if (team.length === 1) return team[0];
+    return `${team[0]} +${team.length - 1}`;
+  };
+
+  const getEfficiencyColor = (efficiency?: number) => {
+    if (!efficiency) return 'text-gray-500';
+    if (efficiency >= 90) return 'text-green-600';
+    if (efficiency >= 70) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   if (loading) {
@@ -47,36 +65,81 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
       </div>
       
       {activities && activities.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Tarefa Macro</TableHead>
-              <TableHead>Processo</TableHead>
-              <TableHead>OS</TableHead>
-              <TableHead>Fábrica/Obra</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {activities.map((activity) => (
-              <TableRow key={activity.id}>
-                <TableCell>{activity.description}</TableCell>
-                <TableCell>{activity.macroTask}</TableCell>
-                <TableCell>{activity.process}</TableCell>
-                <TableCell>
-                  {activity.serviceOrder?.serviceOrderNumber || 'N/A'}
-                </TableCell>
-                <TableCell>{activity.projectName}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getStatusColor(activity.status)}>
-                    {activity.status}
-                  </Badge>
-                </TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Tarefa Macro</TableHead>
+                <TableHead>Processo</TableHead>
+                <TableHead>OS</TableHead>
+                <TableHead>Fábrica/Obra</TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Tempo Total
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Previsto
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Users className="w-4 h-4" />
+                    Equipe
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <TrendingUp className="w-4 h-4" />
+                    Eficiência
+                  </div>
+                </TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {activities.map((activity) => (
+                <TableRow key={activity.id}>
+                  <TableCell className="max-w-xs truncate" title={activity.description}>
+                    {activity.description}
+                  </TableCell>
+                  <TableCell>{activity.macroTask}</TableCell>
+                  <TableCell>{activity.process}</TableCell>
+                  <TableCell>
+                    {activity.serviceOrder?.serviceOrderNumber || 'N/A'}
+                  </TableCell>
+                  <TableCell>{activity.projectName}</TableCell>
+                  <TableCell className="text-center">
+                    {formatTime(activity.totalTime)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {formatTime(activity.estimatedTime)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1" title={activity.team?.join(', ')}>
+                      <Users className="w-3 h-3" />
+                      {formatTeam(activity.team)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className={getEfficiencyColor(activity.kpis?.efficiency)}>
+                      {activity.kpis?.efficiency ? `${activity.kpis.efficiency}%` : '-'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={getStatusColor(activity.status)}>
+                      {activity.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : (
         <div className="flex justify-center items-center h-40 bg-gray-50 rounded-md">
           <p className="text-gray-500">Nenhuma atividade encontrada com os filtros selecionados</p>

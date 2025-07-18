@@ -10,6 +10,7 @@ export const useDashboardFilters = () => {
     processId: null,
     serviceOrderId: null,
     obraId: null,
+    collaboratorId: null,
     period: 'todos',
     startDate: null,
     endDate: null
@@ -27,6 +28,7 @@ export const useDashboardFilters = () => {
           filters.processId,
           filters.obraId,
           filters.serviceOrderId,
+          filters.collaboratorId,
           filters.period as PeriodFilterType,
           filters.startDate,
           filters.endDate
@@ -34,6 +36,7 @@ export const useDashboardFilters = () => {
 
         setFilteredActivities(activities);
       } catch (error) {
+        console.error('Erro ao carregar atividades filtradas:', error);
         setFilteredActivities([]);
       } finally {
         setIsFilteredDataLoading(false);

@@ -8,6 +8,7 @@ export interface DashboardFilters {
   serviceOrderId?: number | null;
   period?: PeriodFilterType | string | null;
   obraId?: number | null;
+  collaboratorId?: number | null;
   startDate?: Date | null;
   endDate?: Date | null;
 }
@@ -33,5 +34,12 @@ export interface FilteredActivity {
   serviceOrder: ServiceOrder;
   serviceOrderId?: number;
   projectName: string;
+  totalTime?: number;
+  estimatedTime?: number;
+  team?: string[];
+  kpis?: {
+    efficiency?: number;
+    progress?: number;
+  };
   createdAt?: string | Date;
 }

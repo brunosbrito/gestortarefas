@@ -4,8 +4,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { TarefaMacro } from '@/interfaces/TarefaMacroInterface';
 import { Processo } from '@/interfaces/ProcessoInterface';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import TarefaMacroService from '@/services/TarefaMacroService';
 import ProcessService from '@/services/ProcessService';
+import ColaboradorService from '@/services/ColaboradorService';
 import { Filter } from 'lucide-react';
 import { DashboardFilters } from '@/interfaces/DashboardFilters';
 
@@ -17,19 +19,22 @@ interface TaskProcessFilterProps {
 export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProcessFilterProps) => {
   const [macroTasks, setMacroTasks] = useState<TarefaMacro[]>([]);
   const [processes, setProcesses] = useState<Processo[]>([]);
+  const [collaborators, setCollaborators] = useState<Colaborador[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [macroTaskResponse, processResponse] = await Promise.all([
+        const [macroTaskResponse, processResponse, collaboratorsData] = await Promise.all([
           TarefaMacroService.getAll(),
-          ProcessService.getAll()
+          ProcessService.getAll(),
+          ColaboradorService.getAllColaboradores()
         ]);
 
         setMacroTasks(macroTaskResponse.data);
         setProcesses(processResponse.data);
+        setCollaborators(collaboratorsData);
       } catch (error) {
         console.error("Erro ao buscar dados para filtros:", error);
       } finally {
@@ -50,6 +55,11 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
     onFilterChange({ processId });
   };
 
+  const handleCollaboratorChange = (value: string) => {
+    const collaboratorId = value === 'todos' ? null : parseInt(value);
+    onFilterChange({ collaboratorId });
+  };
+
   return (
     <Card className="p-4 mb-4">
       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -58,7 +68,7 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
           <h3 className="font-medium">Filtrar por:</h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
           <div>
             <label htmlFor="macroTask" className="block text-sm mb-1">Tarefa Macro</label>
             <Select 
@@ -79,6 +89,7 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
               </SelectContent>
             </Select>
           </div>
+          
           <div>
             <label htmlFor="process" className="block text-sm mb-1">Processo</label>
             <Select 
@@ -94,6 +105,27 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
                 {processes.map(process => (
                   <SelectItem key={process.id} value={process.id.toString()}>
                     {process.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label htmlFor="collaborator" className="block text-sm mb-1">Colaborador</label>
+            <Select 
+              value={currentFilters.collaboratorId?.toString() || 'todos'} 
+              onValueChange={handleCollaboratorChange}
+              disabled={isLoading}
+            >
+              <SelectTrigger id="collaborator" className="w-full">
+                <SelectValue placeholder="Todos Colaboradores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Colaboradores</SelectItem>
+                {collaborators.map(collaborator => (
+                  <SelectItem key={collaborator.id} value={collaborator.id.toString()}>
+                    {collaborator.name}
                   </SelectItem>
                 ))}
               </SelectContent>
