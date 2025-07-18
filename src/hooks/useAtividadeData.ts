@@ -96,7 +96,11 @@ export const useAtividadeData = () => {
       // Filtro por data
       if (filtros.dataInicio || filtros.dataFim) {
         atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
-          const dataAtividade = new Date(atividade.startDate);
+          // Para atividades planejadas usa createdAt, para iniciadas usa startDate se disponível
+          const dataAtividade = atividade.startDate 
+            ? new Date(atividade.startDate)
+            : new Date(atividade.createdAt);
+          
           const dataInicio = filtros.dataInicio ? new Date(filtros.dataInicio) : null;
           const dataFim = filtros.dataFim ? new Date(filtros.dataFim) : null;
 
