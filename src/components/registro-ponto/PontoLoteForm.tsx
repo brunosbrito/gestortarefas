@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Search, Building, ArrowLeft, ArrowRight, Save, Users } from 'lucide-react';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
@@ -58,19 +59,22 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   );
 
   const [filtroSetor, setFiltroSetor] = useState<string>('');
+  const [filtroNome, setFiltroNome] = useState<string>('');
+  const [obraGlobal, setObraGlobal] = useState<string>('');
 
   // Obter setores únicos dos colaboradores
   const setores = Array.from(new Set(colaboradores.map(c => c.sector).filter(Boolean)));
 
   const colaboradoresFiltrados = registros.filter(col => {
     const matchSetor = !filtroSetor || filtroSetor === 'todos' || col.sector === filtroSetor;
-    return matchSetor;
+    const matchNome = !filtroNome || col.name.toLowerCase().includes(filtroNome.toLowerCase());
+    return matchSetor && matchNome;
   });
 
   const proximaEtapa = () => {
     if (etapa === 'presentes') {
       setEtapa('faltas');
-      toast({ title: 'Agora selecione os que faltaram' });
+      toast({ title: 'Agora selecione os colaboradores que faltaram' });
     }
   };
 
@@ -81,9 +85,19 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   };
 
   const updateRegistro = (id: number, field: keyof ColaboradorRegistro, value: any) => {
-    setRegistros(prev => prev.map(reg => 
-      reg.id === id ? { ...reg, [field]: value } : reg
-    ));
+    setRegistros(prev => prev.map(reg => {
+      if (reg.id === id) {
+        const updated = { ...reg, [field]: value };
+        
+        // Se está marcando como presente e há obra global selecionada, atribuir automaticamente
+        if (field === 'presente' && value === true && obraGlobal && !reg.project) {
+          updated.project = obraGlobal;
+        }
+        
+        return updated;
+      }
+      return reg;
+    }));
   };
 
   const handleSubmit = () => {
@@ -112,58 +126,129 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
     naoRegistrados: registros.filter(r => !r.presente && !r.faltou).length
   };
 
+  const obraGlobalNome = obras.find(o => o.name === obraGlobal)?.name || '';
+
   return (
     <div className="space-y-6">
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">
-          Registro em Lote - Turno {turno} 
-          {etapa === 'presentes' ? ' - Marcar Presentes' : ' - Selecionar Faltas'}
+        <h2 className="text-2xl font-bold text-[#003366]">
+          Registro em Lote - Turno {turno}
         </h2>
         <div className="flex gap-2">
-          <Badge variant="secondary">{resumo.total} Total</Badge>
-          <Badge variant="default">{resumo.presentes} Presentes</Badge>
-          <Badge variant="destructive">{resumo.faltas} Faltas</Badge>
+          <Badge variant="secondary" className="bg-[#E0E0E0]">
+            <Users className="w-3 h-3 mr-1" />
+            {resumo.total} Total
+          </Badge>
+          <Badge variant="default" className="bg-[#FFA500] text-white">
+            {resumo.presentes} Presentes
+          </Badge>
+          <Badge variant="destructive">
+            {resumo.faltas} Faltas
+          </Badge>
           {resumo.naoRegistrados > 0 && (
-            <Badge variant="outline">{resumo.naoRegistrados} Não Registrados</Badge>
+            <Badge variant="outline">
+              {resumo.naoRegistrados} Não Registrados
+            </Badge>
           )}
         </div>
       </div>
 
-      <div className="flex gap-4 mb-4">
-        <Select value={filtroSetor} onValueChange={setFiltroSetor}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrar por setor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os setores</SelectItem>
-            {setores.map(setor => (
-              <SelectItem key={setor} value={setor!}>{getSetorLabel(setor)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Etapa atual */}
+      <div className="text-center">
+        <Badge variant={etapa === 'presentes' ? 'default' : 'outline'} className="text-sm">
+          {etapa === 'presentes' ? 'Etapa 1: Marcar Presentes' : 'Etapa 2: Selecionar Faltas'}
+        </Badge>
       </div>
 
+      {/* Filtros */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Filtro por nome */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome..."
+                value={filtroNome}
+                onChange={(e) => setFiltroNome(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Seleção de obra global (apenas na etapa de presentes) */}
+            {etapa === 'presentes' && (
+              <div className="relative">
+                <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
+                <Select value={obraGlobal} onValueChange={setObraGlobal}>
+                  <SelectTrigger className="pl-10">
+                    <SelectValue placeholder="Selecionar obra para novos presentes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhuma obra selecionada</SelectItem>
+                    {obras.map(obra => (
+                      <SelectItem key={obra.id} value={obra.name}>
+                        {obra.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Filtro por setor */}
+            <Select value={filtroSetor} onValueChange={setFiltroSetor}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar por setor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os setores</SelectItem>
+                {setores.map(setor => (
+                  <SelectItem key={setor} value={setor!}>
+                    {getSetorLabel(setor)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Indicador de obra global selecionada */}
+          {etapa === 'presentes' && obraGlobal && (
+            <div className="mt-3 p-2 bg-[#FFA500]/10 border border-[#FFA500]/20 rounded-md">
+              <p className="text-sm text-[#003366]">
+                <Building className="inline w-4 h-4 mr-1" />
+                Obra selecionada: <strong>{obraGlobalNome}</strong>
+                <span className="ml-2 text-muted-foreground">
+                  (será atribuída automaticamente aos novos presentes)
+                </span>
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Tabela */}
       <Card>
         <CardContent className="p-0">
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full">
-              <thead className="bg-muted sticky top-0">
+              <thead className="bg-[#E0E0E0] sticky top-0">
                 <tr>
                   {etapa === 'presentes' ? (
                     <>
-                      <th className="p-2">Presente</th>
-                      <th className="p-2">Nome</th>
-                      <th className="p-2">Cargo</th>
-                      <th className="p-2">Setor</th>
-                      <th className="p-2">Obra</th>
+                      <th className="p-3 text-left font-medium">Presente</th>
+                      <th className="p-3 text-left font-medium">Nome</th>
+                      <th className="p-3 text-left font-medium">Cargo</th>
+                      <th className="p-3 text-left font-medium">Setor</th>
+                      <th className="p-3 text-left font-medium">Obra</th>
                     </>
                   ) : (
                     <>
-                      <th className="p-2">Faltou</th>
-                      <th className="p-2">Nome</th>
-                      <th className="p-2">Cargo</th>
-                      <th className="p-2">Setor</th>
-                      <th className="p-2">Motivo da Falta</th>
+                      <th className="p-3 text-left font-medium">Faltou</th>
+                      <th className="p-3 text-left font-medium">Nome</th>
+                      <th className="p-3 text-left font-medium">Cargo</th>
+                      <th className="p-3 text-left font-medium">Setor</th>
+                      <th className="p-3 text-left font-medium">Motivo da Falta</th>
                     </>
                   )}
                 </tr>
@@ -171,25 +256,37 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
               <tbody>
                 {etapa === 'presentes' ? (
                   colaboradoresFiltrados.map(registro => (
-                    <tr key={registro.id} className={!registro.presente ? 'bg-muted/50' : ''}>
-                      <td className="p-2 text-center">
+                    <tr 
+                      key={registro.id} 
+                      className={`hover:bg-muted/30 ${
+                        registro.presente 
+                          ? 'bg-[#FFA500]/10 border-l-4 border-[#FFA500]' 
+                          : 'bg-background'
+                      }`}
+                    >
+                      <td className="p-3 text-center">
                         <Checkbox
                           checked={registro.presente}
                           onCheckedChange={(checked) => 
                             updateRegistro(registro.id, 'presente', checked)
                           }
+                          className="data-[state=checked]:bg-[#FFA500] data-[state=checked]:border-[#FFA500]"
                         />
                       </td>
-                      <td className="p-2 font-medium">{registro.name}</td>
-                      <td className="p-2">{registro.role}</td>
-                      <td className="p-2">{getSetorLabel(registro.sector)}</td>
-                      <td className="p-2">
+                      <td className="p-3 font-medium">{registro.name}</td>
+                      <td className="p-3">{registro.role}</td>
+                      <td className="p-3">
+                        <Badge variant="outline" className="text-xs">
+                          {getSetorLabel(registro.sector)}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
                         {registro.presente && (
                           <Select 
                             value={registro.project || ''} 
                             onValueChange={(value) => updateRegistro(registro.id, 'project', value)}
                           >
-                            <SelectTrigger className="h-8">
+                            <SelectTrigger className="h-8 text-xs">
                               <SelectValue placeholder="Selecionar obra" />
                             </SelectTrigger>
                             <SelectContent>
@@ -206,8 +303,15 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                   ))
                 ) : (
                   colaboradoresFiltrados.map(registro => (
-                    <tr key={registro.id} className={registro.faltou ? 'bg-destructive/10' : 'bg-muted/50'}>
-                      <td className="p-2 text-center">
+                    <tr 
+                      key={registro.id} 
+                      className={`hover:bg-muted/30 ${
+                        registro.faltou 
+                          ? 'bg-destructive/10 border-l-4 border-destructive' 
+                          : 'bg-muted/20'
+                      }`}
+                    >
+                      <td className="p-3 text-center">
                         <Checkbox
                           checked={registro.faltou}
                           onCheckedChange={(checked) => 
@@ -215,15 +319,19 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                           }
                         />
                       </td>
-                      <td className="p-2 font-medium">{registro.name}</td>
-                      <td className="p-2">{registro.role}</td>
-                      <td className="p-2">{getSetorLabel(registro.sector)}</td>
-                      <td className="p-2">
+                      <td className="p-3 font-medium">{registro.name}</td>
+                      <td className="p-3">{registro.role}</td>
+                      <td className="p-3">
+                        <Badge variant="outline" className="text-xs">
+                          {getSetorLabel(registro.sector)}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
                         {registro.faltou && (
                           <Input
                             value={registro.reason || ''}
                             onChange={(e) => updateRegistro(registro.id, 'reason', e.target.value)}
-                            className="h-8"
+                            className="h-8 text-xs"
                             placeholder="Motivo da falta"
                           />
                         )}
@@ -237,10 +345,12 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         </CardContent>
       </Card>
 
-      <div className="flex justify-between gap-2">
+      {/* Controles de navegação */}
+      <div className="flex justify-between items-center gap-2">
         <div>
           {etapa === 'faltas' && (
-            <Button variant="outline" onClick={voltarEtapa}>
+            <Button variant="outline" onClick={voltarEtapa} className="border-[#FFA500] text-[#FFA500] hover:bg-[#FFA500]/10">
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar aos Presentes
             </Button>
           )}
@@ -250,11 +360,13 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             Cancelar
           </Button>
           {etapa === 'presentes' ? (
-            <Button onClick={proximaEtapa}>
+            <Button onClick={proximaEtapa} className="bg-[#FFA500] hover:bg-[#FFA500]/90">
               Próximo: Selecionar Faltas
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit}>
+            <Button onClick={handleSubmit} className="bg-[#FFA500] hover:bg-[#FFA500]/90">
+              <Save className="w-4 h-4 mr-2" />
               Salvar Registros
             </Button>
           )}
