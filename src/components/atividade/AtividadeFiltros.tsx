@@ -126,51 +126,79 @@ export const AtividadeFiltrosComponent = ({
             </Select>
           </div>
 
-          {/* Filtro Período */}
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium">Período</label>
+          {/* Filtro Data Início */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Início</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !filtros.dataInicio && !filtros.dataFim && "text-muted-foreground"
+                    !filtros.dataInicio && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filtros.dataInicio && filtros.dataFim ? (
-                    <>
-                      {format(new Date(filtros.dataInicio), "dd/MM/yyyy", { locale: ptBR })} -{" "}
-                      {format(new Date(filtros.dataFim), "dd/MM/yyyy", { locale: ptBR })}
-                    </>
-                  ) : filtros.dataInicio ? (
+                  {filtros.dataInicio ? (
                     format(new Date(filtros.dataInicio), "dd/MM/yyyy", { locale: ptBR })
                   ) : (
-                    <span>Selecione o período</span>
+                    <span>Selecionar data início</span>
                   )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={filtros.dataInicio ? new Date(filtros.dataInicio) : new Date()}
-                  selected={{
-                    from: filtros.dataInicio ? new Date(filtros.dataInicio) : undefined,
-                    to: filtros.dataFim ? new Date(filtros.dataFim) : undefined,
-                  }}
-                  onSelect={(range: DateRange | undefined) => {
-                    if (range?.from) {
-                      onFiltroChange({ 
-                        dataInicio: format(range.from, 'yyyy-MM-dd'),
-                        dataFim: range.to ? format(range.to, 'yyyy-MM-dd') : null 
-                      });
+                  mode="single"
+                  selected={filtros.dataInicio ? new Date(filtros.dataInicio) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      onFiltroChange({ dataInicio: format(date, 'yyyy-MM-dd') });
                     } else {
-                      onFiltroChange({ dataInicio: null, dataFim: null });
+                      onFiltroChange({ dataInicio: null });
                     }
                   }}
-                  numberOfMonths={2}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Filtro Data Fim */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Fim</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !filtros.dataFim && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filtros.dataFim ? (
+                    format(new Date(filtros.dataFim), "dd/MM/yyyy", { locale: ptBR })
+                  ) : (
+                    <span>Selecionar data fim</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={filtros.dataFim ? new Date(filtros.dataFim) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      onFiltroChange({ dataFim: format(date, 'yyyy-MM-dd') });
+                    } else {
+                      onFiltroChange({ dataFim: null });
+                    }
+                  }}
+                  disabled={(date) => 
+                    filtros.dataInicio ? date < new Date(filtros.dataInicio) : false
+                  }
+                  initialFocus
                   className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
