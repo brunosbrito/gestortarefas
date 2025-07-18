@@ -25,8 +25,8 @@ import { useToast } from '@/hooks/use-toast';
 const statusListas = [
   'Planejadas',
   'Em execução',
-  'Concluídas',
   'Paralizadas',
+  'Concluídas',
 ] as const;
 
 const Atividades = () => {
