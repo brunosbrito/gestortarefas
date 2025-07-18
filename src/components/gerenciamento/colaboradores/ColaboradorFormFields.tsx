@@ -1,4 +1,3 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
@@ -11,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 export const colaboradorFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   role: z.string().min(1, "Cargo é obrigatório"),
+  sector: z.string().optional(),
 });
 
 export type ColaboradorFormValues = z.infer<typeof colaboradorFormSchema>;
@@ -93,6 +93,20 @@ export const ColaboradorFormFields = ({ form }: ColaboradorFormFieldsProps) => {
                   </SelectContent>
                 </Select>
               )}
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="sector"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Setor</FormLabel>
+            <FormControl>
+              <Input placeholder="Digite o setor" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

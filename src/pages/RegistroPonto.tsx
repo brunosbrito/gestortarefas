@@ -9,10 +9,11 @@ import {
   DialogTrigger,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { PontoForm } from '@/components/registro-ponto/PontoForm';
 import { PontoTable } from '@/components/registro-ponto/PontoTable';
+import { PontoLoteForm } from '@/components/registro-ponto/PontoLoteForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ObrasService from '@/services/ObrasService';
 import ColaboradorService from '@/services/ColaboradorService';
@@ -22,18 +23,22 @@ import {
   deleteEffectives,
   getEffectivesByShiftAndDate,
   updateEffective,
+  createBatchEffective,
 } from '@/services/EffectiveService';
 import { Funcionario } from '@/interfaces/FuncionarioInterface';
+import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
+import { Colaborador } from '@/interfaces/ColaboradorInterface';
 
 const RegistroPonto = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLoteDialogOpen, setIsLoteDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] =
     useState<Funcionario | null>(null);
   const [currentTurno, setCurrentTurno] = useState('1');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [obras, setObras] = useState<Obra[]>([]);
-  const [colaboradores, setColaboradores] = useState([]);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
@@ -98,6 +103,18 @@ const RegistroPonto = () => {
     }
   };
 
+  const onLoteSubmit = async (registros: CreateEffectiveDto[]) => {
+    try {
+      await createBatchEffective(registros);
+      setIsLoteDialogOpen(false);
+      toast.success(`${registros.length} registros criados com sucesso!`);
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao criar registros em lote:', error);
+      toast.error('Erro ao criar registros em lote. Tente novamente.');
+    }
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -115,29 +132,55 @@ const RegistroPonto = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-construction-800">
             Registro de Ponto
           </h1>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Registro
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Novo Registro de Ponto</DialogTitle>
-                <DialogDescription>
-                  Preencha os campos abaixo para adicionar um novo registro de
-                  ponto.
-                </DialogDescription>
-              </DialogHeader>
-              <PontoForm
-                onSubmit={onSubmit}
-                obras={obras}
-                colaboradores={colaboradores}
-                onClose={() => setIsDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Dialog open={isLoteDialogOpen} onOpenChange={setIsLoteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <Users className="w-4 h-4 mr-2" />
+                  Registro em Lote
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Registro em Lote - Turno {currentTurno}</DialogTitle>
+                  <DialogDescription>
+                    Registre o ponto de múltiplos colaboradores de uma vez.
+                  </DialogDescription>
+                </DialogHeader>
+                <PontoLoteForm
+                  colaboradores={colaboradores}
+                  obras={obras}
+                  onSubmit={onLoteSubmit}
+                  onClose={() => setIsLoteDialogOpen(false)}
+                  turno={currentTurno}
+                />
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Registro
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Novo Registro de Ponto</DialogTitle>
+                  <DialogDescription>
+                    Preencha os campos abaixo para adicionar um novo registro de
+                    ponto.
+                  </DialogDescription>
+                </DialogHeader>
+                <PontoForm
+                  onSubmit={onSubmit}
+                  obras={obras}
+                  colaboradores={colaboradores}
+                  onClose={() => setIsDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

@@ -82,12 +82,31 @@ export const PontoTable = ({
     }
   };
 
+  const resumo = {
+    total: funcionariosFiltrados.length,
+    presentes: funcionariosFiltrados.filter(f => f.status === 'PRESENTE').length,
+    faltas: funcionariosFiltrados.filter(f => f.status === 'FALTA').length
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-construction-800">
-          {getTurnoLabel(turno)}
-        </h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-semibold text-construction-800">
+            {getTurnoLabel(turno)}
+          </h2>
+          <div className="flex gap-2">
+            <Badge variant="secondary">
+              Total: {resumo.total}
+            </Badge>
+            <Badge variant="default">
+              Presentes: {resumo.presentes}
+            </Badge>
+            <Badge variant="destructive">
+              Faltas: {resumo.faltas}
+            </Badge>
+          </div>
+        </div>
         <Button onClick={handleEnviarTurno} variant="secondary" size="sm">
           <Send className="w-4 h-4 mr-2" />
           <span className="hidden sm:inline">Enviar Registros do Turno</span>

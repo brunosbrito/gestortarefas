@@ -267,7 +267,7 @@ export const FilteredActivitiesTable = ({
                         </Tooltip>
                       </TableCell>
                       <TableCell className="text-center text-sm">
-                        {formatTime(activity.totalTime.toFixed(2))}
+                        {formatTime(parseFloat(activity.totalTime.toFixed(2)))}
                       </TableCell>
                       <TableCell className="text-center text-sm">
                         {activity.estimatedTime}
