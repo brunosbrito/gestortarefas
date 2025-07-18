@@ -166,13 +166,13 @@ class PdfService {
               text = worker.name;
               break;
             case 1:
-              text = worker.role || 'Não informado';
+              text = 'Não informado';
               break;
             case 2:
-              text = worker.entryExit || '07:30 - 17:30';
+              text = '07:30 - 17:30';
               break;
             case 3:
-              text = worker.interval || '01:00';
+              text = '01:00';
               break;
             case 4:
               text = worker.hours || '09:00';
@@ -256,7 +256,7 @@ class PdfService {
       doc.setFontSize(9);
       rnc.materials.forEach((material) => {
         checkPageBreak(5);
-        doc.text(`• ${material.name}`, margin, yPos);
+        doc.text(`• ${material.material}`, margin, yPos);
         yPos += 5;
       });
 
