@@ -33,12 +33,12 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   onClose,
   turno
 }) => {
-  const mapearCargoParaTipo = (cargo: string): 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA' => {
-    const cargoLower = cargo.toLowerCase();
-    if (cargoLower.includes('engenheiro') || cargoLower.includes('engenharia')) {
+  const mapearCargoParaTipo = (cargo: string): 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' => {
+    const cargoUpper = cargo.toUpperCase();
+    if (cargoUpper.includes('ENGENHARIA') || cargoUpper.includes('ENGENHEIRO')) {
       return 'ENGENHARIA';
     }
-    if (cargoLower.includes('administrativo') || cargoLower.includes('admin')) {
+    if (cargoUpper.includes('ADMINISTRATIVO') || cargoUpper.includes('ADMIN')) {
       return 'ADMINISTRATIVO';
     }
     return 'PRODUCAO';
@@ -95,8 +95,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
     const registrosValidos = registros.map(reg => ({
       username: reg.name,
       shift: parseInt(turno),
-      role: reg.role as 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO',
-      typeRegister: reg.typeRegister,
+      role: mapearCargoParaTipo(reg.role) as 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO',
+      typeRegister: (reg.presente ? mapearCargoParaTipo(reg.role) : 'FALTA') as 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA',
       project: reg.project,
       sector: reg.sector,
       reason: reg.reason,
@@ -192,7 +192,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                       </td>
                       <td className="p-2 font-medium">{registro.name}</td>
                       <td className="p-2">{registro.role}</td>
-                      <td className="p-2">{registro.typeRegister}</td>
+                      <td className="p-2">{registro.presente ? mapearCargoParaTipo(registro.role) : 'FALTA'}</td>
                       <td className="p-2">
                         {registro.presente && (
                           <Select 

@@ -107,7 +107,6 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Cargo</TableHead>
-              <TableHead>Setor</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -116,7 +115,6 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
               <TableRow key={colaborador.id}>
                 <TableCell>{colaborador.name}</TableCell>
                 <TableCell>{colaborador.role}</TableCell>
-                <TableCell>{colaborador.sector || '-'}</TableCell>
                 <TableCell className="flex space-x-2">
                   <Button
                     variant="outline"
