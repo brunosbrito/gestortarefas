@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Users,
@@ -12,6 +11,7 @@ import {
   AlertOctagon,
   Briefcase,
   Calendar,
+  ClipboardList,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -22,9 +22,9 @@ export const navItems: MenuItem[] = [
     path: '/dashboard',
   },
   {
-    icon: Calendar,
-    label: 'Programação',
-    path: '/programacao',
+    icon: ClipboardList,
+    label: 'Atividade',
+    path: '/atividade',
   },
   {
     icon: Users,

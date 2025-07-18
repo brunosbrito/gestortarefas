@@ -15,7 +15,7 @@ import ValorPorCargo from './pages/gerenciamento/valor-por-cargo';
 import Fabricas from './pages/Fabricas';
 import Mineradoras from './pages/Mineradoras';
 import NaoConformidades from './pages/nao-conformidades';
-import Programacao from './pages/Programacao';
+import Atividade from './pages/Atividade';
 
 function App() {
   return (
@@ -23,7 +23,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/programacao" element={<Programacao />} />
+        <Route path="/atividade" element={<Atividade />} />
+        <Route path="/programacao" element={<Atividade />} />
         <Route path="/users" element={<Users />} />
         <Route path="/obras" element={<Obras />} />
         <Route path="/fabricas" element={<Fabricas />} />

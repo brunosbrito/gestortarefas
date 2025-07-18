@@ -1,0 +1,158 @@
+
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Filter, X } from 'lucide-react';
+import { AtividadeFiltros } from '@/hooks/useAtividadeData';
+
+interface AtividadeFiltrosProps {
+  filtros: AtividadeFiltros;
+  onFiltroChange: (filtros: Partial<AtividadeFiltros>) => void;
+  onLimparFiltros: () => void;
+  tarefasMacro?: any[];
+  processos?: any[];
+  colaboradores?: any[];
+  isLoading?: boolean;
+}
+
+export const AtividadeFiltrosComponent = ({
+  filtros,
+  onFiltroChange,
+  onLimparFiltros,
+  tarefasMacro = [],
+  processos = [],
+  colaboradores = [],
+  isLoading = false
+}: AtividadeFiltrosProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Filter className="w-5 h-5 text-[#FF7F0E]" />
+          Filtros
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Filtro Tarefa Macro */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Tarefa Macro</label>
+            <Select
+              value={filtros.tarefaMacroId || ''}
+              onValueChange={(value) => onFiltroChange({ tarefaMacroId: value || null })}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as tarefas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as tarefas</SelectItem>
+                {tarefasMacro.map((tarefa) => (
+                  <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
+                    {tarefa.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro Processo */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Processo</label>
+            <Select
+              value={filtros.processoId || ''}
+              onValueChange={(value) => onFiltroChange({ processoId: value || null })}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos os processos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os processos</SelectItem>
+                {processos.map((processo) => (
+                  <SelectItem key={processo.id} value={processo.id.toString()}>
+                    {processo.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro Colaborador */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Colaborador</label>
+            <Select
+              value={filtros.colaboradorId || ''}
+              onValueChange={(value) => onFiltroChange({ colaboradorId: value || null })}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos os colaboradores" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os colaboradores</SelectItem>
+                {colaboradores.map((colaborador) => (
+                  <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                    {colaborador.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro Status */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Status</label>
+            <Select
+              value={filtros.status || ''}
+              onValueChange={(value) => onFiltroChange({ status: value || null })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="Planejadas">Planejadas</SelectItem>
+                <SelectItem value="Em execução">Em execução</SelectItem>
+                <SelectItem value="Concluídas">Concluídas</SelectItem>
+                <SelectItem value="Paralizadas">Paralizadas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro Data Início */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Início</label>
+            <Input
+              type="date"
+              value={filtros.dataInicio || ''}
+              onChange={(e) => onFiltroChange({ dataInicio: e.target.value || null })}
+            />
+          </div>
+
+          {/* Filtro Data Fim */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Data Fim</label>
+            <Input
+              type="date"
+              value={filtros.dataFim || ''}
+              onChange={(e) => onFiltroChange({ dataFim: e.target.value || null })}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            onClick={onLimparFiltros}
+            className="flex items-center gap-2"
+          >
+            <X className="w-4 h-4" />
+            Limpar Filtros
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
