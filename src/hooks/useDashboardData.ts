@@ -20,9 +20,6 @@ export const useDashboardData = () => {
   const [macroTaskStatistic, setMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
   const [processStatistic, setProcessStatistic] = useState<ProcessStatistic[]>([]);
   const [collaboratorStatistic, setCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
-  const [originalMacroTaskStatistic, setOriginalMacroTaskStatistic] = useState<MacroTaskStatistic[]>([]);
-  const [originalProcessStatistic, setOriginalProcessStatistic] = useState<ProcessStatistic[]>([]);
-  const [originalCollaboratorStatistic, setOriginalCollaboratorStatistic] = useState<CollaboratorStatistic[]>([]);
   const [totalActivities, setTotalActivities] = useState<number>(0);
   const [totalProjetos, setTotalProjetos] = useState<number>(0);
   const [totalServiceOrder, setTotalServiceOrder] = useState<number>(0);
@@ -59,25 +56,34 @@ export const useDashboardData = () => {
       // Contar atividades por status
       countActivitiesByStatus(activities);
       
-      // Carregar estatísticas para os gráficos
-      const dadosMacroTask = await dataMacroTask();
-      setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
-      setOriginalMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
-      
-      const dadosProcesso = await dataProcess();
-      setProcessStatistic(dadosProcesso as ProcessStatistic[]);
-      setOriginalProcessStatistic(dadosProcesso as ProcessStatistic[]);
-      
-      // Carregar dados dos colaboradores
-      const dadosColaboradores = await dataCollaborators();
-      setCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
-      setOriginalCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
+      // Carregar estatísticas para os gráficos sem filtros inicialmente
+      await loadStatistics();
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
       // Resetar os dados em caso de erro
       resetDashboardData();
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Função para carregar estatísticas com filtros
+  const loadStatistics = async (obraId?: number | null, serviceOrderId?: number | null) => {
+    try {
+      const [dadosMacroTask, dadosProcesso, dadosColaboradores] = await Promise.all([
+        dataMacroTask(obraId, serviceOrderId),
+        dataProcess(obraId, serviceOrderId),
+        dataCollaborators(obraId, serviceOrderId)
+      ]);
+      
+      setMacroTaskStatistic(dadosMacroTask as MacroTaskStatistic[]);
+      setProcessStatistic(dadosProcesso as ProcessStatistic[]);
+      setCollaboratorStatistic(dadosColaboradores as CollaboratorStatistic[]);
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+      setMacroTaskStatistic([]);
+      setProcessStatistic([]);
+      setCollaboratorStatistic([]);
     }
   };
 
@@ -197,77 +203,8 @@ export const useDashboardData = () => {
     setTotalProjetos(filteredProjects.length);
     setTotalServiceOrder(filteredServiceOrders.length);
     
-    // Filtrar estatísticas de tarefas macro
-    if (originalMacroTaskStatistic.length > 0) {
-      // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
-        setMacroTaskStatistic([...originalMacroTaskStatistic]);
-      } else {
-        // Caso contrário, aplicar filtro de período
-        let filteredMacroTask = [...originalMacroTaskStatistic];
-        
-        if (period && period !== 'todos') {
-          if (period === 'personalizado' && (startDate || endDate)) {
-            // Filtro com datas personalizadas
-            filteredMacroTask = filterDataByPeriod(filteredMacroTask, period, startDate, endDate);
-          } else {
-            // Filtro com períodos predefinidos
-            filteredMacroTask = filterDataByPeriod(filteredMacroTask, period);
-          }
-        }
-        
-        // Se não há dados após filtragem, define como array vazio
-        setMacroTaskStatistic(filteredMacroTask.length > 0 ? filteredMacroTask : []);
-      }
-    }
-    
-    // Filtrar estatísticas de processos
-    if (originalProcessStatistic.length > 0) {
-      // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
-        setProcessStatistic([...originalProcessStatistic]);
-      } else {
-        // Caso contrário, aplicar filtro de período
-        let filteredProcess = [...originalProcessStatistic];
-        
-        if (period && period !== 'todos') {
-          if (period === 'personalizado' && (startDate || endDate)) {
-            // Filtro com datas personalizadas
-            filteredProcess = filterDataByPeriod(filteredProcess, period, startDate, endDate);
-          } else {
-            // Filtro com períodos predefinidos
-            filteredProcess = filterDataByPeriod(filteredProcess, period);
-          }
-        }
-        
-        // Se não há dados após filtragem, define como array vazio
-        setProcessStatistic(filteredProcess.length > 0 ? filteredProcess : []);
-      }
-    }
-    
-    // Filtrar estatísticas de colaboradores
-    if (originalCollaboratorStatistic.length > 0) {
-      // Se for "todos" e não houver outros filtros, restaurar os dados originais
-      if (period === 'todos' && !obraId && !serviceOrderId && !startDate && !endDate) {
-        setCollaboratorStatistic([...originalCollaboratorStatistic]);
-      } else {
-        // Caso contrário, aplicar filtro de período
-        let filteredCollaborators = [...originalCollaboratorStatistic];
-        
-        if (period && period !== 'todos') {
-          if (period === 'personalizado' && (startDate || endDate)) {
-            // Filtro com datas personalizadas
-            filteredCollaborators = filterDataByPeriod(filteredCollaborators, period, startDate, endDate);
-          } else {
-            // Filtro com períodos predefinidos
-            filteredCollaborators = filterDataByPeriod(filteredCollaborators, period);
-          }
-        }
-        
-        // Se não há dados após filtragem, define como array vazio
-        setCollaboratorStatistic(filteredCollaborators.length > 0 ? filteredCollaborators : []);
-      }
-    }
+    // Recarregar estatísticas com os filtros aplicados
+    loadStatistics(obraId, serviceOrderId);
   };
 
   return {

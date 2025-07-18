@@ -18,10 +18,35 @@ const parseTimeToHours = (timeString: string | null | undefined): number => {
   return hours + minutes;
 };
 
-export const dataMacroTask = async () => {
+export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: number | null) => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
-    const activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+    let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+
+    // Aplicar filtros antes da agregação
+    if (obraId !== null && obraId !== undefined) {
+      activities = activities.filter(activity => {
+        if (!activity.project) return false;
+        
+        const activityProjectId = typeof activity.project.id === 'string' 
+          ? Number(activity.project.id) 
+          : activity.project.id;
+          
+        return activityProjectId === obraId;
+      });
+    }
+
+    if (serviceOrderId !== null && serviceOrderId !== undefined) {
+      activities = activities.filter(activity => {
+        if (!activity.serviceOrder) return false;
+        
+        const activityServiceOrderId = typeof activity.serviceOrder.id === 'string' 
+          ? Number(activity.serviceOrder.id) 
+          : activity.serviceOrder.id;
+          
+        return activityServiceOrderId === serviceOrderId;
+      });
+    }
 
     // Agrupar por macroTaskId
     const groupedData = activities.reduce((acc: any, activity: any) => {
@@ -72,10 +97,35 @@ export const dataMacroTask = async () => {
   }
 };
 
-export const dataProcess = async () => {
+export const dataProcess = async (obraId?: number | null, serviceOrderId?: number | null) => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
-    const activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+    let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+
+    // Aplicar filtros antes da agregação
+    if (obraId !== null && obraId !== undefined) {
+      activities = activities.filter(activity => {
+        if (!activity.project) return false;
+        
+        const activityProjectId = typeof activity.project.id === 'string' 
+          ? Number(activity.project.id) 
+          : activity.project.id;
+          
+        return activityProjectId === obraId;
+      });
+    }
+
+    if (serviceOrderId !== null && serviceOrderId !== undefined) {
+      activities = activities.filter(activity => {
+        if (!activity.serviceOrder) return false;
+        
+        const activityServiceOrderId = typeof activity.serviceOrder.id === 'string' 
+          ? Number(activity.serviceOrder.id) 
+          : activity.serviceOrder.id;
+          
+        return activityServiceOrderId === serviceOrderId;
+      });
+    }
 
     // Agrupar por processId
     const groupedData = activities.reduce((acc: any, activity: any) => {
@@ -126,10 +176,35 @@ export const dataProcess = async () => {
   }
 };
 
-export const dataCollaborators = async () => {
+export const dataCollaborators = async (obraId?: number | null, serviceOrderId?: number | null) => {
   try {
     const response = await axios.get(`${API_URL}/activities`);
-    const activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+    let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+
+    // Aplicar filtros antes da agregação
+    if (obraId !== null && obraId !== undefined) {
+      activities = activities.filter(activity => {
+        if (!activity.project) return false;
+        
+        const activityProjectId = typeof activity.project.id === 'string' 
+          ? Number(activity.project.id) 
+          : activity.project.id;
+          
+        return activityProjectId === obraId;
+      });
+    }
+
+    if (serviceOrderId !== null && serviceOrderId !== undefined) {
+      activities = activities.filter(activity => {
+        if (!activity.serviceOrder) return false;
+        
+        const activityServiceOrderId = typeof activity.serviceOrder.id === 'string' 
+          ? Number(activity.serviceOrder.id) 
+          : activity.serviceOrder.id;
+          
+        return activityServiceOrderId === serviceOrderId;
+      });
+    }
 
     // Agrupar por colaboradorId
     const groupedData = activities.reduce((acc: any, activity: any) => {
