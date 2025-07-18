@@ -11,7 +11,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const user = useUser();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const token = getStoredToken();
@@ -36,33 +35,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static h-full bg-white border-r border-construction-200 z-50 transition-all duration-300 transform ${
+        className={`fixed md:static w-[280px] h-full bg-white border-r border-construction-200 z-50 transition-transform duration-300 transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 ${
-          isDesktopSidebarCollapsed ? "md:w-16" : "w-[280px]"
-        }`}
+        } md:translate-x-0`}
       >
-        <div className="h-full flex flex-col">
-          <Header user={user} isCollapsed={isDesktopSidebarCollapsed} />
-          <Sidebar user={user} isCollapsed={isDesktopSidebarCollapsed} />
-        </div>
+        <Header user={user} />
+        <Sidebar user={user} />
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto w-full relative">
-        {/* Desktop toggle button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsDesktopSidebarCollapsed(!isDesktopSidebarCollapsed)}
-          className="hidden md:flex fixed top-4 z-10 bg-white border border-construction-200 shadow-sm hover:bg-construction-50 transition-all duration-300"
-          style={{
-            left: isDesktopSidebarCollapsed ? '20px' : '296px',
-          }}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-
+      <main className="flex-1 overflow-auto w-full">
         {/* Mobile header */}
         <div className="md:hidden flex items-center p-4 bg-white border-b border-construction-200">
           <Button
@@ -79,7 +61,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <h1 className="ml-4 text-lg font-semibold">Sistema de Gestão</h1>
         </div>
 
-        <div className={`container mx-auto p-4 md:p-6 transition-all duration-300`}>{children}</div>
+        <div className="container mx-auto p-4 md:p-6">{children}</div>
       </main>
     </div>
   );
