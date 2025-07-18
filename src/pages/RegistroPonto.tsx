@@ -23,14 +23,12 @@ import {
   deleteEffectives,
   getEffectivesByShiftAndDate,
   updateEffective,
-  createBatchEffective,
 } from '@/services/EffectiveService';
 import { Funcionario } from '@/interfaces/FuncionarioInterface';
 import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 
 const RegistroPonto = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLoteDialogOpen, setIsLoteDialogOpen] = useState(false);
   const [selectedFuncionario, setSelectedFuncionario] =
@@ -74,20 +72,6 @@ const RegistroPonto = () => {
     setIsEditDialogOpen(true);
   };
 
-  const onSubmit = async (data: any) => {
-    try {
-      if (data.typeRegister !== 'FALTA') {
-        data.role = data.typeRegister;
-      }
-      await createEffective(data);
-      setIsDialogOpen(false);
-      toast.success('Registro adicionado com sucesso');
-      fetchData();
-    } catch (error) {
-      console.error('Erro ao criar registro:', error);
-      toast.error('Erro ao criar registro. Tente novamente.');
-    }
-  };
 
   const onEditSubmit = async (data: any) => {
     if (!selectedFuncionario) return;
@@ -103,9 +87,9 @@ const RegistroPonto = () => {
     }
   };
 
-  const onLoteSubmit = async (registros: CreateEffectiveDto[]) => {
+  const onLoteSubmit = async (registros: any) => {
     try {
-      await createBatchEffective(registros);
+      await createEffective(registros);
       setIsLoteDialogOpen(false);
       toast.success(`${registros.length} registros criados com sucesso!`);
       fetchData();
@@ -157,29 +141,6 @@ const RegistroPonto = () => {
               </DialogContent>
             </Dialog>
             
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Registro
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Novo Registro de Ponto</DialogTitle>
-                  <DialogDescription>
-                    Preencha os campos abaixo para adicionar um novo registro de
-                    ponto.
-                  </DialogDescription>
-                </DialogHeader>
-                <PontoForm
-                  onSubmit={onSubmit}
-                  obras={obras}
-                  colaboradores={colaboradores}
-                  onClose={() => setIsDialogOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
 

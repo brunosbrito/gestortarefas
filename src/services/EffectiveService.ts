@@ -47,15 +47,6 @@ export const deleteEffectives = async (id: number) => {
   }
 };
 
-export const createBatchEffective = async (data: CreateEffectiveDto[]) => {
-  try {
-    const response = await axios.post(`${URL}/batch`, data);
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao criar registros em lote:', error);
-    throw error;
-  }
-};
 
 export const enviarEfetivo = async (registro: any) => {
   try {
