@@ -251,6 +251,12 @@ export const AtividadesTable = () => {
                           Início
                         </div>
                       </TableHead>
+                      <TableHead className="w-28 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          Criação
+                        </div>
+                      </TableHead>
                       <TableHead className="w-[150px]">Observações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -340,6 +346,9 @@ export const AtividadesTable = () => {
                         </TableCell>
                         <TableCell className="text-center text-sm">
                           {formatDate(atividade.startDate)}
+                        </TableCell>
+                        <TableCell className="text-center text-sm">
+                          {formatDate(atividade.createdAt)}
                         </TableCell>
                         <TableCell className="max-w-[150px]">
                           <Tooltip>
