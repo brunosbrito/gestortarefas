@@ -27,6 +27,17 @@ export const getAllActivities = async () => {
   }
 };
 
+// Função para obter apenas atividades programadas
+export const getScheduledActivities = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/activities?status=Planejadas`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching scheduled activities', error);
+    throw error;
+  }
+};
+
 export const getActivitiesByServiceOrderId = async (serviceOrderId: string | undefined) => {
   if (!serviceOrderId) {
     throw new Error('Service Order ID is required');

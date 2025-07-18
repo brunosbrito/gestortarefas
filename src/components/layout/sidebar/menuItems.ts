@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Users,
@@ -9,7 +10,8 @@ import {
   Factory,
   Mountain,
   AlertOctagon,
-  Briefcase ,
+  Briefcase,
+  Calendar,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -18,6 +20,11 @@ export const navItems: MenuItem[] = [
     icon: LayoutDashboard,
     label: 'Dashboard',
     path: '/dashboard',
+  },
+  {
+    icon: Calendar,
+    label: 'Programação',
+    path: '/programacao',
   },
   {
     icon: Users,
