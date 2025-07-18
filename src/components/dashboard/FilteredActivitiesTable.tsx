@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FilteredActivity } from '@/interfaces/DashboardFilters';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ export const FilteredActivitiesTable = ({ activities, loading }: FilteredActivit
   const currentItems = activities.slice(startIndex, endIndex);
 
   // Reset página quando atividades mudam
-  useState(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [activities]);
 
