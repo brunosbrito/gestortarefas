@@ -39,15 +39,15 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Tarefa Macro</label>
             <Select
-              value={filtros.tarefaMacroId || ''}
-              onValueChange={(value) => onFiltroChange({ tarefaMacroId: value || null })}
+              value={filtros.tarefaMacroId || 'all'}
+              onValueChange={(value) => onFiltroChange({ tarefaMacroId: value === 'all' ? null : value })}
               disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as tarefas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as tarefas</SelectItem>
+                <SelectItem value="all">Todas as tarefas</SelectItem>
                 {tarefasMacro.map((tarefa) => (
                   <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
                     {tarefa.name}
@@ -61,15 +61,15 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Processo</label>
             <Select
-              value={filtros.processoId || ''}
-              onValueChange={(value) => onFiltroChange({ processoId: value || null })}
+              value={filtros.processoId || 'all'}
+              onValueChange={(value) => onFiltroChange({ processoId: value === 'all' ? null : value })}
               disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os processos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os processos</SelectItem>
+                <SelectItem value="all">Todos os processos</SelectItem>
                 {processos.map((processo) => (
                   <SelectItem key={processo.id} value={processo.id.toString()}>
                     {processo.name}
@@ -83,15 +83,15 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Colaborador</label>
             <Select
-              value={filtros.colaboradorId || ''}
-              onValueChange={(value) => onFiltroChange({ colaboradorId: value || null })}
+              value={filtros.colaboradorId || 'all'}
+              onValueChange={(value) => onFiltroChange({ colaboradorId: value === 'all' ? null : value })}
               disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os colaboradores" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os colaboradores</SelectItem>
+                <SelectItem value="all">Todos os colaboradores</SelectItem>
                 {colaboradores.map((colaborador) => (
                   <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
                     {colaborador.name}
@@ -105,14 +105,14 @@ export const AtividadeFiltrosComponent = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Status</label>
             <Select
-              value={filtros.status || ''}
-              onValueChange={(value) => onFiltroChange({ status: value || null })}
+              value={filtros.status || 'all'}
+              onValueChange={(value) => onFiltroChange({ status: value === 'all' ? null : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="Planejadas">Planejadas</SelectItem>
                 <SelectItem value="Em execução">Em execução</SelectItem>
                 <SelectItem value="Concluídas">Concluídas</SelectItem>
