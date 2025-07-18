@@ -23,7 +23,8 @@ export const NovoColaboradorForm = ({
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
       name: "",
-      role: ""
+      role: "",
+      sector: undefined
     }
   });
 
@@ -31,7 +32,8 @@ export const NovoColaboradorForm = ({
     try {
       await ColaboradorService.createColaborador({
         name: data.name,
-        role: data.role
+        role: data.role,
+        sector: data.sector
       });
 
       toast({
