@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,6 +19,7 @@ import {
   ArrowRight,
   Save,
   Users,
+  AlertTriangle,
 } from 'lucide-react';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
@@ -73,6 +75,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   const [filtroSetor, setFiltroSetor] = useState<string>('');
   const [filtroNome, setFiltroNome] = useState<string>('');
   const [obraGlobal, setObraGlobal] = useState<string>('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Obter setores únicos dos colaboradores
   const setores = Array.from(
@@ -84,20 +87,70 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
       !filtroSetor || filtroSetor === 'todos' || col.sector === filtroSetor;
     const matchNome =
       !filtroNome || col.name.toLowerCase().includes(filtroNome.toLowerCase());
+    
+    // Na etapa de faltas, excluir colaboradores que estão presentes
+    if (etapa === 'faltas') {
+      return matchSetor && matchNome && !col.presente;
+    }
+    
     return matchSetor && matchNome;
   });
 
-  const proximaEtapa = () => {
-    if (etapa === 'presentes') {
-      setEtapa('faltas');
-      toast({ title: 'Agora selecione os colaboradores que faltaram' });
+  const validateProximaEtapa = () => {
+    const errors: string[] = [];
+    
+    // Validar se há obra selecionada
+    if (!obraGlobal || obraGlobal === 'none') {
+      errors.push('Selecione uma obra antes de prosseguir para as faltas');
     }
+
+    // Validar se há pelo menos um colaborador presente
+    const presentes = registros.filter(r => r.presente);
+    if (presentes.length === 0) {
+      errors.push('Marque pelo menos um colaborador como presente');
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
+  const validateSubmit = () => {
+    const errors: string[] = [];
+    
+    // Validar motivos das faltas
+    const faltasSemMotivo = registros.filter(r => r.faltou && (!r.reason || r.reason.trim() === ''));
+    if (faltasSemMotivo.length > 0) {
+      errors.push(`${faltasSemMotivo.length} colaborador(es) marcado(s) como falta sem motivo preenchido`);
+    }
+
+    // Validar se há pelo menos um registro (presente ou falta)
+    const registrosValidos = registros.filter(r => r.presente || r.faltou);
+    if (registrosValidos.length === 0) {
+      errors.push('É necessário registrar pelo menos um colaborador');
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
+  const proximaEtapa = () => {
+    if (!validateProximaEtapa()) {
+      toast({ 
+        title: 'Validação', 
+        description: 'Corrija os erros antes de prosseguir',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setEtapa('faltas');
+    setValidationErrors([]);
+    toast({ title: 'Agora selecione os colaboradores que faltaram' });
   };
 
   const voltarEtapa = () => {
-    if (etapa === 'faltas') {
-      setEtapa('presentes');
-    }
+    setEtapa('presentes');
+    setValidationErrors([]);
   };
 
   const updateRegistro = (
@@ -111,8 +164,13 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
           const updated = { ...reg, [field]: value };
 
           // Se está marcando como presente e há obra global selecionada, atribuir automaticamente
-          if (!updated.presente ) {
-            updated.project = 'vazio';
+          if (field === 'presente' && value && obraGlobal && obraGlobal !== 'none') {
+            updated.project = obraGlobal;
+          }
+
+          // Se está desmarcando como presente, limpar projeto
+          if (field === 'presente' && !value) {
+            updated.project = undefined;
           }
 
           return updated;
@@ -123,6 +181,15 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   };
 
   const handleSubmit = () => {
+    if (!validateSubmit()) {
+      toast({ 
+        title: 'Validação', 
+        description: 'Corrija os erros antes de finalizar',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const registrosValidos = registros
       .filter((reg) => reg.presente || reg.faltou)
       .map((reg) => ({
@@ -194,6 +261,25 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         </Badge>
       </div>
 
+      {/* Mensagens de validação */}
+      {validationErrors.length > 0 && (
+        <Card className="border-destructive bg-destructive/10">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium text-destructive">Erros de validação:</p>
+                <ul className="text-sm text-destructive space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index}>• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filtros */}
       <Card>
         <CardContent className="p-4">
@@ -214,8 +300,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
               <div className="relative">
                 <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
                 <Select value={obraGlobal} onValueChange={setObraGlobal}>
-                  <SelectTrigger className="pl-10">
-                    <SelectValue placeholder="Selecionar obra para novos presentes" />
+                  <SelectTrigger className={`pl-10 ${!obraGlobal || obraGlobal === 'none' ? 'border-destructive' : ''}`}>
+                    <SelectValue placeholder="Selecionar obra (obrigatório)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">
@@ -248,7 +334,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
           </div>
 
           {/* Indicador de obra global selecionada */}
-          {etapa === 'presentes' && obraGlobal && (
+          {etapa === 'presentes' && obraGlobal && obraGlobal !== 'none' && (
             <div className="mt-3 p-2 bg-[#FFA500]/10 border border-[#FFA500]/20 rounded-md">
               <p className="text-sm text-[#003366]">
                 <Building className="inline w-4 h-4 mr-1" />
@@ -256,6 +342,16 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                 <span className="ml-2 text-muted-foreground">
                   (será atribuída automaticamente aos novos presentes)
                 </span>
+              </p>
+            </div>
+          )}
+
+          {/* Aviso sobre colaboradores excluídos na etapa de faltas */}
+          {etapa === 'faltas' && (
+            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-700">
+                <Users className="inline w-4 h-4 mr-1" />
+                Colaboradores marcados como presentes não aparecem nesta lista.
               </p>
             </div>
           )}
@@ -284,7 +380,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                       <th className="p-3 text-left font-medium">Cargo</th>
                       <th className="p-3 text-left font-medium">Setor</th>
                       <th className="p-3 text-left font-medium">
-                        Motivo da Falta
+                        Motivo da Falta *
                       </th>
                     </>
                   )}
@@ -319,23 +415,17 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                         </td>
                         <td className="p-3">
                           {registro.presente && (
-                            <Select
-                              value={registro.project || ''}
-                              onValueChange={(value) =>
-                                updateRegistro(registro.id, 'project', value)
-                              }
-                            >
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder="Selecionar obra" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {obras.map((obra) => (
-                                  <SelectItem key={obra.id} value={obra.name}>
-                                    {obra.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="text-sm">
+                              {registro.project ? (
+                                <Badge variant="secondary" className="bg-[#FFA500]/20 text-[#003366]">
+                                  {registro.project}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  Aguardando obra...
+                                </span>
+                              )}
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -375,8 +465,12 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                                   e.target.value
                                 )
                               }
-                              className="h-8 text-xs"
-                              placeholder="Motivo da falta"
+                              className={`h-8 text-xs ${
+                                registro.faltou && (!registro.reason || registro.reason.trim() === '')
+                                  ? 'border-destructive'
+                                  : ''
+                              }`}
+                              placeholder="Motivo obrigatório"
                             />
                           )}
                         </td>
@@ -410,6 +504,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             <Button
               onClick={proximaEtapa}
               className="bg-[#FFA500] hover:bg-[#FFA500]/90"
+              disabled={validationErrors.length > 0}
             >
               Próximo: Selecionar Faltas
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -418,6 +513,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             <Button
               onClick={handleSubmit}
               className="bg-[#FFA500] hover:bg-[#FFA500]/90"
+              disabled={validationErrors.length > 0}
             >
               <Save className="w-4 h-4 mr-2" />
               Salvar Registros

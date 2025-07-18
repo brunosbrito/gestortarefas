@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Plus, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { PontoForm } from '@/components/registro-ponto/PontoForm';
 import { PontoTable } from '@/components/registro-ponto/PontoTable';
@@ -72,7 +73,6 @@ const RegistroPonto = () => {
     setIsEditDialogOpen(true);
   };
 
-
   const onEditSubmit = async (data: any) => {
     if (!selectedFuncionario) return;
     try {
@@ -119,14 +119,14 @@ const RegistroPonto = () => {
           <div className="flex gap-2">
             <Dialog open={isLoteDialogOpen} onOpenChange={setIsLoteDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full sm:w-auto">
+                <Button className="bg-[#FFA500] hover:bg-[#FFA500]/90 w-full sm:w-auto">
                   <Users className="w-4 h-4 mr-2" />
-                  Registro em Lote
+                  Adicionar Registro
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Registro em Lote - Turno {currentTurno}</DialogTitle>
+                  <DialogTitle>Adicionar Registro - Turno {currentTurno}</DialogTitle>
                   <DialogDescription>
                     Registre o ponto de múltiplos colaboradores de uma vez.
                   </DialogDescription>
@@ -140,7 +140,6 @@ const RegistroPonto = () => {
                 />
               </DialogContent>
             </Dialog>
-            
           </div>
         </div>
 
