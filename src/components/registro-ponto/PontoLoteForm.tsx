@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,11 +21,23 @@ interface PontoLoteFormProps {
 
 interface ColaboradorRegistro extends Colaborador {
   presente: boolean;
-  typeRegister: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA';
+  faltou: boolean;
   project?: string;
-  sector?: string;
   reason?: string;
 }
+
+const getSetorLabel = (sector: string) => {
+  switch (sector) {
+    case 'PRODUCAO':
+      return 'Produção';
+    case 'ADMINISTRATIVO':
+      return 'Administrativo';
+    case 'ENGENHARIA':
+      return 'Engenharia';
+    default:
+      return sector;
+  }
+};
 
 export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   colaboradores,
@@ -33,49 +46,31 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   onClose,
   turno
 }) => {
-  const mapearCargoParaTipo = (cargo: string): 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' => {
-    const cargoUpper = cargo.toUpperCase();
-    if (cargoUpper.includes('ENGENHARIA') || cargoUpper.includes('ENGENHEIRO')) {
-      return 'ENGENHARIA';
-    }
-    if (cargoUpper.includes('ADMINISTRATIVO') || cargoUpper.includes('ADMIN')) {
-      return 'ADMINISTRATIVO';
-    }
-    return 'PRODUCAO';
-  };
-
   const [etapa, setEtapa] = useState<'presentes' | 'faltas'>('presentes');
   const [registros, setRegistros] = useState<ColaboradorRegistro[]>(
     colaboradores
-      .sort((a, b) => a.name.localeCompare(b.name)) // Ordem alfabética
+      .sort((a, b) => a.name.localeCompare(b.name))
       .map(col => ({
         ...col,
-        presente: false, // Desmarcado por padrão
-        typeRegister: mapearCargoParaTipo(col.role),
-        sector: col.sector
+        presente: false,
+        faltou: false
       }))
   );
 
   const [filtroSetor, setFiltroSetor] = useState<string>('');
-  const [filtroCargo, setFiltroCargo] = useState<string>('');
 
+  // Obter setores únicos dos colaboradores
   const setores = Array.from(new Set(colaboradores.map(c => c.sector).filter(Boolean)));
-  const cargos = Array.from(new Set(colaboradores.map(c => c.role)));
 
   const colaboradoresFiltrados = registros.filter(col => {
     const matchSetor = !filtroSetor || filtroSetor === 'todos' || col.sector === filtroSetor;
-    const matchCargo = !filtroCargo || filtroCargo === 'todos' || col.role === filtroCargo;
-    return matchSetor && matchCargo;
+    return matchSetor;
   });
 
   const proximaEtapa = () => {
     if (etapa === 'presentes') {
-      // Marca como falta os que não foram selecionados como presentes
-      setRegistros(prev => prev.map(reg => 
-        reg.presente ? reg : { ...reg, typeRegister: 'FALTA' }
-      ));
       setEtapa('faltas');
-      toast({ title: 'Agora registre os que faltaram' });
+      toast({ title: 'Agora selecione os que faltaram' });
     }
   };
 
@@ -92,16 +87,18 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   };
 
   const handleSubmit = () => {
-    const registrosValidos = registros.map(reg => ({
-      username: reg.name,
-      shift: parseInt(turno),
-      role: mapearCargoParaTipo(reg.role) as 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO',
-      typeRegister: (reg.presente ? mapearCargoParaTipo(reg.role) : 'FALTA') as 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA',
-      project: reg.project,
-      sector: reg.sector,
-      reason: reg.reason,
-      status: reg.presente ? 'PRESENTE' as const : 'FALTA' as const
-    }));
+    const registrosValidos = registros
+      .filter(reg => reg.presente || reg.faltou)
+      .map(reg => ({
+        username: reg.name,
+        shift: parseInt(turno),
+        role: reg.sector as 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO',
+        typeRegister: (reg.presente ? reg.sector : 'FALTA') as 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA' | 'FALTA',
+        project: reg.project,
+        sector: reg.sector,
+        reason: reg.reason,
+        status: reg.presente ? 'PRESENTE' as const : 'FALTA' as const
+      }));
 
     onSubmit(registrosValidos);
     onClose();
@@ -111,7 +108,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   const resumo = {
     total: registros.length,
     presentes: registros.filter(r => r.presente).length,
-    faltas: registros.filter(r => !r.presente).length
+    faltas: registros.filter(r => r.faltou).length,
+    naoRegistrados: registros.filter(r => !r.presente && !r.faltou).length
   };
 
   return (
@@ -119,15 +117,17 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">
           Registro em Lote - Turno {turno} 
-          {etapa === 'presentes' ? ' - Marcar Presentes' : ' - Registrar Faltas'}
+          {etapa === 'presentes' ? ' - Marcar Presentes' : ' - Selecionar Faltas'}
         </h2>
         <div className="flex gap-2">
           <Badge variant="secondary">{resumo.total} Total</Badge>
           <Badge variant="default">{resumo.presentes} Presentes</Badge>
           <Badge variant="destructive">{resumo.faltas} Faltas</Badge>
+          {resumo.naoRegistrados > 0 && (
+            <Badge variant="outline">{resumo.naoRegistrados} Não Registrados</Badge>
+          )}
         </div>
       </div>
-
 
       <div className="flex gap-4 mb-4">
         <Select value={filtroSetor} onValueChange={setFiltroSetor}>
@@ -137,19 +137,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
           <SelectContent>
             <SelectItem value="todos">Todos os setores</SelectItem>
             {setores.map(setor => (
-              <SelectItem key={setor} value={setor!}>{setor}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={filtroCargo} onValueChange={setFiltroCargo}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filtrar por cargo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os cargos</SelectItem>
-            {cargos.map(cargo => (
-              <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>
+              <SelectItem key={setor} value={setor!}>{getSetorLabel(setor)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -166,13 +154,15 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                       <th className="p-2">Presente</th>
                       <th className="p-2">Nome</th>
                       <th className="p-2">Cargo</th>
-                      <th className="p-2">Tipo</th>
+                      <th className="p-2">Setor</th>
                       <th className="p-2">Obra</th>
                     </>
                   ) : (
                     <>
+                      <th className="p-2">Faltou</th>
                       <th className="p-2">Nome</th>
                       <th className="p-2">Cargo</th>
+                      <th className="p-2">Setor</th>
                       <th className="p-2">Motivo da Falta</th>
                     </>
                   )}
@@ -192,7 +182,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                       </td>
                       <td className="p-2 font-medium">{registro.name}</td>
                       <td className="p-2">{registro.role}</td>
-                      <td className="p-2">{registro.presente ? mapearCargoParaTipo(registro.role) : 'FALTA'}</td>
+                      <td className="p-2">{getSetorLabel(registro.sector)}</td>
                       <td className="p-2">
                         {registro.presente && (
                           <Select 
@@ -215,17 +205,28 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                     </tr>
                   ))
                 ) : (
-                  colaboradoresFiltrados.filter(r => !r.presente).map(registro => (
-                    <tr key={registro.id} className="bg-destructive/10">
+                  colaboradoresFiltrados.map(registro => (
+                    <tr key={registro.id} className={registro.faltou ? 'bg-destructive/10' : 'bg-muted/50'}>
+                      <td className="p-2 text-center">
+                        <Checkbox
+                          checked={registro.faltou}
+                          onCheckedChange={(checked) => 
+                            updateRegistro(registro.id, 'faltou', checked)
+                          }
+                        />
+                      </td>
                       <td className="p-2 font-medium">{registro.name}</td>
                       <td className="p-2">{registro.role}</td>
+                      <td className="p-2">{getSetorLabel(registro.sector)}</td>
                       <td className="p-2">
-                        <Input
-                          value={registro.reason || ''}
-                          onChange={(e) => updateRegistro(registro.id, 'reason', e.target.value)}
-                          className="h-8"
-                          placeholder="Motivo da falta"
-                        />
+                        {registro.faltou && (
+                          <Input
+                            value={registro.reason || ''}
+                            onChange={(e) => updateRegistro(registro.id, 'reason', e.target.value)}
+                            className="h-8"
+                            placeholder="Motivo da falta"
+                          />
+                        )}
                       </td>
                     </tr>
                   ))
@@ -250,11 +251,11 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
           </Button>
           {etapa === 'presentes' ? (
             <Button onClick={proximaEtapa}>
-              Próximo: Registrar Faltas
+              Próximo: Selecionar Faltas
             </Button>
           ) : (
             <Button onClick={handleSubmit}>
-              Salvar {resumo.total} Registros
+              Salvar Registros
             </Button>
           )}
         </div>

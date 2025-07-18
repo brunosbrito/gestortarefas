@@ -3,7 +3,7 @@ export interface Colaborador {
   id: number;
   name: string;
   role: string;
-  sector?: string;
+  sector: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA';
   createdAt: string;
   updatedAt: string;
 }
@@ -11,5 +11,5 @@ export interface Colaborador {
 export interface CreateColaborador {
   name: string;
   role: string;
-  sector?: string;
+  sector: 'PRODUCAO' | 'ADMINISTRATIVO' | 'ENGENHARIA';
 }

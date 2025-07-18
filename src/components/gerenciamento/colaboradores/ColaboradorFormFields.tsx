@@ -1,3 +1,4 @@
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
@@ -10,7 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 export const colaboradorFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   role: z.string().min(1, "Cargo é obrigatório"),
-  sector: z.string().optional(),
+  sector: z.enum(['PRODUCAO', 'ADMINISTRATIVO', 'ENGENHARIA'], {
+    required_error: "Setor é obrigatório",
+  }),
 });
 
 export type ColaboradorFormValues = z.infer<typeof colaboradorFormSchema>;
@@ -115,16 +118,9 @@ export const ColaboradorFormFields = ({ form }: ColaboradorFormFieldsProps) => {
                   <SelectValue placeholder="Selecione um setor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Produção">Produção</SelectItem>
-                  <SelectItem value="Qualidade">Qualidade</SelectItem>
-                  <SelectItem value="Manutenção">Manutenção</SelectItem>
-                  <SelectItem value="Logística">Logística</SelectItem>
-                  <SelectItem value="Administrativo">Administrativo</SelectItem>
-                  <SelectItem value="Comercial">Comercial</SelectItem>
-                  <SelectItem value="Financeiro">Financeiro</SelectItem>
-                  <SelectItem value="Recursos Humanos">Recursos Humanos</SelectItem>
-                  <SelectItem value="Engenharia">Engenharia</SelectItem>
-                  <SelectItem value="Segurança do Trabalho">Segurança do Trabalho</SelectItem>
+                  <SelectItem value="PRODUCAO">Produção</SelectItem>
+                  <SelectItem value="ADMINISTRATIVO">Administrativo</SelectItem>
+                  <SelectItem value="ENGENHARIA">Engenharia</SelectItem>
                 </SelectContent>
               </Select>
             </FormControl>

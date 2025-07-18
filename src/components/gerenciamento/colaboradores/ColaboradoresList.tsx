@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import {
   Table,
@@ -33,6 +34,19 @@ import ColaboradorService from '@/services/ColaboradorService';
 interface ColaboradoresListProps {
   reload: boolean;
 }
+
+const getSetorLabel = (sector: string) => {
+  switch (sector) {
+    case 'PRODUCAO':
+      return 'Produção';
+    case 'ADMINISTRATIVO':
+      return 'Administrativo';
+    case 'ENGENHARIA':
+      return 'Engenharia';
+    default:
+      return sector;
+  }
+};
 
 export function ColaboradoresList({ reload }: ColaboradoresListProps) {
   const [listColaboradores, setListColaboradores] = useState<Colaborador[]>([]);
@@ -107,6 +121,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Cargo</TableHead>
+              <TableHead>Setor</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -115,6 +130,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
               <TableRow key={colaborador.id}>
                 <TableCell>{colaborador.name}</TableCell>
                 <TableCell>{colaborador.role}</TableCell>
+                <TableCell>{getSetorLabel(colaborador.sector)}</TableCell>
                 <TableCell className="flex space-x-2">
                   <Button
                     variant="outline"
