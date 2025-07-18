@@ -1,10 +1,15 @@
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Filter, X } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Filter, X, Calendar as CalendarIcon } from 'lucide-react';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 interface AtividadeFiltrosProps {
   filtros: AtividadeFiltros;
@@ -121,24 +126,55 @@ export const AtividadeFiltrosComponent = ({
             </Select>
           </div>
 
-          {/* Filtro Data Início */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Data Início</label>
-            <Input
-              type="date"
-              value={filtros.dataInicio || ''}
-              onChange={(e) => onFiltroChange({ dataInicio: e.target.value || null })}
-            />
-          </div>
-
-          {/* Filtro Data Fim */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Data Fim</label>
-            <Input
-              type="date"
-              value={filtros.dataFim || ''}
-              onChange={(e) => onFiltroChange({ dataFim: e.target.value || null })}
-            />
+          {/* Filtro Período */}
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-medium">Período</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !filtros.dataInicio && !filtros.dataFim && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filtros.dataInicio && filtros.dataFim ? (
+                    <>
+                      {format(new Date(filtros.dataInicio), "dd/MM/yyyy", { locale: ptBR })} -{" "}
+                      {format(new Date(filtros.dataFim), "dd/MM/yyyy", { locale: ptBR })}
+                    </>
+                  ) : filtros.dataInicio ? (
+                    format(new Date(filtros.dataInicio), "dd/MM/yyyy", { locale: ptBR })
+                  ) : (
+                    <span>Selecione o período</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={filtros.dataInicio ? new Date(filtros.dataInicio) : new Date()}
+                  selected={{
+                    from: filtros.dataInicio ? new Date(filtros.dataInicio) : undefined,
+                    to: filtros.dataFim ? new Date(filtros.dataFim) : undefined,
+                  }}
+                  onSelect={(range: DateRange | undefined) => {
+                    if (range?.from) {
+                      onFiltroChange({ 
+                        dataInicio: format(range.from, 'yyyy-MM-dd'),
+                        dataFim: range.to ? format(range.to, 'yyyy-MM-dd') : null 
+                      });
+                    } else {
+                      onFiltroChange({ dataInicio: null, dataFim: null });
+                    }
+                  }}
+                  numberOfMonths={2}
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
