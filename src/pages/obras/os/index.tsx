@@ -26,6 +26,7 @@ import {
   Edit,
   Hash,
   FileText,
+  Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaOSForm } from '@/components/obras/os/NovaOSForm';
@@ -38,6 +39,7 @@ import {
 import {
   getAllServiceOrders,
   getServiceOrderByProjectId,
+  deleteServiceOrder,
 } from '@/services/ServiceOrderService';
 import { VisualizarOSDialog } from '@/components/obras/os/VisualizarOSDialog';
 import { EditarOSDialog } from '@/components/obras/os/EditarOSDialog';
@@ -77,6 +79,25 @@ const OrdensServico = () => {
 
     const config = statusConfig[status];
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const handleRemoveOS = async (os: ServiceOrder) => {
+    if (window.confirm(`Tem certeza que deseja remover a OS-${os.serviceOrderNumber.toString().padStart(3, '0')}?`)) {
+      try {
+        await deleteServiceOrder(os.id);
+        await getServiceOrders();
+        toast({
+          title: 'Ordem de Serviço removida',
+          description: 'A OS foi removida com sucesso.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Erro ao remover OS',
+          description: 'Ocorreu um erro ao remover a ordem de serviço.',
+          variant: 'destructive',
+        });
+      }
+    }
   };
 
   return (
@@ -185,6 +206,13 @@ const OrdensServico = () => {
                   }}
                 >
                   <Edit className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => handleRemoveOS(os)}
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </CardFooter>
             </Card>
