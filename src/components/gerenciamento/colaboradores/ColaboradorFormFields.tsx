@@ -106,7 +106,27 @@ export const ColaboradorFormFields = ({ form }: ColaboradorFormFieldsProps) => {
           <FormItem>
             <FormLabel>Setor</FormLabel>
             <FormControl>
-              <Input placeholder="Digite o setor" {...field} />
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um setor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Produção">Produção</SelectItem>
+                  <SelectItem value="Qualidade">Qualidade</SelectItem>
+                  <SelectItem value="Manutenção">Manutenção</SelectItem>
+                  <SelectItem value="Logística">Logística</SelectItem>
+                  <SelectItem value="Administrativo">Administrativo</SelectItem>
+                  <SelectItem value="Comercial">Comercial</SelectItem>
+                  <SelectItem value="Financeiro">Financeiro</SelectItem>
+                  <SelectItem value="Recursos Humanos">Recursos Humanos</SelectItem>
+                  <SelectItem value="Engenharia">Engenharia</SelectItem>
+                  <SelectItem value="Segurança do Trabalho">Segurança do Trabalho</SelectItem>
+                </SelectContent>
+              </Select>
             </FormControl>
             <FormMessage />
           </FormItem>
