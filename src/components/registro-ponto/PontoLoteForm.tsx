@@ -46,12 +46,14 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
   const [etapa, setEtapa] = useState<'presentes' | 'faltas'>('presentes');
   const [registros, setRegistros] = useState<ColaboradorRegistro[]>(
-    colaboradores.map(col => ({
-      ...col,
-      presente: true,
-      typeRegister: mapearCargoParaTipo(col.role),
-      sector: col.sector
-    }))
+    colaboradores
+      .sort((a, b) => a.name.localeCompare(b.name)) // Ordem alfabética
+      .map(col => ({
+        ...col,
+        presente: false, // Desmarcado por padrão
+        typeRegister: mapearCargoParaTipo(col.role),
+        sector: col.sector
+      }))
   );
 
   const [filtroSetor, setFiltroSetor] = useState<string>('');
