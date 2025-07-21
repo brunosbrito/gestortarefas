@@ -1,6 +1,11 @@
-
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -45,9 +50,9 @@ const COLUMN_LABELS = {
   estimatedTime: 'Tempo Estimado',
   totalTime: 'Tempo Total (h)',
   kpi: 'KPI (%)',
-  progress: 'Progresso (%)',
   quantityTotal: 'Quantidade Total',
   quantityCompleted: 'Quantidade Concluída',
+  progress: 'Progresso (%)',
   team: 'Equipe',
   startDate: 'Data Início',
   endDate: 'Data Fim',
@@ -69,9 +74,9 @@ const DEFAULT_CONFIG: ExcelConfig = {
     estimatedTime: true,
     totalTime: false,
     kpi: true,
-    progress: true,
     quantityTotal: false,
     quantityCompleted: false,
+    progress: true,
     team: true,
     startDate: true,
     endDate: false,
@@ -99,7 +104,7 @@ export const ExcelConfigDialog: React.FC<ExcelConfigDialogProps> = ({
   const [config, setConfig] = useState<ExcelConfig>(DEFAULT_CONFIG);
 
   const handleColumnToggle = (column: keyof ExcelConfig['columns']) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       columns: {
         ...prev.columns,
@@ -110,10 +115,10 @@ export const ExcelConfigDialog: React.FC<ExcelConfigDialogProps> = ({
 
   const handleSelectAll = () => {
     const allSelected = Object.fromEntries(
-      Object.keys(config.columns).map(key => [key, true])
+      Object.keys(config.columns).map((key) => [key, true])
     ) as ExcelConfig['columns'];
-    
-    setConfig(prev => ({
+
+    setConfig((prev) => ({
       ...prev,
       columns: allSelected,
     }));
@@ -121,10 +126,10 @@ export const ExcelConfigDialog: React.FC<ExcelConfigDialogProps> = ({
 
   const handleDeselectAll = () => {
     const allDeselected = Object.fromEntries(
-      Object.keys(config.columns).map(key => [key, false])
+      Object.keys(config.columns).map((key) => [key, false])
     ) as ExcelConfig['columns'];
-    
-    setConfig(prev => ({
+
+    setConfig((prev) => ({
       ...prev,
       columns: allDeselected,
     }));
@@ -135,7 +140,9 @@ export const ExcelConfigDialog: React.FC<ExcelConfigDialogProps> = ({
     setOpen(false);
   };
 
-  const selectedColumnsCount = Object.values(config.columns).filter(Boolean).length;
+  const selectedColumnsCount = Object.values(config.columns).filter(
+    Boolean
+  ).length;
   const canExport = selectedColumnsCount > 0 && atividades.length > 0;
 
   return (
@@ -188,8 +195,12 @@ export const ExcelConfigDialog: React.FC<ExcelConfigDialogProps> = ({
                 <div key={key} className="flex items-center space-x-2">
                   <Checkbox
                     id={key}
-                    checked={config.columns[key as keyof ExcelConfig['columns']]}
-                    onCheckedChange={() => handleColumnToggle(key as keyof ExcelConfig['columns'])}
+                    checked={
+                      config.columns[key as keyof ExcelConfig['columns']]
+                    }
+                    onCheckedChange={() =>
+                      handleColumnToggle(key as keyof ExcelConfig['columns'])
+                    }
                   />
                   <Label htmlFor={key} className="text-sm font-normal">
                     {label}

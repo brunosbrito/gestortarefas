@@ -1,6 +1,11 @@
-
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,8 +28,9 @@ export interface PdfConfig {
     estimatedTime: boolean;
     totalTime: boolean;
     kpi: boolean;
-    progress: boolean;
     quantity: boolean;
+    quantityCompleted: boolean;
+    progress: boolean;
     team: boolean;
     startDate: boolean;
     createdAt: boolean;
@@ -51,13 +57,14 @@ const DEFAULT_CONFIG: PdfConfig = {
     estimatedTime: true,
     totalTime: false,
     kpi: true,
-    progress: true,
     quantity: true,
+    quantityCompleted: true,
+    progress: true,
     team: false,
     startDate: true,
     createdAt: false,
     observations: false,
-  }
+  },
 };
 
 const COLUMN_LABELS = {
@@ -70,8 +77,9 @@ const COLUMN_LABELS = {
   estimatedTime: 'Tempo Estimado',
   totalTime: 'Tempo Total',
   kpi: 'KPI',
-  progress: 'Progresso',
   quantity: 'Quantidade',
+  quantityCompleted: 'Quantidade Concluída',
+  progress: 'Progresso',
   team: 'Equipe',
   startDate: 'Data Início',
   createdAt: 'Data Criação',
@@ -82,40 +90,43 @@ export const PdfConfigDialog = ({
   atividades,
   filtros,
   onExport,
-  isExporting
+  isExporting,
 }: PdfConfigDialogProps) => {
   const [open, setOpen] = useState(false);
   const [config, setConfig] = useState<PdfConfig>(DEFAULT_CONFIG);
 
-  const handleColumnChange = (column: keyof PdfConfig['columns'], checked: boolean) => {
-    setConfig(prev => ({
+  const handleColumnChange = (
+    column: keyof PdfConfig['columns'],
+    checked: boolean
+  ) => {
+    setConfig((prev) => ({
       ...prev,
       columns: {
         ...prev.columns,
-        [column]: checked
-      }
+        [column]: checked,
+      },
     }));
   };
 
   const handleSelectAll = () => {
     const allTrue = Object.fromEntries(
-      Object.keys(config.columns).map(key => [key, true])
+      Object.keys(config.columns).map((key) => [key, true])
     ) as PdfConfig['columns'];
-    
-    setConfig(prev => ({
+
+    setConfig((prev) => ({
       ...prev,
-      columns: allTrue
+      columns: allTrue,
     }));
   };
 
   const handleSelectNone = () => {
     const allFalse = Object.fromEntries(
-      Object.keys(config.columns).map(key => [key, false])
+      Object.keys(config.columns).map((key) => [key, false])
     ) as PdfConfig['columns'];
-    
-    setConfig(prev => ({
+
+    setConfig((prev) => ({
       ...prev,
-      columns: allFalse
+      columns: allFalse,
     }));
   };
 
@@ -156,7 +167,12 @@ export const PdfConfigDialog = ({
             <CardContent>
               <RadioGroup
                 value={config.orientation}
-                onValueChange={(value) => setConfig(prev => ({ ...prev, orientation: value as 'portrait' | 'landscape' }))}
+                onValueChange={(value) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    orientation: value as 'portrait' | 'landscape',
+                  }))
+                }
                 className="flex gap-6"
               >
                 <div className="flex items-center space-x-2">
@@ -196,7 +212,8 @@ export const PdfConfigDialog = ({
                 </div>
               </CardTitle>
               <p className="text-xs text-gray-600">
-                {selectedCount} coluna(s) selecionada(s) • {atividades.length} atividade(s)
+                {selectedCount} coluna(s) selecionada(s) • {atividades.length}{' '}
+                atividade(s)
               </p>
             </CardHeader>
             <CardContent>
@@ -205,9 +222,14 @@ export const PdfConfigDialog = ({
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox
                       id={key}
-                      checked={config.columns[key as keyof PdfConfig['columns']]}
-                      onCheckedChange={(checked) => 
-                        handleColumnChange(key as keyof PdfConfig['columns'], Boolean(checked))
+                      checked={
+                        config.columns[key as keyof PdfConfig['columns']]
+                      }
+                      onCheckedChange={(checked) =>
+                        handleColumnChange(
+                          key as keyof PdfConfig['columns'],
+                          Boolean(checked)
+                        )
                       }
                     />
                     <Label htmlFor={key} className="text-sm">
@@ -222,22 +244,31 @@ export const PdfConfigDialog = ({
           {/* Preview */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Preview das Colunas Selecionadas</CardTitle>
+              <CardTitle className="text-sm">
+                Preview das Colunas Selecionadas
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-xs bg-gray-50 p-3 rounded-md">
-                <div className="font-medium mb-2">Colunas que serão incluídas no PDF:</div>
+                <div className="font-medium mb-2">
+                  Colunas que serão incluídas no PDF:
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(config.columns)
                     .filter(([_, selected]) => selected)
                     .map(([key, _]) => (
-                      <span key={key} className="bg-[#FF7F0E]/20 text-[#003366] px-2 py-1 rounded text-xs">
+                      <span
+                        key={key}
+                        className="bg-[#FF7F0E]/20 text-[#003366] px-2 py-1 rounded text-xs"
+                      >
                         {COLUMN_LABELS[key as keyof typeof COLUMN_LABELS]}
                       </span>
                     ))}
                 </div>
                 {selectedCount === 0 && (
-                  <p className="text-red-500 text-xs">Nenhuma coluna selecionada</p>
+                  <p className="text-red-500 text-xs">
+                    Nenhuma coluna selecionada
+                  </p>
                 )}
               </div>
             </CardContent>
@@ -247,10 +278,7 @@ export const PdfConfigDialog = ({
 
           {/* Botões de Ação */}
           <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
             <Button
