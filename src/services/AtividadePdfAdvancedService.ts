@@ -243,9 +243,16 @@ export class AtividadePdfAdvancedService {
     filtros: AtividadeFiltros,
     config: PdfConfig
   ) {
-    const doc = await this.gerarRelatorioAvancado(atividades, filtros, config);
-    const fileName = `relatorio_atividades_${new Date().toISOString().split('T')[0]}.pdf`;
-    
-    doc.save(fileName);
+    try {
+      console.log('Iniciando geração do PDF com', atividades.length, 'atividades');
+      const doc = await this.gerarRelatorioAvancado(atividades, filtros, config);
+      const fileName = `relatorio_atividades_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      doc.save(fileName);
+      console.log('PDF gerado com sucesso');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      throw new Error('Erro na geração do PDF: ' + (error as Error).message);
+    }
   }
 }

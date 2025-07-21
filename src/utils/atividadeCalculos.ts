@@ -2,12 +2,16 @@
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 
 export const calcularKPI = (atividade: AtividadeStatus): number => {
-  const tempoEstimado = parseFloat(atividade.estimatedTime?.replace(/[^\d.,]/g, '').replace(',', '.') || '0');
+  const tempoEstimadoStr = atividade.estimatedTime?.toString() || '0';
+  const tempoEstimado = parseFloat(tempoEstimadoStr.replace(/[^\d.,]/g, '').replace(',', '.'));
   const tempoTotal = atividade.totalTime || 0;
   
-  if (tempoEstimado === 0) return 0;
+  // Validação para evitar divisão por zero e valores inválidos
+  if (!tempoEstimado || tempoEstimado <= 0 || !isFinite(tempoEstimado)) return 0;
+  if (!tempoTotal || !isFinite(tempoTotal)) return 0;
   
-  return (tempoTotal / tempoEstimado) * 100;
+  const kpi = (tempoTotal / tempoEstimado) * 100;
+  return isFinite(kpi) ? Math.min(kpi, 999) : 0; // Limita o valor máximo
 };
 
 export const calcularProgresso = (atividade: AtividadeStatus): number => {
@@ -20,10 +24,12 @@ export const calcularProgresso = (atividade: AtividadeStatus): number => {
 };
 
 export const formatarKPI = (kpi: number): string => {
+  if (!isFinite(kpi)) return '0.0%';
   return `${kpi.toFixed(1)}%`;
 };
 
 export const formatarProgresso = (progresso: number): string => {
+  if (!isFinite(progresso)) return '0.0%';
   return `${progresso.toFixed(1)}%`;
 };
 
