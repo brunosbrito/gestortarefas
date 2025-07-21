@@ -33,6 +33,15 @@ export const formatarProgresso = (progresso: number): string => {
   return `${progresso.toFixed(1)}%`;
 };
 
+export const formatarTempoTotal = (tempoTotal: number): string => {
+  if (!tempoTotal || !isFinite(tempoTotal)) return '0h00m';
+  
+  const horas = Math.floor(tempoTotal);
+  const minutos = Math.round((tempoTotal - horas) * 60);
+  
+  return `${horas}h${minutos.toString().padStart(2, '0')}m`;
+};
+
 export const getKPIColor = (kpi: number): string => {
   if (kpi <= 100) return 'text-green-600 bg-green-50 border-green-200';
   if (kpi <= 120) return 'text-yellow-600 bg-yellow-50 border-yellow-200';

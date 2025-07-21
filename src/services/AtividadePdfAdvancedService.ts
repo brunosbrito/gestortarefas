@@ -1,10 +1,9 @@
-
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
 import { PdfConfig } from '@/components/atividade/PdfConfigDialog';
-import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, obterCodigoSequencial } from '@/utils/atividadeCalculos';
+import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, formatarTempoTotal, obterCodigoSequencial } from '@/utils/atividadeCalculos';
 
 export class AtividadePdfAdvancedService {
   private static getColumnData(atividade: AtividadeStatus, index: number, column: string): string {
@@ -28,7 +27,7 @@ export class AtividadePdfAdvancedService {
       case 'estimatedTime':
         return atividade.estimatedTime || '-';
       case 'totalTime':
-        return atividade.totalTime ? `${atividade.totalTime}h` : '-';
+        return formatarTempoTotal(atividade.totalTime);
       case 'kpi':
         return formatarKPI(calcularKPI(atividade));
       case 'progress':

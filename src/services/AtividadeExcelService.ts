@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
 import { ExcelConfig } from '@/components/atividade/ExcelConfigDialog';
-import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, obterCodigoSequencial } from '@/utils/atividadeCalculos';
+import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, formatarTempoTotal, obterCodigoSequencial } from '@/utils/atividadeCalculos';
 
 interface ColumnConfig {
   key: string;
@@ -67,10 +67,10 @@ export class AtividadeExcelService {
         getValue: (atividade) => atividade.estimatedTime || '-',
       },
       totalTime: {
-        key: 'Tempo Total (h)',
-        label: 'Tempo Total (h)',
+        key: 'Tempo Total',
+        label: 'Tempo Total',
         width: 15,
-        getValue: (atividade) => atividade.totalTime || 0,
+        getValue: (atividade) => formatarTempoTotal(atividade.totalTime),
       },
       kpi: {
         key: 'KPI (%)',

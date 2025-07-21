@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PdfConfigDialog } from './PdfConfigDialog';
 import { ExcelConfigDialog, ExcelConfig } from './ExcelConfigDialog';
 import { AtividadePdfAdvancedService } from '@/services/AtividadePdfAdvancedService';
-import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, getKPIColor, getProgressoColor, obterCodigoSequencial } from '@/utils/atividadeCalculos';
+import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, formatarTempoTotal, getKPIColor, getProgressoColor, obterCodigoSequencial } from '@/utils/atividadeCalculos';
 import { Progress } from '@/components/ui/progress';
 
 export const AtividadesTable = () => {
@@ -237,9 +237,15 @@ export const AtividadesTable = () => {
                           T. Est.
                         </div>
                       </TableHead>
+                      <TableHead className="w-20 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          T. Total
+                        </div>
+                      </TableHead>
                       <TableHead className="w-16 text-center">KPI</TableHead>
-                      <TableHead className="w-20 text-center">Progresso</TableHead>
                       <TableHead className="w-20 text-center">Qtd.</TableHead>
+                      <TableHead className="w-20 text-center">Progresso</TableHead>
                       <TableHead className="w-24 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <Users className="w-4 h-4" />
@@ -338,10 +344,23 @@ export const AtividadesTable = () => {
                           <TableCell className="text-center text-sm">
                             {formatTime(atividade.estimatedTime)}
                           </TableCell>
+                          <TableCell className="text-center text-sm">
+                            {formatarTempoTotal(atividade.totalTime)}
+                          </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline" className={`text-xs ${getKPIColor(kpi)}`}>
                               {formatarKPI(kpi)}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-center text-sm">
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium">
+                                {atividade.completedQuantity || 0}
+                              </span>
+                              <span className="text-gray-400 text-xs">
+                                /{atividade.quantity || 0}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="space-y-1">
@@ -352,16 +371,6 @@ export const AtividadesTable = () => {
                                 value={Math.min(progresso, 100)} 
                                 className="h-2 w-16"
                               />
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center text-sm">
-                            <div className="flex flex-col items-center">
-                              <span className="font-medium">
-                                {atividade.completedQuantity || 0}
-                              </span>
-                              <span className="text-gray-400 text-xs">
-                                /{atividade.quantity || 0}
-                              </span>
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
