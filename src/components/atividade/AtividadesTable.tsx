@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,10 @@ import { AtividadePdfService } from '@/services/AtividadePdfService';
 import { AtividadeExcelService } from '@/services/AtividadeExcelService';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useToast } from '@/hooks/use-toast';
+import { PdfConfigDialog } from './PdfConfigDialog';
+import { AtividadePdfAdvancedService } from '@/services/AtividadePdfAdvancedService';
+import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, getKPIColor, getProgressoColor, obterCodigoSequencial } from '@/utils/atividadeCalculos';
+import { Progress } from '@/components/ui/progress';
 
 export const AtividadesTable = () => {
   const { 
@@ -23,6 +26,7 @@ export const AtividadesTable = () => {
     tarefasMacro,
     processos,
     colaboradores,
+    obras,
     totalAtividades,
     handleFiltroChange,
     limparFiltros
@@ -96,10 +100,10 @@ export const AtividadesTable = () => {
     setCurrentPage(1);
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDFAdvanced = async (config: any) => {
     setIsExporting(true);
     try {
-      await AtividadePdfService.downloadPDF(atividadesFiltradas, filtros);
+      await AtividadePdfAdvancedService.downloadPDF(atividadesFiltradas, filtros, config);
       toast({
         title: "PDF Gerado",
         description: "O relatório em PDF foi baixado com sucesso.",
@@ -156,6 +160,7 @@ export const AtividadesTable = () => {
         tarefasMacro={tarefasMacro}
         processos={processos}
         colaboradores={colaboradores}
+        obras={obras}
         isLoading={isLoadingAtividades}
       />
 
@@ -173,16 +178,12 @@ export const AtividadesTable = () => {
           <div className="flex items-center gap-4">
             {/* Botões de exportação */}
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportPDF}
-                disabled={isExporting || totalAtividades === 0}
-                className="flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                {isExporting ? 'Gerando...' : 'PDF'}
-              </Button>
+              <PdfConfigDialog
+                atividades={atividadesFiltradas}
+                filtros={filtros}
+                onExport={handleExportPDFAdvanced}
+                isExporting={isExporting}
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -195,7 +196,6 @@ export const AtividadesTable = () => {
               </Button>
             </div>
 
-            {/* Informações de paginação */}
             {totalAtividades > 0 && (
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <span>
@@ -227,6 +227,7 @@ export const AtividadesTable = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-16 text-center">Item</TableHead>
                       <TableHead className="w-[200px]">Descrição</TableHead>
                       <TableHead className="w-[120px]">Tarefa Macro</TableHead>
                       <TableHead className="w-[100px]">Processo</TableHead>
@@ -239,6 +240,9 @@ export const AtividadesTable = () => {
                           T. Est.
                         </div>
                       </TableHead>
+                      <TableHead className="w-16 text-center">KPI</TableHead>
+                      <TableHead className="w-20 text-center">Progresso</TableHead>
+                      <TableHead className="w-20 text-center">Qtd.</TableHead>
                       <TableHead className="w-24 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <Users className="w-4 h-4" />
@@ -261,109 +265,144 @@ export const AtividadesTable = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {currentItems.map((atividade: AtividadeStatus) => (
-                      <TableRow key={atividade.id}>
-                        <TableCell className="max-w-[200px]">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="truncate font-medium">
-                                {atividade.description}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{atividade.description}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell className="max-w-[120px]">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="truncate">
-                                {typeof atividade.macroTask === 'string' 
-                                  ? atividade.macroTask 
-                                  : atividade.macroTask?.name || '-'}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{typeof atividade.macroTask === 'string' 
-                                ? atividade.macroTask 
-                                : atividade.macroTask?.name || '-'}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell className="max-w-[100px]">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="truncate">
-                                {typeof atividade.process === 'string' 
-                                  ? atividade.process 
-                                  : atividade.process?.name || '-'}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{typeof atividade.process === 'string' 
-                                ? atividade.process 
-                                : atividade.process?.name || '-'}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {getStatusBadge(atividade.status)}
-                        </TableCell>
-                        <TableCell className="text-center text-sm">
-                          {atividade.serviceOrder?.serviceOrderNumber || 'N/A'}
-                        </TableCell>
-                        <TableCell className="max-w-[150px]">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="truncate flex items-center gap-1">
-                                <Building2 className="w-3 h-3 text-gray-500" />
-                                {atividade.project?.name || 'N/A'}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{atividade.project?.name || 'N/A'}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell className="text-center text-sm">
-                          {formatTime(atividade.estimatedTime)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-1 text-sm">
+                    {currentItems.map((atividade: AtividadeStatus, index: number) => {
+                      const globalIndex = startIndex + index;
+                      const kpi = calcularKPI(atividade);
+                      const progresso = calcularProgresso(atividade);
+                      
+                      return (
+                        <TableRow key={atividade.id}>
+                          <TableCell className="text-center font-mono text-sm">
+                            {obterCodigoSequencial(globalIndex)}
+                          </TableCell>
+                          <TableCell className="max-w-[200px]">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="flex items-center gap-1">
-                                  <Users className="w-3 h-3" />
-                                  {formatTeam(atividade.collaborators)}
+                                <div className="truncate font-medium">
+                                  {atividade.description}
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>{getTeamTooltip(atividade.collaborators)}</p>
+                                <p>{atividade.description}</p>
                               </TooltipContent>
                             </Tooltip>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center text-sm">
-                          {formatDate(atividade.startDate)}
-                        </TableCell>
-                        <TableCell className="text-center text-sm">
-                          {formatDate(atividade.createdAt)}
-                        </TableCell>
-                        <TableCell className="max-w-[150px]">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="truncate text-sm text-gray-600">
-                                {atividade.observation || '-'}
+                          </TableCell>
+                          <TableCell className="max-w-[120px]">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="truncate">
+                                  {typeof atividade.macroTask === 'string' 
+                                    ? atividade.macroTask 
+                                    : atividade.macroTask?.name || '-'}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{typeof atividade.macroTask === 'string' 
+                                  ? atividade.macroTask 
+                                  : atividade.macroTask?.name || '-'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell className="max-w-[100px]">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="truncate">
+                                  {typeof atividade.process === 'string' 
+                                    ? atividade.process 
+                                    : atividade.process?.name || '-'}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{typeof atividade.process === 'string' 
+                                  ? atividade.process 
+                                  : atividade.process?.name || '-'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {getStatusBadge(atividade.status)}
+                          </TableCell>
+                          <TableCell className="text-center text-sm">
+                            {atividade.serviceOrder?.serviceOrderNumber || 'N/A'}
+                          </TableCell>
+                          <TableCell className="max-w-[150px]">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="truncate flex items-center gap-1">
+                                  <Building2 className="w-3 h-3 text-gray-500" />
+                                  {atividade.project?.name || 'N/A'}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{atividade.project?.name || 'N/A'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell className="text-center text-sm">
+                            {formatTime(atividade.estimatedTime)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className={`text-xs ${getKPIColor(kpi)}`}>
+                              {formatarKPI(kpi)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="space-y-1">
+                              <div className="text-xs font-medium">
+                                {formatarProgresso(progresso)}
                               </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{atividade.observation || 'Sem observações'}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              <Progress 
+                                value={Math.min(progresso, 100)} 
+                                className="h-2 w-16"
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center text-sm">
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium">
+                                {atividade.completedQuantity || 0}
+                              </span>
+                              <span className="text-gray-400 text-xs">
+                                /{atividade.quantity || 0}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-1 text-sm">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center gap-1">
+                                    <Users className="w-3 h-3" />
+                                    {formatTeam(atividade.collaborators)}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{getTeamTooltip(atividade.collaborators)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center text-sm">
+                            {formatDate(atividade.startDate)}
+                          </TableCell>
+                          <TableCell className="text-center text-sm">
+                            {formatDate(atividade.createdAt)}
+                          </TableCell>
+                          <TableCell className="max-w-[150px]">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="truncate text-sm text-gray-600">
+                                  {atividade.observation || '-'}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{atividade.observation || 'Sem observações'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TooltipProvider>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,6 +18,7 @@ interface AtividadeFiltrosProps {
   tarefasMacro?: any[];
   processos?: any[];
   colaboradores?: any[];
+  obras?: any[];
   isLoading?: boolean;
 }
 
@@ -29,6 +29,7 @@ export const AtividadeFiltrosComponent = ({
   tarefasMacro = [],
   processos = [],
   colaboradores = [],
+  obras = [],
   isLoading = false
 }: AtividadeFiltrosProps) => {
   const [filtrosTemp, setFiltrosTemp] = useState<AtividadeFiltros>(filtros);
@@ -58,6 +59,7 @@ export const AtividadeFiltrosComponent = ({
       tarefaMacroId: null,
       processoId: null,
       colaboradorId: null,
+      obraId: null,
       status: null,
       dataInicio: null,
       dataFim: null
@@ -74,7 +76,7 @@ export const AtividadeFiltrosComponent = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Filtro Tarefa Macro */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Tarefa Macro</label>
@@ -141,6 +143,28 @@ export const AtividadeFiltrosComponent = ({
             </Select>
           </div>
 
+          {/* Filtro Obra */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Obra/Projeto</label>
+            <Select
+              value={filtrosTemp.obraId || 'all'}
+              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, obraId: value === 'all' ? null : value }))}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as obras" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as obras</SelectItem>
+                {obras.map((obra) => (
+                  <SelectItem key={obra.id} value={obra.id.toString()}>
+                    {obra.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Filtro Status */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Status</label>
@@ -163,7 +187,7 @@ export const AtividadeFiltrosComponent = ({
           </div>
 
           {/* Filtro Data Range */}
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2 md:col-span-3">
             <label className="text-sm font-medium">Período</label>
             <Popover>
               <PopoverTrigger asChild>

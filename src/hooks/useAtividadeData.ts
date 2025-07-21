@@ -5,12 +5,14 @@ import { getAllActivities } from '@/services/ActivityService';
 import TarefaMacroService from '@/services/TarefaMacroService';
 import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
+import ProjectService from '@/services/ObrasService';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 
 export interface AtividadeFiltros {
   tarefaMacroId: string | null;
   processoId: string | null;
   colaboradorId: string | null;
+  obraId: string | null;
   status: string | null;
   dataInicio: string | null;
   dataFim: string | null;
@@ -21,6 +23,7 @@ export const useAtividadeData = () => {
     tarefaMacroId: null,
     processoId: null,
     colaboradorId: null,
+    obraId: null,
     status: null,
     dataInicio: null,
     dataFim: null
@@ -51,6 +54,11 @@ export const useAtividadeData = () => {
   const { data: colaboradores, isLoading: isLoadingColaboradores } = useQuery({
     queryKey: ['colaboradores'],
     queryFn: () => ColaboradorService.getAll(),
+  });
+
+  const { data: obras, isLoading: isLoadingObras } = useQuery({
+    queryKey: ['obras'],
+    queryFn: () => ProjectService.getAllObras(),
   });
 
   useEffect(() => {
@@ -86,6 +94,13 @@ export const useAtividadeData = () => {
         });
       }
 
+      // Filtro por obra
+      if (filtros.obraId) {
+        atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
+          return atividade.project?.id?.toString() === filtros.obraId;
+        });
+      }
+
       // Filtro por status
       if (filtros.status && filtros.status !== 'todos') {
         atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => 
@@ -96,7 +111,6 @@ export const useAtividadeData = () => {
       // Filtro por data
       if (filtros.dataInicio || filtros.dataFim) {
         atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
-          // Para atividades planejadas usa createdAt, para iniciadas usa startDate se disponível
           const dataAtividade = atividade.startDate 
             ? new Date(atividade.startDate)
             : new Date(atividade.createdAt);
@@ -123,6 +137,7 @@ export const useAtividadeData = () => {
       tarefaMacroId: null,
       processoId: null,
       colaboradorId: null,
+      obraId: null,
       status: null,
       dataInicio: null,
       dataFim: null
@@ -136,11 +151,13 @@ export const useAtividadeData = () => {
     isLoadingTarefas,
     isLoadingProcessos,
     isLoadingColaboradores,
+    isLoadingObras,
     error,
     refetch,
     tarefasMacro,
     processos,
     colaboradores,
+    obras,
     totalAtividades: atividadesFiltradas.length,
     handleFiltroChange,
     limparFiltros
