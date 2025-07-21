@@ -14,6 +14,7 @@ import { AtividadeExcelService } from '@/services/AtividadeExcelService';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useToast } from '@/hooks/use-toast';
 import { PdfConfigDialog } from './PdfConfigDialog';
+import { ExcelConfigDialog, ExcelConfig } from './ExcelConfigDialog';
 import { AtividadePdfAdvancedService } from '@/services/AtividadePdfAdvancedService';
 import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, getKPIColor, getProgressoColor, obterCodigoSequencial } from '@/utils/atividadeCalculos';
 import { Progress } from '@/components/ui/progress';
@@ -119,10 +120,10 @@ export const AtividadesTable = () => {
     }
   };
 
-  const handleExportExcel = async () => {
+  const handleExportExcel = async (config: ExcelConfig) => {
     setIsExporting(true);
     try {
-      await AtividadeExcelService.downloadExcel(atividadesFiltradas, filtros);
+      await AtividadeExcelService.downloadExcel(atividadesFiltradas, filtros, config);
       toast({
         title: "Excel Gerado",
         description: "O relatório em Excel foi baixado com sucesso.",
@@ -184,16 +185,12 @@ export const AtividadesTable = () => {
                 onExport={handleExportPDFAdvanced}
                 isExporting={isExporting}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportExcel}
-                disabled={isExporting || totalAtividades === 0}
-                className="flex items-center gap-2"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                {isExporting ? 'Gerando...' : 'Excel'}
-              </Button>
+              <ExcelConfigDialog
+                atividades={atividadesFiltradas}
+                filtros={filtros}
+                onExport={handleExportExcel}
+                isExporting={isExporting}
+              />
             </div>
 
             {totalAtividades > 0 && (

@@ -1,38 +1,161 @@
-
 import * as XLSX from 'xlsx';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
+import { ExcelConfig } from '@/components/atividade/ExcelConfigDialog';
 import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, obterCodigoSequencial } from '@/utils/atividadeCalculos';
 
+interface ColumnConfig {
+  key: string;
+  label: string;
+  width: number;
+  getValue: (atividade: AtividadeStatus, index: number) => any;
+}
+
 export class AtividadeExcelService {
-  static async gerarRelatorioExcel(atividades: AtividadeStatus[], filtros: AtividadeFiltros) {
-    // Preparar dados para a planilha com as novas colunas
-    const dadosFormatados = atividades.map((atividade, index) => ({
-      'Item': obterCodigoSequencial(index),
-      'Descrição': atividade.description,
-      'Tarefa Macro': typeof atividade.macroTask === 'string' 
-        ? atividade.macroTask 
-        : atividade.macroTask?.name || '-',
-      'Processo': typeof atividade.process === 'string' 
-        ? atividade.process 
-        : atividade.process?.name || '-',
-      'Status': atividade.status,
-      'Obra/Projeto': atividade.project?.name || '-',
-      'OS': atividade.serviceOrder?.serviceOrderNumber || 'N/A',
-      'Tempo Estimado': atividade.estimatedTime || '-',
-      'Tempo Total (h)': atividade.totalTime || 0,
-      'KPI (%)': calcularKPI(atividade).toFixed(1),
-      'Progresso (%)': calcularProgresso(atividade).toFixed(1),
-      'Quantidade Total': atividade.quantity || 0,
-      'Quantidade Concluída': atividade.completedQuantity || 0,
-      'Equipe': atividade.collaborators?.map(c => c.name).join(', ') || '-',
-      'Data Início': atividade.startDate ? new Date(atividade.startDate).toLocaleDateString('pt-BR') : '-',
-      'Data Fim': atividade.endDate ? new Date(atividade.endDate).toLocaleDateString('pt-BR') : '-',
-      'Data Criação': new Date(atividade.createdAt).toLocaleDateString('pt-BR'),
-      'Observações': atividade.observation || '-',
-      'Cliente': atividade.project?.client || '-',
-      'Endereço': atividade.project?.address || '-'
-    }));
+  private static getColumnConfigs(): Record<string, ColumnConfig> {
+    return {
+      item: {
+        key: 'Item',
+        label: 'Item',
+        width: 8,
+        getValue: (_, index) => obterCodigoSequencial(index),
+      },
+      description: {
+        key: 'Descrição',
+        label: 'Descrição',
+        width: 40,
+        getValue: (atividade) => atividade.description,
+      },
+      macroTask: {
+        key: 'Tarefa Macro',
+        label: 'Tarefa Macro',
+        width: 25,
+        getValue: (atividade) => typeof atividade.macroTask === 'string' 
+          ? atividade.macroTask 
+          : atividade.macroTask?.name || '-',
+      },
+      process: {
+        key: 'Processo',
+        label: 'Processo',
+        width: 20,
+        getValue: (atividade) => typeof atividade.process === 'string' 
+          ? atividade.process 
+          : atividade.process?.name || '-',
+      },
+      status: {
+        key: 'Status',
+        label: 'Status',
+        width: 15,
+        getValue: (atividade) => atividade.status,
+      },
+      project: {
+        key: 'Obra/Projeto',
+        label: 'Obra/Projeto',
+        width: 30,
+        getValue: (atividade) => atividade.project?.name || '-',
+      },
+      serviceOrder: {
+        key: 'OS',
+        label: 'OS',
+        width: 10,
+        getValue: (atividade) => atividade.serviceOrder?.serviceOrderNumber || 'N/A',
+      },
+      estimatedTime: {
+        key: 'Tempo Estimado',
+        label: 'Tempo Estimado',
+        width: 15,
+        getValue: (atividade) => atividade.estimatedTime || '-',
+      },
+      totalTime: {
+        key: 'Tempo Total (h)',
+        label: 'Tempo Total (h)',
+        width: 15,
+        getValue: (atividade) => atividade.totalTime || 0,
+      },
+      kpi: {
+        key: 'KPI (%)',
+        label: 'KPI (%)',
+        width: 12,
+        getValue: (atividade) => calcularKPI(atividade).toFixed(1),
+      },
+      progress: {
+        key: 'Progresso (%)',
+        label: 'Progresso (%)',
+        width: 15,
+        getValue: (atividade) => calcularProgresso(atividade).toFixed(1),
+      },
+      quantityTotal: {
+        key: 'Quantidade Total',
+        label: 'Quantidade Total',
+        width: 15,
+        getValue: (atividade) => atividade.quantity || 0,
+      },
+      quantityCompleted: {
+        key: 'Quantidade Concluída',
+        label: 'Quantidade Concluída',
+        width: 18,
+        getValue: (atividade) => atividade.completedQuantity || 0,
+      },
+      team: {
+        key: 'Equipe',
+        label: 'Equipe',
+        width: 30,
+        getValue: (atividade) => atividade.collaborators?.map(c => c.name).join(', ') || '-',
+      },
+      startDate: {
+        key: 'Data Início',
+        label: 'Data Início',
+        width: 12,
+        getValue: (atividade) => atividade.startDate ? new Date(atividade.startDate).toLocaleDateString('pt-BR') : '-',
+      },
+      endDate: {
+        key: 'Data Fim',
+        label: 'Data Fim',
+        width: 12,
+        getValue: (atividade) => atividade.endDate ? new Date(atividade.endDate).toLocaleDateString('pt-BR') : '-',
+      },
+      createdAt: {
+        key: 'Data Criação',
+        label: 'Data Criação',
+        width: 12,
+        getValue: (atividade) => new Date(atividade.createdAt).toLocaleDateString('pt-BR'),
+      },
+      observations: {
+        key: 'Observações',
+        label: 'Observações',
+        width: 30,
+        getValue: (atividade) => atividade.observation || '-',
+      },
+      client: {
+        key: 'Cliente',
+        label: 'Cliente',
+        width: 25,
+        getValue: (atividade) => atividade.project?.client || '-',
+      },
+      address: {
+        key: 'Endereço',
+        label: 'Endereço',
+        width: 35,
+        getValue: (atividade) => atividade.project?.address || '-',
+      },
+    };
+  }
+
+  static async gerarRelatorioExcel(atividades: AtividadeStatus[], filtros: AtividadeFiltros, config: ExcelConfig) {
+    const allColumns = this.getColumnConfigs();
+    const selectedColumns = Object.entries(config.columns)
+      .filter(([_, selected]) => selected)
+      .map(([key]) => allColumns[key])
+      .filter(Boolean);
+
+    // Preparar dados para a planilha com as colunas selecionadas
+    const dadosFormatados = atividades.map((atividade, index) => {
+      const row: Record<string, any> = {};
+      selectedColumns.forEach(column => {
+        row[column.key] = column.getValue(atividade, index);
+      });
+      return row;
+    });
 
     // Criar workbook
     const workbook = XLSX.utils.book_new();
@@ -40,30 +163,8 @@ export class AtividadeExcelService {
     // Aba principal com dados
     const worksheet = XLSX.utils.json_to_sheet(dadosFormatados);
 
-    // Ajustar largura das colunas
-    const columnWidths = [
-      { wch: 8 },  // Item
-      { wch: 40 }, // Descrição
-      { wch: 25 }, // Tarefa Macro
-      { wch: 20 }, // Processo
-      { wch: 15 }, // Status
-      { wch: 30 }, // Obra/Projeto
-      { wch: 10 }, // OS
-      { wch: 15 }, // Tempo Estimado
-      { wch: 15 }, // Tempo Total
-      { wch: 12 }, // KPI
-      { wch: 15 }, // Progresso
-      { wch: 15 }, // Quantidade Total
-      { wch: 18 }, // Quantidade Concluída
-      { wch: 30 }, // Equipe
-      { wch: 12 }, // Data Início
-      { wch: 12 }, // Data Fim
-      { wch: 12 }, // Data Criação
-      { wch: 30 }, // Observações
-      { wch: 25 }, // Cliente
-      { wch: 35 }  // Endereço
-    ];
-
+    // Ajustar largura das colunas dinamicamente
+    const columnWidths = selectedColumns.map(column => ({ wch: column.width }));
     worksheet['!cols'] = columnWidths;
 
     // Adicionar estilo ao cabeçalho (linha 1)
@@ -79,35 +180,44 @@ export class AtividadeExcelService {
       }
     }
 
-    // Aplicar formatação condicional para KPI e Progresso
+    // Aplicar formatação condicional para KPI e Progresso se estiverem selecionados
+    const kpiColumnIndex = selectedColumns.findIndex(col => col.key === 'KPI (%)');
+    const progressColumnIndex = selectedColumns.findIndex(col => col.key === 'Progresso (%)');
+
     for (let row = 1; row <= dadosFormatados.length; row++) {
-      // Coluna KPI (J)
-      const kpiCell = worksheet[`J${row + 1}`];
-      if (kpiCell && kpiCell.v) {
-        const kpiValue = parseFloat(kpiCell.v as string);
-        let fillColor = "00FF00"; // Verde
-        if (kpiValue > 120) fillColor = "FF0000"; // Vermelho
-        else if (kpiValue > 100) fillColor = "FFFF00"; // Amarelo
-        
-        kpiCell.s = {
-          fill: { fgColor: { rgb: fillColor } },
-          alignment: { horizontal: "center" }
-        };
+      // Coluna KPI
+      if (kpiColumnIndex >= 0) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: kpiColumnIndex });
+        const kpiCell = worksheet[cellAddress];
+        if (kpiCell && kpiCell.v) {
+          const kpiValue = parseFloat(kpiCell.v as string);
+          let fillColor = "00FF00"; // Verde
+          if (kpiValue > 120) fillColor = "FF0000"; // Vermelho
+          else if (kpiValue > 100) fillColor = "FFFF00"; // Amarelo
+          
+          kpiCell.s = {
+            fill: { fgColor: { rgb: fillColor } },
+            alignment: { horizontal: "center" }
+          };
+        }
       }
 
-      // Coluna Progresso (K)
-      const progressCell = worksheet[`K${row + 1}`];
-      if (progressCell && progressCell.v) {
-        const progressValue = parseFloat(progressCell.v as string);
-        let fillColor = "FF0000"; // Vermelho
-        if (progressValue >= 100) fillColor = "00FF00"; // Verde
-        else if (progressValue >= 75) fillColor = "0000FF"; // Azul
-        else if (progressValue >= 50) fillColor = "FFFF00"; // Amarelo
-        
-        progressCell.s = {
-          fill: { fgColor: { rgb: fillColor } },
-          alignment: { horizontal: "center" }
-        };
+      // Coluna Progresso
+      if (progressColumnIndex >= 0) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: progressColumnIndex });
+        const progressCell = worksheet[cellAddress];
+        if (progressCell && progressCell.v) {
+          const progressValue = parseFloat(progressCell.v as string);
+          let fillColor = "FF0000"; // Vermelho
+          if (progressValue >= 100) fillColor = "00FF00"; // Verde
+          else if (progressValue >= 75) fillColor = "0000FF"; // Azul
+          else if (progressValue >= 50) fillColor = "FFFF00"; // Amarelo
+          
+          progressCell.s = {
+            fill: { fgColor: { rgb: fillColor } },
+            alignment: { horizontal: "center" }
+          };
+        }
       }
     }
 
@@ -125,6 +235,7 @@ export class AtividadeExcelService {
 
     const resumo = [
       { 'Informação': 'Total de Atividades', 'Valor': totalAtividades },
+      { 'Informação': 'Colunas Selecionadas', 'Valor': selectedColumns.length },
       { 'Informação': 'Data de Geração', 'Valor': new Date().toLocaleDateString('pt-BR') },
       { 'Informação': '', 'Valor': '' }, // Linha em branco
       { 'Informação': 'STATUS', 'Valor': 'QUANTIDADE' },
@@ -156,8 +267,8 @@ export class AtividadeExcelService {
     
     XLSX.utils.book_append_sheet(workbook, worksheetResumo, 'Resumo');
 
-    // Criar aba de análise por obra se houver filtro por obra
-    if (filtros.obraId || atividades.length > 0) {
+    // Criar aba de análise por obra se houver dados
+    if (atividades.length > 0) {
       const obraAnalise = this.criarAnalisePorObra(atividades);
       const worksheetObra = XLSX.utils.json_to_sheet(obraAnalise);
       worksheetObra['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
@@ -215,8 +326,8 @@ export class AtividadeExcelService {
     }));
   }
 
-  static async downloadExcel(atividades: AtividadeStatus[], filtros: AtividadeFiltros) {
-    const workbook = await this.gerarRelatorioExcel(atividades, filtros);
+  static async downloadExcel(atividades: AtividadeStatus[], filtros: AtividadeFiltros, config: ExcelConfig) {
+    const workbook = await this.gerarRelatorioExcel(atividades, filtros, config);
     const fileName = `relatorio_atividades_${new Date().toISOString().split('T')[0]}.xlsx`;
     
     XLSX.writeFile(workbook, fileName);
