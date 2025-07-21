@@ -49,24 +49,89 @@ export class AtividadePdfAdvancedService {
     }
   }
 
-  private static getColumnHeaders(config: PdfConfig): { key: string; header: string; width?: number }[] {
-    const headers: { key: string; header: string; width?: number }[] = [];
+  private static calculateDynamicWidths(selectedColumns: string[], orientation: 'portrait' | 'landscape'): { [key: string]: number } {
+    const availableWidth = orientation === 'landscape' ? 257 : 170; // largura disponível em mm
+    const totalColumns = selectedColumns.length;
+    
+    // Definir prioridades e larguras mínimas/máximas para cada tipo de coluna
+    const columnConfig: { [key: string]: { priority: 'small' | 'medium' | 'large'; min: number; max: number } } = {
+      item: { priority: 'small', min: 12, max: 15 },
+      kpi: { priority: 'small', min: 12, max: 15 },
+      progress: { priority: 'small', min: 15, max: 18 },
+      quantity: { priority: 'small', min: 15, max: 20 },
+      estimatedTime: { priority: 'small', min: 12, max: 15 },
+      totalTime: { priority: 'small', min: 12, max: 15 },
+      startDate: { priority: 'small', min: 15, max: 18 },
+      createdAt: { priority: 'small', min: 15, max: 18 },
+      status: { priority: 'medium', min: 15, max: 25 },
+      process: { priority: 'medium', min: 18, max: 30 },
+      macroTask: { priority: 'medium', min: 20, max: 35 },
+      project: { priority: 'medium', min: 20, max: 40 },
+      team: { priority: 'medium', min: 20, max: 35 },
+      description: { priority: 'large', min: 25, max: 60 },
+      observations: { priority: 'large', min: 25, max: 50 }
+    };
+
+    // Calcular larguras dinamicamente
+    const widths: { [key: string]: number } = {};
+    let usedWidth = 0;
+
+    // Primeiro passo: alocar larguras mínimas para colunas pequenas
+    const smallColumns = selectedColumns.filter(col => columnConfig[col]?.priority === 'small');
+    smallColumns.forEach(col => {
+      const config = columnConfig[col];
+      if (config) {
+        widths[col] = Math.min(config.max, Math.max(config.min, availableWidth / totalColumns));
+        usedWidth += widths[col];
+      }
+    });
+
+    // Segundo passo: alocar larguras para colunas médias
+    const mediumColumns = selectedColumns.filter(col => columnConfig[col]?.priority === 'medium');
+    const remainingWidth1 = availableWidth - usedWidth;
+    const mediumWidth = remainingWidth1 / (mediumColumns.length + selectedColumns.filter(col => columnConfig[col]?.priority === 'large').length * 1.5);
+    
+    mediumColumns.forEach(col => {
+      const config = columnConfig[col];
+      if (config) {
+        widths[col] = Math.min(config.max, Math.max(config.min, mediumWidth));
+        usedWidth += widths[col];
+      }
+    });
+
+    // Terceiro passo: alocar largura restante para colunas grandes
+    const largeColumns = selectedColumns.filter(col => columnConfig[col]?.priority === 'large');
+    const remainingWidth2 = availableWidth - usedWidth;
+    const largeWidth = remainingWidth2 / largeColumns.length;
+    
+    largeColumns.forEach(col => {
+      const config = columnConfig[col];
+      if (config) {
+        widths[col] = Math.min(config.max, Math.max(config.min, largeWidth));
+      }
+    });
+
+    return widths;
+  }
+
+  private static getColumnHeaders(config: PdfConfig): { key: string; header: string }[] {
+    const headers: { key: string; header: string }[] = [];
     const columnMapping = {
-      item: { header: 'Item', width: 15 },
-      description: { header: 'Descrição', width: 40 },
-      macroTask: { header: 'Tarefa Macro', width: 25 },
-      process: { header: 'Processo', width: 20 },
-      status: { header: 'Status', width: 18 },
-      project: { header: 'Obra/Projeto', width: 30 },
-      estimatedTime: { header: 'T. Est.', width: 15 },
-      totalTime: { header: 'T. Total', width: 15 },
-      kpi: { header: 'KPI', width: 12 },
-      progress: { header: 'Progresso', width: 15 },
-      quantity: { header: 'Qtd.', width: 15 },
-      team: { header: 'Equipe', width: 25 },
-      startDate: { header: 'Início', width: 15 },
-      createdAt: { header: 'Criação', width: 15 },
-      observations: { header: 'Observações', width: 35 }
+      item: { header: 'Item' },
+      description: { header: 'Descrição' },
+      macroTask: { header: 'Tarefa Macro' },
+      process: { header: 'Processo' },
+      status: { header: 'Status' },
+      project: { header: 'Obra/Projeto' },
+      estimatedTime: { header: 'T. Est.' },
+      totalTime: { header: 'T. Total' },
+      kpi: { header: 'KPI' },
+      progress: { header: 'Progresso' },
+      quantity: { header: 'Qtd.' },
+      team: { header: 'Equipe' },
+      startDate: { header: 'Início' },
+      createdAt: { header: 'Criação' },
+      observations: { header: 'Observações' }
     };
 
     Object.entries(config.columns).forEach(([column, selected]) => {
@@ -74,8 +139,7 @@ export class AtividadePdfAdvancedService {
         const mapping = columnMapping[column as keyof typeof columnMapping];
         headers.push({
           key: column,
-          header: mapping.header,
-          width: mapping.width
+          header: mapping.header
         });
       }
     });
@@ -162,6 +226,11 @@ export class AtividadePdfAdvancedService {
 
     // Preparar dados da tabela
     const columns = this.getColumnHeaders(config);
+    const selectedColumnKeys = columns.map(col => col.key);
+    
+    // Calcular larguras dinâmicas
+    const dynamicWidths = this.calculateDynamicWidths(selectedColumnKeys, config.orientation);
+    
     const data = atividades.map((atividade, index) => {
       const row: any = {};
       columns.forEach(col => {
@@ -170,11 +239,7 @@ export class AtividadePdfAdvancedService {
       return row;
     });
 
-    // Configurações da tabela
-    const pageWidth = config.orientation === 'landscape' ? 297 : 210;
-    const availableWidth = pageWidth - 40; // margens de 20mm de cada lado
-
-    // Gerar tabela
+    // Gerar tabela com larguras dinâmicas
     autoTable(doc, {
       startY: summaryHeight,
       head: [columns.map(col => col.header)],
@@ -199,7 +264,7 @@ export class AtividadePdfAdvancedService {
       columnStyles: {
         ...columns.reduce((acc, col, index) => {
           acc[index] = {
-            cellWidth: col.width || 'auto',
+            cellWidth: dynamicWidths[col.key] || 'auto',
             halign: ['item', 'kpi', 'progress', 'quantity'].includes(col.key) ? 'center' : 'left'
           };
           return acc;
@@ -216,6 +281,7 @@ export class AtividadePdfAdvancedService {
 
     // Rodapé
     const pageCount = doc.getNumberOfPages();
+    const pageWidth = config.orientation === 'landscape' ? 297 : 210;
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);

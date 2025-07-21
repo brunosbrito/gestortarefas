@@ -24,13 +24,13 @@ export const calcularProgresso = (atividade: AtividadeStatus): number => {
 };
 
 export const formatarKPI = (kpi: number): string => {
-  if (!isFinite(kpi)) return '0.0%';
-  return `${kpi.toFixed(1)}%`;
+  if (!isFinite(kpi)) return '0%';
+  return `${Math.round(kpi)}%`;
 };
 
 export const formatarProgresso = (progresso: number): string => {
-  if (!isFinite(progresso)) return '0.0%';
-  return `${progresso.toFixed(1)}%`;
+  if (!isFinite(progresso)) return '0%';
+  return `${Math.round(progresso)}%`;
 };
 
 export const formatarTempoTotal = (tempoTotal: number): string => {
