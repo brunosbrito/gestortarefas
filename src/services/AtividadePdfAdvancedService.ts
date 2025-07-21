@@ -1,16 +1,10 @@
 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
 import { PdfConfig } from '@/components/atividade/PdfConfigDialog';
 import { calcularKPI, calcularProgresso, formatarKPI, formatarProgresso, obterCodigoSequencial } from '@/utils/atividadeCalculos';
-
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
 
 export class AtividadePdfAdvancedService {
   private static getColumnData(atividade: AtividadeStatus, index: number, column: string): string {
@@ -182,7 +176,7 @@ export class AtividadePdfAdvancedService {
     const availableWidth = pageWidth - 40; // margens de 20mm de cada lado
 
     // Gerar tabela
-    doc.autoTable({
+    autoTable(doc, {
       startY: summaryHeight,
       head: [columns.map(col => col.header)],
       body: data.map((row: any) => columns.map(col => row[col.key])),
