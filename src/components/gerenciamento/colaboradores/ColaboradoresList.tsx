@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import {
   Table,
@@ -9,24 +8,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Ban, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { EditColaboradorForm } from './EditColaboradorForm';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ColaboradorService from '@/services/ColaboradorService';
@@ -50,10 +40,12 @@ const getSetorLabel = (sector: string) => {
 
 export function ColaboradoresList({ reload }: ColaboradoresListProps) {
   const [listColaboradores, setListColaboradores] = useState<Colaborador[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [filteredColaboradores, setFilteredColaboradores] = useState<
+    Colaborador[]
+  >([]);
+  const [filters, setFilters] = useState({ name: '', role: '', sector: '' });
   const [selectedColaborador, setSelectedColaborador] =
     useState<Colaborador | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -61,12 +53,13 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
     try {
       const response = await ColaboradorService.getAllColaboradores();
       setListColaboradores(response);
-      setError(null);
     } catch (err) {
       console.error('Erro ao buscar os colaboradores:', err);
-      setError(
-        'Não foi possível carregar os colaboradores. Tente novamente mais tarde.'
-      );
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao carregar colaboradores',
+        description: 'Não foi possível carregar os colaboradores.',
+      });
     }
   };
 
@@ -74,36 +67,39 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
     getColaboradores();
   }, [reload]);
 
-  const handleDeleteClick = (colaborador: Colaborador) => {
-    setSelectedColaborador(colaborador);
-    setIsDeleteDialogOpen(true);
-  };
+  useEffect(() => {
+    const filtered = listColaboradores.filter(
+      (colaborador) =>
+        colaborador.name.toLowerCase().includes(filters.name.toLowerCase()) &&
+        colaborador.role.toLowerCase().includes(filters.role.toLowerCase()) &&
+        colaborador.sector.toLowerCase().includes(filters.sector.toLowerCase())
+    );
+    setFilteredColaboradores(filtered);
+  }, [filters, listColaboradores]);
 
   const handleEditClick = (colaborador: Colaborador) => {
     setSelectedColaborador(colaborador);
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!selectedColaborador) return;
-
+  const handleDeactivate = async (
+    colaborador: Colaborador,
+    status: boolean
+  ) => {
     try {
-      await ColaboradorService.deleteColaborador(selectedColaborador.id);
+      await ColaboradorService.desativarColaborador(colaborador.id, status);
       toast({
-        title: 'Colaborador excluído',
-        description: 'O colaborador foi excluído com sucesso.',
+        title: 'Colaborador desativado',
+        description: `O colaborador ${colaborador.name} foi desativado.`,
       });
       getColaboradores();
     } catch (error) {
+      console.error('Erro ao desativar colaborador:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro ao excluir colaborador',
-        description: 'Não foi possível excluir o colaborador. Tente novamente.',
+        title: 'Erro ao desativar',
+        description: 'Não foi possível desativar o colaborador.',
       });
-      console.error('Erro ao excluir o colaborador:', error);
-    } finally {
-      setIsDeleteDialogOpen(false);
-      setSelectedColaborador(null);
     }
   };
 
@@ -115,6 +111,24 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
 
   return (
     <>
+      <div className="mb-4 grid grid-cols-3 gap-4">
+        <Input
+          placeholder="Filtrar por nome"
+          value={filters.name}
+          onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+        />
+        <Input
+          placeholder="Filtrar por cargo"
+          value={filters.role}
+          onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+        />
+        <Input
+          placeholder="Filtrar por setor"
+          value={filters.sector}
+          onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
+        />
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -126,7 +140,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {listColaboradores.map((colaborador) => (
+            {filteredColaboradores.map((colaborador) => (
               <TableRow key={colaborador.id}>
                 <TableCell>{colaborador.name}</TableCell>
                 <TableCell>{colaborador.role}</TableCell>
@@ -142,9 +156,15 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleDeleteClick(colaborador)}
+                    onClick={() =>
+                      handleDeactivate(colaborador, !colaborador.status)
+                    }
                   >
-                    <Trash2 className="h-4 w-4" color="red" />
+                    {colaborador.status ? (
+                      <Ban className="h-4 w-4" color="orange" /> // Ícone para desativar
+                    ) : (
+                      <Check className="h-4 w-4" color="green" /> // Ícone para ativar
+                    )}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -152,27 +172,6 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o colaborador "
-              {selectedColaborador?.name}"? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>

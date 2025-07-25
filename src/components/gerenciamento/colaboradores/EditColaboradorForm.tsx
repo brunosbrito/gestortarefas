@@ -27,7 +27,8 @@ export const EditColaboradorForm = ({
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
       name: colaborador.name,
-      role: colaborador.role
+      role: colaborador.role,
+      sector: colaborador.sector,
     },
   });
 
@@ -44,7 +45,8 @@ export const EditColaboradorForm = ({
         colaborador.id,
         {
           name: data.name,
-          role: data.role
+          role: data.role,
+          sector: data.sector,
         }
       );
       toast({

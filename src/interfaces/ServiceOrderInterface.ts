@@ -1,5 +1,5 @@
 export interface ServiceOrder {
-  id: string;
+  id: number;
   serviceOrderNumber: string;
   description: string;
   status: 'em_andamento' | 'concluida' | 'pausada';

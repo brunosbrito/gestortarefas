@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 
 interface AtividadeMetadataProps {
   atividade: AtividadeStatus;
-  onProgressClick: () => void;
   elapsedTime: number;
   calculateProgress: () => number;
   formatTime: (time: number) => string;
@@ -28,7 +27,6 @@ interface AtividadeMetadataProps {
 
 export const AtividadeMetadata = ({
   atividade,
-  onProgressClick,
   elapsedTime,
   calculateProgress,
   formatTime,
@@ -60,9 +58,7 @@ export const AtividadeMetadata = ({
                 {atividade.completedQuantity || 0} de {atividade.quantity})
               </span>
             </div>
-            <Button variant="outline" size="sm" onClick={onProgressClick}>
-              <CheckCircle2 size={16} />
-            </Button>
+            
           </div>
           <Progress value={calculateProgress()} className="h-2" />
         </div>

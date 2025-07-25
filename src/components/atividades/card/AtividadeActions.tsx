@@ -67,7 +67,7 @@ export const AtividadeActions = ({
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex justify-between items-center">
       <Button
         variant="outline"
         size="sm"

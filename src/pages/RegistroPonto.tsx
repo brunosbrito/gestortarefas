@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -46,10 +45,13 @@ const RegistroPonto = () => {
       const funcionariosData = await getEffectivesByShiftAndDate(currentTurno);
       const obrasData = await ObrasService.getAllObras();
       const colaboradoresData = await ColaboradorService.getAllColaboradores();
+      const colaboradoresFiltrados = colaboradoresData
+        .filter((colaborador) => colaborador.status === true)
+        .sort((a, b) => a.name.localeCompare(b.name));
 
       setFuncionarios(funcionariosData);
       setObras(obrasData);
-      setColaboradores(colaboradoresData);
+      setColaboradores(colaboradoresFiltrados);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados. Tente novamente.');
@@ -125,18 +127,12 @@ const RegistroPonto = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Registro - Turno {currentTurno}</DialogTitle>
-                  <DialogDescription>
-                    Registre o ponto de múltiplos colaboradores de uma vez.
-                  </DialogDescription>
-                </DialogHeader>
                 <PontoLoteForm
                   colaboradores={colaboradores}
                   obras={obras}
                   onSubmit={onLoteSubmit}
                   onClose={() => setIsLoteDialogOpen(false)}
-                  turno={currentTurno}
+                  turno={Number(currentTurno)}
                 />
               </DialogContent>
             </Dialog>

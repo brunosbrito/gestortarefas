@@ -23,7 +23,7 @@ export const AtividadeDetails = ({ atividade }: AtividadeDetailsProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="w-full">
           <Eye className="w-4 h-4 mr-1" />
           Detalhes
         </Button>

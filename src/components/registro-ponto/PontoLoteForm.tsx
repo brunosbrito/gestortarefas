@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,7 +31,7 @@ interface PontoLoteFormProps {
   obras: Obra[];
   onSubmit: (registros: CreateEffectiveDto[]) => void;
   onClose: () => void;
-  turno: string;
+  turno: number;
 }
 
 interface ColaboradorRegistro extends Colaborador {
@@ -45,8 +44,8 @@ interface ColaboradorRegistro extends Colaborador {
 // Constantes para os setores
 const SETORES = {
   PRODUCAO: 'PRODUCAO',
-  ADMINISTRATIVO: 'ADMINISTRATIVO', 
-  ENGENHARIA: 'ENGENHARIA'
+  ADMINISTRATIVO: 'ADMINISTRATIVO',
+  ENGENHARIA: 'ENGENHARIA',
 } as const;
 
 const getSetorLabel = (sector: string) => {
@@ -64,7 +63,9 @@ const getSetorLabel = (sector: string) => {
 
 // Função para comparação case-insensitive de setores
 const isProducao = (sector: string) => {
-  return sector?.toUpperCase() === 'PRODUCAO' || sector?.toLowerCase() === 'produção';
+  return (
+    sector?.toUpperCase() === 'PRODUCAO' || sector?.toLowerCase() === 'produção'
+  );
 };
 
 export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
@@ -76,8 +77,11 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 }) => {
   console.log('PontoLoteForm - obras recebidas:', obras);
   console.log('PontoLoteForm - colaboradores:', colaboradores);
-  console.log('PontoLoteForm - setores dos colaboradores:', colaboradores.map(c => ({ nome: c.name, setor: c.sector })));
-  
+  console.log(
+    'PontoLoteForm - setores dos colaboradores:',
+    colaboradores.map((c) => ({ nome: c.name, setor: c.sector }))
+  );
+
   const [etapa, setEtapa] = useState<'presentes' | 'faltas'>('presentes');
   const [registros, setRegistros] = useState<ColaboradorRegistro[]>(
     colaboradores
@@ -104,36 +108,48 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
       !filtroSetor || filtroSetor === 'todos' || col.sector === filtroSetor;
     const matchNome =
       !filtroNome || col.name.toLowerCase().includes(filtroNome.toLowerCase());
-    
+
     // Na etapa de faltas, excluir colaboradores que estão presentes
     if (etapa === 'faltas') {
       return matchSetor && matchNome && !col.presente;
     }
-    
+
     return matchSetor && matchNome;
   });
 
   // Verificar se há colaboradores de produção presentes (usando função case-insensitive)
-  const presentesProducao = registros.filter(r => r.presente && isProducao(r.sector));
-  const presentesOutrosSetores = registros.filter(r => r.presente && !isProducao(r.sector));
+  const presentesProducao = registros.filter(
+    (r) => r.presente && isProducao(r.sector)
+  );
+  const presentesOutrosSetores = registros.filter(
+    (r) => r.presente && !isProducao(r.sector)
+  );
   const obraObrigatoria = presentesProducao.length > 0;
 
   console.log('Análise de setores:', {
-    presentesProducao: presentesProducao.map(p => ({ nome: p.name, setor: p.sector })),
-    presentesOutrosSetores: presentesOutrosSetores.map(p => ({ nome: p.name, setor: p.sector })),
-    obraObrigatoria
+    presentesProducao: presentesProducao.map((p) => ({
+      nome: p.name,
+      setor: p.sector,
+    })),
+    presentesOutrosSetores: presentesOutrosSetores.map((p) => ({
+      nome: p.name,
+      setor: p.sector,
+    })),
+    obraObrigatoria,
   });
 
   const validateProximaEtapa = () => {
     const errors: string[] = [];
-    
+
     // Validar se há obra selecionada apenas se houver colaboradores de produção presentes
     if (obraObrigatoria && (!obraGlobal || obraGlobal === 'none')) {
-      errors.push(`Selecione uma obra - obrigatório para os ${presentesProducao.length} colaborador(es) de Produção`);
+      errors.push(
+        `Selecione uma obra - obrigatório para os ${presentesProducao.length} colaborador(es) de Produção`
+      );
     }
 
     // Validar se há pelo menos um colaborador presente
-    const presentes = registros.filter(r => r.presente);
+    const presentes = registros.filter((r) => r.presente);
     if (presentes.length === 0) {
       errors.push('Marque pelo menos um colaborador como presente');
     }
@@ -144,15 +160,19 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
   const validateSubmit = () => {
     const errors: string[] = [];
-    
+
     // Validar motivos das faltas
-    const faltasSemMotivo = registros.filter(r => r.faltou && (!r.reason || r.reason.trim() === ''));
+    const faltasSemMotivo = registros.filter(
+      (r) => r.faltou && (!r.reason || r.reason.trim() === '')
+    );
     if (faltasSemMotivo.length > 0) {
-      errors.push(`${faltasSemMotivo.length} colaborador(es) marcado(s) como falta sem motivo preenchido`);
+      errors.push(
+        `${faltasSemMotivo.length} colaborador(es) marcado(s) como falta sem motivo preenchido`
+      );
     }
 
     // Validar se há pelo menos um registro (presente ou falta)
-    const registrosValidos = registros.filter(r => r.presente || r.faltou);
+    const registrosValidos = registros.filter((r) => r.presente || r.faltou);
     if (registrosValidos.length === 0) {
       errors.push('É necessário registrar pelo menos um colaborador');
     }
@@ -163,10 +183,10 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
   const proximaEtapa = () => {
     if (!validateProximaEtapa()) {
-      toast({ 
-        title: 'Validação', 
+      toast({
+        title: 'Validação',
         description: 'Corrija os erros antes de prosseguir',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -192,9 +212,17 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
           const updated = { ...reg, [field]: value };
 
           // Se está marcando como presente e há obra global selecionada, atribuir apenas para PRODUÇÃO
-          if (field === 'presente' && value && obraGlobal && obraGlobal !== 'none' && isProducao(reg.sector)) {
+          if (
+            field === 'presente' &&
+            value &&
+            obraGlobal &&
+            obraGlobal !== 'none' &&
+            isProducao(reg.sector)
+          ) {
             updated.project = obraGlobal;
-            console.log(`Atribuindo obra "${obraGlobal}" para colaborador de Produção: ${reg.name}`);
+            console.log(
+              `Atribuindo obra "${obraGlobal}" para colaborador de Produção: ${reg.name}`
+            );
           }
 
           // Se está desmarcando como presente, limpar projeto
@@ -211,10 +239,10 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
   const handleSubmit = () => {
     if (!validateSubmit()) {
-      toast({ 
-        title: 'Validação', 
+      toast({
+        title: 'Validação',
         description: 'Corrija os erros antes de finalizar',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -223,7 +251,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
       .filter((reg) => reg.presente || reg.faltou)
       .map((reg) => ({
         username: reg.name,
-        shift: parseInt(turno),
+        shift: turno,
         role: reg.sector as 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO',
         typeRegister: (reg.presente ? reg.sector : 'FALTA') as
           | 'PRODUCAO'
@@ -254,12 +282,25 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
   const obraGlobalNome = obras.find((o) => o.name === obraGlobal)?.name || '';
 
+  const getTurnoLabel = (turno: number) => {
+    switch (turno) {
+      case 1:
+        return '1º Turno';
+      case 2:
+        return '2º Turno';
+      case 3:
+        return 'Turno Central';
+      default:
+        return `${turno}º Central`;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-[#003366]">
-          Registro em Lote - Turno {turno}
+          Registro em Lote - {getTurnoLabel(turno)}
         </h2>
         <div className="flex gap-2">
           <Badge variant="secondary" className="bg-[#E0E0E0]">
@@ -300,13 +341,20 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                 <p className="font-medium text-blue-800">Resumo por Setor:</p>
                 <div className="flex gap-2 flex-wrap">
                   {presentesProducao.length > 0 && (
-                    <Badge variant="secondary" className="bg-[#FFA500]/20 text-[#003366]">
+                    <Badge
+                      variant="secondary"
+                      className="bg-[#FFA500]/20 text-[#003366]"
+                    >
                       Produção: {presentesProducao.length} (obra obrigatória)
                     </Badge>
                   )}
                   {presentesOutrosSetores.length > 0 && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Outros setores: {presentesOutrosSetores.length} (obra opcional)
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-800"
+                    >
+                      Outros setores: {presentesOutrosSetores.length} (obra
+                      opcional)
                     </Badge>
                   )}
                 </div>
@@ -323,7 +371,9 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
               <div className="space-y-1">
-                <p className="font-medium text-destructive">Erros de validação:</p>
+                <p className="font-medium text-destructive">
+                  Erros de validação:
+                </p>
                 <ul className="text-sm text-destructive space-y-1">
                   {validationErrors.map((error, index) => (
                     <li key={index}>• {error}</li>
@@ -354,17 +404,26 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             {etapa === 'presentes' && (
               <div className="relative">
                 <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                <Select value={obraGlobal} onValueChange={(value) => {
-                  console.log('Obra selecionada:', value);
-                  setObraGlobal(value);
-                }}>
-                  <SelectTrigger className={`pl-10 ${obraObrigatoria && (!obraGlobal || obraGlobal === 'none') ? 'border-destructive' : ''}`}>
-                    <SelectValue 
+                <Select
+                  value={obraGlobal}
+                  onValueChange={(value) => {
+                    console.log('Obra selecionada:', value);
+                    setObraGlobal(value);
+                  }}
+                >
+                  <SelectTrigger
+                    className={`pl-10 ${
+                      obraObrigatoria && (!obraGlobal || obraGlobal === 'none')
+                        ? 'border-destructive'
+                        : ''
+                    }`}
+                  >
+                    <SelectValue
                       placeholder={
-                        obraObrigatoria 
-                          ? "Selecionar obra (obrigatório para Produção)" 
-                          : "Selecionar obra (opcional)"
-                      } 
+                        obraObrigatoria
+                          ? 'Selecionar obra (obrigatório para Produção)'
+                          : 'Selecionar obra (opcional)'
+                      }
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -482,7 +541,10 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                             <div className="text-sm">
                               {isProducao(registro.sector) ? (
                                 registro.project ? (
-                                  <Badge variant="secondary" className="bg-[#FFA500]/20 text-[#003366]">
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-[#FFA500]/20 text-[#003366]"
+                                  >
                                     {registro.project}
                                   </Badge>
                                 ) : (
@@ -491,7 +553,10 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                                   </span>
                                 )
                               ) : (
-                                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-green-100 text-green-800"
+                                >
                                   Obra não obrigatória
                                 </Badge>
                               )}
@@ -536,7 +601,9 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                                 )
                               }
                               className={`h-8 text-xs ${
-                                registro.faltou && (!registro.reason || registro.reason.trim() === '')
+                                registro.faltou &&
+                                (!registro.reason ||
+                                  registro.reason.trim() === '')
                                   ? 'border-destructive'
                                   : ''
                               }`}

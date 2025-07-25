@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,18 +37,30 @@ const emExecucaoSchema = z.object({
 const concluidaSchema = z.object({
   endDate: z.string().min(1, 'Data de conclusão é obrigatória'),
   endTime: z.string().min(1, 'Hora de conclusão é obrigatória'),
-  realizationDescription: z.string().min(1, 'Descrição do que foi realizado é obrigatória'),
-  workedHours: z.array(z.object({
-    id: z.string(),
-    hours: z.number().min(0.1, 'As horas trabalhadas devem ser maiores que 0'),
-  })),
+  realizationDescription: z
+    .string()
+    .min(1, 'Descrição do que foi realizado é obrigatória'),
+  workedHours: z.array(
+    z.object({
+      id: z.string(),
+      hours: z
+        .number()
+        .min(0.1, 'As horas trabalhadas devem ser maiores que 0'),
+    })
+  ),
 });
 
 const paralizadaSchema = z.object({
   pauseDate: z.string().min(1, 'Data de paralização é obrigatória'),
   pauseTime: z.string().min(1, 'Hora de paralização é obrigatória'),
   reason: z.string().min(1, 'Motivo é obrigatório'),
-  realizationDescription: z.string().min(1, 'Descrição do que foi realizado é obrigatória'),
+  realizationDescription: z
+    .string()
+    .min(1, 'Descrição do que foi realizado é obrigatória'),
+  DayQuantity: z.preprocess(
+    (val) => Number(val),
+    z.number().min(0, 'Quantidade obrigatória')
+  ),
 });
 
 type EmExecucaoForm = z.infer<typeof emExecucaoSchema>;
@@ -90,10 +101,11 @@ export function AtualizarStatusDialog({
   const getDefaultValues = () => {
     if (novoStatus === 'Concluídas') {
       return {
-        workedHours: atividade?.collaborators?.map(col => ({
-          id: col.id.toString(),
-          hours: 0,
-        })) || [],
+        workedHours:
+          atividade?.collaborators?.map((col) => ({
+            id: col.id.toString(),
+            hours: 0,
+          })) || [],
       } as Partial<ConcluidaForm>;
     }
     return {};
@@ -266,17 +278,21 @@ export function AtualizarStatusDialog({
                       name={`workedHours.${index}`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Horas trabalhadas - {colaborador.name}</FormLabel>
+                          <FormLabel>
+                            Horas trabalhadas - {colaborador.name}
+                          </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
                               step="0.1"
                               min="0"
                               placeholder="Digite as horas trabalhadas"
-                              onChange={(e) => field.onChange({
-                                id: colaborador.id.toString(),
-                                hours: parseFloat(e.target.value),
-                              })}
+                              onChange={(e) =>
+                                field.onChange({
+                                  id: colaborador.id.toString(),
+                                  hours: parseFloat(e.target.value),
+                                })
+                              }
                               value={field.value?.hours || ''}
                             />
                           </FormControl>
@@ -352,15 +368,35 @@ export function AtualizarStatusDialog({
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="DayQuantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantidade Realizada</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="Informe a quantidade"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="realizationDescription"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>O que foi realizado até o momento?</FormLabel>
+                      <FormLabel>Descrição</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Descreva o que foi realizado até o momento nesta atividade"
+                          placeholder="Descreva o oque ocorreu..."
                           className="min-h-[100px]"
                           {...field}
                         />

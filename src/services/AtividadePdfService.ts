@@ -76,6 +76,7 @@ export class AtividadePdfService {
         atividade.status,
         this.truncateText(atividade.project?.name || '-', 25),
         new Date(atividade.startDate).toLocaleDateString('pt-BR')
+        
       ];
 
       rowData.forEach((data, colIndex) => {

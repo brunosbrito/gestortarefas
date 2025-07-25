@@ -1,4 +1,3 @@
-
 import { Card, CardFooter } from '@/components/ui/card';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useParams } from 'react-router-dom';
@@ -81,17 +80,12 @@ export const AtividadeCard = ({
     const startDateTime = new Date(startDate);
     const now = new Date();
 
-    if (now < startDateTime) {
-      console.error('Erro: A data de início é maior que o horário atual.');
-      return 0;
-    }
+    const elapsedSeconds = (now.getTime() - startDateTime.getTime()) / 1000;
+    console.log('total', totalTime, elapsedSeconds, 'ms');
 
-    const elapsedSeconds =
-      totalTime + (now.getTime() - startDateTime.getTime()) / 1000;
-
-    const hours = Math.floor(elapsedSeconds / 3600);
-    const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-
+    const totalElapsedSeconds = totalTime * 3600 + elapsedSeconds;
+    const hours = Math.floor(totalElapsedSeconds / 3600);
+    const minutes = Math.floor((totalElapsedSeconds % 3600) / 60);
     return hours + minutes / 60;
   };
 
@@ -100,7 +94,10 @@ export const AtividadeCard = ({
 
     const hours = Math.floor(totalTime);
     const minutes = Math.round((totalTime - hours) * 60);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+      2,
+      '0'
+    )}`;
   };
 
   const formatEstimatedTime = (estimatedTime: string) => {
@@ -119,7 +116,8 @@ export const AtividadeCard = ({
     if (!estimatedTime) return 0;
 
     const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
-    const totalEstimatedSeconds = parseInt(hours) * 3600 + parseInt(minutes) * 60;
+    const totalEstimatedSeconds =
+      parseInt(hours) * 3600 + parseInt(minutes) * 60;
 
     elapsedTime += elapsedTime * 3600;
 
@@ -151,7 +149,6 @@ export const AtividadeCard = ({
 
             <AtividadeMetadata
               atividade={atividade}
-              onProgressClick={() => setIsProgressDialogOpen(true)}
               elapsedTime={elapsedTime}
               calculateProgress={calculateProgress}
               formatTime={formatTime}
@@ -159,18 +156,22 @@ export const AtividadeCard = ({
               calculatePercentage={calculatePercentage}
             />
 
-            <CardFooter className="p-4 pt-0 flex justify-between">
-              <AtividadeDetails atividade={atividade} />
-              <AtividadeActions
-                atividade={atividade}
-                projectId={projectId}
-                serviceOrderId={serviceOrderId}
-                isMobile={isMobile}
-                onMoveClick={() => setIsMoveDialogOpen(true)}
-                onEditSuccess={onDelete}
-                onFileSelect={handleFileSelect}
-                onDelete={onDelete}
-              />
+            <CardFooter className="p-4 pt-0 flex flex-col items-start gap-2">
+              <div className="w-full">
+                <AtividadeActions
+                  atividade={atividade}
+                  projectId={projectId}
+                  serviceOrderId={serviceOrderId}
+                  isMobile={isMobile}
+                  onMoveClick={() => setIsMoveDialogOpen(true)}
+                  onEditSuccess={onDelete}
+                  onFileSelect={handleFileSelect}
+                  onDelete={onDelete}
+                />
+              </div>
+              <div className="w-full">
+                <AtividadeDetails atividade={atividade} />
+              </div>
             </CardFooter>
           </Card>
 

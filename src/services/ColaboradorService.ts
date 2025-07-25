@@ -66,6 +66,19 @@ class ColaboradorService {
       throw error;
     }
   }
+
+  async desativarColaborador(id: number, status: boolean) {
+    try {
+      const response = await axios.patch(`${URL}${id}/status`, {
+        status,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao desativar colaborador:', error);
+      throw error;
+    }
+  }
 }
 
 export default new ColaboradorService();

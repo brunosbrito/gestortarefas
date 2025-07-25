@@ -56,7 +56,7 @@ export const PontoTable = ({
       case 3:
         return 'Turno Central';
       default:
-        return `${turno}º Turno`;
+        return `${turno}º Central`;
     }
   };
 

@@ -1,25 +1,41 @@
-
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 
 export const calcularKPI = (atividade: AtividadeStatus): number => {
   const tempoEstimadoStr = atividade.estimatedTime?.toString() || '0';
-  const tempoEstimado = parseFloat(tempoEstimadoStr.replace(/[^\d.,]/g, '').replace(',', '.'));
-  const tempoTotal = atividade.totalTime || 0;
+  const tempoEstimado = converterParaMinutos(tempoEstimadoStr);
+  let tempoTotal =  0;
+  if (atividade.status === 'Em execução') {
+    const tempoDecorrido = calculateElapsedTime(atividade.totalTime, atividade.startDate);
+    tempoTotal = tempoDecorrido * 60;
+  }
   
-  // Validação para evitar divisão por zero e valores inválidos
-  if (!tempoEstimado || tempoEstimado <= 0 || !isFinite(tempoEstimado)) return 0;
+
+  if (!tempoEstimado || tempoEstimado <= 0 || !isFinite(tempoEstimado))
+    return 0;
   if (!tempoTotal || !isFinite(tempoTotal)) return 0;
-  
+
   const kpi = (tempoTotal / tempoEstimado) * 100;
-  return isFinite(kpi) ? Math.min(kpi, 999) : 0; // Limita o valor máximo
+  return isFinite(kpi) ? Math.min(kpi, 999) : 0;
+};
+
+const converterParaMinutos = (tempoStr: string): number => {
+  const regex = /(\d+)h(?:\s*(\d+)min)?/i;
+  const match = tempoStr.match(regex);
+
+  if (!match) return 0;
+
+  const horas = parseInt(match[1], 10) || 0;
+  const minutos = parseInt(match[2], 10) || 0;
+
+  return horas * 60 + minutos;
 };
 
 export const calcularProgresso = (atividade: AtividadeStatus): number => {
   const quantidadeTotal = atividade.quantity || 0;
   const quantidadeConcluida = atividade.completedQuantity || 0;
-  
+
   if (quantidadeTotal === 0) return 0;
-  
+
   return (quantidadeConcluida / quantidadeTotal) * 100;
 };
 
@@ -33,14 +49,38 @@ export const formatarProgresso = (progresso: number): string => {
   return `${Math.round(progresso)}%`;
 };
 
-export const formatarTempoTotal = (tempoTotal: number): string => {
-  if (!tempoTotal || !isFinite(tempoTotal)) return '0h00m';
   
-  const horas = Math.floor(tempoTotal);
-  const minutos = Math.round((tempoTotal - horas) * 60);
-  
+
+export const formatarTempoTotal = (atividade: AtividadeStatus): string => {
+
+  if(atividade.status === 'Em execução') {
+    const tempoDecorrido = calculateElapsedTime(atividade.totalTime, atividade.startDate);
+    return tempoDecorrido.toFixed(2).replace('.', 'h') + 'm';
+  }
+
+  if (!atividade.totalTime || !isFinite(atividade.totalTime)) return '0h00m';
+
+  const horas = Math.floor(atividade.totalTime);
+  const minutos = Math.round((atividade.totalTime - horas) * 60);
+
   return `${horas}h${minutos.toString().padStart(2, '0')}m`;
 };
+
+export const calculateElapsedTime = (totalTime: number, startDate?: string) => {
+    if (!startDate) return totalTime / 3600;
+
+    const startDateTime = new Date(startDate);
+    const now = new Date();
+
+    const elapsedSeconds =
+      (now.getTime() - startDateTime.getTime()) / 1000;
+
+    const totalElapsedSeconds = totalTime * 3600 + elapsedSeconds;
+    const hours = Math.floor(totalElapsedSeconds / 3600);
+    const minutes = Math.floor((totalElapsedSeconds % 3600) / 60);
+    return hours + minutes / 60;
+
+  };
 
 export const getKPIColor = (kpi: number): string => {
   if (kpi <= 100) return 'text-green-600 bg-green-50 border-green-200';

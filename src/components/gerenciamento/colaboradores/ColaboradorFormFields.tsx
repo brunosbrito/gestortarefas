@@ -11,9 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export const colaboradorFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   role: z.string().min(1, "Cargo é obrigatório"),
-  sector: z.enum(['PRODUCAO', 'ADMINISTRATIVO', 'ENGENHARIA'], {
-    required_error: "Setor é obrigatório",
-  }),
+  sector: z.string().min(1, "Setor é obrigatório"),
 });
 
 export type ColaboradorFormValues = z.infer<typeof colaboradorFormSchema>;

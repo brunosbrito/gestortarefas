@@ -1,6 +1,8 @@
 
 import { TarefaMacro } from "./TarefaMacroInterface";
 import { Processo } from "./ProcessoInterface";
+import { Project } from "./RncInterface";
+import { ServiceOrder } from "./ServiceOrderInterface";
 
 export interface Activity {
   id: number;
@@ -27,4 +29,6 @@ export interface Activity {
   orderServiceId: number;
   createdBy: number;
   unidadeTempo?: string;
+  project: Project,
+  serviceOrder: ServiceOrder
 }
