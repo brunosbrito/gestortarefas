@@ -41,7 +41,7 @@ export const formatarProgresso = (progresso: number): string => {
 };
 
 export const formatarTempoTotal = (atividade: AtividadeStatus): string => {
-  if (atividade.status === 'Em execução') {
+  if (atividade?.status === 'Em execução') {
     const tempoDecorrido = calculateElapsedTime(
       atividade.totalTime,
       atividade.startDate
