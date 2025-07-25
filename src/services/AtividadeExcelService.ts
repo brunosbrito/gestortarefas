@@ -70,19 +70,19 @@ export class AtividadeExcelService {
         key: 'Tempo Total',
         label: 'Tempo Total',
         width: 15,
-        getValue: (atividade) => formatarTempoTotal(atividade.totalTime),
+        getValue: (atividade) => formatarTempoTotal(atividade),
       },
       kpi: {
         key: 'KPI (%)',
         label: 'KPI (%)',
         width: 12,
-        getValue: (atividade) => calcularKPI(atividade).toFixed(1),
+        getValue: (atividade) => formatarKPI(calcularKPI(atividade)),
       },
       progress: {
         key: 'Progresso (%)',
         label: 'Progresso (%)',
         width: 15,
-        getValue: (atividade) => calcularProgresso(atividade).toFixed(1),
+        getValue: (atividade) => formatarProgresso(calcularProgresso(atividade)),
       },
       quantityTotal: {
         key: 'Quantidade Total',

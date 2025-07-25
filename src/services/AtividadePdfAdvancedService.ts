@@ -27,7 +27,7 @@ export class AtividadePdfAdvancedService {
       case 'estimatedTime':
         return atividade.estimatedTime || '-';
       case 'totalTime':
-        return formatarTempoTotal(atividade.totalTime);
+        return formatarTempoTotal(atividade);
       case 'kpi':
         return formatarKPI(calcularKPI(atividade));
       case 'progress':
