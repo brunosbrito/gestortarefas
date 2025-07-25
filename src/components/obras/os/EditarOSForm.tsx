@@ -55,7 +55,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
 
   const handleSubmit = async (data: FormValues) => {
     try {
-      await updateServiceOrder(os.id, {
+      await updateServiceOrder(os.id.toString(), {
         description: data.description,
         projectId: data.projectId,
         startDate: data.startDate,

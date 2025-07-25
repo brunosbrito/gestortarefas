@@ -105,7 +105,7 @@ export const AtividadesTable = () => {
     }
   };
 
-  const handleRowClick = (atividade: Activity) => {
+  const handleRowClick = (atividade: AtividadeStatus) => {
     console.log(atividade, 'asas', atividade.serviceOrder.id)
      navigate(`/obras/${atividade.project.id}/os/${atividade.serviceOrder.id}/atividades`);
   };

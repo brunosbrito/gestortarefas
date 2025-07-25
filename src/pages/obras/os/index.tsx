@@ -98,7 +98,7 @@ const OrdensServico = () => {
 
   const handleRemoveOS = async (os: ServiceOrder) => {
     try {
-      await deleteServiceOrder(os.id);
+      await deleteServiceOrder(os.id.toString());
       await getServiceOrders();
       toast({
         title: 'Ordem de Serviço removida',
