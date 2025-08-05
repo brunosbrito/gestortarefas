@@ -89,96 +89,133 @@ export const PontoTable = ({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-semibold text-construction-800">
+    <div className="space-y-3">
+      {/* Header mobile otimizado */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-construction-800">
             {getTurnoLabel(turno)}
           </h2>
-          <div className="flex gap-2">
-            <Badge variant="secondary">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            <Badge variant="secondary" className="text-xs px-2 py-0.5">
               Total: {resumo.total}
             </Badge>
-            <Badge variant="default">
+            <Badge variant="default" className="text-xs px-2 py-0.5">
               Presentes: {resumo.presentes}
             </Badge>
-            <Badge variant="destructive">
+            <Badge variant="destructive" className="text-xs px-2 py-0.5">
               Faltas: {resumo.faltas}
             </Badge>
           </div>
         </div>
-        <Button onClick={handleEnviarTurno} variant="secondary" size="sm">
-          <Send className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Enviar Registros do Turno</span>
+        <Button onClick={handleEnviarTurno} variant="secondary" size="sm" className="self-start sm:self-auto">
+          <Send className="w-4 h-4 mr-1.5" />
+          <span className="hidden sm:inline">Enviar Registros</span>
           <span className="sm:hidden">Enviar</span>
         </Button>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Layout mobile com cards compactos */}
+      <div className="block md:hidden space-y-2">
+        {funcionariosFiltrados.map((funcionario) => (
+          <div key={funcionario.id} className="bg-card border rounded-lg p-3 space-y-2">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm truncate">{funcionario.username}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                    {funcionario.role}
+                  </Badge>
+                  <Badge
+                    variant={funcionario.status === 'PRESENTE' ? 'default' : 'destructive'}
+                    className="text-xs px-1.5 py-0.5"
+                  >
+                    {funcionario.status}
+                  </Badge>
+                </div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEdit(funcionario)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar
+                  </DropdownMenuItem>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir este registro de ponto? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => { onDelete(funcionario.id); onRefresh(); }}>
+                          Confirmar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            {(funcionario.project || funcionario.sector || funcionario.reason) && (
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                {funcionario.project && <div>Obra: {funcionario.project}</div>}
+                {funcionario.sector && <div>Setor: {funcionario.sector}</div>}
+                {funcionario.reason && <div>Motivo: {funcionario.reason}</div>}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Layout desktop com tabela */}
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead className="hidden md:table-cell">Função</TableHead>
+              <TableHead>Função</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell">Obra</TableHead>
-              <TableHead className="hidden md:table-cell">Setor</TableHead>
-              <TableHead className="hidden md:table-cell">Motivo</TableHead>
+              <TableHead>Obra</TableHead>
+              <TableHead>Setor</TableHead>
+              <TableHead>Motivo</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {funcionariosFiltrados.map((funcionario) => (
               <TableRow key={funcionario.id}>
-                <TableCell className="font-medium">
-                  {funcionario.username}
-                  <div className="md:hidden mt-1 space-y-1">
-                    <Badge variant="secondary" className="block">
-                      {funcionario.role}
-                    </Badge>
-                    {funcionario.project && (
-                      <div className="text-sm text-gray-500">
-                        Obra: {funcionario.project}
-                      </div>
-                    )}
-                    {funcionario.sector && (
-                      <div className="text-sm text-gray-500">
-                        Setor: {funcionario.sector}
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
+                <TableCell className="font-medium">{funcionario.username}</TableCell>
+                <TableCell>
                   <Badge variant="secondary">{funcionario.role}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge
-                    variant={
-                      funcionario.status === 'PRESENTE'
-                        ? 'default'
-                        : 'destructive'
-                    }
+                    variant={funcionario.status === 'PRESENTE' ? 'default' : 'destructive'}
                   >
                     {funcionario.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {funcionario.project || '-'}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {funcionario.sector || '-'}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {funcionario.reason || '-'}
-                </TableCell>
+                <TableCell>{funcionario.project || '-'}</TableCell>
+                <TableCell>{funcionario.sector || '-'}</TableCell>
+                <TableCell>{funcionario.reason || '-'}</TableCell>
                 <TableCell className="text-right">
-                  {/* Desktop actions */}
-                  <div className="hidden md:flex space-x-2 justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(funcionario)}
-                    >
+                  <div className="flex space-x-2 justify-end">
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(funcionario)}>
                       <Edit className="w-4 h-4 mr-2" />
                       Editar
                     </Button>
@@ -191,75 +228,19 @@ export const PontoTable = ({
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Confirmar exclusão
-                          </AlertDialogTitle>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Tem certeza que deseja excluir este registro de
-                            ponto? Esta ação não pode ser desfeita.
+                            Tem certeza que deseja excluir este registro de ponto? Esta ação não pode ser desfeita.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => {
-                              onDelete(funcionario.id);
-                            }}
-                          >
+                          <AlertDialogAction onClick={() => onDelete(funcionario.id)}>
                             Confirmar
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  </div>
-
-                  {/* Mobile actions */}
-                  <div className="md:hidden">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(funcionario)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem
-                              onSelect={(e) => e.preventDefault()}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Confirmar exclusão
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja excluir este registro de
-                                ponto? Esta ação não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => {
-                                  onDelete(funcionario.id);
-                                  onRefresh();
-                                }}
-                              >
-                                Confirmar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>

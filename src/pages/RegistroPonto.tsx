@@ -174,18 +174,18 @@ const RegistroPonto = () => {
           onValueChange={(value) => setCurrentTurno(value.replace('turno', ''))}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 h-auto">
-            <TabsTrigger value="turno1" className="text-xs sm:text-sm lg:text-base py-2 px-3">
+          <TabsList className="grid w-full grid-cols-3 h-9 sm:h-10">
+            <TabsTrigger value="turno1" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3">
               1º Turno
             </TabsTrigger>
-            <TabsTrigger value="turno2" className="text-xs sm:text-sm lg:text-base py-2 px-3">
+            <TabsTrigger value="turno2" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3">
               2º Turno
             </TabsTrigger>
-            <TabsTrigger value="turno3" className="text-xs sm:text-sm lg:text-base py-2 px-3">
+            <TabsTrigger value="turno3" className="text-xs sm:text-sm py-1.5 px-2 sm:py-2 sm:px-3">
               Turno Central
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="turno1" className="mt-6">
+          <TabsContent value="turno1" className="mt-4">
             <PontoTable
               funcionarios={funcionarios}
               turno={1}
@@ -194,7 +194,7 @@ const RegistroPonto = () => {
               onRefresh={fetchData}
             />
           </TabsContent>
-          <TabsContent value="turno2" className="mt-6">
+          <TabsContent value="turno2" className="mt-4">
             <PontoTable
               funcionarios={funcionarios}
               turno={2}
@@ -203,7 +203,7 @@ const RegistroPonto = () => {
               onRefresh={fetchData}
             />
           </TabsContent>
-          <TabsContent value="turno3" className="mt-6">
+          <TabsContent value="turno3" className="mt-4">
             <PontoTable
               funcionarios={funcionarios}
               turno={3}
