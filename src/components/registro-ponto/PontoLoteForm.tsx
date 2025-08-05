@@ -433,7 +433,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                       Nenhuma obra selecionada
                     </SelectItem>
                     <SelectItem value="Fabrica">
-                      Fabrica
+                      Fábrica
                     </SelectItem>
                     {obras.map((obra) => (
                       <SelectItem key={obra.id} value={obra.name}>
