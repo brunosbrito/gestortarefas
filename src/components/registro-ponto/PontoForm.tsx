@@ -183,6 +183,9 @@ export const PontoForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    <SelectItem value="Fabrica">
+                      Fabrica
+                    </SelectItem>
                     {obras.map((obra) => (
                       <SelectItem key={obra.name} value={obra.name}>
                         {obra.name}
