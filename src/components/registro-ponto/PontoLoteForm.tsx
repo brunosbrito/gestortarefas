@@ -25,6 +25,7 @@ import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
 import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PontoLoteFormProps {
   colaboradores: Colaborador[];
@@ -75,6 +76,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   onClose,
   turno,
 }) => {
+  const isMobile = useIsMobile();
   console.log('PontoLoteForm - obras recebidas:', obras);
   console.log('PontoLoteForm - colaboradores:', colaboradores);
   console.log(
@@ -298,21 +300,21 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[#003366]">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#003366]">
           Registro em Lote - {getTurnoLabel(turno)}
         </h2>
-        <div className="flex gap-2">
-          <Badge variant="secondary" className="bg-[#E0E0E0]">
+        <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
+          <Badge variant="secondary" className="bg-[#E0E0E0] text-xs sm:text-sm">
             <Users className="w-3 h-3 mr-1" />
             {resumo.total} Total
           </Badge>
-          <Badge variant="default" className="bg-[#FFA500] text-white">
+          <Badge variant="default" className="bg-[#FFA500] text-white text-xs sm:text-sm">
             {resumo.presentes} Presentes
           </Badge>
-          <Badge variant="destructive">{resumo.faltas} Faltas</Badge>
+          <Badge variant="destructive" className="text-xs sm:text-sm">{resumo.faltas} Faltas</Badge>
           {resumo.naoRegistrados > 0 && (
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-xs sm:text-sm">
               {resumo.naoRegistrados} Não Registrados
             </Badge>
           )}
@@ -387,8 +389,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
       {/* Filtros */}
       <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {/* Filtro por nome */}
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -481,175 +483,283 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         </CardContent>
       </Card>
 
-      {/* Tabela */}
+      {/* Lista de Colaboradores - Responsiva */}
       <Card>
         <CardContent className="p-0">
-          <div className="max-h-96 overflow-y-auto">
-            <table className="w-full">
-              <thead className="bg-[#E0E0E0] sticky top-0">
-                <tr>
-                  {etapa === 'presentes' ? (
-                    <>
-                      <th className="p-3 text-left font-medium">Presente</th>
-                      <th className="p-3 text-left font-medium">Nome</th>
-                      <th className="p-3 text-left font-medium">Cargo</th>
-                      <th className="p-3 text-left font-medium">Setor</th>
-                      <th className="p-3 text-left font-medium">Obra</th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="p-3 text-left font-medium">Faltou</th>
-                      <th className="p-3 text-left font-medium">Nome</th>
-                      <th className="p-3 text-left font-medium">Cargo</th>
-                      <th className="p-3 text-left font-medium">Setor</th>
-                      <th className="p-3 text-left font-medium">
-                        Motivo da Falta *
-                      </th>
-                    </>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {etapa === 'presentes'
-                  ? colaboradoresFiltrados.map((registro) => (
-                      <tr
-                        key={registro.id}
-                        className={`hover:bg-muted/30 ${
-                          registro.presente
-                            ? 'bg-[#FFA500]/10 border-l-4 border-[#FFA500]'
-                            : 'bg-background'
-                        }`}
-                      >
-                        <td className="p-3 text-center">
-                          <Checkbox
-                            checked={registro.presente}
-                            onCheckedChange={(checked) =>
-                              updateRegistro(registro.id, 'presente', checked)
-                            }
-                            className="data-[state=checked]:bg-[#FFA500] data-[state=checked]:border-[#FFA500]"
-                          />
-                        </td>
-                        <td className="p-3 font-medium">{registro.name}</td>
-                        <td className="p-3">{registro.role}</td>
-                        <td className="p-3">
+          {isMobile ? (
+            // Layout de Cards para Mobile
+            <div className="max-h-96 overflow-y-auto p-3 space-y-3">
+              {colaboradoresFiltrados.map((registro) => (
+                <Card
+                  key={registro.id}
+                  className={`${
+                    etapa === 'presentes'
+                      ? registro.presente
+                        ? 'bg-[#FFA500]/10 border-[#FFA500]'
+                        : 'bg-background'
+                      : registro.faltou
+                      ? 'bg-destructive/10 border-destructive'
+                      : 'bg-muted/20'
+                  }`}
+                >
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 pt-1">
+                        <Checkbox
+                          checked={etapa === 'presentes' ? registro.presente : registro.faltou}
+                          onCheckedChange={(checked) =>
+                            updateRegistro(
+                              registro.id,
+                              etapa === 'presentes' ? 'presente' : 'faltou',
+                              checked
+                            )
+                          }
+                          className={etapa === 'presentes' ? "data-[state=checked]:bg-[#FFA500] data-[state=checked]:border-[#FFA500]" : ""}
+                        />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex flex-col gap-1">
+                          <h3 className="font-medium text-sm">{registro.name}</h3>
+                          <p className="text-xs text-muted-foreground">{registro.role}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
                             {getSetorLabel(registro.sector)}
                           </Badge>
-                        </td>
-                        <td className="p-3">
-                          {registro.presente && (
-                            <div className="text-sm">
-                              {isProducao(registro.sector) ? (
-                                registro.project ? (
-                                  <Badge
-                                    variant="secondary"
-                                    className="bg-[#FFA500]/20 text-[#003366]"
-                                  >
-                                    {registro.project}
-                                  </Badge>
-                                ) : (
-                                  <span className="text-muted-foreground">
-                                    Aguardando obra...
-                                  </span>
-                                )
-                              ) : (
+                        </div>
+                        {etapa === 'presentes' && registro.presente && (
+                          <div className="text-xs">
+                            {isProducao(registro.sector) ? (
+                              registro.project ? (
                                 <Badge
                                   variant="secondary"
-                                  className="bg-green-100 text-green-800"
+                                  className="bg-[#FFA500]/20 text-[#003366] text-xs"
                                 >
-                                  Obra não obrigatória
+                                  {registro.project}
                                 </Badge>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  : colaboradoresFiltrados.map((registro) => (
-                      <tr
-                        key={registro.id}
-                        className={`hover:bg-muted/30 ${
-                          registro.faltou
-                            ? 'bg-destructive/10 border-l-4 border-destructive'
-                            : 'bg-muted/20'
-                        }`}
-                      >
-                        <td className="p-3 text-center">
-                          <Checkbox
-                            checked={registro.faltou}
-                            onCheckedChange={(checked) =>
-                              updateRegistro(registro.id, 'faltou', checked)
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  Aguardando obra...
+                                </span>
+                              )
+                            ) : (
+                              <Badge
+                                variant="secondary"
+                                className="bg-green-100 text-green-800 text-xs"
+                              >
+                                Obra não obrigatória
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {etapa === 'faltas' && registro.faltou && (
+                          <Input
+                            value={registro.reason || ''}
+                            onChange={(e) =>
+                              updateRegistro(
+                                registro.id,
+                                'reason',
+                                e.target.value
+                              )
                             }
+                            className={`h-8 text-xs ${
+                              registro.faltou &&
+                              (!registro.reason ||
+                                registro.reason.trim() === '')
+                                ? 'border-destructive'
+                                : ''
+                            }`}
+                            placeholder="Motivo obrigatório"
                           />
-                        </td>
-                        <td className="p-3 font-medium">{registro.name}</td>
-                        <td className="p-3">{registro.role}</td>
-                        <td className="p-3">
-                          <Badge variant="outline" className="text-xs">
-                            {getSetorLabel(registro.sector)}
-                          </Badge>
-                        </td>
-                        <td className="p-3">
-                          {registro.faltou && (
-                            <Input
-                              value={registro.reason || ''}
-                              onChange={(e) =>
-                                updateRegistro(
-                                  registro.id,
-                                  'reason',
-                                  e.target.value
-                                )
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            // Layout de Tabela para Desktop
+            <div className="max-h-96 overflow-y-auto">
+              <table className="w-full">
+                <thead className="bg-[#E0E0E0] sticky top-0">
+                  <tr>
+                    {etapa === 'presentes' ? (
+                      <>
+                        <th className="p-3 text-left font-medium">Presente</th>
+                        <th className="p-3 text-left font-medium">Nome</th>
+                        <th className="p-3 text-left font-medium">Cargo</th>
+                        <th className="p-3 text-left font-medium">Setor</th>
+                        <th className="p-3 text-left font-medium">Obra</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="p-3 text-left font-medium">Faltou</th>
+                        <th className="p-3 text-left font-medium">Nome</th>
+                        <th className="p-3 text-left font-medium">Cargo</th>
+                        <th className="p-3 text-left font-medium">Setor</th>
+                        <th className="p-3 text-left font-medium">
+                          Motivo da Falta *
+                        </th>
+                      </>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {etapa === 'presentes'
+                    ? colaboradoresFiltrados.map((registro) => (
+                        <tr
+                          key={registro.id}
+                          className={`hover:bg-muted/30 ${
+                            registro.presente
+                              ? 'bg-[#FFA500]/10 border-l-4 border-[#FFA500]'
+                              : 'bg-background'
+                          }`}
+                        >
+                          <td className="p-3 text-center">
+                            <Checkbox
+                              checked={registro.presente}
+                              onCheckedChange={(checked) =>
+                                updateRegistro(registro.id, 'presente', checked)
                               }
-                              className={`h-8 text-xs ${
-                                registro.faltou &&
-                                (!registro.reason ||
-                                  registro.reason.trim() === '')
-                                  ? 'border-destructive'
-                                  : ''
-                              }`}
-                              placeholder="Motivo obrigatório"
+                              className="data-[state=checked]:bg-[#FFA500] data-[state=checked]:border-[#FFA500]"
                             />
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-              </tbody>
-            </table>
-          </div>
+                          </td>
+                          <td className="p-3 font-medium">{registro.name}</td>
+                          <td className="p-3">{registro.role}</td>
+                          <td className="p-3">
+                            <Badge variant="outline" className="text-xs">
+                              {getSetorLabel(registro.sector)}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            {registro.presente && (
+                              <div className="text-sm">
+                                {isProducao(registro.sector) ? (
+                                  registro.project ? (
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-[#FFA500]/20 text-[#003366]"
+                                    >
+                                      {registro.project}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground">
+                                      Aguardando obra...
+                                    </span>
+                                  )
+                                ) : (
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-green-100 text-green-800"
+                                  >
+                                    Obra não obrigatória
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    : colaboradoresFiltrados.map((registro) => (
+                        <tr
+                          key={registro.id}
+                          className={`hover:bg-muted/30 ${
+                            registro.faltou
+                              ? 'bg-destructive/10 border-l-4 border-destructive'
+                              : 'bg-muted/20'
+                          }`}
+                        >
+                          <td className="p-3 text-center">
+                            <Checkbox
+                              checked={registro.faltou}
+                              onCheckedChange={(checked) =>
+                                updateRegistro(registro.id, 'faltou', checked)
+                              }
+                            />
+                          </td>
+                          <td className="p-3 font-medium">{registro.name}</td>
+                          <td className="p-3">{registro.role}</td>
+                          <td className="p-3">
+                            <Badge variant="outline" className="text-xs">
+                              {getSetorLabel(registro.sector)}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            {registro.faltou && (
+                              <Input
+                                value={registro.reason || ''}
+                                onChange={(e) =>
+                                  updateRegistro(
+                                    registro.id,
+                                    'reason',
+                                    e.target.value
+                                  )
+                                }
+                                className={`h-8 text-xs ${
+                                  registro.faltou &&
+                                  (!registro.reason ||
+                                    registro.reason.trim() === '')
+                                    ? 'border-destructive'
+                                    : ''
+                                }`}
+                                placeholder="Motivo obrigatório"
+                              />
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Controles de navegação */}
-      <div className="flex justify-between items-center gap-2">
-        <div>
+      <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} gap-2`}>
+        <div className={`${isMobile ? 'order-2' : ''}`}>
           {etapa === 'faltas' && (
             <Button
               variant="outline"
               onClick={voltarEtapa}
-              className="border-[#FFA500] text-[#FFA500] hover:bg-[#FFA500]/10"
+              className={`border-[#FFA500] text-[#FFA500] hover:bg-[#FFA500]/10 ${isMobile ? 'w-full' : ''}`}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar aos Presentes
+              {isMobile ? 'Voltar' : 'Voltar aos Presentes'}
             </Button>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
+        <div className={`flex gap-2 ${isMobile ? 'order-1 flex-col sm:flex-row' : ''}`}>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className={`${isMobile ? 'w-full sm:w-auto' : ''}`}
+          >
             Cancelar
           </Button>
           {etapa === 'presentes' ? (
             <Button
               onClick={proximaEtapa}
-              className="bg-[#FFA500] hover:bg-[#FFA500]/90"
+              className={`bg-[#FFA500] hover:bg-[#FFA500]/90 ${isMobile ? 'w-full sm:w-auto' : ''}`}
               disabled={validationErrors.length > 0}
             >
-              Próximo: Selecionar Faltas
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {isMobile ? (
+                <>
+                  Selecionar Faltas
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              ) : (
+                <>
+                  Próximo: Selecionar Faltas
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
           ) : (
             <Button
               onClick={handleSubmit}
-              className="bg-[#FFA500] hover:bg-[#FFA500]/90"
+              className={`bg-[#FFA500] hover:bg-[#FFA500]/90 ${isMobile ? 'w-full sm:w-auto' : ''}`}
               disabled={validationErrors.length > 0}
             >
               <Save className="w-4 h-4 mr-2" />

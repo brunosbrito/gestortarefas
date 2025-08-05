@@ -114,28 +114,30 @@ const RegistroPonto = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-construction-800">
-            Registro de Ponto
-          </h1>
-          <div className="flex gap-2">
-            <Dialog open={isLoteDialogOpen} onOpenChange={setIsLoteDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#FFA500] hover:bg-[#FFA500]/90 w-full sm:w-auto">
-                  <Users className="w-4 h-4 mr-2" />
-                  Adicionar Registro
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-                <PontoLoteForm
-                  colaboradores={colaboradores}
-                  obras={obras}
-                  onSubmit={onLoteSubmit}
-                  onClose={() => setIsLoteDialogOpen(false)}
-                  turno={Number(currentTurno)}
-                />
-              </DialogContent>
-            </Dialog>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-construction-800">
+              Registro de Ponto
+            </h1>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Dialog open={isLoteDialogOpen} onOpenChange={setIsLoteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-[#FFA500] hover:bg-[#FFA500]/90 w-full sm:w-auto">
+                    <Users className="w-4 h-4 mr-2" />
+                    Adicionar Registro
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[95vw] sm:max-w-4xl lg:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+                  <PontoLoteForm
+                    colaboradores={colaboradores}
+                    obras={obras}
+                    onSubmit={onLoteSubmit}
+                    onClose={() => setIsLoteDialogOpen(false)}
+                    turno={Number(currentTurno)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
 
@@ -172,14 +174,14 @@ const RegistroPonto = () => {
           onValueChange={(value) => setCurrentTurno(value.replace('turno', ''))}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-2">
-            <TabsTrigger value="turno1" className="text-sm sm:text-base">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 h-auto">
+            <TabsTrigger value="turno1" className="text-xs sm:text-sm lg:text-base py-2 px-3">
               1º Turno
             </TabsTrigger>
-            <TabsTrigger value="turno2" className="text-sm sm:text-base">
+            <TabsTrigger value="turno2" className="text-xs sm:text-sm lg:text-base py-2 px-3">
               2º Turno
             </TabsTrigger>
-            <TabsTrigger value="turno3" className="text-sm sm:text-base">
+            <TabsTrigger value="turno3" className="text-xs sm:text-sm lg:text-base py-2 px-3">
               Turno Central
             </TabsTrigger>
           </TabsList>
