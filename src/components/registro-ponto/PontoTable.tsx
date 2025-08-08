@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { enviarEfetivo, updateEffective } from '@/services/EffectiveService';
 import { Funcionario } from '@/interfaces/FuncionarioInterface';
+import { setorLabel, statusLabel } from '@/utils/labels';
 
 interface PontoTableProps {
   funcionarios: Funcionario[];
@@ -124,13 +125,13 @@ export const PontoTable = ({
                 <h3 className="font-medium text-sm truncate">{funcionario.username}</h3>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-                    {funcionario.role}
+                    {setorLabel(funcionario.role)}
                   </Badge>
                   <Badge
                     variant={funcionario.status === 'PRESENTE' ? 'default' : 'destructive'}
                     className="text-xs px-1.5 py-0.5"
                   >
-                    {funcionario.status}
+                    {statusLabel(funcionario.status)}
                   </Badge>
                 </div>
               </div>
@@ -174,7 +175,7 @@ export const PontoTable = ({
             {(funcionario.project || funcionario.sector || funcionario.reason) && (
               <div className="text-xs text-muted-foreground space-y-0.5">
                 {funcionario.project && <div>Obra: {funcionario.project}</div>}
-                {funcionario.sector && <div>Setor: {funcionario.sector}</div>}
+                {funcionario.sector && <div>Setor: {setorLabel(funcionario.sector)}</div>}
                 {funcionario.reason && <div>Motivo: {funcionario.reason}</div>}
               </div>
             )}
@@ -201,17 +202,17 @@ export const PontoTable = ({
               <TableRow key={funcionario.id}>
                 <TableCell className="font-medium">{funcionario.username}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{funcionario.role}</Badge>
+                  <Badge variant="secondary">{setorLabel(funcionario.role)}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge
                     variant={funcionario.status === 'PRESENTE' ? 'default' : 'destructive'}
                   >
-                    {funcionario.status}
+                    {statusLabel(funcionario.status)}
                   </Badge>
                 </TableCell>
                 <TableCell>{funcionario.project || '-'}</TableCell>
-                <TableCell>{funcionario.sector || '-'}</TableCell>
+                <TableCell>{funcionario.sector ? setorLabel(funcionario.sector) : '-'}</TableCell>
                 <TableCell>{funcionario.reason || '-'}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex space-x-2 justify-end">

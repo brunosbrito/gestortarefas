@@ -26,6 +26,7 @@ import { Obra } from '@/interfaces/ObrasInterface';
 import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { normalizeSetorCode } from '@/utils/labels';
 
 interface PontoLoteFormProps {
   colaboradores: Colaborador[];
@@ -251,20 +252,26 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
     const registrosValidos = registros
       .filter((reg) => reg.presente || reg.faltou)
-      .map((reg) => ({
-        username: reg.name,
-        shift: turno,
-        role: reg.sector as 'ENGENHARIA' | 'ADMINISTRATIVO' | 'PRODUCAO',
-        typeRegister: (reg.presente ? reg.sector : 'FALTA') as
-          | 'PRODUCAO'
-          | 'ADMINISTRATIVO'
+      .map((reg) => {
+        const roleCode = (normalizeSetorCode(reg.sector) || 'PRODUCAO') as
           | 'ENGENHARIA'
-          | 'FALTA',
-        project: reg.project,
-        sector: reg.sector,
-        reason: reg.reason,
-        status: reg.presente ? ('PRESENTE' as const) : ('FALTA' as const),
-      }));
+          | 'ADMINISTRATIVO'
+          | 'PRODUCAO';
+        return {
+          username: reg.name,
+          shift: turno,
+          role: roleCode,
+          typeRegister: (reg.presente ? roleCode : 'FALTA') as
+            | 'PRODUCAO'
+            | 'ADMINISTRATIVO'
+            | 'ENGENHARIA'
+            | 'FALTA',
+          project: reg.project,
+          sector: reg.sector,
+          reason: reg.reason,
+          status: reg.presente ? ('PRESENTE' as const) : ('FALTA' as const),
+        };
+      });
 
     console.log('Registros válidos:', registrosValidos);
 

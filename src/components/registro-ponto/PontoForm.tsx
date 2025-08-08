@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
+import { normalizeSetorCode } from '@/utils/labels';
 
 const formSchema = z.object({
   shift: z.string({ required_error: 'Selecione o turno' }),
@@ -69,10 +70,16 @@ export const PontoForm = ({
   const tipoRegistro = form.watch('typeRegister');
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
+    const colaborador = colaboradores.find((c) => c.name === data.username);
+    const roleCode =
+      normalizeSetorCode(colaborador?.sector) ||
+      normalizeSetorCode(data.typeRegister) ||
+      'PRODUCAO';
+
     const effectiveData: CreateEffectiveDto = {
       username: data.username,
       shift: Number(data.shift),
-      role: data.role || 'PRODUCAO',
+      role: roleCode,
       project: data.project,
       typeRegister: data.typeRegister,
       reason: data.reason,
