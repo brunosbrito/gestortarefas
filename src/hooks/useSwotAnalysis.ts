@@ -16,10 +16,14 @@ export const useSwotAnalysis = () => {
         NonConformityService.getAllRnc()
       ]);
 
+      console.log('Dados SWOT:', { activities: activities.length, obras: obras.length, rncs: rncs.length });
+
       const now = new Date();
-      const completedActivities = activities.filter(a => a.status === 'concluido').length;
+      
+      // Corrigir status das atividades para usar os valores corretos
+      const completedActivities = activities.filter(a => a.status === 'Concluída').length;
       const delayedActivities = activities.filter(a => 
-        a.endDate && new Date(a.endDate) < now && a.status !== 'concluido'
+        a.endDate && new Date(a.endDate) < now && a.status !== 'Concluída'
       ).length;
       const ongoingProjects = obras.filter(o => o.status === 'em_andamento').length;
       const projectsOnTime = obras.filter(o => 
@@ -31,9 +35,12 @@ export const useSwotAnalysis = () => {
       const teamProductivity = activities.length > 0 ? 
         Math.round((completedActivities / activities.length) * 100) : 0;
 
-      // Tempo médio de conclusão (simulado - seria calculado com dados reais)
-      const averageCompletionTime = completedActivities > 0 ? 
-        Math.round(Math.random() * 10 + 5) : 0;
+      // Calcular tempo médio real baseado nas atividades concluídas
+      const completedWithTime = activities.filter(a => 
+        a.status === 'Concluída' && a.actualTime && a.actualTime > 0
+      );
+      const averageCompletionTime = completedWithTime.length > 0 ? 
+        Math.round(completedWithTime.reduce((sum, a) => sum + (a.actualTime || 0), 0) / completedWithTime.length) : 0;
 
       return {
         totalActivities: activities.length,
