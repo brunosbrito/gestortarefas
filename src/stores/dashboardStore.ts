@@ -224,15 +224,9 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
         );
       }
 
-      // Filtrar projetos por ID se especificado
-      if (state.filters.obraId) {
-        filteredProjects = filteredProjects.filter(p => p.id === state.filters.obraId);
-      }
-
-      // Filtrar ordens de serviço por ID se especificado
-      if (state.filters.serviceOrderId) {
-        filteredServiceOrders = filteredServiceOrders.filter(os => os.id === state.filters.serviceOrderId);
-      }
+      // NOTA: Não filtramos projetos e ordens de serviço por ID específico
+      // Os cards devem mostrar totais do período, não apenas o item selecionado
+      // A seleção específica afeta apenas atividades e estatísticas
 
       // Recalcular estatísticas baseadas nos dados filtrados
       const activityStatus = countActivitiesByStatus(filteredActivities);
