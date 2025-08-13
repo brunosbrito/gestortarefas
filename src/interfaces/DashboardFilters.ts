@@ -36,7 +36,7 @@ export interface FilteredActivity {
   projectName: string;
   totalTime?: number;
   estimatedTime?: number;
-  team?: string[];
+  team?: Array<{ collaboratorId: number; name: string }>;
   progress?: number;
   createdAt?: string | Date;
 }

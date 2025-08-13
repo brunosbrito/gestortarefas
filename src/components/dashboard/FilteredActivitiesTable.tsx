@@ -82,10 +82,11 @@ export const FilteredActivitiesTable = ({
     return `${h}h${formattedMinutes}`;
   };
 
-  const formatTeam = (team?: string[]) => {
+  const formatTeam = (team?: Array<{ collaboratorId: number; name: string }>) => {
     if (!team || team.length === 0) return '-';
-    if (team.length === 1) return team[0];
-    return `${team[0]} +${team.length - 1}`;
+    
+    if (team.length === 1) return team[0].name;
+    return `${team[0].name} +${team.length - 1}`;
   };
 
   const parseTempoEstimado = (tempo: string): number => {
@@ -283,8 +284,7 @@ export const FilteredActivitiesTable = ({
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>
-                                {activity.team?.join(', ') ||
-                                  'Sem equipe definida'}
+                                {activity.team?.map(member => member.name).join(', ') || 'Sem equipe definida'}
                               </p>
                             </TooltipContent>
                           </Tooltip>
