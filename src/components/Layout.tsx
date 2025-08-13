@@ -44,9 +44,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-hidden w-full flex flex-col">
+      <main className="flex-1 overflow-auto w-full">
         {/* Mobile header */}
-        <div className="md:hidden flex items-center p-4 bg-white border-b border-construction-200 flex-shrink-0">
+        <div className="md:hidden flex items-center p-4 bg-white border-b border-construction-200">
           <Button
             variant="ghost"
             size="icon"
@@ -61,7 +61,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <h1 className="ml-4 text-lg font-semibold">Sistema de Gestão</h1>
         </div>
 
-        <div className="container mx-auto p-4 md:p-6 flex-1 flex flex-col overflow-hidden">{children}</div>
+        <div className="container mx-auto p-4 md:p-6">{children}</div>
       </main>
     </div>
   );

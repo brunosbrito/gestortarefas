@@ -158,7 +158,7 @@ function AssistenteIA() {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col max-w-6xl mx-auto">
+      <div className="h-[calc(100vh-8rem)] flex flex-col max-w-6xl mx-auto">
         {/* Header fixo */}
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <div className="flex items-center gap-3">
