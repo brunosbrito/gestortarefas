@@ -1,158 +1,214 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Building2, ClipboardList, Activity } from 'lucide-react';
+import { useDashboardStore } from '@/stores/dashboardStore';
+import { useUnifiedFilters } from '@/hooks/useUnifiedFilters';
 import { StatsSummary } from './dashboard/StatsSummary';
 import { MacroTasksChart } from './dashboard/charts/MacroTasksChart';
 import { ProcessHoursChart } from './dashboard/charts/ProcessHoursChart';
-import { CollaboratorsChart } from './dashboard/charts/CollaboratorsChart';
 import { LoadingSpinner } from './dashboard/LoadingSpinner';
-import { TaskProcessFilter } from './dashboard/TaskProcessFilter';
 import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
 import { Separator } from './ui/separator';
 import { PeriodFilter } from './dashboard/PeriodFilter';
 import { ActivityStatusCards } from './dashboard/ActivityStatusCards';
 import { SwotAnalysis } from './dashboard/SwotAnalysis';
-import { useDashboardData } from '@/hooks/useDashboardData';
-import { useDashboardFilters } from '@/hooks/useDashboardFilters';
+import { TaskProcessFilter } from './dashboard/TaskProcessFilter';
 
+/**
+ * Dashboard refatorado - integrado com store centralizado e sistema de filtros unificado
+ * 
+ * Principais melhorias:
+ * - Estado centralizado com Zustand
+ * - Sistema de filtros unificado 
+ * - Performance otimizada
+ * - Melhor organização do código
+ * - Responsividade aprimorada
+ */
 const Dashboard = () => {
-  const {
-    macroTaskStatistic,
-    processStatistic,
-    collaboratorStatistic,
-    totalActivities,
-    totalProjetos,
-    totalServiceOrder,
-    activitiesByStatus,
-    isLoading,
-    loadAllData,
-    applyPeriodFilter,
-  } = useDashboardData();
+  const { 
+    statistics, 
+    totals, 
+    activityStatus, 
+    filteredData,
+    loading,
+    loadInitialData 
+  } = useDashboardStore();
+  
+  const { 
+    filters, 
+    updatePeriodFilter, 
+    updateFilters,
+    hasActiveFilters,
+    activeFiltersCount 
+  } = useUnifiedFilters();
 
-  const {
-    filters,
-    filteredActivities,
-    isFilteredDataLoading,
-    handleFilterChange,
-    handlePeriodChange,
-  } = useDashboardFilters();
-
-  // Carregar todos os dados ao montar o componente
+  // Carregar dados iniciais ao montar o componente
   useEffect(() => {
-    loadAllData();
+    console.log('🚀 Inicializando Dashboard...');
+    loadInitialData();
   }, []);
 
-  // Aplicar filtro de período a todos os dados
-  useEffect(() => {
-    if (filters.period) {
-      // Aplicamos o filtro de período aos dados estatísticos
-      applyPeriodFilter(
-        filters.period as any,
-        filters.obraId,
-        filters.serviceOrderId,
-        filters.startDate,
-        filters.endDate
-      );
-    }
-  }, [
-    filters.period,
-    filters.obraId,
-    filters.serviceOrderId,
-    filters.startDate,
-    filters.endDate,
-  ]);
-
+  // Configuração dos cards de estatísticas principais
   const stats = [
     {
       title: 'Fabrica/Obra',
-      value: totalProjetos.toString(),
+      value: totals.projects.toString(),
       icon: Building2,
-      color: 'bg-green-500',
+      color: 'bg-emerald-600',
     },
     {
       title: 'Ordens de Serviço',
-      value: totalServiceOrder.toString(),
+      value: totals.serviceOrders.toString(),
       icon: ClipboardList,
-      color: 'bg-[#003366]',
+      color: 'bg-blue-600',
     },
     {
       title: 'Atividades',
-      value: totalActivities.toString(),
+      value: totals.activities.toString(),
       icon: Activity,
-      color: 'bg-[#F7C948]',
+      color: 'bg-orange-500',
     },
   ];
 
-  if (isLoading) {
-    return <LoadingSpinner />;
+  // Loading inicial
+  if (loading.data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <PeriodFilter
-        onFilterChange={handlePeriodChange}
-        currentFilters={filters}
-      />
-
-      <StatsSummary stats={stats} />
-
-      <ActivityStatusCards activitiesByStatus={activitiesByStatus} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {macroTaskStatistic && macroTaskStatistic.length > 0 ? (
-          <MacroTasksChart macroTasks={macroTaskStatistic} />
-        ) : (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">
-              Atividades por Tarefa Macro
-            </h3>
-            <div className="flex items-center justify-center h-60 text-gray-400">
-              Nenhum dado disponível para os filtros selecionados
+    <div className="space-y-6 p-6">
+      {/* Header com informações sobre filtros ativos */}
+      {hasActiveFilters && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-blue-800">
+                {activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''}
+              </span>
             </div>
+            <span className="text-xs text-blue-600">
+              Exibindo {filteredData.activities.length} de {totals.activities} atividades
+            </span>
           </div>
-        )}
+        </div>
+      )}
 
-        {processStatistic && processStatistic.length > 0 ? (
-          <ProcessHoursChart processes={processStatistic} />
-        ) : (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">
-              Atividades por Processo
-            </h3>
-            <div className="flex items-center justify-center h-60 text-gray-400">
-              Nenhum dado disponível para os filtros selecionados
-            </div>
-          </div>
-        )}
+      {/* Filtro de Período */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <PeriodFilter
+          onFilterChange={(filterData) => {
+            updatePeriodFilter(
+              filterData.period || 'todos',
+              filterData.startDate,
+              filterData.endDate
+            );
+          }}
+          currentFilters={{
+            period: filters.period,
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+          }}
+        />
       </div>
 
-      {/* <div className="grid grid-cols-1 gap-6">
-        {collaboratorStatistic && collaboratorStatistic.length > 0 ? (
-          <CollaboratorsChart collaborators={collaboratorStatistic} />
-        ) : (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Contribuição por Colaborador</h3>
-            <div className="flex items-center justify-center h-60 text-gray-400">
-              Nenhum dado disponível para os filtros selecionados
+      {/* Cards de Estatísticas Principais */}
+      <StatsSummary stats={stats} />
+
+      {/* Cards de Status das Atividades */}
+      <ActivityStatusCards activitiesByStatus={activityStatus} />
+
+      {/* Gráficos de Estatísticas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico de Tarefas Macro */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          {statistics.macroTasks && statistics.macroTasks.length > 0 ? (
+            <MacroTasksChart macroTasks={statistics.macroTasks} />
+          ) : (
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                Atividades por Tarefa Macro
+              </h3>
+              <div className="flex items-center justify-center h-64 text-gray-400">
+                <div className="text-center">
+                  <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum dado disponível</p>
+                  {hasActiveFilters && (
+                    <p className="text-xs mt-1">Tente ajustar os filtros</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Gráfico de Processos */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          {statistics.processes && statistics.processes.length > 0 ? (
+            <ProcessHoursChart processes={statistics.processes} />
+          ) : (
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">
+                Atividades por Processo
+              </h3>
+              <div className="flex items-center justify-center h-64 text-gray-400">
+                <div className="text-center">
+                  <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum dado disponível</p>
+                  {hasActiveFilters && (
+                    <p className="text-xs mt-1">Tente ajustar os filtros</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Separator className="my-8" />
+
+      {/* Análise SWOT */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <SwotAnalysis />
+      </div>
+
+      <Separator className="my-8" />
+
+      {/* Filtros de Tarefa/Processo */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <TaskProcessFilter
+          onFilterChange={(newFilters) => {
+            updateFilters(newFilters);
+          }}
+          currentFilters={filters as any}
+        />
+      </div>
+
+      {/* Tabela de Atividades Filtradas */}
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-6 border-b">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Atividades Filtradas
+            </h3>
+            <div className="text-sm text-gray-500">
+              {loading.filtered ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  Aplicando filtros...
+                </div>
+              ) : (
+                `${filteredData.activities.length} atividade${filteredData.activities.length !== 1 ? 's' : ''}`
+              )}
             </div>
           </div>
-        )}
-      </div> */}
-
-      <Separator className="my-8" />
-
-      <SwotAnalysis filters={filters} />
-
-      <Separator className="my-8" />
-
-      <TaskProcessFilter
-        onFilterChange={handleFilterChange}
-        currentFilters={filters}
-      />
-
-      <div className="grid grid-cols-1 gap-6">
+        </div>
         <FilteredActivitiesTable
-          activities={filteredActivities}
-          loading={isFilteredDataLoading}
+          activities={filteredData.activities as any}
+          loading={loading.filtered}
         />
       </div>
     </div>

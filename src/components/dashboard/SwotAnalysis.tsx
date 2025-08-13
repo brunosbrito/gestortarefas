@@ -2,17 +2,12 @@ import { RefreshCw, TrendingUp, AlertTriangle, Target, Shield } from 'lucide-rea
 import { SwotCard } from './SwotCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useSwotAnalysis } from '@/hooks/useSwotAnalysis';
-import { DashboardFilters } from '@/interfaces/DashboardFilters';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-interface SwotAnalysisProps {
-  filters?: DashboardFilters;
-}
-
-export const SwotAnalysis = ({ filters }: SwotAnalysisProps) => {
-  const { swotData, isLoading, refreshSwotData } = useSwotAnalysis(filters);
+export const SwotAnalysis = () => {
+  const { swotData, isLoading, refreshSwotData } = useSwotAnalysis();
 
   if (isLoading || !swotData) {
     return <LoadingSpinner />;
