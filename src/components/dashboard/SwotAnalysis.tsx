@@ -2,12 +2,17 @@ import { RefreshCw, TrendingUp, AlertTriangle, Target, Shield } from 'lucide-rea
 import { SwotCard } from './SwotCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useSwotAnalysis } from '@/hooks/useSwotAnalysis';
+import { DashboardFilters } from '@/interfaces/DashboardFilters';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export const SwotAnalysis = () => {
-  const { swotData, isLoading, refreshSwotData } = useSwotAnalysis();
+interface SwotAnalysisProps {
+  filters?: DashboardFilters;
+}
+
+export const SwotAnalysis = ({ filters }: SwotAnalysisProps) => {
+  const { swotData, isLoading, refreshSwotData } = useSwotAnalysis(filters);
 
   if (isLoading || !swotData) {
     return <LoadingSpinner />;
@@ -60,7 +65,7 @@ export const SwotAnalysis = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {swotConfig.map((config, index) => (
           <SwotCard
             key={index}

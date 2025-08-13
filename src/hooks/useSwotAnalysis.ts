@@ -1,17 +1,50 @@
 import { useState, useEffect } from 'react';
 import { SwotData, SwotMetrics } from '@/interfaces/SwotInterface';
+import { DashboardFilters } from '@/interfaces/DashboardFilters';
 import { getAllActivities } from '@/services/ActivityService';
+import { filterDataByPeriod } from '@/utils/dateFilter';
 import ObrasService from '@/services/ObrasService';
 import NonConformityService from '@/services/NonConformityService';
 
-export const useSwotAnalysis = () => {
+export const useSwotAnalysis = (filters?: DashboardFilters) => {
   const [swotData, setSwotData] = useState<SwotData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const calculateSwotMetrics = async (): Promise<SwotMetrics> => {
     try {
-      const [activities, obras, rncs] = await Promise.all([
-        getAllActivities(),
+      // Buscar todas as atividades e aplicar filtros manualmente
+      let activities = await getAllActivities();
+
+      // Aplicar filtros se existirem
+      if (filters) {
+        if (filters.macroTaskId) {
+          activities = activities.filter(a => a.macroTaskId === filters.macroTaskId);
+        }
+        if (filters.processId) {
+          activities = activities.filter(a => a.processId === filters.processId);
+        }
+        if (filters.obraId) {
+          activities = activities.filter(a => a.serviceOrder?.projectId === filters.obraId);
+        }
+        if (filters.serviceOrderId) {
+          activities = activities.filter(a => a.serviceOrderId === filters.serviceOrderId);
+        }
+        if (filters.collaboratorId) {
+          activities = activities.filter(a => 
+            a.team?.some(member => member.collaboratorId === filters.collaboratorId)
+          );
+        }
+        if (filters.period && filters.period !== 'todos') {
+          activities = filterDataByPeriod(
+            activities,
+            filters.period as any,
+            filters.startDate,
+            filters.endDate
+          );
+        }
+      }
+
+      const [obras, rncs] = await Promise.all([
         ObrasService.getAllObras(),
         NonConformityService.getAllRnc()
       ]);
@@ -183,7 +216,7 @@ export const useSwotAnalysis = () => {
 
   useEffect(() => {
     loadSwotData();
-  }, []);
+  }, [filters]);
 
   return {
     swotData,

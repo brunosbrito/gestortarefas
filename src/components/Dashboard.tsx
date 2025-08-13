@@ -140,7 +140,7 @@ const Dashboard = () => {
 
       <Separator className="my-8" />
 
-      <SwotAnalysis />
+      <SwotAnalysis filters={filters} />
 
       <Separator className="my-8" />
 
