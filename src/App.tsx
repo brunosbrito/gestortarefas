@@ -16,6 +16,7 @@ import Fabricas from './pages/Fabricas';
 import Mineradoras from './pages/Mineradoras';
 import NaoConformidades from './pages/nao-conformidades';
 import Atividade from './pages/Atividade';
+import AnaliseSwot from './pages/AnaliseSwot';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/atividade" element={<Atividade />} />
+        <Route path="/analise-swot" element={<AnaliseSwot />} />
         <Route path="/programacao" element={<Atividade />} />
         <Route path="/users" element={<Users />} />
         <Route path="/obras" element={<Obras />} />
