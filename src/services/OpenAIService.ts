@@ -6,35 +6,115 @@ import TarefaMacroService from './TarefaMacroService';
 import ProcessService from './ProcessService';
 
 class OpenAIService {
+  private analyzeQuestionType(userMessage: string): 'count' | 'detailed' | 'status' | 'general' {
+    const message = userMessage.toLowerCase();
+    
+    // Detectar perguntas de contagem
+    if (message.includes('quantas') || message.includes('quantos') || message.includes('total')) {
+      return 'count';
+    }
+    
+    // Detectar perguntas sobre status específico
+    if (message.includes('planejadas') || message.includes('pendentes') || 
+        message.includes('andamento') || message.includes('concluídas')) {
+      return 'status';
+    }
+    
+    // Detectar perguntas que precisam de análise detalhada
+    if (message.includes('detalhes') || message.includes('análise') || 
+        message.includes('relatório') || message.includes('como')) {
+      return 'detailed';
+    }
+    
+    return 'general';
+  }
+
+  private filterActivitiesForContext(activities: any[], questionType: string, userMessage: string) {
+    const message = userMessage.toLowerCase();
+    
+    switch (questionType) {
+      case 'count':
+      case 'status':
+        // Para contagens e consultas de status, só precisamos de campos essenciais
+        return activities.map(activity => ({
+          id: activity.id,
+          status: activity.status,
+          description: activity.description?.substring(0, 50) + '...' || '',
+          createdAt: activity.createdAt,
+          projectId: activity.projectId
+        }));
+        
+      case 'detailed':
+        // Para análises detalhadas, enviar dados completos de uma amostra
+        return activities.slice(0, 30); // Limitar a 30 atividades mais recentes
+        
+      default:
+        // Para perguntas gerais, enviar resumo compacto
+        return activities.slice(0, 50).map(activity => ({
+          id: activity.id,
+          status: activity.status,
+          description: activity.description?.substring(0, 50) + '...' || '',
+          projectId: activity.projectId
+        }));
+    }
+  }
+
+  private createActivitySummary(activities: any[]): string {
+    const statusCount = activities.reduce((acc: any, activity: any) => {
+      const status = activity.status || 'Não definido';
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {});
+
+    let summary = `RESUMO ESTATÍSTICO DAS ATIVIDADES:\n`;
+    summary += `Total de atividades: ${activities.length}\n`;
+    summary += `Distribuição por status:\n`;
+    Object.entries(statusCount).forEach(([status, count]) => {
+      summary += `- ${status}: ${count} atividades\n`;
+    });
+
+    return summary;
+  }
+
   private async collectContextData(userMessage: string): Promise<string> {
     let contextData = '';
     const message = userMessage.toLowerCase();
+    const questionType = this.analyzeQuestionType(userMessage);
     
     console.log('Mensagem do usuário:', userMessage);
     console.log('Mensagem processada:', message);
+    console.log('Tipo de pergunta detectado:', questionType);
 
     try {
-      // Verificar se a pergunta é sobre atividades (palavras-chave expandidas)
-      if (message.includes('atividade') || message.includes('atividades') || message.includes('tarefa') || 
-          message.includes('aberto') || message.includes('pendente') || message.includes('progresso') ||
-          message.includes('andamento') || message.includes('finalizada') || message.includes('concluída')) {
+      // Expandir palavras-chave para detectar perguntas sobre atividades
+      const activityKeywords = [
+        'atividade', 'atividades', 'tarefa', 'tarefas', 'task', 'tasks',
+        'aberto', 'aberta', 'abertas', 'abertos',
+        'pendente', 'pendentes', 
+        'andamento', 'progresso', 'em andamento', 'em progresso',
+        'concluída', 'concluídas', 'concluído', 'concluídos', 'finalizada', 'finalizadas',
+        'planejada', 'planejadas', 'planejado', 'planejados'
+      ];
+
+      if (activityKeywords.some(keyword => message.includes(keyword))) {
         console.log('Coletando dados de atividades...');
         const activities = await getAllActivities();
         console.log('Atividades coletadas:', activities?.length || 0);
         
         if (activities && activities.length > 0) {
-          // Formatação melhorada do contexto
-          contextData += `ATIVIDADES DO SISTEMA (Total: ${activities.length}):\n`;
-          contextData += `Dados das atividades em formato JSON:\n${JSON.stringify(activities, null, 2)}\n\n`;
+          // Sempre incluir resumo estatístico
+          contextData += this.createActivitySummary(activities);
+          contextData += '\n';
           
-          // Resumo estatístico
-          const statusCount = activities.reduce((acc: any, activity: any) => {
-            const status = activity.status || 'sem_status';
-            acc[status] = (acc[status] || 0) + 1;
-            return acc;
-          }, {});
+          // Filtrar dados baseado no tipo de pergunta
+          const filteredActivities = this.filterActivitiesForContext(activities, questionType, userMessage);
           
-          contextData += `RESUMO DE STATUS DAS ATIVIDADES:\n${JSON.stringify(statusCount, null, 2)}\n\n`;
+          // Para perguntas de contagem, não precisamos dos dados completos
+          if (questionType !== 'count') {
+            contextData += `DADOS DAS ATIVIDADES (${filteredActivities.length} registros filtrados):\n`;
+            contextData += JSON.stringify(filteredActivities, null, 2);
+            contextData += '\n\n';
+          }
         }
       }
 
@@ -114,6 +194,34 @@ class OpenAIService {
       // Coletar dados de contexto baseado na mensagem
       const contextData = await this.collectContextData(message);
 
+      // Verificar tamanho do contexto e implementar fallback
+      const maxContextSize = 200000; // Deixar margem de segurança
+      let finalContextData = contextData;
+      
+      if (contextData.length > maxContextSize) {
+        console.log('Contexto muito grande, aplicando fallback...');
+        
+        // Para perguntas de contagem, usar apenas resumo estatístico
+        const questionType = this.analyzeQuestionType(message);
+        if (questionType === 'count' || questionType === 'status') {
+          // Recriar contexto apenas com resumos
+          finalContextData = '';
+          const message_lower = message.toLowerCase();
+          
+          if (message_lower.includes('atividade') || message_lower.includes('atividades')) {
+            const activities = await getAllActivities();
+            if (activities && activities.length > 0) {
+              finalContextData = this.createActivitySummary(activities);
+            }
+          }
+        } else {
+          // Para outras perguntas, truncar contexto mantendo partes importantes
+          finalContextData = contextData.substring(0, maxContextSize) + '\n\n[CONTEXTO TRUNCADO DEVIDO AO TAMANHO]';
+        }
+        
+        console.log('Novo tamanho do contexto após fallback:', finalContextData.length);
+      }
+
       // Criar thread
       const threadResponse = await fetch('https://api.openai.com/v1/threads', {
         method: 'POST',
@@ -132,21 +240,22 @@ class OpenAIService {
       const thread = await threadResponse.json();
 
       // Adicionar mensagem com contexto melhorada
-      const messageBody = contextData 
+      const messageBody = finalContextData 
         ? `INSTRUÇÕES IMPORTANTES:
 Você é um assistente especializado em análise de dados de um sistema de gestão de projetos e atividades.
 Os dados abaixo são do sistema atual em tempo real.
-Analise os dados JSON fornecidos e responda de forma precisa e detalhada.
-Para perguntas sobre quantidades, conte os itens nos arrays JSON.
+Analise os dados fornecidos e responda de forma precisa e detalhada.
+Para perguntas sobre quantidades, use os resumos estatísticos fornecidos.
 Para perguntas sobre status, analise os campos de status nos objetos.
 
-${contextData}
+${finalContextData}
 
 PERGUNTA DO USUÁRIO: ${message}
 
 Por favor, analise os dados acima e forneça uma resposta precisa baseada nas informações do sistema.` 
         : message;
       
+      console.log('Tamanho final da mensagem:', messageBody.length);
       console.log('Mensagem final enviada para OpenAI:', messageBody.substring(0, 500) + '...');
 
       await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
