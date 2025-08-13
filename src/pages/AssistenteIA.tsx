@@ -158,8 +158,9 @@ function AssistenteIA() {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+      <div className="h-full flex flex-col max-w-6xl mx-auto">
+        {/* Header fixo */}
+        <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Bot className="w-8 h-8 text-primary" />
             <div>
@@ -224,17 +225,19 @@ function AssistenteIA() {
           </div>
         </div>
 
-        <Card className="h-[600px] flex flex-col">
-          <CardHeader className="pb-3">
+        {/* Chat container com altura flexível */}
+        <Card className="flex-1 flex flex-col min-h-0">
+          <CardHeader className="pb-3 flex-shrink-0">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bot className="w-5 h-5" />
               Conversa
             </CardTitle>
           </CardHeader>
           
-          <CardContent className="flex-1 flex flex-col p-0">
+          <CardContent className="flex-1 flex flex-col p-0 min-h-0">
+            {/* Área de mensagens com scroll */}
             <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
-              <div className="space-y-4 pb-4">
+              <div className="space-y-4 py-4">
                 {messages.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -248,7 +251,7 @@ function AssistenteIA() {
                 {messages.map((message) => (
                   <div key={message.id} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {message.role === 'assistant' && (
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
                         <Bot className="w-4 h-4 text-primary-foreground" />
                       </div>
                     )}
@@ -258,7 +261,7 @@ function AssistenteIA() {
                         ? 'bg-primary text-primary-foreground' 
                         : 'bg-muted'
                     }`}>
-                      <p className="whitespace-pre-wrap">{message.content}</p>
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
                       <p className="text-xs opacity-70 mt-2">
                         {message.timestamp.toLocaleTimeString('pt-BR', { 
                           hour: '2-digit', 
@@ -268,7 +271,7 @@ function AssistenteIA() {
                     </div>
                     
                     {message.role === 'user' && (
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
                         <User className="w-4 h-4" />
                       </div>
                     )}
@@ -277,7 +280,7 @@ function AssistenteIA() {
                 
                 {isLoading && (
                   <div className="flex gap-3 justify-start">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
                       <Bot className="w-4 h-4 text-primary-foreground" />
                     </div>
                     <div className="bg-muted rounded-lg p-3">
@@ -293,20 +296,21 @@ function AssistenteIA() {
               </div>
             </ScrollArea>
             
-            <div className="border-t p-4">
+            {/* Input fixo na parte inferior */}
+            <div className="border-t p-4 flex-shrink-0 bg-card">
               <div className="flex gap-2">
                 <Textarea
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder="Digite sua pergunta sobre atividades, projetos, colaboradores..."
-                  className="min-h-[60px] resize-none"
+                  className="min-h-[60px] max-h-32 resize-none"
                   disabled={isLoading}
                 />
                 <Button 
                   onClick={sendMessage} 
                   disabled={isLoading || !inputMessage.trim()}
-                  className="self-end"
+                  className="self-end flex-shrink-0"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
