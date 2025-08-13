@@ -6,6 +6,75 @@ import TarefaMacroService from './TarefaMacroService';
 import ProcessService from './ProcessService';
 
 class OpenAIService {
+  // Gerenciar thread por usuário
+  getThreadStorageKey(userId: string): string {
+    return `openai_thread_${userId}`;
+  }
+
+  getUserThread(userId: string): string | null {
+    return localStorage.getItem(this.getThreadStorageKey(userId));
+  }
+
+  setUserThread(userId: string, threadId: string): void {
+    localStorage.setItem(this.getThreadStorageKey(userId), threadId);
+  }
+
+  resetUserThread(userId: string): void {
+    localStorage.removeItem(this.getThreadStorageKey(userId));
+  }
+
+  async getOrCreateUserThread(userId: string, apiKey: string): Promise<string> {
+    try {
+      const existingThreadId = this.getUserThread(userId);
+      
+      if (existingThreadId) {
+        // Verificar se thread ainda existe no OpenAI
+        try {
+          const statusResponse = await fetch(`https://api.openai.com/v1/threads/${existingThreadId}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'OpenAI-Beta': 'assistants=v2'
+            }
+          });
+          
+          if (statusResponse.ok) {
+            return existingThreadId;
+          } else {
+            console.log("Thread anterior não encontrada, criando nova...");
+            this.resetUserThread(userId);
+          }
+        } catch (error) {
+          console.log("Erro ao verificar thread anterior, criando nova...");
+          this.resetUserThread(userId);
+        }
+      }
+
+      // Criar nova thread
+      const threadResponse = await fetch('https://api.openai.com/v1/threads', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'OpenAI-Beta': 'assistants=v2'
+        },
+        body: JSON.stringify({})
+      });
+
+      if (!threadResponse.ok) {
+        throw new Error('Erro ao criar thread');
+      }
+
+      const thread = await threadResponse.json();
+      this.setUserThread(userId, thread.id);
+      
+      return thread.id;
+    } catch (error) {
+      console.error('Erro ao gerenciar thread:', error);
+      throw error;
+    }
+  }
+
   private analyzeQuestionType(userMessage: string): 'count' | 'detailed' | 'status' | 'general' {
     const message = userMessage.toLowerCase();
     
@@ -189,7 +258,7 @@ class OpenAIService {
     return contextData;
   }
 
-  async sendMessage(message: string, apiKey: string, assistantId: string): Promise<string> {
+  async sendMessage(message: string, apiKey: string, assistantId: string, userId: string): Promise<string> {
     try {
       // Coletar dados de contexto baseado na mensagem
       const contextData = await this.collectContextData(message);
@@ -222,22 +291,8 @@ class OpenAIService {
         console.log('Novo tamanho do contexto após fallback:', finalContextData.length);
       }
 
-      // Criar thread
-      const threadResponse = await fetch('https://api.openai.com/v1/threads', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'OpenAI-Beta': 'assistants=v2'
-        },
-        body: JSON.stringify({})
-      });
-
-      if (!threadResponse.ok) {
-        throw new Error('Erro ao criar thread');
-      }
-
-      const thread = await threadResponse.json();
+      // Obter ou criar thread para o usuário
+      const threadId = await this.getOrCreateUserThread(userId, apiKey);
 
       // Adicionar mensagem com contexto melhorada
       const messageBody = finalContextData 
@@ -258,7 +313,7 @@ Por favor, analise os dados acima e forneça uma resposta precisa baseada nas in
       console.log('Tamanho final da mensagem:', messageBody.length);
       console.log('Mensagem final enviada para OpenAI:', messageBody.substring(0, 500) + '...');
 
-      await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
+      await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -272,7 +327,7 @@ Por favor, analise os dados acima e forneça uma resposta precisa baseada nas in
       });
 
       // Executar assistente
-      const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
+      const runResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -295,7 +350,7 @@ Por favor, analise os dados acima e forneça uma resposta precisa baseada nas in
       while (runStatus.status === 'queued' || runStatus.status === 'in_progress') {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        const statusResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`, {
+        const statusResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/runs/${run.id}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -315,7 +370,7 @@ Por favor, analise os dados acima e forneça uma resposta precisa baseada nas in
       }
 
       // Buscar resposta
-      const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
+      const messagesResponse = await fetch(`https://api.openai.com/v1/threads/${threadId}/messages`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${apiKey}`,

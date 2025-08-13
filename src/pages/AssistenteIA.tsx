@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { openaiService } from '@/services/OpenAIService';
 import { toast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
+import { useUser } from '@/components/layout/useUser';
 
 export interface ChatMessage {
   id: string;
@@ -28,27 +29,32 @@ function AssistenteIA() {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const user = useUser();
+
+  // Função para obter chave de storage das mensagens por usuário
+  const getMessagesStorageKey = () => {
+    return user ? `chat_messages_${user.id}` : "chat_messages_guest";
+  };
 
   useEffect(() => {
     // Carregar configurações do localStorage
     const savedApiKey = localStorage.getItem('openai_api_key');
     const savedAssistantId = localStorage.getItem('openai_assistant_id');
-    const savedMessages = localStorage.getItem('chat_messages');
 
     if (savedApiKey) setApiKey(savedApiKey);
     if (savedAssistantId) setAssistantId(savedAssistantId);
-    if (savedMessages) {
-      try {
-        const parsedMessages = JSON.parse(savedMessages);
-        setMessages(parsedMessages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        })));
-      } catch (error) {
-        console.error('Erro ao carregar mensagens:', error);
-      }
-    }
   }, []);
+
+  // Resetar thread e limpar mensagens toda vez que a tela é aberta
+  useEffect(() => {
+    if (user) {
+      // Resetar thread do usuário
+      openaiService.resetUserThread(user.id.toString());
+      // Limpar mensagens do chat
+      setMessages([]);
+      localStorage.removeItem(getMessagesStorageKey());
+    }
+  }, [user]);
 
   useEffect(() => {
     // Auto scroll para a última mensagem
@@ -56,11 +62,11 @@ function AssistenteIA() {
   }, [messages]);
 
   useEffect(() => {
-    // Salvar mensagens no localStorage
-    if (messages.length > 0) {
-      localStorage.setItem('chat_messages', JSON.stringify(messages));
+    // Salvar mensagens no localStorage por usuário
+    if (messages.length > 0 && user) {
+      localStorage.setItem(getMessagesStorageKey(), JSON.stringify(messages));
     }
-  }, [messages]);
+  }, [messages, user]);
 
   const saveConfig = () => {
     if (!apiKey.trim() || !assistantId.trim()) {
@@ -83,7 +89,7 @@ function AssistenteIA() {
   };
 
   const sendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || !user) return;
     
     if (!apiKey || !assistantId) {
       toast({
@@ -107,7 +113,7 @@ function AssistenteIA() {
     setIsLoading(true);
 
     try {
-      const response = await openaiService.sendMessage(inputMessage.trim(), apiKey, assistantId);
+      const response = await openaiService.sendMessage(inputMessage.trim(), apiKey, assistantId, user.id.toString());
       
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -131,10 +137,13 @@ function AssistenteIA() {
 
   const clearChat = () => {
     setMessages([]);
-    localStorage.removeItem('chat_messages');
+    if (user) {
+      localStorage.removeItem(getMessagesStorageKey());
+      openaiService.resetUserThread(user.id.toString());
+    }
     toast({
       title: "Chat limpo",
-      description: "Todas as mensagens foram removidas"
+      description: "Todas as mensagens foram removidas e thread resetada"
     });
   };
 
