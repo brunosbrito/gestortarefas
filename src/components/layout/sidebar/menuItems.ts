@@ -12,6 +12,7 @@ import {
   Briefcase,
   Calendar,
   ClipboardList,
+  Bot,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -25,6 +26,11 @@ export const navItems: MenuItem[] = [
     icon: ClipboardList,
     label: 'Atividades',
     path: '/atividade',
+  },
+  {
+    icon: Bot,
+    label: 'Assistente IA',
+    path: '/assistente-ia',
   },
   {
     icon: Users,
