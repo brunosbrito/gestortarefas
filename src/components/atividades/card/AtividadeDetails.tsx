@@ -39,7 +39,7 @@ export const AtividadeDetails = ({ atividade }: AtividadeDetailsProps) => {
           <AtividadeImageCarousel images={atividade.images} />
           <AtividadeInfoBasica atividade={atividade} />
           <Separator className="my-4" />
-          <AtividadeEquipe collaborators={atividade.collaborators} />
+          <AtividadeEquipe collaborators={atividade.collaborators || []} />
           <Separator className="my-4" />
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-construction-700">

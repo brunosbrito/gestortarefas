@@ -26,7 +26,7 @@ export const AtividadeEquipe = ({ collaborators }: AtividadeEquipeProps) => {
                   {collaborator.name}
                 </p>
                 <p className="text-sm text-construction-600">
-                  {collaborator.role}
+                  {collaborator.role || 'Colaborador'}
                 </p>
               </div>
             </div>

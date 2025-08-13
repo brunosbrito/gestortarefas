@@ -115,7 +115,7 @@ export const AtividadeMetadata = ({
 
       <div className="flex items-center mb-2">
         <Users className="w-4 h-4 mr-2" />
-        Equipe: {atividade.collaborators?.map((c) => c.name).join(', ')}
+        Equipe: {atividade.collaborators?.map((c) => c.name).join(', ') || 'Sem equipe definida'}
       </div>
 
       <div className="flex items-center mb-2">
