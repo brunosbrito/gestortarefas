@@ -12,7 +12,6 @@ import {
   Briefcase,
   Calendar,
   ClipboardList,
-  TrendingUp,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -26,11 +25,6 @@ export const navItems: MenuItem[] = [
     icon: ClipboardList,
     label: 'Atividades',
     path: '/atividade',
-  },
-  {
-    icon: TrendingUp,
-    label: 'Análise SWOT',
-    path: '/analise-swot',
   },
   {
     icon: Users,
