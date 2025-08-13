@@ -23,13 +23,17 @@ export const filterDataByPeriod = <T extends { createdAt?: string | Date | undef
   let filterStartDate: Date | null = null;
   let filterEndDate: Date | null = null;
 
-  // Se é um período personalizado com datas definidas
-  if (periodFilter === 'personalizado' && startDate && endDate) {
-    filterStartDate = new Date(startDate);
-    filterStartDate.setHours(0, 0, 0, 0);
+  // Se temos datas personalizadas definidas, usá-las independentemente do tipo de período
+  if (startDate || endDate) {
+    if (startDate) {
+      filterStartDate = new Date(startDate);
+      filterStartDate.setHours(0, 0, 0, 0);
+    }
     
-    filterEndDate = new Date(endDate);
-    filterEndDate.setHours(23, 59, 59, 999); // Final do dia
+    if (endDate) {
+      filterEndDate = new Date(endDate);
+      filterEndDate.setHours(23, 59, 59, 999); // Final do dia
+    }
   } else {
     // Caso contrário, usa os períodos predefinidos
     switch (periodFilter) {

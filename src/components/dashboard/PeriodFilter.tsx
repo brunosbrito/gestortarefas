@@ -69,9 +69,15 @@ export const PeriodFilter = ({
       // Definir hora para o início do dia (00:00:00)
       newStartDate.setHours(0, 0, 0, 0);
       
-      onFilterChange({ startDate: newStartDate });
+      onFilterChange({ 
+        startDate: newStartDate,
+        period: 'personalizado'
+      });
     } else {
-      onFilterChange({ startDate: undefined });
+      onFilterChange({ 
+        startDate: undefined,
+        period: endDate ? 'personalizado' : 'todos'
+      });
     }
   };
 
@@ -83,9 +89,15 @@ export const PeriodFilter = ({
       // Definir hora para o final do dia (23:59:59)
       newEndDate.setHours(23, 59, 59, 999);
       
-      onFilterChange({ endDate: newEndDate });
+      onFilterChange({ 
+        endDate: newEndDate,
+        period: 'personalizado'
+      });
     } else {
-      onFilterChange({ endDate: undefined });
+      onFilterChange({ 
+        endDate: undefined,
+        period: startDate ? 'personalizado' : 'todos'
+      });
     }
   };
 

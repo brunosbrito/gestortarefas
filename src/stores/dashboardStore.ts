@@ -195,25 +195,30 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
         });
       }
 
-      // Aplicar filtro de período
-      if (state.filters.period && state.filters.period !== 'todos') {
+      // Aplicar filtro de período (sempre aplicar se há período ou datas definidas)
+      if ((state.filters.period && state.filters.period !== 'todos') || 
+          state.filters.startDate || 
+          state.filters.endDate) {
+        
+        const periodToUse = state.filters.period || 'todos';
+        
         filteredActivities = filterDataByPeriod(
           filteredActivities,
-          state.filters.period as PeriodFilterType,
+          periodToUse as PeriodFilterType,
           state.filters.startDate,
           state.filters.endDate
         );
 
         filteredProjects = filterDataByPeriod(
           filteredProjects,
-          state.filters.period as PeriodFilterType,
+          periodToUse as PeriodFilterType,
           state.filters.startDate,
           state.filters.endDate
         );
 
         filteredServiceOrders = filterDataByPeriod(
           filteredServiceOrders,
-          state.filters.period as PeriodFilterType,
+          periodToUse as PeriodFilterType,
           state.filters.startDate,
           state.filters.endDate
         );
