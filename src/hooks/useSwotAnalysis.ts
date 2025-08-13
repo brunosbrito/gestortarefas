@@ -17,22 +17,31 @@ export const useSwotAnalysis = (filters?: DashboardFilters) => {
 
       // Aplicar filtros se existirem
       if (filters) {
+        console.log('Aplicando filtros SWOT:', filters);
+        console.log('Atividades antes dos filtros:', activities.length);
+        
         if (filters.macroTaskId) {
           activities = activities.filter(a => a.macroTaskId === filters.macroTaskId);
+          console.log('Após filtro macroTaskId:', activities.length);
         }
         if (filters.processId) {
           activities = activities.filter(a => a.processId === filters.processId);
+          console.log('Após filtro processId:', activities.length);
         }
         if (filters.obraId) {
-          activities = activities.filter(a => a.serviceOrder?.projectId === filters.obraId);
+          // Corrigir: usar projectId diretamente em vez de serviceOrder?.projectId
+          activities = activities.filter(a => a.projectId === filters.obraId);
+          console.log('Após filtro obraId:', activities.length);
         }
         if (filters.serviceOrderId) {
           activities = activities.filter(a => a.serviceOrderId === filters.serviceOrderId);
+          console.log('Após filtro serviceOrderId:', activities.length);
         }
         if (filters.collaboratorId) {
           activities = activities.filter(a => 
             a.team?.some(member => member.collaboratorId === filters.collaboratorId)
           );
+          console.log('Após filtro collaboratorId:', activities.length);
         }
         if (filters.period && filters.period !== 'todos') {
           activities = filterDataByPeriod(
@@ -41,13 +50,35 @@ export const useSwotAnalysis = (filters?: DashboardFilters) => {
             filters.startDate,
             filters.endDate
           );
+          console.log('Após filtro de período:', activities.length);
         }
       }
 
-      const [obras, rncs] = await Promise.all([
+      let [obras, rncs] = await Promise.all([
         ObrasService.getAllObras(),
         NonConformityService.getAllRnc()
       ]);
+
+      // Aplicar filtros para obras e RNCs também
+      if (filters) {
+        if (filters.obraId) {
+          obras = obras.filter(o => o.id === filters.obraId);
+        }
+        if (filters.period && filters.period !== 'todos') {
+          obras = filterDataByPeriod(
+            obras,
+            filters.period as any,
+            filters.startDate,
+            filters.endDate
+          );
+          rncs = filterDataByPeriod(
+            rncs,
+            filters.period as any,
+            filters.startDate,
+            filters.endDate
+          );
+        }
+      }
 
       console.log('Dados SWOT completos:', { 
         activities: activities.length, 
@@ -70,16 +101,16 @@ export const useSwotAnalysis = (filters?: DashboardFilters) => {
 
       const now = new Date();
       
-      // Corrigir status das atividades para usar os valores corretos (plural)
-      const completedActivities = activities.filter(a => a.status === 'Concluídas').length;
-      const paralyzedActivities = activities.filter(a => a.status === 'Paralizadas').length;
-      const plannedActivities = activities.filter(a => a.status === 'Planejadas').length;
+      // Corrigir status das atividades para usar os valores corretos da interface
+      const completedActivities = activities.filter(a => a.status === 'Concluída').length;
+      const paralyzedActivities = activities.filter(a => a.status === 'Paralizada' || a.status === 'Paralisada').length;
+      const plannedActivities = activities.filter(a => a.status === 'Planejado' || a.status === 'Planejada').length;
       const inProgressActivities = activities.filter(a => a.status === 'Em andamento').length;
       
       // Atividades em atraso: incluir paralizadas e aquelas com prazo vencido
       const delayedActivities = activities.filter(a => {
-        const isParalyzed = a.status === 'Paralizadas';
-        const isOverdue = a.endDate && new Date(a.endDate) < now && a.status !== 'Concluídas';
+        const isParalyzed = a.status === 'Paralizada' || a.status === 'Paralisada';
+        const isOverdue = a.endDate && new Date(a.endDate) < now && a.status !== 'Concluída';
         return isParalyzed || isOverdue;
       }).length;
       
@@ -96,7 +127,7 @@ export const useSwotAnalysis = (filters?: DashboardFilters) => {
       // Calcular tempo médio real baseado nas atividades com totalTime
       const activitiesWithTime = activities.filter(a => {
         const totalTime = (a as any).totalTime;
-        return a.status === 'Concluídas' && totalTime && totalTime > 0;
+        return a.status === 'Concluída' && totalTime && totalTime > 0;
       });
       
       const averageCompletionTime = activitiesWithTime.length > 0 ? 
@@ -216,7 +247,7 @@ export const useSwotAnalysis = (filters?: DashboardFilters) => {
 
   useEffect(() => {
     loadSwotData();
-  }, [filters]);
+  }, [filters?.macroTaskId, filters?.processId, filters?.obraId, filters?.serviceOrderId, filters?.collaboratorId, filters?.period, filters?.startDate, filters?.endDate]);
 
   return {
     swotData,
