@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { DashboardState, DashboardFilters, NormalizedActivity, ActivityStatistics } from '@/types/dashboard';
+import { DashboardState, NormalizedActivity, ActivityStatistics, DashboardFilters } from '@/types/dashboard';
+import { PeriodFilterType } from '@/components/dashboard/PeriodFilter';
 import { normalizeActivity, countActivitiesByStatus, filterActivities } from '@/utils/activityHelpers';
 import { filterDataByPeriod } from '@/utils/dateFilter';
 import { getAllActivities } from '@/services/ActivityService';
@@ -43,7 +44,7 @@ const initialState: DashboardState = {
     filtered: false,
   },
   filters: {
-    period: 'todos',
+    period: 'todos' as PeriodFilterType,
   },
   filteredData: {
     activities: [],
@@ -156,7 +157,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     
     set(state => ({
       ...state,
-      filters: { ...state.filters, ...newFilters }
+      filters: { ...state.filters, ...newFilters } as DashboardFilters
     }));
 
     // Aplicar filtros automaticamente
@@ -198,21 +199,21 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
       if (state.filters.period && state.filters.period !== 'todos') {
         filteredActivities = filterDataByPeriod(
           filteredActivities,
-          state.filters.period as any,
+          state.filters.period as PeriodFilterType,
           state.filters.startDate,
           state.filters.endDate
         );
 
         filteredProjects = filterDataByPeriod(
           filteredProjects,
-          state.filters.period as any,
+          state.filters.period as PeriodFilterType,
           state.filters.startDate,
           state.filters.endDate
         );
 
         filteredServiceOrders = filterDataByPeriod(
           filteredServiceOrders,
-          state.filters.period as any,
+          state.filters.period as PeriodFilterType,
           state.filters.startDate,
           state.filters.endDate
         );

@@ -183,7 +183,7 @@ const Dashboard = () => {
           onFilterChange={(newFilters) => {
             updateFilters(newFilters);
           }}
-          currentFilters={filters as any}
+          currentFilters={filters}
         />
       </div>
 

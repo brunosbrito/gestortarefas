@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
-import { DashboardFilters } from '@/interfaces/DashboardFilters';
+import { DashboardFilters } from '@/types/dashboard';
 import ObrasService from '@/services/ObrasService';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { Filter } from 'lucide-react';

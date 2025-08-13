@@ -9,7 +9,7 @@ import TarefaMacroService from '@/services/TarefaMacroService';
 import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Filter } from 'lucide-react';
-import { DashboardFilters } from '@/interfaces/DashboardFilters';
+import { DashboardFilters } from '@/types/dashboard';
 
 interface TaskProcessFilterProps {
   onFilterChange: (filters: Partial<DashboardFilters>) => void;
