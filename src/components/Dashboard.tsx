@@ -101,16 +101,25 @@ const Dashboard = () => {
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <PeriodFilter
           onFilterChange={(filterData) => {
-            updatePeriodFilter(
-              filterData.period || 'todos',
-              filterData.startDate,
-              filterData.endDate
-            );
+            // Atualizar filtros de período
+            if (filterData.period || filterData.startDate || filterData.endDate) {
+              updatePeriodFilter(
+                filterData.period || 'todos',
+                filterData.startDate,
+                filterData.endDate
+              );
+            }
+            
+            // Atualizar filtro de obra
+            if (filterData.obraId !== undefined) {
+              updateFilters({ obraId: filterData.obraId });
+            }
           }}
           currentFilters={{
             period: filters.period,
             startDate: filters.startDate,
             endDate: filters.endDate,
+            obraId: filters.obraId,
           }}
         />
       </div>
