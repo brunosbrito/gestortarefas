@@ -9,49 +9,103 @@ class OpenAIService {
   private async collectContextData(userMessage: string): Promise<string> {
     let contextData = '';
     const message = userMessage.toLowerCase();
+    
+    console.log('Mensagem do usuário:', userMessage);
+    console.log('Mensagem processada:', message);
 
     try {
-      // Verificar se a pergunta é sobre atividades
-      if (message.includes('atividade') || message.includes('atividades') || message.includes('tarefa')) {
+      // Verificar se a pergunta é sobre atividades (palavras-chave expandidas)
+      if (message.includes('atividade') || message.includes('atividades') || message.includes('tarefa') || 
+          message.includes('aberto') || message.includes('pendente') || message.includes('progresso') ||
+          message.includes('andamento') || message.includes('finalizada') || message.includes('concluída')) {
+        console.log('Coletando dados de atividades...');
         const activities = await getAllActivities();
-        contextData += `ATIVIDADES DO SISTEMA:\n${JSON.stringify(activities, null, 2)}\n\n`;
+        console.log('Atividades coletadas:', activities?.length || 0);
+        
+        if (activities && activities.length > 0) {
+          // Formatação melhorada do contexto
+          contextData += `ATIVIDADES DO SISTEMA (Total: ${activities.length}):\n`;
+          contextData += `Dados das atividades em formato JSON:\n${JSON.stringify(activities, null, 2)}\n\n`;
+          
+          // Resumo estatístico
+          const statusCount = activities.reduce((acc: any, activity: any) => {
+            const status = activity.status || 'sem_status';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+          }, {});
+          
+          contextData += `RESUMO DE STATUS DAS ATIVIDADES:\n${JSON.stringify(statusCount, null, 2)}\n\n`;
+        }
       }
 
       // Verificar se a pergunta é sobre projetos/obras
       if (message.includes('projeto') || message.includes('projetos') || message.includes('obra') || message.includes('obras')) {
+        console.log('Coletando dados de projetos...');
         const projects = await ObrasService.getAllObras();
-        contextData += `PROJETOS/OBRAS DO SISTEMA:\n${JSON.stringify(projects, null, 2)}\n\n`;
+        console.log('Projetos coletados:', projects?.length || 0);
+        
+        if (projects && projects.length > 0) {
+          contextData += `PROJETOS/OBRAS DO SISTEMA (Total: ${projects.length}):\n`;
+          contextData += `${JSON.stringify(projects, null, 2)}\n\n`;
+        }
       }
 
       // Verificar se a pergunta é sobre ordens de serviço
       if (message.includes('ordem') || message.includes('serviço') || message.includes('os')) {
+        console.log('Coletando dados de ordens de serviço...');
         const serviceOrders = await getAllServiceOrders();
-        contextData += `ORDENS DE SERVIÇO DO SISTEMA:\n${JSON.stringify(serviceOrders, null, 2)}\n\n`;
+        console.log('Ordens de serviço coletadas:', serviceOrders?.length || 0);
+        
+        if (serviceOrders && serviceOrders.length > 0) {
+          contextData += `ORDENS DE SERVIÇO DO SISTEMA (Total: ${serviceOrders.length}):\n`;
+          contextData += `${JSON.stringify(serviceOrders, null, 2)}\n\n`;
+        }
       }
 
       // Verificar se a pergunta é sobre colaboradores
       if (message.includes('colaborador') || message.includes('colaboradores') || message.includes('funcionário') || message.includes('funcionários')) {
+        console.log('Coletando dados de colaboradores...');
         const colaboradores = await ColaboradorService.getAllColaboradores();
-        contextData += `COLABORADORES DO SISTEMA:\n${JSON.stringify(colaboradores, null, 2)}\n\n`;
+        console.log('Colaboradores coletados:', colaboradores?.length || 0);
+        
+        if (colaboradores && colaboradores.length > 0) {
+          contextData += `COLABORADORES DO SISTEMA (Total: ${colaboradores.length}):\n`;
+          contextData += `${JSON.stringify(colaboradores, null, 2)}\n\n`;
+        }
       }
 
       // Verificar se a pergunta é sobre tarefas macro
       if (message.includes('tarefa macro') || message.includes('tarefas macro') || message.includes('macro')) {
+        console.log('Coletando dados de tarefas macro...');
         const tarefasMacro = await TarefaMacroService.getAll();
-        contextData += `TAREFAS MACRO DO SISTEMA:\n${JSON.stringify(tarefasMacro.data, null, 2)}\n\n`;
+        console.log('Tarefas macro coletadas:', tarefasMacro?.data?.length || 0);
+        
+        if (tarefasMacro?.data && tarefasMacro.data.length > 0) {
+          contextData += `TAREFAS MACRO DO SISTEMA (Total: ${tarefasMacro.data.length}):\n`;
+          contextData += `${JSON.stringify(tarefasMacro.data, null, 2)}\n\n`;
+        }
       }
 
       // Verificar se a pergunta é sobre processos
       if (message.includes('processo') || message.includes('processos')) {
+        console.log('Coletando dados de processos...');
         const processos = await ProcessService.getAll();
-        contextData += `PROCESSOS DO SISTEMA:\n${JSON.stringify(processos.data, null, 2)}\n\n`;
+        console.log('Processos coletados:', processos?.data?.length || 0);
+        
+        if (processos?.data && processos.data.length > 0) {
+          contextData += `PROCESSOS DO SISTEMA (Total: ${processos.data.length}):\n`;
+          contextData += `${JSON.stringify(processos.data, null, 2)}\n\n`;
+        }
       }
 
     } catch (error) {
       console.error('Erro ao coletar dados de contexto:', error);
-      contextData += 'ERRO: Não foi possível coletar alguns dados do sistema.\n\n';
+      contextData += `ERRO: Não foi possível coletar alguns dados do sistema. Erro: ${error}\n\n`;
     }
 
+    console.log('Contexto final coletado:', contextData.length > 0 ? 'SIM' : 'NÃO');
+    console.log('Tamanho do contexto:', contextData.length, 'caracteres');
+    
     return contextData;
   }
 
@@ -77,10 +131,23 @@ class OpenAIService {
 
       const thread = await threadResponse.json();
 
-      // Adicionar mensagem com contexto
+      // Adicionar mensagem com contexto melhorada
       const messageBody = contextData 
-        ? `CONTEXTO DO SISTEMA:\n${contextData}\n\nPERGUNTA DO USUÁRIO:\n${message}` 
+        ? `INSTRUÇÕES IMPORTANTES:
+Você é um assistente especializado em análise de dados de um sistema de gestão de projetos e atividades.
+Os dados abaixo são do sistema atual em tempo real.
+Analise os dados JSON fornecidos e responda de forma precisa e detalhada.
+Para perguntas sobre quantidades, conte os itens nos arrays JSON.
+Para perguntas sobre status, analise os campos de status nos objetos.
+
+${contextData}
+
+PERGUNTA DO USUÁRIO: ${message}
+
+Por favor, analise os dados acima e forneça uma resposta precisa baseada nas informações do sistema.` 
         : message;
+      
+      console.log('Mensagem final enviada para OpenAI:', messageBody.substring(0, 500) + '...');
 
       await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
         method: 'POST',
