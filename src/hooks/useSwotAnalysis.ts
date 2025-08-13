@@ -16,15 +16,40 @@ export const useSwotAnalysis = () => {
         NonConformityService.getAllRnc()
       ]);
 
-      console.log('Dados SWOT:', { activities: activities.length, obras: obras.length, rncs: rncs.length });
+      console.log('Dados SWOT completos:', { 
+        activities: activities.length, 
+        obras: obras.length, 
+        rncs: rncs.length 
+      });
+      
+      // Debug: verificar status das atividades
+      const uniqueStatuses = [...new Set(activities.map(a => a.status))];
+      console.log('Status únicos encontrados:', uniqueStatuses);
+      
+      // Exemplo de algumas atividades para debug
+      console.log('Exemplos de atividades:', activities.slice(0, 3).map(a => ({
+        id: a.id,
+        status: a.status,
+        totalTime: (a as any).totalTime,
+        actualTime: a.actualTime,
+        endDate: a.endDate
+      })));
 
       const now = new Date();
       
-      // Corrigir status das atividades para usar os valores corretos
-      const completedActivities = activities.filter(a => a.status === 'Concluída').length;
-      const delayedActivities = activities.filter(a => 
-        a.endDate && new Date(a.endDate) < now && a.status !== 'Concluída'
-      ).length;
+      // Corrigir status das atividades para usar os valores corretos (plural)
+      const completedActivities = activities.filter(a => a.status === 'Concluídas').length;
+      const paralyzedActivities = activities.filter(a => a.status === 'Paralizadas').length;
+      const plannedActivities = activities.filter(a => a.status === 'Planejadas').length;
+      const inProgressActivities = activities.filter(a => a.status === 'Em andamento').length;
+      
+      // Atividades em atraso: incluir paralizadas e aquelas com prazo vencido
+      const delayedActivities = activities.filter(a => {
+        const isParalyzed = a.status === 'Paralizadas';
+        const isOverdue = a.endDate && new Date(a.endDate) < now && a.status !== 'Concluídas';
+        return isParalyzed || isOverdue;
+      }).length;
+      
       const ongoingProjects = obras.filter(o => o.status === 'em_andamento').length;
       const projectsOnTime = obras.filter(o => 
         o.status === 'em_andamento' && 
@@ -35,12 +60,26 @@ export const useSwotAnalysis = () => {
       const teamProductivity = activities.length > 0 ? 
         Math.round((completedActivities / activities.length) * 100) : 0;
 
-      // Calcular tempo médio real baseado nas atividades concluídas
-      const completedWithTime = activities.filter(a => 
-        a.status === 'Concluída' && a.actualTime && a.actualTime > 0
-      );
-      const averageCompletionTime = completedWithTime.length > 0 ? 
-        Math.round(completedWithTime.reduce((sum, a) => sum + (a.actualTime || 0), 0) / completedWithTime.length) : 0;
+      // Calcular tempo médio real baseado nas atividades com totalTime
+      const activitiesWithTime = activities.filter(a => {
+        const totalTime = (a as any).totalTime;
+        return a.status === 'Concluídas' && totalTime && totalTime > 0;
+      });
+      
+      const averageCompletionTime = activitiesWithTime.length > 0 ? 
+        Math.round(activitiesWithTime.reduce((sum, a) => {
+          const totalTime = (a as any).totalTime || 0;
+          return sum + Math.abs(totalTime); // Usar valor absoluto pois pode ser negativo
+        }, 0) / activitiesWithTime.length) : 0;
+      
+      console.log('Métricas calculadas:', {
+        completedActivities,
+        paralyzedActivities,
+        delayedActivities,
+        teamProductivity,
+        averageCompletionTime,
+        activitiesWithTimeCount: activitiesWithTime.length
+      });
 
       return {
         totalActivities: activities.length,
