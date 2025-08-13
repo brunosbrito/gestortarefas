@@ -10,6 +10,7 @@ import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
 import { Separator } from './ui/separator';
 import { PeriodFilter } from './dashboard/PeriodFilter';
 import { ActivityStatusCards } from './dashboard/ActivityStatusCards';
+import { SwotAnalysis } from './dashboard/SwotAnalysis';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 
@@ -136,6 +137,10 @@ const Dashboard = () => {
           </div>
         )}
       </div> */}
+
+      <Separator className="my-8" />
+
+      <SwotAnalysis />
 
       <Separator className="my-8" />
 
