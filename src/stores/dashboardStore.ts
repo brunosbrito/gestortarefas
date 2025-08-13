@@ -224,9 +224,20 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
         );
       }
 
-      // NOTA: Não filtramos projetos e ordens de serviço por ID específico
-      // Os cards devem mostrar totais do período, não apenas o item selecionado
-      // A seleção específica afeta apenas atividades e estatísticas
+      // Aplicar filtros específicos de ID conforme necessário
+      // Quando uma obra específica é selecionada, mostrar apenas essa obra (1)
+      // e suas respectivas ordens de serviço
+      if (state.filters.obraId) {
+        filteredProjects = filteredProjects.filter(p => p.id === state.filters.obraId);
+        // Filtrar ordens de serviço para mostrar apenas as dessa obra
+        filteredServiceOrders = filteredServiceOrders.filter(os => os.projectId === state.filters.obraId);
+      }
+
+      // Quando uma ordem de serviço específica é selecionada, mostrar apenas essa OS (1)
+      // mas não filtrar projetos por ID específico
+      if (state.filters.serviceOrderId && !state.filters.obraId) {
+        filteredServiceOrders = filteredServiceOrders.filter(os => os.id === state.filters.serviceOrderId);
+      }
 
       // Recalcular estatísticas baseadas nos dados filtrados
       const activityStatus = countActivitiesByStatus(filteredActivities);
