@@ -4,7 +4,6 @@ import { User } from '@/interfaces/UserInterface';
 import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '../ui/use-toast';
-import { ModuleDropdown } from './ModuleDropdown';
 import { SettingsDropdown } from './SettingsDropdown';
 
 interface HeaderProps {
@@ -46,8 +45,7 @@ export const Header = ({ user }: HeaderProps) => {
             </h1>
           </div>
           
-          <div className="flex items-center justify-center gap-1.5 md:gap-2">
-            <ModuleDropdown />
+          <div className="flex items-center justify-center">
             <SettingsDropdown />
           </div>
         </div>

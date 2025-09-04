@@ -2,8 +2,7 @@ import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { SidebarMenuItem } from "./sidebar/SidebarMenuItem";
 import { User } from "@/interfaces/UserInterface";
-import { useModule } from "@/contexts/ModuleContext";
-import { getMenuItemsByModule } from "./ModuleMenuItems";
+import { navItems } from "./sidebar/menuItems";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SidebarProps {
@@ -12,11 +11,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ user }: SidebarProps) => {
   const location = useLocation();
-  const { activeModule } = useModule();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-
-  // Obtém os itens do menu baseado no módulo ativo
-  const menuItems = getMenuItemsByModule(activeModule);
 
   useEffect(() => {
     const shouldExpandObras = location.pathname.includes('/obras');
@@ -39,7 +34,7 @@ export const Sidebar = ({ user }: SidebarProps) => {
   };
 
   // Filtra os itens do menu baseado na role do usuário
-  const filteredNavItems = menuItems.filter(item => {
+  const filteredNavItems = navItems.filter(item => {
     if (item.adminOnly) {
       return user.role === 'admin';
     }
