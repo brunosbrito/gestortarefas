@@ -20,16 +20,22 @@ export const ModuleDropdown = () => {
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
-          className="h-9 px-3 text-left justify-start gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white"
+          className="h-8 md:h-9 px-2 md:px-3 text-left justify-start gap-1 md:gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white min-w-0"
         >
-          {currentConfig && <currentConfig.icon className="h-4 w-4" />}
-          <span className="font-medium">{currentConfig?.name}</span>
-          <ChevronDown className="h-4 w-4 ml-auto" />
+          {currentConfig && <currentConfig.icon className="h-4 w-4 flex-shrink-0" />}
+          <span className="font-medium truncate hidden sm:inline text-sm md:text-base">
+            {currentConfig?.name}
+          </span>
+          <span className="font-medium text-xs sm:hidden">
+            {currentConfig?.name.split(' ')[0]}
+          </span>
+          <ChevronDown className="h-3 w-3 md:h-4 md:w-4 ml-auto flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        className="w-64 bg-card/95 backdrop-blur-sm border-border/50"
+        className="w-56 md:w-64 bg-card/95 backdrop-blur-sm border-border/50 z-50"
+        sideOffset={4}
       >
         {modules.map((module) => {
           const config = getModuleConfig(module);

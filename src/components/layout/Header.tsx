@@ -38,18 +38,27 @@ export const Header = ({ user }: HeaderProps) => {
 
   return (
     <>
-      <div className="gradient-primary p-4 border-b border-border">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-white hidden md:block">Sistema de Gestão</h1>
-            <h1 className="text-lg font-bold text-white md:hidden">SG</h1>
-            <ModuleIndicator />
+      <div className="gradient-primary p-3 md:p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <h1 className="text-lg md:text-xl font-bold text-white truncate">
+              <span className="hidden sm:inline">Sistema de Gestão</span>
+              <span className="sm:hidden">SG</span>
+            </h1>
+            <div className="hidden sm:block">
+              <ModuleIndicator />
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
             <ModuleDropdown />
             <SettingsDropdown />
           </div>
+        </div>
+        
+        {/* Mobile module indicator */}
+        <div className="sm:hidden mt-2 flex justify-center">
+          <ModuleIndicator />
         </div>
       </div>
 

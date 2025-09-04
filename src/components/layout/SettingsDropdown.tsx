@@ -18,14 +18,15 @@ export const SettingsDropdown = () => {
         <Button 
           variant="ghost" 
           size="icon"
-          className="h-9 w-9 bg-white/10 hover:bg-white/20 border border-white/20 text-white"
+          className="h-8 w-8 md:h-9 md:w-9 bg-white/10 hover:bg-white/20 border border-white/20 text-white flex-shrink-0"
         >
           <Settings className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end" 
-        className="w-56 bg-card/95 backdrop-blur-sm border-border/50"
+        className="w-48 md:w-56 bg-card/95 backdrop-blur-sm border-border/50 z-50"
+        sideOffset={4}
       >
         <DropdownMenuItem onClick={toggleTheme} className="flex items-center gap-3 cursor-pointer">
           {theme === 'light' ? (
