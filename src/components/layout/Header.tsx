@@ -38,15 +38,15 @@ export const Header = ({ user }: HeaderProps) => {
   return (
     <>
       <div className="gradient-primary p-3 md:p-4 border-b border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h1 className="text-lg md:text-xl font-bold text-white truncate">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-center">
+            <h1 className="text-lg md:text-xl font-bold text-white">
               <span className="hidden sm:inline">Sistema de Gestão</span>
               <span className="sm:hidden">SG</span>
             </h1>
           </div>
           
-          <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+          <div className="flex items-center justify-center gap-1.5 md:gap-2">
             <ModuleDropdown />
             <SettingsDropdown />
           </div>
