@@ -364,11 +364,11 @@ export const AtividadesTable = () => {
                         const progresso = calcularProgresso(atividade);
 
                         return (
-                          <TableRow
+                           <TableRow
                             onClick={() => handleRowClick(atividade)}
                             key={atividade.id}
-                            className="cursor-pointer hover:bg-gray-100 transition"
-                          >
+                            className="cursor-pointer hover:bg-muted/60 transition-colors"
+                           >
                             <TableCell className="text-center font-mono text-sm">
                               {obterCodigoSequencial(globalIndex)}
                             </TableCell>
