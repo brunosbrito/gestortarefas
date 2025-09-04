@@ -17,29 +17,29 @@ export const ActivityStatusCards = ({ activitiesByStatus }: ActivityStatusCardsP
       title: 'Planejadas',
       value: activitiesByStatus.planejadas,
       icon: Calendar,
-      color: 'bg-purple-100 border-purple-300 text-purple-800',
-      iconColor: 'text-purple-500'
+      color: 'bg-purple-100 border-purple-300 text-purple-800 dark:bg-purple-950 dark:border-purple-800 dark:text-purple-300',
+      iconColor: 'text-purple-500 dark:text-purple-400'
     },
     {
       title: 'Em Execução',
       value: activitiesByStatus.emExecucao,
       icon: PlayCircle,
-      color: 'bg-green-100 border-green-300 text-green-800',
-      iconColor: 'text-green-500'
+      color: 'bg-green-100 border-green-300 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-300',
+      iconColor: 'text-green-500 dark:text-green-400'
     },
     {
       title: 'Concluídas',
       value: activitiesByStatus.concluidas,
       icon: CheckCircle,
-      color: 'bg-blue-100 border-blue-300 text-blue-800',
-      iconColor: 'text-blue-500'
+      color: 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300',
+      iconColor: 'text-blue-500 dark:text-blue-400'
     },
     {
       title: 'Paralizadas',
       value: activitiesByStatus.paralizadas,
       icon: PauseCircle,
-      color: 'bg-yellow-100 border-yellow-300 text-yellow-800',
-      iconColor: 'text-yellow-500'
+      color: 'bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-300',
+      iconColor: 'text-yellow-500 dark:text-yellow-400'
     }
   ];
 

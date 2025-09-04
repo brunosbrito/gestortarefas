@@ -12,11 +12,11 @@ interface SwotCardProps {
 
 const getSeverityColor = (severity?: string) => {
   switch (severity) {
-    case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-    case 'high': return 'text-red-500 bg-red-50 border-red-200';
-    case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    case 'low': return 'text-green-600 bg-green-50 border-green-200';
-    default: return 'text-construction-600 bg-construction-50 border-construction-200';
+    case 'critical': return 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800';
+    case 'high': return 'text-red-500 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800';
+    case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-950 dark:border-yellow-800';
+    case 'low': return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950 dark:border-green-800';
+    default: return 'text-construction-600 bg-construction-50 border-construction-200 dark:text-construction-400 dark:bg-construction-100 dark:border-construction-300';
   }
 };
 
@@ -42,7 +42,7 @@ export const SwotCard = ({ title, items, color, icon }: SwotCardProps) => {
         <ScrollArea className="h-full">
           <div className="space-y-4 pr-2">
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-construction-500">
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                 <CheckCircle className="w-12 h-12 mb-3 opacity-50" />
                 <p className="text-sm text-center">Nenhum item identificado nesta categoria</p>
               </div>
@@ -54,30 +54,30 @@ export const SwotCard = ({ title, items, color, icon }: SwotCardProps) => {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2 flex-1">
-                      <h4 className="font-semibold text-sm text-construction-900 break-words leading-tight">
+                      <h4 className="font-semibold text-sm text-foreground break-words leading-tight">
                         {item.title}
                       </h4>
                       {getTrendIcon(item.trend)}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                      <span className="text-xl font-bold text-construction-800">
+                      <span className="text-xl font-bold text-foreground">
                         {item.metric}
                       </span>
-                      <span className="text-xs font-medium text-construction-600">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {item.metricLabel}
                       </span>
                     </div>
                   </div>
                   
-                  <p className="text-xs text-construction-700 leading-relaxed mb-3 break-words">
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-3 break-words">
                     {item.description}
                   </p>
                   
                   {item.recommendation && (
-                    <div className="bg-construction-50 p-3 rounded-md border border-construction-100">
+                    <div className="bg-muted/50 p-3 rounded-md border border-border">
                       <div className="flex items-start gap-2">
-                        <Zap className="w-3 h-3 text-construction-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-xs text-construction-700 font-medium leading-relaxed">
+                        <Zap className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-foreground font-medium leading-relaxed">
                           <span className="font-semibold">Recomendação:</span> {item.recommendation}
                         </p>
                       </div>

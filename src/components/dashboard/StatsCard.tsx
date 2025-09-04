@@ -17,8 +17,8 @@ export const StatsCard = ({ title, value, icon: Icon, color }: StatsCardProps) =
           <Icon className="w-6 h-6 text-white" />
         </div>
         <div>
-          <p className="text-sm font-medium text-construction-500">{title}</p>
-          <h2 className="text-2xl font-bold text-construction-900">{value}</h2>
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <h2 className="text-2xl font-bold text-foreground">{value}</h2>
         </div>
       </div>
     </Card>
