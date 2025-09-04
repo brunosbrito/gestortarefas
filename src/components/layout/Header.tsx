@@ -5,7 +5,6 @@ import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '../ui/use-toast';
 import { ModuleDropdown } from './ModuleDropdown';
-import { ModuleIndicator } from './ModuleIndicator';
 import { SettingsDropdown } from './SettingsDropdown';
 
 interface HeaderProps {
@@ -51,11 +50,6 @@ export const Header = ({ user }: HeaderProps) => {
             <ModuleDropdown />
             <SettingsDropdown />
           </div>
-        </div>
-        
-        {/* Indicador do módulo em segunda linha para todas as larguras */}
-        <div className="mt-2 flex justify-center">
-          <ModuleIndicator />
         </div>
       </div>
 
