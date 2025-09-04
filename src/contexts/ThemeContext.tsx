@@ -27,7 +27,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     if (savedTheme === 'light' || savedTheme === 'dark') {
       return savedTheme;
     }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'light'; // Padrão é light mode
   });
 
   useEffect(() => {
