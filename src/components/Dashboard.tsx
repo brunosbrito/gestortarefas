@@ -82,15 +82,15 @@ const Dashboard = () => {
     <div className="space-y-6 p-6">
       {/* Header com informações sobre filtros ativos */}
       {hasActiveFilters && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-blue-800">
+              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
                 {activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''}
               </span>
             </div>
-            <span className="text-xs text-blue-600">
+            <span className="text-xs text-blue-600 dark:text-blue-300">
               Exibindo {filteredData.activities.length} de {totals.activities} atividades
             </span>
           </div>
@@ -98,7 +98,7 @@ const Dashboard = () => {
       )}
 
       {/* Filtro de Período */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-border p-6">
         <PeriodFilter
           onFilterChange={(filterData) => {
             // Atualizar filtros de período
@@ -133,7 +133,7 @@ const Dashboard = () => {
       {/* Gráficos de Estatísticas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico de Tarefas Macro */}
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-card rounded-lg shadow-sm border border-border">
           {statistics.macroTasks && statistics.macroTasks.length > 0 ? (
             <MacroTasksChart macroTasks={statistics.macroTasks} />
           ) : (
@@ -155,7 +155,7 @@ const Dashboard = () => {
         </div>
 
         {/* Gráfico de Processos */}
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-card rounded-lg shadow-sm border border-border">
           {statistics.processes && statistics.processes.length > 0 ? (
             <ProcessHoursChart processes={statistics.processes} />
           ) : (
@@ -180,14 +180,14 @@ const Dashboard = () => {
       <Separator className="my-8" />
 
       {/* Análise SWOT */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-border p-6">
         <SwotAnalysis />
       </div>
 
       <Separator className="my-8" />
 
       {/* Filtros de Tarefa/Processo */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-card rounded-lg shadow-sm border border-border p-6">
         <TaskProcessFilter
           onFilterChange={(newFilters) => {
             updateFilters(newFilters);
@@ -197,7 +197,7 @@ const Dashboard = () => {
       </div>
 
       {/* Tabela de Atividades Filtradas */}
-      <div className="bg-white rounded-lg shadow-sm border">
+      <div className="bg-card rounded-lg shadow-sm border border-border">
         <div className="p-6 border-b">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">

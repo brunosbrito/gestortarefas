@@ -23,7 +23,7 @@ export const StatusList = ({
 
   return (
     <div className="flex-none w-80">
-      <div className="bg-gray-100 rounded-lg p-4 h-full">
+      <div className="bg-card border border-border rounded-lg p-4 h-full shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg">{status}</h3>
           <Badge variant="outline">{atividadesFiltradas.length}</Badge>
