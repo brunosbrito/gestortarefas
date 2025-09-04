@@ -20,7 +20,7 @@ export const ModuleDropdown = () => {
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
-          className="h-8 md:h-9 px-2 md:px-3 text-left justify-start gap-1 md:gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white min-w-0"
+          className="relative z-10 h-8 md:h-9 px-2 md:px-3 text-left justify-start gap-1 md:gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white min-w-0 max-w-[200px] sm:max-w-[240px]"
         >
           {currentConfig && <currentConfig.icon className="h-4 w-4 flex-shrink-0" />}
           <span className="font-medium truncate hidden sm:inline text-sm md:text-base">

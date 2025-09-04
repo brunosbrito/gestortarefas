@@ -18,7 +18,7 @@ export const SettingsDropdown = () => {
         <Button 
           variant="ghost" 
           size="icon"
-          className="h-8 w-8 md:h-9 md:w-9 bg-white/10 hover:bg-white/20 border border-white/20 text-white flex-shrink-0"
+          className="relative z-10 h-8 w-8 md:h-9 md:w-9 bg-white/10 hover:bg-white/20 border border-white/20 text-white flex-shrink-0"
         >
           <Settings className="h-4 w-4" />
         </Button>

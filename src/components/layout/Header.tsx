@@ -45,9 +45,6 @@ export const Header = ({ user }: HeaderProps) => {
               <span className="hidden sm:inline">Sistema de Gestão</span>
               <span className="sm:hidden">SG</span>
             </h1>
-            <div className="hidden sm:block">
-              <ModuleIndicator />
-            </div>
           </div>
           
           <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
@@ -56,8 +53,8 @@ export const Header = ({ user }: HeaderProps) => {
           </div>
         </div>
         
-        {/* Mobile module indicator */}
-        <div className="sm:hidden mt-2 flex justify-center">
+        {/* Indicador do módulo em segunda linha para todas as larguras */}
+        <div className="mt-2 flex justify-center">
           <ModuleIndicator />
         </div>
       </div>
