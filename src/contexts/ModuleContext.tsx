@@ -22,10 +22,21 @@ interface ModuleProviderProps {
 }
 
 export const ModuleProvider = ({ children }: ModuleProviderProps) => {
-  const [activeModule, setActiveModule] = useState<Module>('task-manager');
+  const [activeModule, setActiveModule] = useState<Module>(() => {
+    const savedModule = localStorage.getItem('activeModule');
+    if (savedModule && ['task-manager', 'cutting-optimizer', 'stock', 'cost-manager'].includes(savedModule)) {
+      return savedModule as Module;
+    }
+    return 'task-manager';
+  });
+
+  const handleSetActiveModule = (module: Module) => {
+    setActiveModule(module);
+    localStorage.setItem('activeModule', module);
+  };
 
   return (
-    <ModuleContext.Provider value={{ activeModule, setActiveModule }}>
+    <ModuleContext.Provider value={{ activeModule, setActiveModule: handleSetActiveModule }}>
       {children}
     </ModuleContext.Provider>
   );

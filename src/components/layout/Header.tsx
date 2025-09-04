@@ -4,8 +4,9 @@ import { User } from '@/interfaces/UserInterface';
 import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '../ui/use-toast';
-import { ModuleSelector } from './ModuleSelector';
-import { ThemeToggle } from './ThemeToggle';
+import { ModuleDropdown } from './ModuleDropdown';
+import { ModuleIndicator } from './ModuleIndicator';
+import { SettingsDropdown } from './SettingsDropdown';
 
 interface HeaderProps {
   user: User;
@@ -37,14 +38,20 @@ export const Header = ({ user }: HeaderProps) => {
 
   return (
     <>
-      <div className="gradient-primary p-6 border-b border-border">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Sistema de Gestão</h1>
-          <ThemeToggle />
+      <div className="gradient-primary p-4 border-b border-border">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-white hidden md:block">Sistema de Gestão</h1>
+            <h1 className="text-lg font-bold text-white md:hidden">SG</h1>
+            <ModuleIndicator />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <ModuleDropdown />
+            <SettingsDropdown />
+          </div>
         </div>
       </div>
-
-      <ModuleSelector />
 
       <div className="p-4 border-b border-border">
         <div className="flex items-center space-x-3">

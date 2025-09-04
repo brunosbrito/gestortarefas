@@ -11,4 +11,5 @@ export interface MenuItem {
   label: string;
   path?: string;
   subItems?: SubMenuItem[];
+  adminOnly?: boolean;
 }
