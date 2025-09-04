@@ -23,9 +23,6 @@ interface ThemeProviderProps {
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Evitar acessar localStorage durante SSR
-    if (typeof window === 'undefined') return 'light';
-    
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light' || savedTheme === 'dark') {
       return savedTheme;
@@ -35,18 +32,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    
-    // Remove todas as classes de tema primeiro
     root.classList.remove('light', 'dark');
-    
-    // Adiciona a classe do tema atual
     root.classList.add(theme);
-    
-    // Salva no localStorage
     localStorage.setItem('theme', theme);
-    
-    // Force um repaint para garantir que o tema seja aplicado
-    root.style.colorScheme = theme;
   }, [theme]);
 
   const toggleTheme = () => {
