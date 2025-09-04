@@ -40,15 +40,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <SidebarInset className="pt-[120px]"> {/* Espaço para o header */}
           {/* Mobile header - só mostra em telas pequenas */}
           <div className="md:hidden flex items-center p-4 bg-card border-b border-border shadow-sm">
-            <SidebarTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-accent"
-              >
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SidebarTrigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-accent"
+              onClick={() => {
+                // Trigger sidebar toggle programatically
+                const sidebar = document.querySelector('[data-sidebar]');
+                sidebar?.dispatchEvent(new CustomEvent('toggle'));
+              }}
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
             <h1 className="ml-4 text-lg font-semibold text-foreground">Sistema de Gestão</h1>
           </div>
 

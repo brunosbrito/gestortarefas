@@ -98,11 +98,11 @@ export const AppSidebar = ({ user }: AppSidebarProps) => {
                     </SidebarMenuItem>
                     {isExpanded && group.subItems.map((subItem) => (
                       <SidebarMenuItem key={subItem.path} className="ml-4">
-                        <SidebarMenuButton asChild>
+                        <SidebarMenuButton>
                           <NavLink
                             to={subItem.path}
                             className={({ isActive }) =>
-                              `flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+                              `flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors w-full ${
                                 isActive
                                   ? 'bg-primary text-primary-foreground'
                                   : 'hover:bg-accent hover:text-accent-foreground'
@@ -126,11 +126,11 @@ export const AppSidebar = ({ user }: AppSidebarProps) => {
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton>
                       <NavLink
                         to={group.path!}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+                          `flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors w-full ${
                             isActive
                               ? 'bg-primary text-primary-foreground'
                               : 'hover:bg-accent hover:text-accent-foreground'
