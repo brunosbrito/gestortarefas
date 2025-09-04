@@ -4,6 +4,7 @@ import { SidebarMenuItem } from "./sidebar/SidebarMenuItem";
 import { User } from "@/interfaces/UserInterface";
 import { useModule } from "@/contexts/ModuleContext";
 import { getMenuItemsByModule } from "./ModuleMenuItems";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SidebarProps {
   user: User;
@@ -46,16 +47,18 @@ export const Sidebar = ({ user }: SidebarProps) => {
   });
 
   return (
-    <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-      {filteredNavItems.map((item) => (
-        <SidebarMenuItem
-          key={item.label}
-          item={item}
-          isExpanded={expandedItems.includes(item.label)}
-          isActive={location.pathname === item.path}
-          onToggle={() => toggleExpand(item.label)}
-        />
-      ))}
-    </nav>
+    <ScrollArea className="flex-1 min-h-0">
+      <nav className="p-4 space-y-1">
+        {filteredNavItems.map((item) => (
+          <SidebarMenuItem
+            key={item.label}
+            item={item}
+            isExpanded={expandedItems.includes(item.label)}
+            isActive={location.pathname === item.path}
+            onToggle={() => toggleExpand(item.label)}
+          />
+        ))}
+      </nav>
+    </ScrollArea>
   );
 };

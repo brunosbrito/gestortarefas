@@ -35,9 +35,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static w-[300px] h-full bg-card border-r border-border z-50 transition-transform duration-300 transform ${
+        className={`fixed md:static w-[300px] h-screen bg-card border-r border-border z-50 transition-transform duration-300 transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 shadow-lg md:shadow-none`}
+        } md:translate-x-0 shadow-lg md:shadow-none flex flex-col`}
       >
         <Header user={user} />
         <Sidebar user={user} />
