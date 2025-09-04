@@ -119,9 +119,9 @@ export const AtividadeCard = ({
     const totalEstimatedSeconds =
       parseInt(hours) * 3600 + parseInt(minutes) * 60;
 
-    elapsedTime += elapsedTime * 3600;
+    const elapsedTimeInSeconds = elapsedTime * 3600;
 
-    return Math.round((elapsedTime / totalEstimatedSeconds) * 100);
+    return Math.round((elapsedTimeInSeconds / totalEstimatedSeconds) * 100);
   };
 
   const elapsedTime =

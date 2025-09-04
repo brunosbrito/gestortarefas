@@ -23,14 +23,14 @@ export const AtividadeDetails = ({ atividade }: AtividadeDetailsProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full bg-[#003366] text-white hover:bg-[#003366]/90 border-[#003366]">
+        <Button variant="outline" size="sm" className="w-full">
           <Eye className="w-4 h-4 mr-1" />
           Detalhes
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-construction-800">
+          <DialogTitle className="text-2xl font-bold">
             Detalhes da Atividade
           </DialogTitle>
         </DialogHeader>
@@ -42,10 +42,10 @@ export const AtividadeDetails = ({ atividade }: AtividadeDetailsProps) => {
           <AtividadeEquipe collaborators={atividade.collaborators || []} />
           <Separator className="my-4" />
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-construction-700">
+            <h3 className="text-lg font-semibold">
               Histórico de Alterações
             </h3>
-            <div className="bg-construction-50 p-4 rounded-lg">
+            <div className="bg-muted/30 p-4 rounded-lg">
               <AtividadeHistoricoList activityId={atividade.id} />
             </div>
           </div>

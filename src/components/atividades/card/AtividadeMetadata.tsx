@@ -38,17 +38,17 @@ export const AtividadeMetadata = ({
     <CardContent className="p-4 pt-2 space-y-3">
       <div className="space-y-2 text-sm">
         {/* Projeto e OS */}
-        <div className="flex items-center gap-2 text-gray-600">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <Building2 className="w-4 h-4" />
           <span className="font-medium">{atividade.project.name}</span>
         </div>
         
-        <div className="flex items-center gap-2 text-gray-600">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <FileText className="w-4 h-4" />
           <span>OS N°: {atividade.serviceOrder.serviceOrderNumber}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-gray-600">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="w-4 h-4" />
           <span>Data Criação: {format(parseISO(atividade.createdAt), 'dd/MM/yyyy')}</span>
         </div>
@@ -57,41 +57,41 @@ export const AtividadeMetadata = ({
         {typeof atividade.quantity === 'number' && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-blue-500" />
-              <span className="font-medium text-blue-700">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="font-medium text-primary">
                 Progresso: {calculateProgress().toFixed(0)}% ({atividade.completedQuantity || 0} de {atividade.quantity})
               </span>
             </div>
             <Progress 
               value={calculateProgress()} 
-              className="h-2 bg-gray-100"
+              className="h-2"
             />
           </div>
         )}
 
         {/* Status específico com data */}
         {atividade.status === 'Paralizadas' && atividade.pauseDate && (
-          <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-md">
-            <AlertCircle className="w-4 h-4 text-orange-500" />
-            <span className="text-orange-700 text-xs">
+          <div className="flex items-center gap-2 p-2 bg-warning/10 border border-warning/20 rounded-md">
+            <AlertCircle className="w-4 h-4 text-warning" />
+            <span className="text-warning text-xs">
               Data Paralisação: {format(parseISO(atividade.pauseDate), 'dd/MM/yyyy')}
             </span>
           </div>
         )}
 
         {atividade.status === 'Em execução' && atividade.startDate && (
-          <div className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
-            <PlayCircle className="w-4 h-4 text-green-500" />
-            <span className="text-green-700 text-xs">
+          <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/20 rounded-md">
+            <PlayCircle className="w-4 h-4 text-success" />
+            <span className="text-success text-xs">
               Data Início: {format(parseISO(atividade.startDate), 'dd/MM/yyyy')}
             </span>
           </div>
         )}
 
         {atividade.status === 'Concluídas' && atividade.endDate && (
-          <div className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span className="text-green-700 text-xs">
+          <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/20 rounded-md">
+            <CheckCircle className="w-4 h-4 text-success" />
+            <span className="text-success text-xs">
               Data Conclusão: {format(parseISO(atividade.endDate), 'dd/MM/yyyy')}
             </span>
           </div>
@@ -100,22 +100,22 @@ export const AtividadeMetadata = ({
         {/* Tempo */}
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-blue-500" />
-            <span className="text-blue-700 text-xs">
+            <Clock className="w-4 h-4 text-primary" />
+            <span className="text-primary text-xs">
               Tempo Previsto: {formatEstimatedTime(atividade.estimatedTime)}
             </span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Timer className="w-4 h-4 text-purple-500" />
+            <Timer className="w-4 h-4 text-secondary" />
             <div className="flex items-center gap-1">
-              <span className="text-purple-700 text-xs">
+              <span className="text-secondary text-xs">
                 {formatTime(elapsedTime)}
               </span>
               <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                 calculatePercentage(elapsedTime, atividade.estimatedTime) > 100 
-                  ? 'bg-red-100 text-red-700' 
-                  : 'bg-green-100 text-green-700'
+                  ? 'bg-destructive/10 text-destructive border border-destructive/20' 
+                  : 'bg-success/10 text-success border border-success/20'
               }`}>
                 {calculatePercentage(elapsedTime, atividade.estimatedTime)}%
               </span>
@@ -126,15 +126,15 @@ export const AtividadeMetadata = ({
         {/* Equipe e Criador */}
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-indigo-500" />
-            <span className="text-indigo-700 text-xs font-medium">
+            <Users className="w-4 h-4 text-accent" />
+            <span className="text-accent text-xs font-medium">
               Equipe: {atividade.collaborators.map((c) => c.name).join(', ')}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600 text-xs">
+            <User className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground text-xs">
               Criado por: {atividade.createdBy.username}
             </span>
           </div>

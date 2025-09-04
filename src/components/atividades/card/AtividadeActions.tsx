@@ -72,7 +72,7 @@ export const AtividadeActions = ({
         variant="outline"
         size="sm"
         onClick={onMoveClick}
-        className="flex-1 bg-gray-50 hover:bg-gray-100 border-gray-200"
+        className="flex-1"
       >
         <MoveHorizontal className="w-4 h-4" />
       </Button>
@@ -82,7 +82,7 @@ export const AtividadeActions = ({
         onOpenChange={setIsEditDialogOpen}
       >
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="flex-1 bg-blue-50 hover:bg-blue-100 border-blue-200">
+          <Button variant="secondary" size="sm" className="flex-1">
             <Edit2 className="w-4 h-4" />
           </Button>
         </DialogTrigger>
@@ -112,7 +112,7 @@ export const AtividadeActions = ({
           <Button
             variant="outline"
             size="sm"
-            className="w-full cursor-pointer bg-green-50 hover:bg-green-100 border-green-200"
+            className="w-full cursor-pointer"
             asChild
           >
             <span>
@@ -124,7 +124,7 @@ export const AtividadeActions = ({
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="flex-1 bg-red-50 hover:bg-red-100 border-red-200 text-red-600 hover:text-red-700">
+          <Button variant="destructive" size="sm" className="flex-1">
             <Trash2 className="w-4 h-4" />
           </Button>
         </DialogTrigger>
