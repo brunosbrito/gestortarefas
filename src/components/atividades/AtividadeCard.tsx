@@ -141,7 +141,7 @@ export const AtividadeCard = ({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
         >
-          <Card className="bg-white hover:shadow-lg transition-all duration-200 border-l-4 border-l-[#FF7F0E]">
+          <Card className="hover:shadow-lg dark:hover:shadow-2xl transition-all duration-200 border-l-4 border-l-primary">
             <AtividadeHeader
               sequencialNumber={atividade.cod_sequencial}
               description={atividade.description}
