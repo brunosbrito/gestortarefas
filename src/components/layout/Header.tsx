@@ -4,6 +4,8 @@ import { User } from '@/interfaces/UserInterface';
 import { Button } from '../ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '../ui/use-toast';
+import { ModuleSelector } from './ModuleSelector';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
   user: User;
@@ -11,6 +13,7 @@ interface HeaderProps {
 
 export const Header = ({ user }: HeaderProps) => {
   const navigate = useNavigate();
+  
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('rememberMe');
@@ -26,36 +29,41 @@ export const Header = ({ user }: HeaderProps) => {
 
   if (!user) {
     return (
-      <div className="p-4 border-b border-construction-200">
-        <h1 className="text-2xl font-bold text-primary">Gestor de Tarefas</h1>
+      <div className="gradient-primary p-6 border-b border-border">
+        <h1 className="text-2xl font-bold text-white">Sistema de Gestão</h1>
       </div>
     );
   }
 
   return (
     <>
-      <div className="p-4 border-b border-construction-200">
-        <h1 className="text-2xl font-bold text-primary">Gestor de Tarefas</h1>
+      <div className="gradient-primary p-6 border-b border-border">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">Sistema de Gestão</h1>
+          <ThemeToggle />
+        </div>
       </div>
 
-      <div className="p-4 border-b border-construction-200">
+      <ModuleSelector />
+
+      <div className="p-4 border-b border-border">
         <div className="flex items-center space-x-3">
-          <Avatar>
-            <AvatarFallback className="bg-primary text-white">
-              <UserCircle2 className="w-6 h-6" />
+          <Avatar className="h-10 w-10">
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              <UserCircle2 className="w-5 h-5" />
             </AvatarFallback>
           </Avatar>
-          <div>
-            <p className="text-sm font-medium text-gray-900">{user.username}</p>
-            <p className="text-xs text-gray-500">
-              {user.role === 'admin' ? 'Administrador' : ''}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">{user.username}</p>
+            <p className="text-xs text-muted-foreground">
+              {user.role === 'admin' ? 'Administrador' : 'Usuário'}
             </p>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sair

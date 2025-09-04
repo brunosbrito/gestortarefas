@@ -25,12 +25,12 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#003366",
-          foreground: "#ffffff",
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "#FF7F0E",
-          foreground: "#ffffff",
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         construction: {
           50: "#F8FAFC",
@@ -45,8 +45,26 @@ export default {
           900: "#0F172A",
         },
         warning: {
-          DEFAULT: "#FFD700", // Amarelo para alertas
-          foreground: "#000000",
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        modules: {
+          task: {
+            primary: "hsl(var(--module-task-primary))",
+            secondary: "hsl(var(--module-task-secondary))",
+          },
+          cutting: {
+            primary: "hsl(var(--module-cutting-primary))",
+            secondary: "hsl(var(--module-cutting-secondary))",
+          },
+          stock: {
+            primary: "hsl(var(--module-stock-primary))",
+            secondary: "hsl(var(--module-stock-secondary))",
+          },
+          cost: {
+            primary: "hsl(var(--module-cost-primary))",
+            secondary: "hsl(var(--module-cost-secondary))",
+          },
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",

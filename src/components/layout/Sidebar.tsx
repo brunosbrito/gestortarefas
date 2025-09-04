@@ -36,7 +36,7 @@ export const Sidebar = ({ user }: SidebarProps) => {
   });
 
   return (
-    <nav className="flex-1 p-4 space-y-2">
+    <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
       {filteredNavItems.map((item) => (
         <SidebarMenuItem
           key={item.label}

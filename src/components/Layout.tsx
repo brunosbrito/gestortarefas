@@ -24,33 +24,34 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="flex h-screen bg-construction-50">
+    <div className="flex h-screen bg-background">
       {/* Overlay para mobile */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static w-[280px] h-full bg-white border-r border-construction-200 z-50 transition-transform duration-300 transform ${
+        className={`fixed md:static w-[300px] h-full bg-card border-r border-border z-50 transition-transform duration-300 transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        } md:translate-x-0 shadow-lg md:shadow-none`}
       >
         <Header user={user} />
         <Sidebar user={user} />
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto w-full">
+      <main className="flex-1 overflow-auto w-full bg-background">
         {/* Mobile header */}
-        <div className="md:hidden flex items-center p-4 bg-white border-b border-construction-200">
+        <div className="md:hidden flex items-center p-4 bg-card border-b border-border shadow-sm">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="hover:bg-accent"
           >
             {isSidebarOpen ? (
               <X className="h-6 w-6" />
@@ -58,10 +59,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <Menu className="h-6 w-6" />
             )}
           </Button>
-          <h1 className="ml-4 text-lg font-semibold">Sistema de Gestão</h1>
+          <h1 className="ml-4 text-lg font-semibold text-foreground">Sistema de Gestão</h1>
         </div>
 
-        <div className="container mx-auto p-4 md:p-6">{children}</div>
+        <div className="container mx-auto p-4 md:p-6 max-w-7xl">{children}</div>
       </main>
     </div>
   );
