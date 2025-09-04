@@ -2,19 +2,20 @@
 import { CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import {
   Building2,
   Calendar,
-  CheckCircle2,
-  ClipboardList,
+  CheckCircle,
+  FileText,
   Clock,
-  Clock1,
-  Hourglass,
+  Timer,
   User,
   Users,
+  TrendingUp,
+  PlayCircle,
+  AlertCircle,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface AtividadeMetadataProps {
   atividade: AtividadeStatus;
@@ -34,92 +35,110 @@ export const AtividadeMetadata = ({
   calculatePercentage,
 }: AtividadeMetadataProps) => {
   return (
-    <CardContent className="p-4 pt-0 text-sm text-gray-500">
-      <div className="flex items-center mb-2">
-        <Building2 className="w-4 h-4 mr-2" />
-        {atividade.project?.name}
-      </div>
-      <div className="flex items-center mb-2">
-        <ClipboardList className="w-4 h-4 mr-2" />
-        OS Nº: {atividade.serviceOrder.serviceOrderNumber}
-      </div>
-      <div className="flex items-center mb-2">
-        <Calendar className="w-4 h-4 mr-2" />
-        Data Criação: {format(new Date(atividade.createdAt), 'dd/MM/yyyy')}
-      </div>
+    <CardContent className="p-4 pt-2 space-y-3">
+      <div className="space-y-2 text-sm">
+        {/* Projeto e OS */}
+        <div className="flex items-center gap-2 text-gray-600">
+          <Building2 className="w-4 h-4" />
+          <span className="font-medium">{atividade.project.name}</span>
+        </div>
+        
+        <div className="flex items-center gap-2 text-gray-600">
+          <FileText className="w-4 h-4" />
+          <span>OS N°: {atividade.serviceOrder.serviceOrderNumber}</span>
+        </div>
 
-      {typeof atividade.quantity === 'number' && (
-        <div className="space-y-2 mb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <CheckCircle2 className="w-4 h-4 mr-2 text-[#FF7F0E]" />
-              <span>
-                Progresso: {Math.round(calculateProgress())}% (
-                {atividade.completedQuantity || 0} de {atividade.quantity})
+        <div className="flex items-center gap-2 text-gray-600">
+          <Calendar className="w-4 h-4" />
+          <span>Data Criação: {format(parseISO(atividade.createdAt), 'dd/MM/yyyy')}</span>
+        </div>
+
+        {/* Progresso */}
+        {typeof atividade.quantity === 'number' && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-blue-500" />
+              <span className="font-medium text-blue-700">
+                Progresso: {calculateProgress().toFixed(0)}% ({atividade.completedQuantity || 0} de {atividade.quantity})
               </span>
             </div>
-            
+            <Progress 
+              value={calculateProgress()} 
+              className="h-2 bg-gray-100"
+            />
           </div>
-          <Progress value={calculateProgress()} className="h-2" />
+        )}
+
+        {/* Status específico com data */}
+        {atividade.status === 'Paralizadas' && atividade.pauseDate && (
+          <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-md">
+            <AlertCircle className="w-4 h-4 text-orange-500" />
+            <span className="text-orange-700 text-xs">
+              Data Paralisação: {format(parseISO(atividade.pauseDate), 'dd/MM/yyyy')}
+            </span>
+          </div>
+        )}
+
+        {atividade.status === 'Em execução' && atividade.startDate && (
+          <div className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
+            <PlayCircle className="w-4 h-4 text-green-500" />
+            <span className="text-green-700 text-xs">
+              Data Início: {format(parseISO(atividade.startDate), 'dd/MM/yyyy')}
+            </span>
+          </div>
+        )}
+
+        {atividade.status === 'Concluídas' && atividade.endDate && (
+          <div className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            <span className="text-green-700 text-xs">
+              Data Conclusão: {format(parseISO(atividade.endDate), 'dd/MM/yyyy')}
+            </span>
+          </div>
+        )}
+
+        {/* Tempo */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-blue-500" />
+            <span className="text-blue-700 text-xs">
+              Tempo Previsto: {formatEstimatedTime(atividade.estimatedTime)}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Timer className="w-4 h-4 text-purple-500" />
+            <div className="flex items-center gap-1">
+              <span className="text-purple-700 text-xs">
+                {formatTime(elapsedTime)}
+              </span>
+              <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                calculatePercentage(elapsedTime, atividade.estimatedTime) > 100 
+                  ? 'bg-red-100 text-red-700' 
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {calculatePercentage(elapsedTime, atividade.estimatedTime)}%
+              </span>
+            </div>
+          </div>
         </div>
-      )}
 
-      {atividade.status !== 'Planejadas' && (
-        <div className="flex items-center mb-2">
-          <Clock className="w-4 h-4 mr-2" />
-          {(() => {
-            switch (atividade.status) {
-              case 'Em execução':
-                return `Data início (${format(
-                  new Date(atividade.startDate),
-                  'dd/MM/yyyy'
-                )})`;
-              case 'Paralizadas':
-                return `Data Paralisação: ${format(
-                  new Date(atividade.pauseDate),
-                  'dd/MM/yyyy'
-                )}`;
-              default:
-                return `Data Conclusão: ${format(
-                  new Date(atividade.endDate),
-                  'dd/MM/yyyy'
-                )}`;
-            }
-          })()}
+        {/* Equipe e Criador */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-indigo-500" />
+            <span className="text-indigo-700 text-xs font-medium">
+              Equipe: {atividade.collaborators.map((c) => c.name).join(', ')}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-gray-500" />
+            <span className="text-gray-600 text-xs">
+              Criado por: {atividade.createdBy.username}
+            </span>
+          </div>
         </div>
-      )}
-
-      <div className="flex items-center mb-2">
-        <Clock1 className="w-4 h-4 mr-2" />
-        Tempo Previsto: {formatEstimatedTime(atividade.estimatedTime)}
-      </div>
-
-      {atividade.status === 'Planejadas' ? null : (
-        <div className="flex items-center mb-2">
-          <Hourglass className="w-4 h-4 mr-2" />
-          Tempo Atividade: {formatTime(elapsedTime)}
-          {' | '}
-          <span
-            style={{
-              marginLeft: '5px',
-              color:
-                calculatePercentage(elapsedTime, atividade.estimatedTime) > 100
-                  ? 'red'
-                  : 'green',
-            }}
-          >
-            {calculatePercentage(elapsedTime, atividade.estimatedTime)}%
-          </span>
-        </div>
-      )}
-
-      <div className="flex items-center mb-2">
-        <Users className="w-4 h-4 mr-2" />
-        Equipe: {atividade.collaborators?.map((c) => c.name).join(', ') || 'Sem equipe definida'}
-      </div>
-
-      <div className="flex items-center mb-2">
-        <User className="w-4 h-4 mr-2" /> Criado por: {atividade.createdBy?.username}
       </div>
     </CardContent>
   );

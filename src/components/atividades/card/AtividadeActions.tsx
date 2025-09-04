@@ -67,11 +67,12 @@ export const AtividadeActions = ({
   };
 
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex gap-2 w-full">
       <Button
         variant="outline"
         size="sm"
         onClick={onMoveClick}
+        className="flex-1 bg-gray-50 hover:bg-gray-100 border-gray-200"
       >
         <MoveHorizontal className="w-4 h-4" />
       </Button>
@@ -81,7 +82,7 @@ export const AtividadeActions = ({
         onOpenChange={setIsEditDialogOpen}
       >
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="flex-1 bg-blue-50 hover:bg-blue-100 border-blue-200">
             <Edit2 className="w-4 h-4" />
           </Button>
         </DialogTrigger>
@@ -99,7 +100,7 @@ export const AtividadeActions = ({
         </DialogContent>
       </Dialog>
 
-      <div className="relative">
+      <div className="relative flex-1">
         <input
           type="file"
           accept="image/*"
@@ -107,11 +108,11 @@ export const AtividadeActions = ({
           className="hidden"
           id={`upload-image-${atividade.id}`}
         />
-        <label htmlFor={`upload-image-${atividade.id}`}>
+        <label htmlFor={`upload-image-${atividade.id}`} className="w-full">
           <Button
             variant="outline"
             size="sm"
-            className="cursor-pointer"
+            className="w-full cursor-pointer bg-green-50 hover:bg-green-100 border-green-200"
             asChild
           >
             <span>
@@ -123,7 +124,7 @@ export const AtividadeActions = ({
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">
+          <Button variant="outline" size="sm" className="flex-1 bg-red-50 hover:bg-red-100 border-red-200 text-red-600 hover:text-red-700">
             <Trash2 className="w-4 h-4" />
           </Button>
         </DialogTrigger>

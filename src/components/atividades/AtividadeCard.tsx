@@ -141,7 +141,7 @@ export const AtividadeCard = ({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
         >
-          <Card className="bg-white hover:shadow-md transition-shadow">
+          <Card className="bg-white hover:shadow-lg transition-all duration-200 border-l-4 border-l-[#FF7F0E]">
             <AtividadeHeader
               sequencialNumber={atividade.cod_sequencial}
               description={atividade.description}
@@ -156,22 +156,18 @@ export const AtividadeCard = ({
               calculatePercentage={calculatePercentage}
             />
 
-            <CardFooter className="p-4 pt-0 flex flex-col items-start gap-2">
-              <div className="w-full">
-                <AtividadeActions
-                  atividade={atividade}
-                  projectId={projectId}
-                  serviceOrderId={serviceOrderId}
-                  isMobile={isMobile}
-                  onMoveClick={() => setIsMoveDialogOpen(true)}
-                  onEditSuccess={onDelete}
-                  onFileSelect={handleFileSelect}
-                  onDelete={onDelete}
-                />
-              </div>
-              <div className="w-full">
-                <AtividadeDetails atividade={atividade} />
-              </div>
+            <CardFooter className="p-4 pt-0 flex flex-col gap-3">
+              <AtividadeActions
+                atividade={atividade}
+                projectId={projectId}
+                serviceOrderId={serviceOrderId}
+                isMobile={isMobile}
+                onMoveClick={() => setIsMoveDialogOpen(true)}
+                onEditSuccess={onDelete}
+                onFileSelect={handleFileSelect}
+                onDelete={onDelete}
+              />
+              <AtividadeDetails atividade={atividade} />
             </CardFooter>
           </Card>
 
