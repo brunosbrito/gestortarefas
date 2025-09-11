@@ -1,26 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Header } from "./layout/Header";
 import { Sidebar } from "./layout/Sidebar";
 import { useUser } from "./layout/useUser";
 import { Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
-import { useNavigate } from "react-router-dom";
-import { getStoredToken } from "@/services/AuthService";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const user = useUser();
-  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    const token = getStoredToken();
-    if (!token) {
-      navigate("/");
-    }
-  }, [navigate]);
-
   if (!user) {
-    return <div>Carregando...</div>;
+    return <div>Carregando dados do usuário...</div>;
   }
 
   return (

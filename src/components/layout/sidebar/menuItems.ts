@@ -33,11 +33,6 @@ export const navItems: MenuItem[] = [
     path: '/assistente-ia',
   },
   {
-    icon: Users,
-    label: 'Usuários',
-    path: '/users',
-  },
-  {
     icon: Building2,
     label: 'Obras',
     path: '/obras',

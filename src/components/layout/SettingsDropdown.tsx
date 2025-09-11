@@ -1,5 +1,5 @@
 import { Settings, Moon, Sun, User, HelpCircle } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,7 +10,24 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export const SettingsDropdown = () => {
-  const { theme, toggleTheme } = useTheme();
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const currentTheme = root.classList.contains('dark') ? 'dark' : 'light';
+    setTheme(currentTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    
+    root.classList.remove('light', 'dark');
+    root.classList.add(newTheme);
+    
+    localStorage.setItem('theme', newTheme);
+    setTheme(newTheme);
+  };
 
   return (
     <DropdownMenu>
