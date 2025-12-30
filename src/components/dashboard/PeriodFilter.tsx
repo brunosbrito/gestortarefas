@@ -170,7 +170,7 @@ export const PeriodFilter = ({
                   onSelect={handleStartDateSelect}
                   disabled={isLoading}
                   locale={ptBR}
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>
@@ -204,7 +204,7 @@ export const PeriodFilter = ({
                   onSelect={handleEndDateSelect}
                   disabled={isLoading}
                   locale={ptBR}
-                  initialFocus
+                  autoFocus
                 />
               </PopoverContent>
             </Popover>
