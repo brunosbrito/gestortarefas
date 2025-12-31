@@ -68,6 +68,11 @@ export const AtividadeCardMobile = ({
   const progresso = calcularProgresso(atividade);
   const statusConfig = getStatusConfig(atividade.status);
 
+  // Formatar código da atividade como ATV-XXX
+  const formatAtividadeCodigo = (id: number) => {
+    return `ATV-${String(id).padStart(3, '0')}`;
+  };
+
   return (
     <motion.div
       variants={fadeInUp}
@@ -96,7 +101,7 @@ export const AtividadeCardMobile = ({
                   variant="outline"
                   className="font-mono text-xs px-2.5 py-1 min-h-[24px]"
                 >
-                  #{obterCodigoSequencial(globalIndex)}
+                  {formatAtividadeCodigo(atividade.id)}
                 </Badge>
                 <Badge
                   className={cn(

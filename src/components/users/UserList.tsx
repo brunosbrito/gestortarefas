@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,80 +22,61 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EditUserForm } from "./EditUserForm";
 import { cn } from "@/lib/utils";
+import { SortableTableHeader, useTableSort } from "@/components/tables/SortableTableHeader";
+import { useDataFetching } from "@/hooks/useDataFetching";
+import { useDialogState } from "@/hooks/useDialogState";
 
 export const UserList = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [showInactive, setShowInactive] = useState(false);
-  const [userToToggle, setUserToToggle] = useState<User | null>(null);
-  const [isToggleDialogOpen, setIsToggleDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [showInactive, setShowInactive] = useState(false);
 
-  const fetchUsers = async () => {
-    try {
-      const usersData = await UserService.getAllUsers();
-      setUsers(usersData || []);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao carregar usuários",
-        description: "Não foi possível carregar a lista de usuários.",
-      });
-    }
-  };
+  // Fetch de usuários com loading automático
+  const { data: users, isLoading, refetch } = useDataFetching({
+    fetchFn: () => UserService.getAllUsers(),
+    errorMessage: "Erro ao carregar usuários",
+  });
 
-  const handleEditClick = (user: User) => {
-    setSelectedUser(user);
-    setIsEditDialogOpen(true);
-  };
+  // Diálogos gerenciados com hook customizado
+  const editDialog = useDialogState<User>();
+  const toggleDialog = useDialogState<User>();
 
-  const handleEditSuccess = () => {
-    setIsEditDialogOpen(false);
-    fetchUsers();
+  // Handler de sucesso na edição
+  const handleEditSuccess = useCallback(() => {
+    editDialog.close();
+    refetch();
     toast({
       title: "Usuário atualizado",
       description: "As informações do usuário foram atualizadas com sucesso.",
     });
-  };
+  }, [editDialog, refetch, toast]);
 
-  const handleToggleClick = (user: User) => {
-    setUserToToggle(user);
-    setIsToggleDialogOpen(true);
-  };
-
-  const handleToggleStatus = async () => {
-    if (!userToToggle) return;
+  // Handler de toggle de status
+  const handleToggleStatus = useCallback(async () => {
+    if (!toggleDialog.data) return;
 
     try {
       const updatedUser = {
-        ...userToToggle,
-        isActive: !userToToggle.isActive,
+        ...toggleDialog.data,
+        isActive: !toggleDialog.data.isActive,
       };
 
-      await UserService.updateUser(userToToggle.id.toString(), updatedUser);
+      await UserService.updateUser(toggleDialog.data.id.toString(), updatedUser);
 
       toast({
         title: updatedUser.isActive ? "Usuário reativado" : "Usuário desativado",
-        description: `${userToToggle.username} foi ${updatedUser.isActive ? 'reativado' : 'desativado'} com sucesso.`,
+        description: `${toggleDialog.data.username} foi ${updatedUser.isActive ? 'reativado' : 'desativado'} com sucesso.`,
       });
 
-      fetchUsers();
+      refetch();
+      toggleDialog.close();
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro ao alterar status",
         description: "Não foi possível alterar o status do usuário.",
       });
-    } finally {
-      setIsToggleDialogOpen(false);
-      setUserToToggle(null);
     }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  }, [toggleDialog, toast, refetch]);
 
   const getRoleConfig = (role: string) => {
     return role === 'admin'
@@ -131,11 +112,14 @@ export const UserList = () => {
 
   // Filtrar usuários baseado no toggle
   const filteredUsers = showInactive
-    ? users
-    : users.filter(user => user.isActive);
+    ? (users || [])
+    : (users || []).filter(user => user.isActive);
 
-  const activeCount = users.filter(u => u.isActive).length;
-  const inactiveCount = users.filter(u => !u.isActive).length;
+  // Sorting - aplicado aos dados filtrados
+  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort(filteredUsers, 'username', 'asc');
+
+  const activeCount = (users || []).filter(u => u.isActive).length;
+  const inactiveCount = (users || []).filter(u => !u.isActive).length;
 
   return (
     <>
@@ -160,7 +144,7 @@ export const UserList = () => {
                 variant="outline"
                 className="bg-primary/10 text-primary border-primary/30 ml-2 font-semibold tabular-nums"
               >
-                {filteredUsers.length}
+                {sortedData.length}
               </Badge>
             </div>
 
@@ -183,19 +167,41 @@ export const UserList = () => {
         </div>
 
         {/* Tabela */}
-        {filteredUsers.length > 0 ? (
+        {sortedData.length > 0 ? (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
-                  <TableHead className="font-semibold text-foreground border-r border-border/50 border-solid">Nome</TableHead>
-                  <TableHead className="font-semibold text-foreground border-r border-border/50 border-solid">Permissão</TableHead>
-                  <TableHead className="font-semibold text-foreground border-r border-border/50 border-solid">Status</TableHead>
+                  <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">Item</TableHead>
+                  <SortableTableHeader
+                    label="Nome"
+                    sortKey="username"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
+                  <SortableTableHeader
+                    label="Permissão"
+                    sortKey="role"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
+                  <SortableTableHeader
+                    label="Status"
+                    sortKey="isActive"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
                   <TableHead className="text-right font-semibold text-foreground">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user, index) => {
+                {sortedData.map((user, index) => {
                   const roleConfig = getRoleConfig(user.role);
                   const statusConfig = getStatusConfig(user.isActive);
 
@@ -208,8 +214,11 @@ export const UserList = () => {
                         "hover:bg-accent/50 hover:shadow-sm"
                       )}
                     >
-                      <TableCell className="font-semibold text-foreground py-4 border-r border-border/50 border-solid">{user.username}</TableCell>
-                      <TableCell className="py-4 border-r border-border/50 border-solid">
+                      <TableCell className="text-center font-mono text-sm font-bold py-4 border-r border-border/30">
+                        {String(index + 1).padStart(3, '0')}
+                      </TableCell>
+                      <TableCell className="font-semibold text-foreground py-4 border-r border-border/30">{user.username}</TableCell>
+                      <TableCell className="py-4 border-r border-border/30">
                         <Badge
                           variant="outline"
                           className={cn(
@@ -222,7 +231,7 @@ export const UserList = () => {
                           {roleConfig.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-4 border-r border-border/50 border-solid">
+                      <TableCell className="py-4 border-r border-border/30">
                         <Badge
                           className={cn(
                             "flex items-center gap-1.5 w-fit px-3 py-1.5 font-medium",
@@ -239,7 +248,7 @@ export const UserList = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditClick(user)}
+                            onClick={() => editDialog.open(user)}
                             className="hover:bg-primary/10 hover:text-primary font-medium"
                           >
                             <Edit className="w-4 h-4 mr-2" />
@@ -248,7 +257,7 @@ export const UserList = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleToggleClick(user)}
+                            onClick={() => toggleDialog.open(user)}
                             className={cn(
                               "font-medium",
                               user.isActive
@@ -293,37 +302,37 @@ export const UserList = () => {
         )}
       </Card>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={editDialog.isOpen} onOpenChange={editDialog.setIsOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Usuário</DialogTitle>
           </DialogHeader>
-          {selectedUser && (
+          {editDialog.data && (
             <EditUserForm
-              user={selectedUser}
+              user={editDialog.data}
               onSuccess={handleEditSuccess}
             />
           )}
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isToggleDialogOpen} onOpenChange={setIsToggleDialogOpen}>
+      <AlertDialog open={toggleDialog.isOpen} onOpenChange={toggleDialog.setIsOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {userToToggle?.isActive ? 'Desativar usuário' : 'Reativar usuário'}
+              {toggleDialog.data?.isActive ? 'Desativar usuário' : 'Reativar usuário'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {userToToggle?.isActive ? (
+              {toggleDialog.data?.isActive ? (
                 <>
-                  Tem certeza que deseja desativar o usuário <strong>{userToToggle.username}</strong>?
+                  Tem certeza que deseja desativar o usuário <strong>{toggleDialog.data.username}</strong>?
                   <br /><br />
                   O usuário não será excluído permanentemente. Ele será apenas desativado e poderá ser reativado posteriormente.
                   Todos os dados históricos serão mantidos.
                 </>
               ) : (
                 <>
-                  Tem certeza que deseja reativar o usuário <strong>{userToToggle?.username}</strong>?
+                  Tem certeza que deseja reativar o usuário <strong>{toggleDialog.data?.username}</strong>?
                   <br /><br />
                   O usuário voltará a ter acesso ao sistema e aparecerá na lista de usuários ativos.
                 </>
@@ -335,12 +344,12 @@ export const UserList = () => {
             <AlertDialogAction
               onClick={handleToggleStatus}
               className={cn(
-                userToToggle?.isActive
+                toggleDialog.data?.isActive
                   ? "bg-destructive hover:bg-destructive/90"
                   : "bg-green-600 hover:bg-green-700"
               )}
             >
-              {userToToggle?.isActive ? 'Desativar' : 'Reativar'}
+              {toggleDialog.data?.isActive ? 'Desativar' : 'Reativar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

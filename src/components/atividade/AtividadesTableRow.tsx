@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ interface AtividadesTableRowProps {
   formatTeam: (collaborators: any[]) => string;
 }
 
+// Movido para fora do componente para evitar recriação em cada render
 const getStatusConfig = (status: string) => {
   const config = {
     'Planejadas': {
@@ -57,7 +58,8 @@ const getStatusConfig = (status: string) => {
   return config[status as keyof typeof config] || config['Planejadas'];
 };
 
-export const AtividadesTableRow = ({
+// Componente otimizado com React.memo para evitar re-renders desnecessários
+export const AtividadesTableRow = memo(({
   atividade,
   globalIndex,
   onRowClick,
@@ -69,6 +71,11 @@ export const AtividadesTableRow = ({
   const kpi = calcularKPI(atividade);
   const progresso = calcularProgresso(atividade);
   const statusConfig = getStatusConfig(atividade.status);
+
+  // Formatar código da atividade como ATV-XXX
+  const formatAtividadeCodigo = (id: number) => {
+    return `ATV-${String(id).padStart(3, '0')}`;
+  };
 
   const handleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,7 +95,7 @@ export const AtividadesTableRow = ({
       >
         {/* Item */}
         <TableCell className="text-center font-mono text-sm font-bold py-4 border-r border-border/30">
-          {obterCodigoSequencial(globalIndex)}
+          {formatAtividadeCodigo(atividade.id)}
         </TableCell>
 
         {/* Descrição */}
@@ -290,4 +297,7 @@ export const AtividadesTableRow = ({
       </AnimatePresence>
     </>
   );
-};
+});
+
+// DisplayName para melhorar debugging
+AtividadesTableRow.displayName = 'AtividadesTableRow';

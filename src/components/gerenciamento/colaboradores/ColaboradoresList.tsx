@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -26,6 +26,8 @@ import { EditColaboradorForm } from './EditColaboradorForm';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ColaboradorService from '@/services/ColaboradorService';
 import { cn } from '@/lib/utils';
+import { useDataFetching } from '@/hooks/useDataFetching';
+import { useDialogState } from '@/hooks/useDialogState';
 
 interface ColaboradoresListProps {
   reload: boolean;
@@ -78,57 +80,38 @@ const getSetorConfig = (sector: string) => {
 };
 
 export function ColaboradoresList({ reload }: ColaboradoresListProps) {
-  const [listColaboradores, setListColaboradores] = useState<Colaborador[]>([]);
-  const [filteredColaboradores, setFilteredColaboradores] = useState<
-    Colaborador[]
-  >([]);
-  const [filters, setFilters] = useState({ name: '', role: '', sector: '' });
-  const [selectedColaborador, setSelectedColaborador] =
-    useState<Colaborador | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [showInactive, setShowInactive] = useState(false);
   const { toast } = useToast();
+  const [filters, setFilters] = useState({ name: '', role: '', sector: '' });
+  const [showInactive, setShowInactive] = useState(false);
 
-  // Sorting - aplicado aos dados filtrados
-  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort(filteredColaboradores, 'name', 'asc');
+  // Fetch de colaboradores com loading automático e refetch on reload
+  const { data: listColaboradores, refetch } = useDataFetching({
+    fetchFn: () => ColaboradorService.getAllColaboradores(),
+    errorMessage: 'Erro ao carregar colaboradores',
+    dependencies: [reload],
+  });
+
+  // Diálogo gerenciado com hook customizado
+  const editDialog = useDialogState<Colaborador>();
 
   const hasActiveFilters = filters.name || filters.role || filters.sector;
 
-  const getColaboradores = async () => {
-    try {
-      const response = await ColaboradorService.getAllColaboradores();
-      setListColaboradores(response);
-    } catch (err) {
-      console.error('Erro ao buscar os colaboradores:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao carregar colaboradores',
-        description: 'Não foi possível carregar os colaboradores.',
-      });
-    }
-  };
-
-  useEffect(() => {
-    getColaboradores();
-  }, [reload]);
-
-  useEffect(() => {
-    const filtered = listColaboradores.filter(
+  // Filtrar colaboradores com useMemo para performance
+  const filteredColaboradores = useMemo(() => {
+    return (listColaboradores || []).filter(
       (colaborador) =>
         colaborador.name.toLowerCase().includes(filters.name.toLowerCase()) &&
         colaborador.role.toLowerCase().includes(filters.role.toLowerCase()) &&
         colaborador.sector.toLowerCase().includes(filters.sector.toLowerCase()) &&
-        (showInactive || colaborador.status) // Mostra apenas ativos se showInactive for false
+        (showInactive || colaborador.status)
     );
-    setFilteredColaboradores(filtered);
-  }, [filters, listColaboradores, showInactive]);
+  }, [listColaboradores, filters, showInactive]);
 
-  const handleEditClick = (colaborador: Colaborador) => {
-    setSelectedColaborador(colaborador);
-    setIsEditDialogOpen(true);
-  };
+  // Sorting - aplicado aos dados filtrados
+  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort(filteredColaboradores, 'name', 'asc');
 
-  const handleDeactivate = async (
+  // Handler de desativar/ativar com useCallback
+  const handleDeactivate = useCallback(async (
     colaborador: Colaborador,
     status: boolean
   ) => {
@@ -138,7 +121,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
         title: status ? 'Colaborador ativado' : 'Colaborador desativado',
         description: `O colaborador ${colaborador.name} foi ${status ? 'ativado' : 'desativado'}.`,
       });
-      getColaboradores();
+      refetch();
     } catch (error) {
       console.error('Erro ao alterar status do colaborador:', error);
       toast({
@@ -147,17 +130,18 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
         description: 'Não foi possível alterar o status do colaborador.',
       });
     }
-  };
+  }, [toast, refetch]);
 
-  const handleEditSuccess = () => {
-    setIsEditDialogOpen(false);
-    setSelectedColaborador(null);
-    getColaboradores();
-  };
+  // Handler de sucesso na edição
+  const handleEditSuccess = useCallback(() => {
+    editDialog.close();
+    refetch();
+  }, [editDialog, refetch]);
 
-  const clearFilters = () => {
+  // Limpar filtros
+  const clearFilters = useCallback(() => {
     setFilters({ name: '', role: '', sector: '' });
-  };
+  }, []);
 
   return (
     <>
@@ -336,7 +320,7 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEditClick(colaborador)}
+                            onClick={() => editDialog.open(colaborador)}
                             className="hover:bg-accent"
                           >
                             <Edit2 className="h-4 w-4" />
@@ -387,14 +371,14 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
         )}
       </Card>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={editDialog.isOpen} onOpenChange={editDialog.setIsOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Colaborador</DialogTitle>
           </DialogHeader>
-          {selectedColaborador && (
+          {editDialog.data && (
             <EditColaboradorForm
-              colaborador={selectedColaborador}
+              colaborador={editDialog.data}
               onSuccess={handleEditSuccess}
             />
           )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Table,
@@ -39,6 +39,8 @@ import { AtividadesTableRow } from './AtividadesTableRow';
 import { AtividadeCardMobile } from './AtividadeCard.Mobile';
 import { cn } from '@/lib/utils';
 import { staggerContainer } from '@/lib/animations';
+import { SortableTableHeader, useTableSort } from '@/components/tables/SortableTableHeader';
+import { calcularKPI, calcularProgresso } from '@/utils/atividadeCalculos';
 
 export const AtividadesTable = () => {
   const navigate = useNavigate();
@@ -61,17 +63,30 @@ export const AtividadesTable = () => {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [isExporting, setIsExporting] = useState(false);
 
-  const totalPages = Math.ceil(totalAtividades / itemsPerPage);
+  // Adicionar campos calculados para permitir ordenação
+  const atividadesComCalculos = useMemo(() => {
+    return atividadesFiltradas.map(atividade => ({
+      ...atividade,
+      _kpi: calcularKPI(atividade),
+      _progresso: calcularProgresso(atividade),
+    }));
+  }, [atividadesFiltradas]);
+
+  // Sorting - aplicado aos dados filtrados com cálculos
+  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort(atividadesComCalculos, 'id', 'asc');
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = atividadesFiltradas.slice(startIndex, endIndex);
+  const currentItems = sortedData.slice(startIndex, endIndex);
 
   // Reset página quando atividades mudam
   useEffect(() => {
     setCurrentPage(1);
-  }, [atividadesFiltradas]);
+  }, [sortedData]);
 
-  const formatDate = (dateString?: string) => {
+  // useCallback para evitar recriação de funções em cada render
+  const formatDate = useCallback((dateString?: string) => {
     if (!dateString) return '-';
     try {
       const date = new Date(dateString);
@@ -79,34 +94,34 @@ export const AtividadesTable = () => {
     } catch {
       return '-';
     }
-  };
+  }, []);
 
-  const handleRowClick = (atividade: AtividadeStatus) => {
+  const handleRowClick = useCallback((atividade: AtividadeStatus) => {
     navigate(`/obras/${atividade.project.id}/os/${atividade.serviceOrder.id}/atividades`);
-  };
+  }, [navigate]);
 
-  const formatTime = (timeString?: string) => {
+  const formatTime = useCallback((timeString?: string) => {
     if (!timeString) return '-';
     return timeString;
-  };
+  }, []);
 
-  const formatTeam = (collaborators?: any[]) => {
+  const formatTeam = useCallback((collaborators?: any[]) => {
     if (!collaborators || collaborators.length === 0) return '-';
     if (collaborators.length === 1)
       return collaborators[0].name || collaborators[0];
     return `${collaborators[0].name || collaborators[0]} +${
       collaborators.length - 1
     }`;
-  };
+  }, []);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  const handleItemsPerPageChange = (value: string) => {
+  const handleItemsPerPageChange = useCallback((value: string) => {
     setItemsPerPage(Number(value));
     setCurrentPage(1);
-  };
+  }, []);
 
   const handleExportPDFAdvanced = async (config: any) => {
     setIsExporting(true);
@@ -255,17 +270,67 @@ export const AtividadesTable = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
-                    <TableHead className="w-16 text-center font-semibold text-foreground border-r border-border/30">Item</TableHead>
-                    <TableHead className="w-[250px] font-semibold text-foreground border-r border-border/30">Descrição</TableHead>
-                    <TableHead className="w-[140px] text-center font-semibold text-foreground border-r border-border/30">Status</TableHead>
-                    <TableHead className="w-[150px] font-semibold text-foreground border-r border-border/30">Tarefa Macro</TableHead>
-                    <TableHead className="w-[120px] text-center font-semibold text-foreground border-r border-border/30">
-                      Tempo Total
-                    </TableHead>
-                    <TableHead className="w-[120px] text-center font-semibold text-foreground border-r border-border/30">
-                      Progresso
-                    </TableHead>
-                    <TableHead className="w-[100px] text-center font-semibold text-foreground border-r border-border/30">KPI</TableHead>
+                    <SortableTableHeader
+                      label="Item"
+                      sortKey="id"
+                      currentSortKey={sortKey}
+                      currentSortDirection={sortDirection}
+                      onSort={handleSort}
+                      className="w-16 border-r border-border/30"
+                      align="center"
+                    />
+                    <SortableTableHeader
+                      label="Descrição"
+                      sortKey="description"
+                      currentSortKey={sortKey}
+                      currentSortDirection={sortDirection}
+                      onSort={handleSort}
+                      className="w-[250px] border-r border-border/30"
+                    />
+                    <SortableTableHeader
+                      label="Status"
+                      sortKey="status"
+                      currentSortKey={sortKey}
+                      currentSortDirection={sortDirection}
+                      onSort={handleSort}
+                      className="w-[140px] border-r border-border/30"
+                      align="center"
+                    />
+                    <SortableTableHeader
+                      label="Tarefa Macro"
+                      sortKey="macroTask.name"
+                      currentSortKey={sortKey}
+                      currentSortDirection={sortDirection}
+                      onSort={handleSort}
+                      className="w-[150px] border-r border-border/30"
+                    />
+                    <SortableTableHeader
+                      label="Tempo Total"
+                      sortKey="totalTime"
+                      currentSortKey={sortKey}
+                      currentSortDirection={sortDirection}
+                      onSort={handleSort}
+                      className="w-[120px] border-r border-border/30"
+                      align="center"
+                    />
+                    <SortableTableHeader
+                      label="Progresso"
+                      sortKey="_progresso"
+                      currentSortKey={sortKey}
+                      currentSortDirection={sortDirection}
+                      onSort={handleSort}
+                      className="w-[120px] border-r border-border/30"
+                      align="center"
+                    />
+                    <SortableTableHeader
+                      label="KPI"
+                      sortKey="_kpi"
+                      currentSortKey={sortKey}
+                      currentSortDirection={sortDirection}
+                      onSort={handleSort}
+                      className="w-[100px] border-r border-border/30"
+                      align="center"
+                    />
                     <TableHead className="w-16 text-center font-semibold text-foreground"></TableHead>
                   </TableRow>
                 </TableHeader>
