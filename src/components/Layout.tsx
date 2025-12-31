@@ -86,7 +86,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </Button>
 
           <h1 className="text-base font-semibold text-foreground">
-            Sistema de Gestão
+            Gestor Master
           </h1>
 
           {/* Botão de ajuda */}

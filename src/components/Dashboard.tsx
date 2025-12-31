@@ -6,7 +6,8 @@ import { StatsSummary } from './dashboard/StatsSummary';
 import { MacroTasksChart } from './dashboard/charts/MacroTasksChart';
 import { ProcessHoursChart } from './dashboard/charts/ProcessHoursChart';
 import { LoadingSpinner } from './dashboard/LoadingSpinner';
-import { FilteredActivitiesTable } from './dashboard/FilteredActivitiesTable';
+import { DashboardKPIs } from './dashboard/DashboardKPIs';
+import { ProductivityTrendsChart } from './dashboard/charts/ProductivityTrendsChart';
 import { Separator } from './ui/separator';
 import { PeriodFilter } from './dashboard/PeriodFilter';
 import { ActivityStatusCards } from './dashboard/ActivityStatusCards';
@@ -185,6 +186,11 @@ const Dashboard = () => {
           <ActivityStatusCards activitiesByStatus={activityStatus} />
         </div>
 
+        {/* KPIs Agregados */}
+        <div data-tour="dashboard-kpis">
+          <DashboardKPIs />
+        </div>
+
         {/* Gráficos de Estatísticas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div data-tour="macro-tasks-chart">
@@ -193,6 +199,11 @@ const Dashboard = () => {
           <div data-tour="process-chart">
             <ProcessHoursChart processes={statistics.processes || []} />
           </div>
+        </div>
+
+        {/* Tendências de Produtividade */}
+        <div data-tour="productivity-trends">
+          <ProductivityTrendsChart />
         </div>
 
         {/* Análise SWOT - Collapsible */}
@@ -217,33 +228,6 @@ const Dashboard = () => {
             </CollapsibleContent>
           </div>
         </Collapsible>
-
-        {/* Tabela de Atividades Filtradas */}
-        <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden" data-tour="activities-table">
-          <div className="p-4 md:p-6 border-b border-border/50 bg-muted/30">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                Atividades Filtradas
-              </h3>
-              <div className="text-sm text-muted-foreground">
-                {loading.filtered ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    Aplicando filtros...
-                  </div>
-                ) : (
-                  <span className="font-medium tabular-nums">
-                    {filteredData.activities.length} atividade{filteredData.activities.length !== 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          <FilteredActivitiesTable
-            activities={filteredData.activities as any}
-            loading={loading.filtered}
-          />
-        </div>
       </div>
     </div>
   );

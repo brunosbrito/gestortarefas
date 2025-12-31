@@ -133,7 +133,7 @@ export const obrasTourSteps: DriveStep[] = [
 export const welcomeTourSteps: DriveStep[] = [
   {
     popover: {
-      title: 'Bem-vindo ao Sistema de Gestão! 👋',
+      title: 'Bem-vindo ao Gestor Master! 👋',
       description: 'Este é um sistema completo para gerenciar suas obras, atividades e equipes. Vamos conhecer as principais funcionalidades?',
     }
   },

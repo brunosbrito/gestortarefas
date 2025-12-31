@@ -199,10 +199,10 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
                 <h3 className="text-lg font-semibold">Colaboradores</h3>
                 <p className="text-xs text-muted-foreground">
                   {showInactive
-                    ? `${filteredColaboradores.length} de ${listColaboradores.length} colaboradores`
+                    ? `${filteredColaboradores.length} de ${(listColaboradores || []).length} colaboradores`
                     : hasActiveFilters
-                      ? `${filteredColaboradores.length} de ${listColaboradores.filter(c => c.status).length} colaboradores ativos`
-                      : `${listColaboradores.filter(c => c.status).length} ${listColaboradores.filter(c => c.status).length === 1 ? 'colaborador ativo' : 'colaboradores ativos'}`
+                      ? `${filteredColaboradores.length} de ${(listColaboradores || []).filter(c => c.status).length} colaboradores ativos`
+                      : `${(listColaboradores || []).filter(c => c.status).length} ${(listColaboradores || []).filter(c => c.status).length === 1 ? 'colaborador ativo' : 'colaboradores ativos'}`
                   }
                 </p>
               </div>

@@ -16,7 +16,7 @@ export const Header = ({ user }: HeaderProps) => {
           <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
             <Building2 className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Sistema de Gestão</h1>
+          <h1 className="text-2xl font-bold text-white">Gestor Master</h1>
         </div>
       </div>
     );
@@ -32,8 +32,8 @@ export const Header = ({ user }: HeaderProps) => {
               <Building2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
             <h1 className="text-base md:text-lg font-bold text-white">
-              <span className="hidden sm:inline">Sistema de Gestão</span>
-              <span className="sm:hidden">SG</span>
+              <span className="hidden sm:inline">Gestor Master</span>
+              <span className="sm:hidden">GM</span>
             </h1>
           </div>
 

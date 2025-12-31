@@ -105,14 +105,20 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Obter setores únicos dos colaboradores
+  // Obter setores únicos dos colaboradores (normalizados para evitar duplicatas)
   const setores = Array.from(
-    new Set(colaboradores.map((c) => c.sector).filter(Boolean))
+    new Set(
+      colaboradores
+        .map((c) => c.sector?.toUpperCase())
+        .filter(Boolean)
+    )
   );
 
   const colaboradoresFiltrados = registros.filter((col) => {
     const matchSetor =
-      !filtroSetor || filtroSetor === 'todos' || col.sector === filtroSetor;
+      !filtroSetor ||
+      filtroSetor === 'todos' ||
+      col.sector?.toUpperCase() === filtroSetor;
     const matchNome =
       !filtroNome || col.name.toLowerCase().includes(filtroNome.toLowerCase());
 
@@ -601,23 +607,41 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
             // Layout de Tabela para Desktop
             <div className="max-h-96 overflow-y-auto">
               <table className="w-full">
-                <thead className="bg-[#E0E0E0] sticky top-0">
-                  <tr>
+                <thead className="bg-muted/50 sticky top-0 shadow-sm">
+                  <tr className="border-b-2 border-border/50">
                     {etapa === 'presentes' ? (
                       <>
-                        <th className="p-3 text-left font-medium">Presente</th>
-                        <th className="p-3 text-left font-medium">Nome</th>
-                        <th className="p-3 text-left font-medium">Cargo</th>
-                        <th className="p-3 text-left font-medium">Setor</th>
-                        <th className="p-3 text-left font-medium">Obra</th>
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30 w-20 text-center">
+                          Presente
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30">
+                          Nome
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30">
+                          Cargo
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30">
+                          Setor
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground">
+                          Obra
+                        </th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3 text-left font-medium">Faltou</th>
-                        <th className="p-3 text-left font-medium">Nome</th>
-                        <th className="p-3 text-left font-medium">Cargo</th>
-                        <th className="p-3 text-left font-medium">Setor</th>
-                        <th className="p-3 text-left font-medium">
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30 w-20 text-center">
+                          Faltou
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30">
+                          Nome
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30">
+                          Cargo
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground border-r border-border/30">
+                          Setor
+                        </th>
+                        <th className="p-3 text-left font-semibold text-foreground">
                           Motivo da Falta *
                         </th>
                       </>
@@ -629,13 +653,13 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                     ? colaboradoresFiltrados.map((registro) => (
                         <tr
                           key={registro.id}
-                          className={`hover:bg-muted/30 ${
+                          className={`hover:bg-muted/30 border-b border-border/30 transition-colors ${
                             registro.presente
-                              ? 'bg-[#FFA500]/10 border-l-4 border-[#FFA500]'
-                              : 'bg-background'
+                              ? 'bg-[#FFA500]/10 border-l-4 border-l-[#FFA500]'
+                              : 'bg-background border-l-4 border-l-transparent'
                           }`}
                         >
-                          <td className="p-3 text-center">
+                          <td className="p-3 text-center border-r border-border/30">
                             <Checkbox
                               checked={registro.presente}
                               onCheckedChange={(checked) =>
@@ -644,9 +668,13 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                               className="data-[state=checked]:bg-[#FFA500] data-[state=checked]:border-[#FFA500]"
                             />
                           </td>
-                          <td className="p-3 font-medium">{registro.name}</td>
-                          <td className="p-3">{registro.role}</td>
-                          <td className="p-3">
+                          <td className="p-3 font-medium border-r border-border/30">
+                            {registro.name}
+                          </td>
+                          <td className="p-3 text-sm text-muted-foreground border-r border-border/30">
+                            {registro.role}
+                          </td>
+                          <td className="p-3 border-r border-border/30">
                             <Badge variant="outline" className="text-xs">
                               {getSetorLabel(registro.sector)}
                             </Badge>
@@ -683,13 +711,13 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                     : colaboradoresFiltrados.map((registro) => (
                         <tr
                           key={registro.id}
-                          className={`hover:bg-muted/30 ${
+                          className={`hover:bg-muted/30 border-b border-border/30 transition-colors ${
                             registro.faltou
-                              ? 'bg-destructive/10 border-l-4 border-destructive'
-                              : 'bg-muted/20'
+                              ? 'bg-destructive/10 border-l-4 border-l-destructive'
+                              : 'bg-muted/20 border-l-4 border-l-transparent'
                           }`}
                         >
-                          <td className="p-3 text-center">
+                          <td className="p-3 text-center border-r border-border/30">
                             <Checkbox
                               checked={registro.faltou}
                               onCheckedChange={(checked) =>
@@ -697,9 +725,13 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                               }
                             />
                           </td>
-                          <td className="p-3 font-medium">{registro.name}</td>
-                          <td className="p-3">{registro.role}</td>
-                          <td className="p-3">
+                          <td className="p-3 font-medium border-r border-border/30">
+                            {registro.name}
+                          </td>
+                          <td className="p-3 text-sm text-muted-foreground border-r border-border/30">
+                            {registro.role}
+                          </td>
+                          <td className="p-3 border-r border-border/30">
                             <Badge variant="outline" className="text-xs">
                               {getSetorLabel(registro.sector)}
                             </Badge>
