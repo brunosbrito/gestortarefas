@@ -14,6 +14,7 @@ import { Edit2, Trash2, ListTodo } from "lucide-react"
 import TarefaMacroService from "@/services/TarefaMacroService"
 import { useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { SortableTableHeader, useTableSort } from "@/components/tables/SortableTableHeader"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,9 @@ export function TarefasMacroList({ reload }: TarefasMacroListProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { toast } = useToast();
+
+  // Sorting
+  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort(listTarefasMacro, 'name', 'asc');
 
   const getTarefasMacro = async () => {
     try {
@@ -136,12 +140,20 @@ export function TarefasMacroList({ reload }: TarefasMacroListProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
-                  <TableHead className="font-semibold text-foreground border-r border-border/30">Nome</TableHead>
+                  <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">Item</TableHead>
+                  <SortableTableHeader
+                    label="Nome"
+                    sortKey="name"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
                   <TableHead className="text-right font-semibold text-foreground">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {listTarefasMacro.map((tarefa, index) => (
+                {sortedData.map((tarefa, index) => (
                   <TableRow
                     key={tarefa.id}
                     className={cn(
@@ -150,6 +162,9 @@ export function TarefasMacroList({ reload }: TarefasMacroListProps) {
                       "hover:bg-accent/50 hover:shadow-sm"
                     )}
                   >
+                    <TableCell className="text-center font-mono text-sm font-bold py-4 border-r border-border/30">
+                      {String(index + 1).padStart(3, '0')}
+                    </TableCell>
                     <TableCell className="font-semibold text-foreground py-4 border-r border-border/30">{tarefa.name}</TableCell>
                     <TableCell className="text-right py-4">
                       <div className="flex items-center justify-end gap-2">

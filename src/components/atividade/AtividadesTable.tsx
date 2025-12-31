@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   Table,
   TableBody,
@@ -37,6 +38,7 @@ import { useNavigate } from 'react-router-dom';
 import { AtividadesTableRow } from './AtividadesTableRow';
 import { AtividadeCardMobile } from './AtividadeCard.Mobile';
 import { cn } from '@/lib/utils';
+import { staggerContainer } from '@/lib/animations';
 
 export const AtividadesTable = () => {
   const navigate = useNavigate();
@@ -287,7 +289,12 @@ export const AtividadesTable = () => {
             </div>
 
             {/* Mobile view - Cards */}
-            <div className="md:hidden p-4 space-y-4">
+            <motion.div
+              className="md:hidden p-4 space-y-4"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
               {currentItems.map((atividade: AtividadeStatus, index: number) => {
                 const globalIndex = startIndex + index;
                 return (
@@ -300,7 +307,7 @@ export const AtividadesTable = () => {
                   />
                 );
               })}
-            </div>
+            </motion.div>
 
             {/* Paginação modernizada */}
             {totalPages > 1 && (

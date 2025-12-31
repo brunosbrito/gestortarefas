@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Edit2, Trash2, Workflow } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { SortableTableHeader, useTableSort } from '@/components/tables/SortableTableHeader';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,9 @@ export function ProcessosList({ reload }: ProcessosListProps) {
   const [listProcessos, setListProcessos] = useState<Processo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Sorting
+  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort(listProcessos, 'name', 'asc');
 
   const handleDeleteClick = (processo: Processo) => {
     setSelectedProcesso(processo);
@@ -141,12 +145,20 @@ export function ProcessosList({ reload }: ProcessosListProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
-                  <TableHead className="font-semibold text-foreground border-r border-border/30">Nome</TableHead>
+                  <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">Item</TableHead>
+                  <SortableTableHeader
+                    label="Nome"
+                    sortKey="name"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
                   <TableHead className="text-right font-semibold text-foreground">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {listProcessos.map((processo, index) => (
+                {sortedData.map((processo, index) => (
                   <TableRow
                     key={processo.id}
                     className={cn(
@@ -155,6 +167,9 @@ export function ProcessosList({ reload }: ProcessosListProps) {
                       "hover:bg-accent/50 hover:shadow-sm"
                     )}
                   >
+                    <TableCell className="text-center font-mono text-sm font-bold py-4 border-r border-border/30">
+                      {String(index + 1).padStart(3, '0')}
+                    </TableCell>
                     <TableCell className="font-semibold text-foreground py-4 border-r border-border/30">{processo.name}</TableCell>
                     <TableCell className="text-right py-4">
                       <div className="flex items-center justify-end gap-2">

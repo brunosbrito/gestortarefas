@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -45,6 +45,7 @@ import {
 import { cn } from '@/lib/utils';
 import { HelpTooltip } from '@/components/tooltips/HelpTooltip';
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent';
+import { FormProgressIndicator, FormStep, useFormProgress } from '@/components/forms/FormProgressIndicator';
 
 type UnidadeTempo = 'minutos' | 'horas';
 
@@ -99,6 +100,39 @@ const FormSection = ({ icon: Icon, title, children }: FormSectionProps) => (
   </div>
 );
 
+const FORM_STEPS: FormStep[] = [
+  {
+    id: 'basicas',
+    label: 'Básico',
+    icon: FileText,
+    description: 'Tarefa macro, processo e descrição'
+  },
+  {
+    id: 'tempo',
+    label: 'Tempo',
+    icon: Clock,
+    description: 'Tempo e quantidade'
+  },
+  {
+    id: 'equipe',
+    label: 'Equipe',
+    icon: Users,
+    description: 'Seleção de colaboradores'
+  },
+  {
+    id: 'observacoes',
+    label: 'Obs.',
+    icon: MessageSquare,
+    description: 'Observações adicionais'
+  },
+  {
+    id: 'anexos',
+    label: 'Anexos',
+    icon: Paperclip,
+    description: 'Imagens e documentos'
+  }
+];
+
 export function NovaAtividadeForm({
   editMode = false,
   atividadeInicial,
@@ -115,6 +149,15 @@ export function NovaAtividadeForm({
   const [macroTaskSelectedValue, setMacroTaskSelectedValue] = useState<string>('');
   const [processSelectedValue, setProcessSelectedValue] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form progress tracking
+  const formProgress = useFormProgress(FORM_STEPS.length);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Set ref for a section
+  const setSectionRef = (index: number) => (el: HTMLDivElement | null) => {
+    sectionRefs.current[index] = el;
+  };
 
   const determinarValorInicialTarefaMacro = () => {
     if (!atividadeInicial) return '';
@@ -270,6 +313,38 @@ export function NovaAtividadeForm({
     return () => subscription.unsubscribe();
   }, [form.watch]);
 
+  // Track form progress based on field completion
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      // Section 0: Básico - macroTask, process, description
+      if (values.macroTask && values.process && values.description) {
+        formProgress.markStepCompleted(0);
+      } else {
+        formProgress.markStepIncomplete(0);
+      }
+
+      // Section 1: Tempo - quantity, timePerUnit
+      if (values.quantity && values.timePerUnit) {
+        formProgress.markStepCompleted(1);
+      } else {
+        formProgress.markStepIncomplete(1);
+      }
+
+      // Section 2: Equipe - collaborators (at least 1)
+      if (values.collaborators && values.collaborators.length > 0) {
+        formProgress.markStepCompleted(2);
+      } else {
+        formProgress.markStepIncomplete(2);
+      }
+
+      // Sections 3 & 4 (Observações, Anexos) are optional - mark as complete
+      formProgress.markStepCompleted(3);
+      formProgress.markStepCompleted(4);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.watch, formProgress]);
+
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
@@ -334,10 +409,25 @@ export function NovaAtividadeForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
+        {/* Progress Indicator */}
+        <FormProgressIndicator
+          steps={FORM_STEPS}
+          currentStep={formProgress.currentStep}
+          completedSteps={formProgress.completedSteps}
+          onStepClick={(stepIndex) => {
+            const sectionElement = sectionRefs.current[stepIndex];
+            if (sectionElement) {
+              sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              formProgress.goToStep(stepIndex);
+            }
+          }}
+        />
+
         {/* Conteúdo com espaço para o footer sticky */}
-        <div className="space-y-6 md:space-y-8 pb-28 md:pb-32">
+        <div className="space-y-6 md:space-y-8 pb-28 md:pb-32 mt-4">
           {/* Seção: Informações Básicas */}
-          <FormSection icon={FileText} title="Informações Básicas">
+          <div ref={setSectionRef(0)}>
+            <FormSection icon={FileText} title="Informações Básicas">
             <FormField
               control={form.control}
               name="macroTask"
@@ -448,11 +538,13 @@ export function NovaAtividadeForm({
               )}
             />
           </FormSection>
+          </div>
 
           <Separator className="my-8" />
 
           {/* Seção: Tempo e Quantidade */}
-          <FormSection icon={Clock} title="Tempo e Quantidade">
+          <div ref={setSectionRef(1)}>
+            <FormSection icon={Clock} title="Tempo e Quantidade">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -550,11 +642,13 @@ export function NovaAtividadeForm({
               </div>
             )}
           </FormSection>
+          </div>
 
           <Separator className="my-8" />
 
           {/* Seção: Equipe */}
-          <FormSection icon={Users} title="Equipe">
+          <div ref={setSectionRef(2)}>
+            <FormSection icon={Users} title="Equipe">
             <FormField
               control={form.control}
               name="collaborators"
@@ -611,11 +705,13 @@ export function NovaAtividadeForm({
               )}
             />
           </FormSection>
+          </div>
 
           <Separator className="my-8" />
 
           {/* Seção: Observações */}
-          <FormSection icon={MessageSquare} title="Observações">
+          <div ref={setSectionRef(3)}>
+            <FormSection icon={MessageSquare} title="Observações">
             <FormField
               control={form.control}
               name="observation"
@@ -637,11 +733,13 @@ export function NovaAtividadeForm({
               )}
             />
           </FormSection>
+          </div>
 
           <Separator className="my-8" />
 
           {/* Seção: Anexos */}
-          <FormSection icon={Paperclip} title="Anexos">
+          <div ref={setSectionRef(4)}>
+            <FormSection icon={Paperclip} title="Anexos">
             <div className="space-y-4">
               <FileUploadField
                 form={form}
@@ -668,6 +766,7 @@ export function NovaAtividadeForm({
               />
             </div>
           </FormSection>
+          </div>
         </div>
 
         {/* Footer Sticky */}

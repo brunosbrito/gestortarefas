@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Users2, Edit2, Ban, Check, Filter, X, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SortableTableHeader, useTableSort } from '@/components/tables/SortableTableHeader';
 import {
   Dialog,
   DialogContent,
@@ -87,6 +88,9 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
   const { toast } = useToast();
+
+  // Sorting - aplicado aos dados filtrados
+  const { sortedData, sortKey, sortDirection, handleSort } = useTableSort(filteredColaboradores, 'name', 'asc');
 
   const hasActiveFilters = filters.name || filters.role || filters.sector;
 
@@ -249,15 +253,37 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
-                  <TableHead className="font-semibold text-foreground border-r border-border/30">Nome</TableHead>
-                  <TableHead className="font-semibold text-foreground border-r border-border/30">Cargo</TableHead>
-                  <TableHead className="font-semibold text-foreground border-r border-border/30">Setor</TableHead>
+                  <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">Item</TableHead>
+                  <SortableTableHeader
+                    label="Nome"
+                    sortKey="name"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
+                  <SortableTableHeader
+                    label="Cargo"
+                    sortKey="role"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
+                  <SortableTableHeader
+                    label="Setor"
+                    sortKey="sector"
+                    currentSortKey={sortKey}
+                    currentSortDirection={sortDirection}
+                    onSort={handleSort}
+                    className="border-r border-border/30"
+                  />
                   <TableHead className="font-semibold text-foreground border-r border-border/30">Status</TableHead>
                   <TableHead className="text-right font-semibold text-foreground">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredColaboradores.map((colaborador, index) => {
+                {sortedData.map((colaborador, index) => {
                   const setorConfig = getSetorConfig(colaborador.sector);
 
                   return (
@@ -269,6 +295,9 @@ export function ColaboradoresList({ reload }: ColaboradoresListProps) {
                         "hover:bg-accent/50 hover:shadow-sm"
                       )}
                     >
+                      <TableCell className="text-center font-mono text-sm font-bold py-4 border-r border-border/30">
+                        {String(index + 1).padStart(3, '0')}
+                      </TableCell>
                       <TableCell className="font-semibold text-foreground py-4 border-r border-border/30">{colaborador.name}</TableCell>
                       <TableCell className="py-4 text-muted-foreground border-r border-border/30">{colaborador.role}</TableCell>
                       <TableCell className="py-4 border-r border-border/30">

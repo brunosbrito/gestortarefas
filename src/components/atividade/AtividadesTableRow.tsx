@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -172,111 +173,121 @@ export const AtividadesTableRow = ({
       </TableRow>
 
       {/* Expandable row com detalhes */}
-      {isExpanded && (
-        <TableRow className="bg-muted/20 hover:bg-muted/20">
-          <TableCell colSpan={8} className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Processo */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Processo
-                </div>
-                <div className="text-sm font-medium">
-                  {typeof atividade.process === 'string'
-                    ? atividade.process
-                    : atividade.process?.name || '-'}
-                </div>
-              </div>
-
-              {/* OS */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Ordem de Serviço
-                </div>
-                <div className="text-sm font-medium">
-                  {atividade.serviceOrder?.serviceOrderNumber || 'N/A'}
-                </div>
-              </div>
-
-              {/* Obra/Projeto */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Obra/Projeto
-                </div>
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Building2 className="w-4 h-4 text-muted-foreground" />
-                  {atividade.project?.name || 'N/A'}
-                </div>
-              </div>
-
-              {/* Tempo Estimado */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Tempo Estimado
-                </div>
-                <div className="text-sm font-medium tabular-nums">
-                  {formatTime(atividade.estimatedTime)}
-                </div>
-              </div>
-
-              {/* Quantidade */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Quantidade
-                </div>
-                <div className="text-sm font-medium tabular-nums">
-                  {atividade.completedQuantity || 0} / {atividade.quantity || 0}
-                </div>
-              </div>
-
-              {/* Equipe */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Equipe
-                </div>
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  {formatTeam(atividade.collaborators)}
-                </div>
-              </div>
-
-              {/* Data de Início */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Data de Início
-                </div>
-                <div className="flex items-center gap-2 text-sm font-medium tabular-nums">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  {formatDate(atividade.startDate)}
-                </div>
-              </div>
-
-              {/* Data de Criação */}
-              <div className="space-y-1.5">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Data de Criação
-                </div>
-                <div className="flex items-center gap-2 text-sm font-medium tabular-nums">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  {formatDate(atividade.createdAt)}
-                </div>
-              </div>
-
-              {/* Observações */}
-              {atividade.observations && (
-                <div className="space-y-1.5 lg:col-span-3">
-                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Observações
+      <AnimatePresence>
+        {isExpanded && (
+          <TableRow className="bg-muted/20 hover:bg-muted/20">
+            <TableCell colSpan={8} className="p-0 overflow-hidden">
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="p-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Processo */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Processo
+                    </div>
+                    <div className="text-sm font-medium">
+                      {typeof atividade.process === 'string'
+                        ? atividade.process
+                        : atividade.process?.name || '-'}
+                    </div>
                   </div>
-                  <div className="text-sm">
-                    {atividade.observations}
+
+                  {/* OS */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Ordem de Serviço
+                    </div>
+                    <div className="text-sm font-medium">
+                      {atividade.serviceOrder?.serviceOrderNumber || 'N/A'}
+                    </div>
                   </div>
+
+                  {/* Obra/Projeto */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Obra/Projeto
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Building2 className="w-4 h-4 text-muted-foreground" />
+                      {atividade.project?.name || 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Tempo Estimado */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Tempo Estimado
+                    </div>
+                    <div className="text-sm font-medium tabular-nums">
+                      {formatTime(atividade.estimatedTime)}
+                    </div>
+                  </div>
+
+                  {/* Quantidade */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Quantidade
+                    </div>
+                    <div className="text-sm font-medium tabular-nums">
+                      {atividade.completedQuantity || 0} / {atividade.quantity || 0}
+                    </div>
+                  </div>
+
+                  {/* Equipe */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Equipe
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      {formatTeam(atividade.collaborators)}
+                    </div>
+                  </div>
+
+                  {/* Data de Início */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Data de Início
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium tabular-nums">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      {formatDate(atividade.startDate)}
+                    </div>
+                  </div>
+
+                  {/* Data de Criação */}
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Data de Criação
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium tabular-nums">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      {formatDate(atividade.createdAt)}
+                    </div>
+                  </div>
+
+                  {/* Observações */}
+                  {atividade.observations && (
+                    <div className="space-y-1.5 lg:col-span-3">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Observações
+                      </div>
+                      <div className="text-sm">
+                        {atividade.observations}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </TableCell>
-        </TableRow>
-      )}
+              </motion.div>
+            </TableCell>
+          </TableRow>
+        )}
+      </AnimatePresence>
     </>
   );
 };

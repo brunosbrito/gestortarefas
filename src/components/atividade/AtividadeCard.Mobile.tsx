@@ -1,9 +1,11 @@
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Clock, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { fadeInUp, hoverScale, tapScale } from '@/lib/animations';
 import {
   calcularKPI,
   calcularProgresso,
@@ -67,121 +69,130 @@ export const AtividadeCardMobile = ({
   const statusConfig = getStatusConfig(atividade.status);
 
   return (
-    <Card
-      onClick={() => onCardClick(atividade)}
-      className={cn(
-        "border-l-4 cursor-pointer",
-        "transition-all duration-200",
-        "hover:shadow-elevation-3 hover:scale-[1.02]",
-        "active:scale-[0.98]",
-        statusConfig.borderColor
-      )}
+    <motion.div
+      variants={fadeInUp}
+      initial="hidden"
+      animate="visible"
+      whileHover={hoverScale}
+      whileTap={tapScale}
     >
-      {/* Header */}
-      <div className="p-4 pb-3 border-b border-border/50 bg-muted/20">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+      <Card
+        onClick={() => onCardClick(atividade)}
+        className={cn(
+          "border-l-4 cursor-pointer",
+          "transition-all duration-200",
+          "hover:shadow-elevation-3 active:shadow-elevation-2",
+          "min-h-[44px]", // Touch target minimum
+          "touch-manipulation", // Optimize for touch
+          statusConfig.borderColor
+        )}
+      >
+        {/* Header */}
+        <div className="p-4 pb-3 border-b border-border/50 bg-muted/20">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className="font-mono text-xs px-2.5 py-1 min-h-[24px]"
+                >
+                  #{obterCodigoSequencial(globalIndex)}
+                </Badge>
+                <Badge
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1 min-h-[24px]",
+                    statusConfig.bgColor,
+                    statusConfig.textColor
+                  )}
+                >
+                  <span className={cn("w-2 h-2 rounded-full flex-shrink-0", statusConfig.dotColor)} />
+                  <span className="text-xs font-semibold whitespace-nowrap">{statusConfig.label}</span>
+                </Badge>
+              </div>
+              <h3 className="font-semibold text-base line-clamp-2 leading-snug">
+                {atividade.description}
+              </h3>
+            </div>
+            <ChevronRight className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-0.5" />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-5">
+          {/* Tarefa Macro */}
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">
+              Tarefa Macro
+            </div>
+            <div className="text-sm font-medium line-clamp-1">
+              {typeof atividade.macroTask === 'string'
+                ? atividade.macroTask
+                : atividade.macroTask?.name || '-'}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Progresso</span>
+              <span className="text-sm font-bold tabular-nums">{formatarProgresso(progresso)}</span>
+            </div>
+            <Progress
+              value={Math.min(progresso, 100)}
+              className="h-2.5"
+            />
+          </div>
+
+          {/* Grid 2x2 de informações */}
+          <div className="grid grid-cols-2 gap-4 pt-3 border-t border-border/50">
+            {/* Tempo */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <Clock className="w-4 h-4" />
+                <span>Tempo</span>
+              </div>
+              <div className="text-sm font-semibold tabular-nums">
+                {formatarTempoTotal(atividade)}
+              </div>
+            </div>
+
+            {/* KPI */}
+            <div className="space-y-1.5">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                KPI
+              </div>
               <Badge
                 variant="outline"
-                className="font-mono text-xs px-2 py-0.5"
+                className={cn("text-sm font-bold tabular-nums w-fit px-2.5 py-0.5", getKPIColor(kpi))}
               >
-                #{obterCodigoSequencial(globalIndex)}
-              </Badge>
-              <Badge
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-0.5",
-                  statusConfig.bgColor,
-                  statusConfig.textColor
-                )}
-              >
-                <span className={cn("w-1.5 h-1.5 rounded-full", statusConfig.dotColor)} />
-                <span className="text-xs font-semibold">{statusConfig.label}</span>
+                {formatarKPI(kpi)}
               </Badge>
             </div>
-            <h3 className="font-semibold text-sm line-clamp-2 leading-snug">
-              {atividade.description}
-            </h3>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-1" />
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-4">
-        {/* Tarefa Macro */}
-        <div>
-          <div className="text-xs font-medium text-muted-foreground mb-1">
-            Tarefa Macro
-          </div>
-          <div className="text-sm font-medium line-clamp-1">
-            {typeof atividade.macroTask === 'string'
-              ? atividade.macroTask
-              : atividade.macroTask?.name || '-'}
-          </div>
-        </div>
+            {/* Equipe */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <Users className="w-4 h-4" />
+                <span>Equipe</span>
+              </div>
+              <div className="text-sm font-medium line-clamp-1">
+                {formatTeam(atividade.collaborators)}
+              </div>
+            </div>
 
-        {/* Progress bar */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-muted-foreground">Progresso</span>
-            <span className="font-bold tabular-nums">{formatarProgresso(progresso)}</span>
-          </div>
-          <Progress
-            value={Math.min(progresso, 100)}
-            className="h-2"
-          />
-        </div>
-
-        {/* Grid 2x2 de informações */}
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/50">
-          {/* Tempo */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Tempo</span>
-            </div>
-            <div className="text-sm font-semibold tabular-nums">
-              {formatarTempoTotal(atividade)}
-            </div>
-          </div>
-
-          {/* KPI */}
-          <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">
-              KPI
-            </div>
-            <Badge
-              variant="outline"
-              className={cn("text-xs font-semibold tabular-nums w-fit", getKPIColor(kpi))}
-            >
-              {formatarKPI(kpi)}
-            </Badge>
-          </div>
-
-          {/* Equipe */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Users className="w-3.5 h-3.5" />
-              <span>Equipe</span>
-            </div>
-            <div className="text-sm font-medium line-clamp-1">
-              {formatTeam(atividade.collaborators)}
-            </div>
-          </div>
-
-          {/* Obra */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Obra</span>
-            </div>
-            <div className="text-sm font-medium line-clamp-1">
-              {atividade.project?.name || 'N/A'}
+            {/* Obra */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <Building2 className="w-4 h-4" />
+                <span>Obra</span>
+              </div>
+              <div className="text-sm font-medium line-clamp-1">
+                {atividade.project?.name || 'N/A'}
+              </div>
             </div>
           </div>
         </div>
-      </div>
     </Card>
+    </motion.div>
   );
 };
