@@ -27,6 +27,8 @@ import { getServiceOrderByProjectId } from '@/services/ServiceOrderService';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ColaboradorService from '@/services/ColaboradorService';
 import { NonConformity } from '@/interfaces/RncInterface';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   project: z.string().min(1, 'Projeto é obrigatório'),
@@ -48,6 +50,7 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
   const [projetos, setProjetos] = useState<Obra[]>([]);
   const [os, setOs] = useState<ServiceOrder[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -107,16 +110,27 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
     }
   };
 
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    try {
+      await onNext(data);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onNext)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 md:space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="project"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Projeto</FormLabel>
+                <FormLabel className="font-medium">
+                  Projeto <span className="text-destructive">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -125,7 +139,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className={cn(
+                      form.formState.errors.project && "border-destructive bg-destructive/5"
+                    )}>
                       <SelectValue placeholder="Selecione o projeto" />
                     </SelectTrigger>
                   </FormControl>
@@ -137,7 +153,12 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                {form.formState.errors.project && (
+                  <FormMessage className="flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {form.formState.errors.project.message}
+                  </FormMessage>
+                )}
               </FormItem>
             )}
           />
@@ -147,13 +168,17 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
             name="serviceOrder"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ordem de Serviço</FormLabel>
+                <FormLabel className="font-medium">
+                  Ordem de Serviço <span className="text-destructive">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className={cn(
+                      form.formState.errors.serviceOrder && "border-destructive bg-destructive/5"
+                    )}>
                       <SelectValue placeholder="Selecione a OS" />
                     </SelectTrigger>
                   </FormControl>
@@ -171,25 +196,34 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                     )}
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                {form.formState.errors.serviceOrder && (
+                  <FormMessage className="flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {form.formState.errors.serviceOrder.message}
+                  </FormMessage>
+                )}
               </FormItem>
             )}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="responsibleRnc"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Responsável pela RNC</FormLabel>
+                <FormLabel className="font-medium">
+                  Responsável pela RNC <span className="text-destructive">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className={cn(
+                      form.formState.errors.responsibleRnc && "border-destructive bg-destructive/5"
+                    )}>
                       <SelectValue placeholder="Selecione o responsável" />
                     </SelectTrigger>
                   </FormControl>
@@ -207,7 +241,12 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                     )}
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                {form.formState.errors.responsibleRnc && (
+                  <FormMessage className="flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {form.formState.errors.responsibleRnc.message}
+                  </FormMessage>
+                )}
               </FormItem>
             )}
           />
@@ -217,13 +256,17 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
             name="responsibleIdentification"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Identificado por</FormLabel>
+                <FormLabel className="font-medium">
+                  Identificado por <span className="text-destructive">*</span>
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className={cn(
+                      form.formState.errors.responsibleIdentification && "border-destructive bg-destructive/5"
+                    )}>
                       <SelectValue placeholder="Selecione quem identificou" />
                     </SelectTrigger>
                   </FormControl>
@@ -241,7 +284,12 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
                     )}
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                {form.formState.errors.responsibleIdentification && (
+                  <FormMessage className="flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {form.formState.errors.responsibleIdentification.message}
+                  </FormMessage>
+                )}
               </FormItem>
             )}
           />
@@ -252,11 +300,24 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
           name="dateOccurrence"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Data da Ocorrência</FormLabel>
+              <FormLabel className="font-medium">
+                Data da Ocorrência <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input
+                  type="date"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.dateOccurrence && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.dateOccurrence && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.dateOccurrence.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -266,25 +327,51 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Descrição</FormLabel>
+              <FormLabel className="font-medium">
+                Descrição <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Descreva a não conformidade"
-                  className="min-h-[100px]"
+                  className={cn(
+                    "min-h-[100px]",
+                    form.formState.errors.description && "border-destructive bg-destructive/5"
+                  )}
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.description && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.description.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
 
-        <Button
-          type="submit"
-          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-        >
-          {initialData ? 'Salvar Alterações' : 'Criar RNC'}
-        </Button>
+        <div className="pt-4">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "w-full h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>{initialData ? 'Salvando...' : 'Criando...'}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>{initialData ? 'Salvar Alterações' : 'Criar RNC'}</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

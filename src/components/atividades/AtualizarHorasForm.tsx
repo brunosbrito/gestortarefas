@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   horasColaboradores: z.array(
@@ -36,6 +38,7 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(true);
   const [isValid, setIsValid] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultValues = {
     horasColaboradores:
@@ -58,7 +61,7 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
     return allHorasPreenchidas;
   };
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     if (!validateForm(data)) {
       toast({
         title: 'Atenção',
@@ -69,31 +72,36 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
       return;
     }
 
-    console.log(data);
-    toast({
-      title: 'Horas atualizadas com sucesso!',
-      description: 'As horas trabalhadas foram registradas.',
-    });
-    setShowForm(false);
+    setIsSubmitting(true);
+    try {
+      console.log(data);
+      toast({
+        title: 'Horas atualizadas com sucesso!',
+        description: 'As horas trabalhadas foram registradas.',
+      });
+      setShowForm(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
         <div className="space-y-4">
           {form.watch('horasColaboradores').map((campo, index) => (
             <div
               key={index}
-              className="flex gap-4 items-center bg-gray-50 p-4 rounded-lg"
+              className="flex gap-4 items-center bg-muted/30 p-4 rounded-lg"
             >
               <FormField
                 control={form.control}
                 name={`horasColaboradores.${index}.colaborador`}
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Colaborador</FormLabel>
+                    <FormLabel className="font-medium">Colaborador</FormLabel>
                     <FormControl>
-                      <Input {...field} readOnly className="bg-white" />
+                      <Input {...field} readOnly className="bg-background" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -104,7 +112,9 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
                 name={`horasColaboradores.${index}.horas`}
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Horas Trabalhadas</FormLabel>
+                    <FormLabel className="font-medium">
+                      Horas Trabalhadas <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -113,10 +123,19 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
                           field.onChange(Number(e.target.value));
                           validateForm(form.getValues());
                         }}
-                        className="bg-white"
+                        className={cn(
+                          "bg-background",
+                          form.formState.errors.horasColaboradores?.[index]?.horas &&
+                          "border-destructive bg-destructive/5"
+                        )}
                       />
                     </FormControl>
-                    <FormMessage />
+                    {form.formState.errors.horasColaboradores?.[index]?.horas && (
+                      <FormMessage className="flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {form.formState.errors.horasColaboradores[index].horas.message}
+                      </FormMessage>
+                    )}
                   </FormItem>
                 )}
               />
@@ -125,9 +144,28 @@ export function AtualizarHorasForm({ atividade }: AtualizarHorasFormProps) {
         </div>
 
         {showForm && (
-          <Button type="submit" disabled={!isValid}>
-            Atualizar Horas
-          </Button>
+          <div className="pt-4">
+            <Button
+              type="submit"
+              disabled={!isValid || isSubmitting}
+              className={cn(
+                "w-full h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+                (isSubmitting || !isValid) && "opacity-70"
+              )}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Atualizando...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>Atualizar Horas</span>
+                </div>
+              )}
+            </Button>
+          </div>
         )}
       </form>
     </Form>

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -25,46 +24,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  Calendar,
-  Clock,
-  Users,
-  Building2,
-  FileText,
-  FileSpreadsheet,
-  Download,
-} from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useAtividadeData } from '@/hooks/useAtividadeData';
 import { AtividadeFiltrosComponent } from './AtividadeFiltros';
-import { AtividadePdfService } from '@/services/AtividadePdfService';
-import { AtividadeExcelService } from '@/services/AtividadeExcelService';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { useToast } from '@/hooks/use-toast';
 import { PdfConfigDialog } from './PdfConfigDialog';
 import { ExcelConfigDialog, ExcelConfig } from './ExcelConfigDialog';
 import { AtividadePdfAdvancedService } from '@/services/AtividadePdfAdvancedService';
-import {
-  calcularKPI,
-  calcularProgresso,
-  formatarKPI,
-  formatarProgresso,
-  formatarTempoTotal,
-  getKPIColor,
-  getProgressoColor,
-  obterCodigoSequencial,
-} from '@/utils/atividadeCalculos';
-import { Progress } from '@/components/ui/progress';
-import { Activity } from '@/interfaces/AtividadeInterface';
+import { AtividadeExcelService } from '@/services/AtividadeExcelService';
 import { useNavigate } from 'react-router-dom';
+import { AtividadesTableRow } from './AtividadesTableRow';
+import { AtividadeCardMobile } from './AtividadeCard.Mobile';
+import { cn } from '@/lib/utils';
 
 export const AtividadesTable = () => {
-
   const navigate = useNavigate();
 
   const {
@@ -106,8 +80,7 @@ export const AtividadesTable = () => {
   };
 
   const handleRowClick = (atividade: AtividadeStatus) => {
-    console.log(atividade, 'asas', atividade.serviceOrder.id)
-     navigate(`/obras/${atividade.project.id}/os/${atividade.serviceOrder.id}/atividades`);
+    navigate(`/obras/${atividade.project.id}/os/${atividade.serviceOrder.id}/atividades`);
   };
 
   const formatTime = (timeString?: string) => {
@@ -122,43 +95,6 @@ export const AtividadesTable = () => {
     return `${collaborators[0].name || collaborators[0]} +${
       collaborators.length - 1
     }`;
-  };
-
-  const getTeamTooltip = (collaborators?: any[]) => {
-    if (!collaborators || collaborators.length === 0)
-      return 'Sem equipe definida';
-    return collaborators.map((c) => c.name || c).join(', ');
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      Planejadas: {
-        color: 'bg-blue-100 text-blue-800 border-blue-300',
-        label: 'Planejadas',
-      },
-      'Em execução': {
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-        label: 'Em Execução',
-      },
-      Concluídas: {
-        color: 'bg-green-100 text-green-800 border-green-300',
-        label: 'Concluídas',
-      },
-      Paralizadas: {
-        color: 'bg-red-100 text-red-800 border-red-300',
-        label: 'Paralizadas',
-      },
-    };
-
-    const config =
-      statusConfig[status as keyof typeof statusConfig] ||
-      statusConfig['Planejadas'];
-
-    return (
-      <Badge variant="outline" className={config.color}>
-        {config.label}
-      </Badge>
-    );
   };
 
   const handlePageChange = (page: number) => {
@@ -221,7 +157,7 @@ export const AtividadesTable = () => {
       <div className="space-y-6">
         <Card className="p-6">
           <div className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF7F0E]"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         </Card>
       </div>
@@ -243,298 +179,143 @@ export const AtividadesTable = () => {
       />
 
       {/* Tabela */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <Calendar className="w-5 h-5 mr-2 text-[#FF7F0E]" />
-            <h3 className="text-lg font-semibold">Atividades</h3>
-            <Badge
-              variant="outline"
-              className="ml-3 bg-purple-100 text-purple-800 border-purple-300"
-            >
-              Total: {totalAtividades}
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Botões de exportação */}
-            <div className="flex items-center gap-2">
-              <PdfConfigDialog
-                atividades={atividadesFiltradas}
-                filtros={filtros}
-                onExport={handleExportPDFAdvanced}
-                isExporting={isExporting}
-              />
-              <ExcelConfigDialog
-                atividades={atividadesFiltradas}
-                filtros={filtros}
-                onExport={handleExportExcel}
-                isExporting={isExporting}
-              />
+      <Card className="overflow-hidden border border-border/50 shadow-elevation-2">
+        {/* Header modernizado */}
+        <div className="p-4 md:p-6 border-b-2 border-border/50 bg-muted/30">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Atividades</h3>
+                <p className="text-xs text-muted-foreground">
+                  Total de {totalAtividades} {totalAtividades === 1 ? 'registro' : 'registros'}
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className="bg-primary/10 text-primary border-primary/30 ml-2 font-semibold tabular-nums"
+              >
+                {totalAtividades}
+              </Badge>
             </div>
 
-            {totalAtividades > 0 && (
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>
-                  Mostrando {startIndex + 1}-
-                  {Math.min(endIndex, totalAtividades)} de {totalAtividades}{' '}
-                  resultados
-                </span>
-                <div className="flex items-center gap-2">
-                  <span>Por página:</span>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={handleItemsPerPageChange}
-                  >
-                    <SelectTrigger className="w-20 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Botões de exportação */}
+              <div className="flex items-center gap-2">
+                <PdfConfigDialog
+                  atividades={atividadesFiltradas}
+                  filtros={filtros}
+                  onExport={handleExportPDFAdvanced}
+                  isExporting={isExporting}
+                />
+                <ExcelConfigDialog
+                  atividades={atividadesFiltradas}
+                  filtros={filtros}
+                  onExport={handleExportExcel}
+                  isExporting={isExporting}
+                />
               </div>
-            )}
+
+              {totalAtividades > 0 && (
+                <div className="flex items-center gap-3 text-sm text-muted-foreground border-l pl-3">
+                  <span className="hidden md:inline">
+                    {startIndex + 1}-{Math.min(endIndex, totalAtividades)} de {totalAtividades}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs">Por página:</span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={handleItemsPerPageChange}
+                    >
+                      <SelectTrigger className="w-20 h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {atividadesFiltradas && atividadesFiltradas.length > 0 ? (
           <div className="space-y-4">
-            <div className="rounded-md border">
-              <TooltipProvider>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16 text-center">Item</TableHead>
-                      <TableHead className="w-[200px]">Descrição</TableHead>
-                      <TableHead className="w-[120px]">Tarefa Macro</TableHead>
-                      <TableHead className="w-[100px]">Processo</TableHead>
-                      <TableHead className="w-[100px] text-center">
-                        Status
-                      </TableHead>
-                      <TableHead className="w-16 text-center">OS</TableHead>
-                      <TableHead className="w-[150px]">Obra/Projeto</TableHead>
-                      <TableHead className="w-20 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          T. Est.
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-20 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          T. Total
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-16 text-center">KPI</TableHead>
-                      <TableHead className="w-20 text-center">Qtd.</TableHead>
-                      <TableHead className="w-20 text-center">
-                        Progresso
-                      </TableHead>
-                      <TableHead className="w-24 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Users className="w-4 h-4" />
-                          Equipe
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-28 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          Início
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-28 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          Criação
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-[150px]">Observações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentItems.map(
-                      (atividade: AtividadeStatus, index: number) => {
-                        const globalIndex = startIndex + index;
-                        const kpi = calcularKPI(atividade);
-                        const progresso = calcularProgresso(atividade);
-
-                        return (
-                           <TableRow
-                            onClick={() => handleRowClick(atividade)}
-                            key={atividade.id}
-                            className="cursor-pointer hover:bg-muted/60 transition-colors"
-                           >
-                            <TableCell className="text-center font-mono text-sm">
-                              {obterCodigoSequencial(globalIndex)}
-                            </TableCell>
-                            <TableCell className="max-w-[200px]">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="truncate font-medium">
-                                    {atividade.description}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{atividade.description}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableCell>
-                            <TableCell className="max-w-[120px]">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="truncate">
-                                    {typeof atividade.macroTask === 'string'
-                                      ? atividade.macroTask
-                                      : atividade.macroTask?.name || '-'}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
-                                    {typeof atividade.macroTask === 'string'
-                                      ? atividade.macroTask
-                                      : atividade.macroTask?.name || '-'}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableCell>
-                            <TableCell className="max-w-[100px]">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="truncate">
-                                    {typeof atividade.process === 'string'
-                                      ? atividade.process
-                                      : atividade.process?.name || '-'}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
-                                    {typeof atividade.process === 'string'
-                                      ? atividade.process
-                                      : atividade.process?.name || '-'}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {getStatusBadge(atividade.status)}
-                            </TableCell>
-                            <TableCell className="text-center text-sm">
-                              {atividade.serviceOrder?.serviceOrderNumber ||
-                                'N/A'}
-                            </TableCell>
-                            <TableCell className="max-w-[150px]">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="truncate flex items-center gap-1">
-                                    <Building2 className="w-3 h-3 text-gray-500" />
-                                    {atividade.project?.name || 'N/A'}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{atividade.project?.name || 'N/A'}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableCell>
-                            <TableCell className="text-center text-sm">
-                              {formatTime(atividade.estimatedTime)}
-                            </TableCell>
-                            <TableCell className="text-center text-sm">
-                              {formatarTempoTotal(atividade)}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge
-                                variant="outline"
-                                className={`text-xs ${getKPIColor(kpi)}`}
-                              >
-                                {formatarKPI(kpi)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center text-sm">
-                              <div className="flex flex-col items-center">
-                                <span className="font-medium">
-                                  {atividade.completedQuantity || 0}
-                                </span>
-                                <span className="text-gray-400 text-xs">
-                                  /{atividade.quantity || 0}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="space-y-1">
-                                <div className="text-xs font-medium">
-                                  {formatarProgresso(progresso)}
-                                </div>
-                                <Progress
-                                  value={Math.min(progresso, 100)}
-                                  className="h-2 w-16"
-                                />
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="flex items-center justify-center gap-1 text-sm">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex items-center gap-1">
-                                      <Users className="w-3 h-3" />
-                                      {formatTeam(atividade.collaborators)}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>
-                                      {getTeamTooltip(atividade.collaborators)}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center text-sm">
-                              {formatDate(atividade.startDate)}
-                            </TableCell>
-                            <TableCell className="text-center text-sm">
-                              {formatDate(atividade.createdAt)}
-                            </TableCell>
-                            <TableCell className="max-w-[150px]">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="truncate text-sm text-gray-600">
-                                    {atividade.observation || '-'}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
-                                    {atividade.observation || 'Sem observações'}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      }
-                    )}
-                  </TableBody>
-                </Table>
-              </TooltipProvider>
+            {/* Desktop view - Tabela */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
+                    <TableHead className="w-16 text-center font-semibold text-foreground border-r border-border/30">Item</TableHead>
+                    <TableHead className="w-[250px] font-semibold text-foreground border-r border-border/30">Descrição</TableHead>
+                    <TableHead className="w-[140px] text-center font-semibold text-foreground border-r border-border/30">Status</TableHead>
+                    <TableHead className="w-[150px] font-semibold text-foreground border-r border-border/30">Tarefa Macro</TableHead>
+                    <TableHead className="w-[120px] text-center font-semibold text-foreground border-r border-border/30">
+                      Tempo Total
+                    </TableHead>
+                    <TableHead className="w-[120px] text-center font-semibold text-foreground border-r border-border/30">
+                      Progresso
+                    </TableHead>
+                    <TableHead className="w-[100px] text-center font-semibold text-foreground border-r border-border/30">KPI</TableHead>
+                    <TableHead className="w-16 text-center font-semibold text-foreground"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentItems.map((atividade: AtividadeStatus, index: number) => {
+                    const globalIndex = startIndex + index;
+                    return (
+                      <AtividadesTableRow
+                        key={atividade.id}
+                        atividade={atividade}
+                        globalIndex={globalIndex}
+                        onRowClick={handleRowClick}
+                        formatDate={formatDate}
+                        formatTime={formatTime}
+                        formatTeam={formatTeam}
+                      />
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
 
+            {/* Mobile view - Cards */}
+            <div className="md:hidden p-4 space-y-4">
+              {currentItems.map((atividade: AtividadeStatus, index: number) => {
+                const globalIndex = startIndex + index;
+                return (
+                  <AtividadeCardMobile
+                    key={atividade.id}
+                    atividade={atividade}
+                    globalIndex={globalIndex}
+                    onCardClick={handleRowClick}
+                    formatTeam={formatTeam}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Paginação modernizada */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center p-4 border-t border-border/50 bg-muted/20">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
-                        onClick={() =>
-                          handlePageChange(Math.max(1, currentPage - 1))
-                        }
-                        className={
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        className={cn(
+                          "transition-all",
                           currentPage === 1
                             ? 'pointer-events-none opacity-50'
-                            : 'cursor-pointer'
-                        }
+                            : 'cursor-pointer hover:bg-accent'
+                        )}
                       />
                     </PaginationItem>
 
@@ -555,7 +336,12 @@ export const AtividadesTable = () => {
                           <PaginationLink
                             onClick={() => handlePageChange(pageNumber)}
                             isActive={currentPage === pageNumber}
-                            className="cursor-pointer"
+                            className={cn(
+                              "cursor-pointer transition-all",
+                              currentPage === pageNumber
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                                : "hover:bg-accent"
+                            )}
                           >
                             {pageNumber}
                           </PaginationLink>
@@ -566,15 +352,14 @@ export const AtividadesTable = () => {
                     <PaginationItem>
                       <PaginationNext
                         onClick={() =>
-                          handlePageChange(
-                            Math.min(totalPages, currentPage + 1)
-                          )
+                          handlePageChange(Math.min(totalPages, currentPage + 1))
                         }
-                        className={
+                        className={cn(
+                          "transition-all",
                           currentPage === totalPages
                             ? 'pointer-events-none opacity-50'
-                            : 'cursor-pointer'
-                        }
+                            : 'cursor-pointer hover:bg-accent'
+                        )}
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -583,14 +368,18 @@ export const AtividadesTable = () => {
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-40 bg-gray-50 rounded-md">
-            <Calendar className="w-12 h-12 text-gray-400 mb-2" />
-            <p className="text-gray-500 text-lg font-medium">
-              Nenhuma atividade encontrada
-            </p>
-            <p className="text-gray-400 text-sm">
-              Tente ajustar os filtros para ver mais resultados
-            </p>
+          <div className="flex flex-col items-center justify-center p-12 gap-4">
+            <div className="p-4 rounded-full bg-muted/50">
+              <Calendar className="w-12 h-12 text-muted-foreground opacity-50" />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold text-foreground">
+                Nenhuma atividade encontrada
+              </p>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Tente ajustar os filtros para ver mais resultados ou crie uma nova atividade
+              </p>
+            </div>
           </div>
         )}
       </Card>

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import valuePerPositionService, { ValuePerPosition } from "@/services/valuePerPositionService";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Esquema de validação
 const formSchema = z.object({
@@ -77,17 +78,30 @@ export function ValorPorCargoForm({ valorParaEditar, onSuccess }: ValorPorCargoF
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
         <FormField
           control={form.control}
           name="position"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cargo</FormLabel>
+              <FormLabel className="font-medium">
+                Cargo <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Nome do cargo" {...field} />
+                <Input
+                  placeholder="Nome do cargo"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.position && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.position && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.position.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -97,17 +111,27 @@ export function ValorPorCargoForm({ valorParaEditar, onSuccess }: ValorPorCargoF
           name="value"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor (R$)</FormLabel>
+              <FormLabel className="font-medium">
+                Valor (R$) <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="0.00" 
-                  step="0.01" 
-                  {...field} 
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  step="0.01"
+                  {...field}
                   onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  className={cn(
+                    form.formState.errors.value && "border-destructive bg-destructive/5"
+                  )}
                 />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.value && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.value.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -118,12 +142,29 @@ export function ValorPorCargoForm({ valorParaEditar, onSuccess }: ValorPorCargoF
             variant="outline"
             onClick={onSuccess}
             disabled={isSubmitting}
+            className="h-11"
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {valorParaEditar ? "Atualizar" : "Salvar"}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>{valorParaEditar ? "Atualizando..." : "Salvando..."}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>{valorParaEditar ? "Atualizar" : "Salvar"}</span>
+              </div>
+            )}
           </Button>
         </div>
       </form>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -24,7 +25,8 @@ import { toast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
-import { Trash2 } from 'lucide-react';
+import { Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   colaboradorId: z.string().min(1, 'Selecione um colaborador'),
@@ -39,6 +41,7 @@ interface MaoObraFormProps {
 
 export function MaoObraForm({ rnc, onClose }: MaoObraFormProps) {
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Buscar colaboradores
   const { data: colaboradores = [] } = useQuery<Colaborador[]>({
@@ -85,6 +88,7 @@ export function MaoObraForm({ rnc, onClose }: MaoObraFormProps) {
       rnc,
     };
 
+    setIsSubmitting(true);
     try {
       await RncService.workforce(newWorker);
       await queryClient.invalidateQueries({
@@ -102,22 +106,28 @@ export function MaoObraForm({ rnc, onClose }: MaoObraFormProps) {
         description: 'Verifique a conexão e tente novamente.',
       });
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
         {/* Colaborador */}
         <FormField
           control={form.control}
           name="colaboradorId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Colaborador</FormLabel>
+              <FormLabel className="font-medium">
+                Colaborador <span className="text-destructive">*</span>
+              </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className={cn(
+                    form.formState.errors.colaboradorId && "border-destructive bg-destructive/5"
+                  )}>
                     <SelectValue placeholder="Selecione o colaborador" />
                   </SelectTrigger>
                 </FormControl>
@@ -129,7 +139,12 @@ export function MaoObraForm({ rnc, onClose }: MaoObraFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <FormMessage />
+              {form.formState.errors.colaboradorId && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.colaboradorId.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -140,11 +155,25 @@ export function MaoObraForm({ rnc, onClose }: MaoObraFormProps) {
           name="hours"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Horas trabalhadas</FormLabel>
+              <FormLabel className="font-medium">
+                Horas trabalhadas <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input type="number" step="0.1" {...field} />
+                <Input
+                  type="number"
+                  step="0.1"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.hours && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.hours && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.hours.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -155,11 +184,25 @@ export function MaoObraForm({ rnc, onClose }: MaoObraFormProps) {
           name="valueHour"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor por hora (R$)</FormLabel>
+              <FormLabel className="font-medium">
+                Valor por hora (R$) <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input type="number" step="0.01" {...field} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.valueHour && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.valueHour && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.valueHour.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -173,12 +216,35 @@ export function MaoObraForm({ rnc, onClose }: MaoObraFormProps) {
         )}
 
         {/* Botões */}
-        <div className="space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <div className="space-x-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="h-11"
+          >
             Voltar
           </Button>
-          <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Adicionar
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Adicionando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Adicionar</span>
+              </div>
+            )}
           </Button>
         </div>
 

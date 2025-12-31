@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -12,12 +13,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Trash2 } from 'lucide-react';
+import { Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
   uploadRncImage,
   listImagesByRnc,
   deleteRncImage,
 } from '@/services/rncImageService';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   image: z.any(),
@@ -31,6 +33,7 @@ interface ImagensFormProps {
 
 export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Lista as imagens da RNC
   const { data: imagens = [] } = useQuery({
@@ -57,6 +60,7 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
     const file = values.image?.[0];
     if (!file) return;
 
+    setIsSubmitting(true);
     try {
       await uploadRncImage({
         file,
@@ -68,27 +72,39 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
       form.reset();
     } catch (error) {
       console.error('Erro ao enviar imagem:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleImageAdd)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleImageAdd)} className="space-y-6 md:space-y-8">
         {/* Upload da imagem */}
         <FormField
           control={form.control}
           name="image"
           render={({ field: { onChange } }) => (
             <FormItem>
-              <FormLabel>Imagem</FormLabel>
+              <FormLabel className="font-medium">
+                Imagem <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   type="file"
                   accept="image/*"
                   onChange={(e) => onChange(e.target.files)}
+                  className={cn(
+                    form.formState.errors.image && "border-destructive bg-destructive/5"
+                  )}
                 />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.image && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.image.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -99,22 +115,58 @@ export function ImagensForm({ rncId, onClose }: ImagensFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Descrição</FormLabel>
+              <FormLabel className="font-medium">
+                Descrição <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Digite uma descrição" {...field} />
+                <Input
+                  placeholder="Digite uma descrição"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.description && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.description && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.description.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
 
         {/* Botões */}
-        <div className="space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <div className="space-x-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="h-11"
+          >
             Voltar
           </Button>
-          <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Adicionar Imagem
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Adicionando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Adicionar Imagem</span>
+              </div>
+            )}
           </Button>
         </div>
 

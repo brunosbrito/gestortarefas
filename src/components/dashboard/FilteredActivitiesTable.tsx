@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Activity, Clock, Users, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FilteredActivitiesTableProps {
   activities: FilteredActivity[];
@@ -55,20 +56,39 @@ export const FilteredActivitiesTable = ({
   // Reset página quando atividades mudam
   useEffect(() => {
     setCurrentPage(1);
-    console.log('Atividades atualizadas:', activities);
   }, [activities]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     if (status.toLowerCase().includes('planejada')) {
-      return 'bg-purple-100 text-purple-800 border-purple-300';
+      return {
+        bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+        textColor: 'text-purple-700 dark:text-purple-300',
+        dotColor: 'bg-purple-500',
+      };
     } else if (status.toLowerCase().includes('execução')) {
-      return 'bg-green-100 text-green-800 border-green-300';
+      return {
+        bgColor: 'bg-green-100 dark:bg-green-900/30',
+        textColor: 'text-green-700 dark:text-green-300',
+        dotColor: 'bg-green-500',
+      };
     } else if (status.toLowerCase().includes('concluída')) {
-      return 'bg-blue-100 text-blue-800 border-blue-300';
+      return {
+        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+        textColor: 'text-blue-700 dark:text-blue-300',
+        dotColor: 'bg-blue-500',
+      };
     } else if (status.toLowerCase().includes('paralizada')) {
-      return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      return {
+        bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+        textColor: 'text-yellow-700 dark:text-yellow-300',
+        dotColor: 'bg-yellow-500',
+      };
     } else {
-      return 'bg-gray-100 text-gray-800 border-gray-300';
+      return {
+        bgColor: 'bg-gray-100 dark:bg-gray-900/30',
+        textColor: 'text-gray-700 dark:text-gray-300',
+        dotColor: 'bg-gray-500',
+      };
     }
   };
 
@@ -84,7 +104,7 @@ export const FilteredActivitiesTable = ({
 
   const formatTeam = (team?: Array<{ collaboratorId: number; name: string }>) => {
     if (!team || team.length === 0) return '-';
-    
+
     if (team.length === 1) return team[0].name;
     return `${team[0].name} +${team.length - 1}`;
   };
@@ -107,17 +127,9 @@ export const FilteredActivitiesTable = ({
   const getEfficiencyColor = (totalMin: number, tempoEstimadoStr: string) => {
     const eficiencia = CalculateEfficiency(totalMin, tempoEstimadoStr);
 
-    // Condição para valor negativo ou 0
-    if (eficiencia <= 0) return 'text-gray-500';
-
-    // Gastou bem menos tempo
-    if (eficiencia > 0 && eficiencia <= 100) return 'text-green-600';
-
-    // Gastou tempo igual ou menos
-    if (eficiencia > 100) return 'text-red-600';
-
-    // Gastou mais tempo
-    return 'text-red-600';
+    if (eficiencia <= 0) return 'text-muted-foreground';
+    if (eficiencia > 0 && eficiencia <= 100) return 'text-green-600 dark:text-green-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   const handlePageChange = (page: number) => {
@@ -131,99 +143,72 @@ export const FilteredActivitiesTable = ({
 
   if (loading) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center mb-4">
-          <Activity className="w-5 h-5 mr-2 text-[#003366]" />
-          <h3 className="text-lg font-semibold">Atividades</h3>
+      <div className="flex items-center justify-center p-12">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm text-muted-foreground">Carregando atividades...</span>
         </div>
-        <div className="flex justify-center items-center h-40">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#003366]"></div>
-        </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <Activity className="w-5 h-5 mr-2 text-[#003366]" />
-          <h3 className="text-lg font-semibold">Atividades</h3>
-        </div>
-
-        {totalItems > 0 && (
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <span>
-              Mostrando {startIndex + 1}-{Math.min(endIndex, totalItems)} de{' '}
-              {totalItems} resultados
-            </span>
-            <div className="flex items-center gap-2">
-              <span>Por página:</span>
-              <Select
-                value={itemsPerPage.toString()}
-                onValueChange={handleItemsPerPageChange}
-              >
-                <SelectTrigger className="w-20 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-      </div>
-
+    <div className="overflow-x-auto">
       {activities && activities.length > 0 ? (
         <div className="space-y-4">
-          <div className="rounded-md border">
-            <TooltipProvider>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Descrição</TableHead>
-                    <TableHead className="w-[150px]">Tarefa Macro</TableHead>
-                    <TableHead className="w-[120px]">Processo</TableHead>
-                    <TableHead className="w-16 text-center">OS</TableHead>
-                    <TableHead className="w-[150px]">Fábrica/Obra</TableHead>
-                    <TableHead className="w-20 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        T. Total
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-20 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        T. Prev.
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-24 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Users className="w-4 h-4" />
-                        Equipe
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-20 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <TrendingUp className="w-4 h-4" />
-                        Efic.
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-28">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentItems.map((activity) => (
-                    <TableRow key={activity.id}>
-                      <TableCell className="max-w-[200px]">
+          <TooltipProvider>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
+                  <TableHead className="w-[200px] font-semibold text-foreground border-r border-border/30">Descrição</TableHead>
+                  <TableHead className="w-[150px] font-semibold text-foreground border-r border-border/30">Tarefa Macro</TableHead>
+                  <TableHead className="w-[120px] font-semibold text-foreground border-r border-border/30">Processo</TableHead>
+                  <TableHead className="w-16 text-center font-semibold text-foreground border-r border-border/30">OS</TableHead>
+                  <TableHead className="w-[150px] font-semibold text-foreground border-r border-border/30">Fábrica/Obra</TableHead>
+                  <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">
+                    <div className="flex items-center justify-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      T. Total
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">
+                    <div className="flex items-center justify-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      T. Prev.
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-24 text-center font-semibold text-foreground border-r border-border/30">
+                    <div className="flex items-center justify-center gap-1">
+                      <Users className="w-4 h-4" />
+                      Equipe
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">
+                    <div className="flex items-center justify-center gap-1">
+                      <TrendingUp className="w-4 h-4" />
+                      Efic.
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-28 font-semibold text-foreground">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentItems.map((activity, index) => {
+                  const statusConfig = getStatusConfig(activity.status);
+
+                  return (
+                    <TableRow
+                      key={activity.id}
+                      className={cn(
+                        "transition-all duration-200 border-b",
+                        index % 2 === 0 ? "bg-background" : "bg-muted/20",
+                        "hover:bg-accent/50 hover:shadow-sm"
+                      )}
+                    >
+                      <TableCell className="max-w-[200px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">
+                            <div className="truncate font-semibold text-foreground">
                               {activity.description}
                             </div>
                           </TooltipTrigger>
@@ -232,33 +217,33 @@ export const FilteredActivitiesTable = ({
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="max-w-[150px]">
+                      <TableCell className="max-w-[150px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">{activity.macroTask}</div>
+                            <div className="truncate text-muted-foreground">{activity.macroTask}</div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{activity.macroTask}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="max-w-[120px]">
+                      <TableCell className="max-w-[120px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">{activity.process}</div>
+                            <div className="truncate text-muted-foreground">{activity.process}</div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{activity.process}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="text-center text-sm">
+                      <TableCell className="text-center text-sm py-4 font-medium border-r border-border/30">
                         {activity.serviceOrder?.serviceOrderNumber || 'N/A'}
                       </TableCell>
-                      <TableCell className="max-w-[150px]">
+                      <TableCell className="max-w-[150px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">
+                            <div className="truncate text-muted-foreground">
                               {activity.projectName}
                             </div>
                           </TooltipTrigger>
@@ -267,19 +252,19 @@ export const FilteredActivitiesTable = ({
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="text-center text-sm">
+                      <TableCell className="text-center text-sm font-bold tabular-nums py-4 border-r border-border/30">
                         {formatTime(parseFloat(activity.totalTime.toFixed(2)))}
                       </TableCell>
-                      <TableCell className="text-center text-sm">
+                      <TableCell className="text-center text-sm tabular-nums py-4 font-medium border-r border-border/30">
                         {activity.estimatedTime}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center py-4 border-r border-border/30">
                         <div className="flex items-center justify-center gap-1 text-sm">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="flex items-center gap-1">
                                 <Users className="w-3 h-3" />
-                                {formatTeam(activity.team)}
+                                <span className="font-medium">{formatTeam(activity.team)}</span>
                               </div>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -290,11 +275,14 @@ export const FilteredActivitiesTable = ({
                           </Tooltip>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center text-sm">
+                      <TableCell className="text-center text-sm font-bold tabular-nums py-4 border-r border-border/30">
                         <span
-                          className={getEfficiencyColor(
-                            activity.totalTime || 0,
-                            activity.estimatedTime.toString()
+                          className={cn(
+                            "text-base",
+                            getEfficiencyColor(
+                              activity.totalTime || 0,
+                              activity.estimatedTime.toString()
+                            )
                           )}
                         >
                           {CalculateEfficiency(
@@ -303,25 +291,27 @@ export const FilteredActivitiesTable = ({
                           ).toFixed(2)}%
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-4">
                         <Badge
-                          variant="outline"
-                          className={`${getStatusColor(
-                            activity.status
-                          )} text-xs`}
+                          className={cn(
+                            "flex items-center gap-1.5 w-fit px-3 py-1.5 font-medium",
+                            statusConfig.bgColor,
+                            statusConfig.textColor
+                          )}
                         >
+                          <span className={cn("w-1.5 h-1.5 rounded-full", statusConfig.dotColor)} />
                           {activity.status}
                         </Badge>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TooltipProvider>
-          </div>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TooltipProvider>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center p-4">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
@@ -329,11 +319,12 @@ export const FilteredActivitiesTable = ({
                       onClick={() =>
                         handlePageChange(Math.max(1, currentPage - 1))
                       }
-                      className={
+                      className={cn(
+                        "transition-all",
                         currentPage === 1
                           ? 'pointer-events-none opacity-50'
-                          : 'cursor-pointer'
-                      }
+                          : 'cursor-pointer hover:bg-accent'
+                      )}
                     />
                   </PaginationItem>
 
@@ -354,7 +345,12 @@ export const FilteredActivitiesTable = ({
                         <PaginationLink
                           onClick={() => handlePageChange(pageNumber)}
                           isActive={currentPage === pageNumber}
-                          className="cursor-pointer"
+                          className={cn(
+                            "cursor-pointer transition-all",
+                            currentPage === pageNumber
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                              : "hover:bg-accent"
+                          )}
                         >
                           {pageNumber}
                         </PaginationLink>
@@ -367,11 +363,12 @@ export const FilteredActivitiesTable = ({
                       onClick={() =>
                         handlePageChange(Math.min(totalPages, currentPage + 1))
                       }
-                      className={
+                      className={cn(
+                        "transition-all",
                         currentPage === totalPages
                           ? 'pointer-events-none opacity-50'
-                          : 'cursor-pointer'
-                      }
+                          : 'cursor-pointer hover:bg-accent'
+                      )}
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -380,12 +377,20 @@ export const FilteredActivitiesTable = ({
           )}
         </div>
       ) : (
-        <div className="flex justify-center items-center h-40 bg-gray-50 rounded-md">
-          <p className="text-gray-500">
-            Nenhuma atividade encontrada com os filtros selecionados
-          </p>
+        <div className="flex flex-col items-center justify-center p-12 gap-4">
+          <div className="p-4 rounded-full bg-muted/50">
+            <Activity className="w-12 h-12 text-muted-foreground opacity-50" />
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-lg font-semibold text-foreground">
+              Nenhuma atividade encontrada
+            </p>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Ajuste os filtros para ver mais resultados
+            </p>
+          </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 };

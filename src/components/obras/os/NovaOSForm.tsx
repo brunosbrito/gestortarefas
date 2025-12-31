@@ -11,6 +11,8 @@ import { CreateServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { formSchema, FormValues } from './osFormSchema';
 import { OSFormFields } from './OSFormFields';
 import { useParams } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 function getUserIdFromLocalStorage(): number | null {
   const userId = localStorage.getItem('userId');
@@ -21,6 +23,7 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const { toast } = useToast();
   const { projectId } = useParams();
   const [obras, setObras] = useState<Obra[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -56,6 +59,7 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
   }, [toast]);
 
   const handleSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
     const userId = getUserIdFromLocalStorage();
 
     const serviceOrderData: CreateServiceOrder = {
@@ -86,19 +90,38 @@ export const NovaOSForm = ({ onSuccess }: { onSuccess: () => void }) => {
         title: 'Erro ao criar Ordem de Serviço',
         description: 'Não foi possível criar a ordem de serviço.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 md:space-y-8">
         <OSFormFields form={form} obras={obras} />
-        <Button
-          type="submit"
-          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-        >
-          Criar OS
-        </Button>
+
+        <div className="pt-4">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "w-full h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Criando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Criar Ordem de Serviço</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

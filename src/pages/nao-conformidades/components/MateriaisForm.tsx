@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -20,9 +21,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Trash2 } from 'lucide-react';
+import { Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import MaterialService from '@/services/MaterialService';
 import { Material } from '@/interfaces/MaterialInterface';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   material: z.string().min(1, 'Material é obrigatório'),
@@ -40,6 +42,7 @@ interface MateriaisFormProps {
 
 export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: materiaisRaw } = useQuery<Material[]>({
     queryKey: ['materiais-rnc', rnc],
@@ -71,6 +74,7 @@ export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
       rncId: rnc,
     };
 
+    setIsSubmitting(true);
     try {
       await MaterialService.create(novoMaterial);
       await queryClient.invalidateQueries({ queryKey: ['materiais-rnc', rnc] });
@@ -85,23 +89,38 @@ export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
         title: 'Erro ao salvar',
         description: 'Verifique a conexão e tente novamente.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
         {/* Material */}
         <FormField
           control={form.control}
           name="material"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Material</FormLabel>
+              <FormLabel className="font-medium">
+                Material <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Digite o nome do material" {...field} />
+                <Input
+                  placeholder="Digite o nome do material"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.material && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.material && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.material.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -112,11 +131,25 @@ export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
           name="quantidade"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Quantidade</FormLabel>
+              <FormLabel className="font-medium">
+                Quantidade <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input type="number" step="0.01" {...field} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.quantidade && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.quantidade && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.quantidade.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -127,10 +160,14 @@ export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
           name="unidade"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Unidade</FormLabel>
+              <FormLabel className="font-medium">
+                Unidade <span className="text-destructive">*</span>
+              </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className={cn(
+                    form.formState.errors.unidade && "border-destructive bg-destructive/5"
+                  )}>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                 </FormControl>
@@ -141,7 +178,12 @@ export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
                   <SelectItem value="cm">cm</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
+              {form.formState.errors.unidade && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.unidade.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -152,11 +194,25 @@ export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
           name="preco"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Preço unitário (R$)</FormLabel>
+              <FormLabel className="font-medium">
+                Preço unitário (R$) <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input type="number" step="0.01" {...field} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.preco && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.preco && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.preco.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -169,12 +225,35 @@ export function MateriaisForm({ rnc, onClose }: MateriaisFormProps) {
         )}
 
         {/* Botões */}
-        <div className="space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <div className="space-x-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="h-11"
+          >
             Voltar
           </Button>
-          <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Adicionar
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Adicionando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Adicionar</span>
+              </div>
+            )}
           </Button>
         </div>
 

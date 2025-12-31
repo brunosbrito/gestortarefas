@@ -187,34 +187,42 @@ export const PontoTable = ({
       <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Função</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Obra</TableHead>
-              <TableHead>Setor</TableHead>
-              <TableHead>Motivo</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
+              <TableHead className="font-semibold text-foreground border-r border-border/30">Nome</TableHead>
+              <TableHead className="font-semibold text-foreground border-r border-border/30">Função</TableHead>
+              <TableHead className="font-semibold text-foreground border-r border-border/30">Status</TableHead>
+              <TableHead className="font-semibold text-foreground border-r border-border/30">Obra</TableHead>
+              <TableHead className="font-semibold text-foreground border-r border-border/30">Setor</TableHead>
+              <TableHead className="font-semibold text-foreground border-r border-border/30">Motivo</TableHead>
+              <TableHead className="text-right font-semibold text-foreground">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {funcionariosFiltrados.map((funcionario) => (
-              <TableRow key={funcionario.id}>
-                <TableCell className="font-medium">{funcionario.username}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{setorLabel(funcionario.role)}</Badge>
+            {funcionariosFiltrados.map((funcionario, index) => (
+              <TableRow
+                key={funcionario.id}
+                className={cn(
+                  "transition-all duration-200 border-b",
+                  index % 2 === 0 ? "bg-background" : "bg-muted/20",
+                  "hover:bg-accent/50 hover:shadow-sm"
+                )}
+              >
+                <TableCell className="font-semibold text-foreground py-4 border-r border-border/30">{funcionario.username}</TableCell>
+                <TableCell className="py-4 border-r border-border/30">
+                  <Badge variant="secondary" className="font-medium">{setorLabel(funcionario.role)}</Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="py-4 border-r border-border/30">
                   <Badge
                     variant={funcionario.status === 'PRESENTE' ? 'default' : 'destructive'}
+                    className="font-medium"
                   >
                     {statusLabel(funcionario.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>{funcionario.project || '-'}</TableCell>
-                <TableCell>{funcionario.sector ? setorLabel(funcionario.sector) : '-'}</TableCell>
-                <TableCell>{funcionario.reason || '-'}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="py-4 text-muted-foreground border-r border-border/30">{funcionario.project || '-'}</TableCell>
+                <TableCell className="py-4 text-muted-foreground border-r border-border/30">{funcionario.sector ? setorLabel(funcionario.sector) : '-'}</TableCell>
+                <TableCell className="py-4 text-muted-foreground border-r border-border/30">{funcionario.reason || '-'}</TableCell>
+                <TableCell className="text-right py-4">
                   <div className="flex space-x-2 justify-end">
                     <Button variant="ghost" size="sm" onClick={() => onEdit(funcionario)}>
                       <Edit className="w-4 h-4 mr-2" />

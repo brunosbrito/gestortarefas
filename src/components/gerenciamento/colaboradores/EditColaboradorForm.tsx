@@ -11,7 +11,9 @@ import {
   colaboradorFormSchema,
   ColaboradorFormValues,
 } from './ColaboradorFormFields';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface EditColaboradorFormProps {
   colaborador: Colaborador;
@@ -23,6 +25,7 @@ export const EditColaboradorForm = ({
   onSuccess,
 }: EditColaboradorFormProps) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<ColaboradorFormValues>({
     resolver: zodResolver(colaboradorFormSchema),
     defaultValues: {
@@ -35,11 +38,13 @@ export const EditColaboradorForm = ({
   useEffect(() => {
     form.reset({
       name: colaborador.name,
-      role: colaborador.role
+      role: colaborador.role,
+      sector: colaborador.sector
     });
   }, [colaborador, form]);
 
   const onSubmit = async (data: ColaboradorFormValues) => {
+    setIsSubmitting(true);
     try {
       await ColaboradorService.updateColaborador(
         colaborador.id,
@@ -62,19 +67,38 @@ export const EditColaboradorForm = ({
         description:
           'Ocorreu um erro ao atualizar as informações do colaborador.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
         <ColaboradorFormFields form={form} />
-        <Button
-          type="submit"
-          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-        >
-          Atualizar Colaborador
-        </Button>
+
+        <div className="pt-4">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "w-full h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Salvando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Atualizar Colaborador</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

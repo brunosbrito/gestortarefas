@@ -10,6 +10,8 @@ import { updateServiceOrder } from '@/services/ServiceOrderService';
 import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { formSchema, FormValues } from './osFormSchema';
 import { OSFormFields } from './OSFormFields';
+import { CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface EditarOSFormProps {
   os: ServiceOrder;
@@ -18,6 +20,7 @@ interface EditarOSFormProps {
 
 export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
   const [obras, setObras] = useState<Obra[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -54,6 +57,7 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
   }, [toast]);
 
   const handleSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
     try {
       await updateServiceOrder(os.id.toString(), {
         description: data.description,
@@ -80,19 +84,38 @@ export const EditarOSForm = ({ os, onSuccess }: EditarOSFormProps) => {
         title: 'Erro ao atualizar Ordem de Serviço',
         description: 'Não foi possível atualizar a ordem de serviço.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 md:space-y-8">
         <OSFormFields form={form} obras={obras} />
-        <Button
-          type="submit"
-          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-        >
-          Atualizar OS
-        </Button>
+
+        <div className="pt-4">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "w-full h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Atualizando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Atualizar Ordem de Serviço</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

@@ -20,6 +20,8 @@ import {
   Users,
   AlertTriangle,
   Info,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
@@ -27,6 +29,7 @@ import { CreateEffectiveDto } from '@/interfaces/EffectiveInterface';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { normalizeSetorCode } from '@/utils/labels';
+import { cn } from '@/lib/utils';
 
 interface PontoLoteFormProps {
   colaboradores: Colaborador[];
@@ -100,6 +103,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   const [filtroNome, setFiltroNome] = useState<string>('');
   const [obraGlobal, setObraGlobal] = useState<string>('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Obter setores únicos dos colaboradores
   const setores = Array.from(
@@ -240,7 +244,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateSubmit()) {
       toast({
         title: 'Validação',
@@ -250,36 +254,41 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
       return;
     }
 
-    const registrosValidos = registros
-      .filter((reg) => reg.presente || reg.faltou)
-      .map((reg) => {
-        const roleCode = (normalizeSetorCode(reg.sector) || 'PRODUCAO') as
-          | 'ENGENHARIA'
-          | 'ADMINISTRATIVO'
-          | 'PRODUCAO';
-        return {
-          username: reg.name,
-          shift: turno,
-          role: roleCode,
-          typeRegister: (reg.presente ? roleCode : 'FALTA') as
-            | 'PRODUCAO'
-            | 'ADMINISTRATIVO'
+    setIsSubmitting(true);
+    try {
+      const registrosValidos = registros
+        .filter((reg) => reg.presente || reg.faltou)
+        .map((reg) => {
+          const roleCode = (normalizeSetorCode(reg.sector) || 'PRODUCAO') as
             | 'ENGENHARIA'
-            | 'FALTA',
-          project: reg.project,
-          sector: reg.sector,
-          reason: reg.reason,
-          status: reg.presente ? ('PRESENTE' as const) : ('FALTA' as const),
-        };
+            | 'ADMINISTRATIVO'
+            | 'PRODUCAO';
+          return {
+            username: reg.name,
+            shift: turno,
+            role: roleCode,
+            typeRegister: (reg.presente ? roleCode : 'FALTA') as
+              | 'PRODUCAO'
+              | 'ADMINISTRATIVO'
+              | 'ENGENHARIA'
+              | 'FALTA',
+            project: reg.project,
+            sector: reg.sector,
+            reason: reg.reason,
+            status: reg.presente ? ('PRESENTE' as const) : ('FALTA' as const),
+          };
+        });
+
+      console.log('Registros válidos:', registrosValidos);
+
+      await onSubmit(registrosValidos);
+      onClose();
+      toast({
+        title: `${registrosValidos.length} registros criados com sucesso!`,
       });
-
-    console.log('Registros válidos:', registrosValidos);
-
-    onSubmit(registrosValidos);
-    onClose();
-    toast({
-      title: `${registrosValidos.length} registros criados com sucesso!`,
-    });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resumo = {
@@ -769,11 +778,24 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
           ) : (
             <Button
               onClick={handleSubmit}
-              className={`bg-[#FFA500] hover:bg-[#FFA500]/90 ${isMobile ? 'w-full sm:w-auto' : ''}`}
-              disabled={validationErrors.length > 0}
+              className={cn(
+                "h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+                isMobile ? "w-full sm:w-auto" : "",
+                (isSubmitting || validationErrors.length > 0) && "opacity-70"
+              )}
+              disabled={validationErrors.length > 0 || isSubmitting}
             >
-              <Save className="w-4 h-4 mr-2" />
-              Salvar Registros
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Salvando...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>Salvar Registros</span>
+                </div>
+              )}
             </Button>
           )}
         </div>

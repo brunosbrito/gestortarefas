@@ -1,4 +1,4 @@
-import { Settings, Moon, Sun, User, HelpCircle } from 'lucide-react';
+import { Settings, Moon, Sun, User, HelpCircle, LogOut } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,9 +8,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 export const SettingsDropdown = () => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('rememberMe');
+    localStorage.removeItem('userEmail');
+    sessionStorage.removeItem('authToken');
+
+    toast({
+      description: 'Você foi desconectado com sucesso.',
+    });
+
+    navigate('/');
+  };
 
   return (
     <DropdownMenu>
@@ -47,6 +63,16 @@ export const SettingsDropdown = () => {
         <DropdownMenuItem className="flex items-center gap-3 cursor-pointer opacity-50">
           <HelpCircle className="h-4 w-4" />
           <span>Ajuda e Suporte</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="flex items-center gap-3 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sair</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

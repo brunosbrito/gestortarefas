@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -25,6 +26,8 @@ import NonConformityService from '@/services/NonConformityService';
 import { NonConformity } from '@/interfaces/RncInterface';
 import { useToast } from '@/hooks/use-toast';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   correctiveAction: z.string().min(1, 'Ação corretiva é obrigatória'),
@@ -44,6 +47,7 @@ export function AcaoCorretivaForm({
   onUpdate,
 }: AcaoCorretivaFormProps) {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: colaboradores = [] } = useQuery({
     queryKey: ['colaboradores'],
@@ -65,6 +69,7 @@ export function AcaoCorretivaForm({
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
     try {
       // Encontrar o colaborador selecionado
       const selectedColaborador = colaboradores.find(
@@ -90,25 +95,37 @@ export function AcaoCorretivaForm({
         title: 'Erro',
         description: 'Erro ao salvar ação corretiva.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 md:space-y-8">
         <FormField
           control={form.control}
           name="correctiveAction"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ação Corretiva</FormLabel>
+              <FormLabel className="font-medium">
+                Ação Corretiva <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Descreva a ação corretiva..."
                   {...field}
+                  className={cn(
+                    form.formState.errors.correctiveAction && "border-destructive bg-destructive/5"
+                  )}
                 />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.correctiveAction && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.correctiveAction.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -118,10 +135,14 @@ export function AcaoCorretivaForm({
           name="responsibleAction"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Responsável pela Ação</FormLabel>
+              <FormLabel className="font-medium">
+                Responsável pela Ação <span className="text-destructive">*</span>
+              </FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className={cn(
+                    form.formState.errors.responsibleAction && "border-destructive bg-destructive/5"
+                  )}>
                     <SelectValue placeholder="Selecione o responsável" />
                   </SelectTrigger>
                 </FormControl>
@@ -136,7 +157,12 @@ export function AcaoCorretivaForm({
                   ))}
                 </SelectContent>
               </Select>
-              <FormMessage />
+              {form.formState.errors.responsibleAction && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.responsibleAction.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
@@ -146,21 +172,57 @@ export function AcaoCorretivaForm({
           name="dateConclusion"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Data de Conclusão</FormLabel>
+              <FormLabel className="font-medium">
+                Data de Conclusão <span className="text-destructive">*</span>
+              </FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input
+                  type="date"
+                  {...field}
+                  className={cn(
+                    form.formState.errors.dateConclusion && "border-destructive bg-destructive/5"
+                  )}
+                />
               </FormControl>
-              <FormMessage />
+              {form.formState.errors.dateConclusion && (
+                <FormMessage className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {form.formState.errors.dateConclusion.message}
+                </FormMessage>
+              )}
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="h-11"
+          >
             Cancelar
           </Button>
-          <Button type="submit" className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90">
-            Salvar
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "h-11 font-semibold shadow-lg transition-all bg-primary hover:bg-primary/90",
+              isSubmitting && "opacity-70"
+            )}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Salvando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Salvar</span>
+              </div>
+            )}
           </Button>
         </div>
       </form>

@@ -35,31 +35,49 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static w-[300px] h-screen bg-card border-r border-border z-50 transition-transform duration-300 transform ${
+        className={`fixed md:static w-[280px] h-screen bg-card/95 backdrop-blur-xl border-r border-border/50 z-50 transition-all duration-300 ease-in-out transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 shadow-lg md:shadow-none flex flex-col`}
+        } md:translate-x-0 shadow-xl md:shadow-none flex flex-col`}
       >
         <Header user={user} />
         <Sidebar user={user} />
+
+        {/* Footer com versão */}
+        <div className="mt-auto p-4 border-t border-border/50 bg-muted/30">
+          <div className="text-center space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">
+              GMX Soluções Industriais
+            </p>
+            <p className="text-[10px] text-muted-foreground/70">
+              v2.0.0 • 2025
+            </p>
+          </div>
+        </div>
       </aside>
 
       {/* Main content */}
       <main className="flex-1 overflow-auto w-full bg-background">
         {/* Mobile header */}
-        <div className="md:hidden flex items-center p-4 bg-card border-b border-border shadow-sm">
+        <div className="md:hidden sticky top-0 z-40 flex items-center justify-between p-4 bg-card/95 backdrop-blur-xl border-b border-border/50 shadow-elevation-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hover:bg-accent"
+            className="hover:bg-accent rounded-lg"
           >
             {isSidebarOpen ? (
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             ) : (
-              <Menu className="h-6 w-6" />
+              <Menu className="h-5 w-5" />
             )}
           </Button>
-          <h1 className="ml-4 text-lg font-semibold text-foreground">Sistema de Gestão</h1>
+
+          <h1 className="text-base font-semibold text-foreground">
+            Sistema de Gestão
+          </h1>
+
+          {/* Spacer for symmetry */}
+          <div className="w-10"></div>
         </div>
 
         <div className="container mx-auto p-4 md:p-6 max-w-7xl">{children}</div>

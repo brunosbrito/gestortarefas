@@ -115,40 +115,47 @@ export const AtividadesProgramadasTable = () => {
             <TooltipProvider>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[250px]">Descrição</TableHead>
-                    <TableHead className="w-[150px]">Tarefa Macro</TableHead>
-                    <TableHead className="w-[120px]">Processo</TableHead>
-                    <TableHead className="w-16 text-center">OS</TableHead>
-                    <TableHead className="w-[180px]">Obra/Projeto</TableHead>
-                    <TableHead className="w-20 text-center">
+                  <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
+                    <TableHead className="w-[250px] font-semibold text-foreground border-r border-border/30">Descrição</TableHead>
+                    <TableHead className="w-[150px] font-semibold text-foreground border-r border-border/30">Tarefa Macro</TableHead>
+                    <TableHead className="w-[120px] font-semibold text-foreground border-r border-border/30">Processo</TableHead>
+                    <TableHead className="w-16 text-center font-semibold text-foreground border-r border-border/30">OS</TableHead>
+                    <TableHead className="w-[180px] font-semibold text-foreground border-r border-border/30">Obra/Projeto</TableHead>
+                    <TableHead className="w-20 text-center font-semibold text-foreground border-r border-border/30">
                       <div className="flex items-center justify-center gap-1">
                         <Clock className="w-4 h-4" />
                         T. Est.
                       </div>
                     </TableHead>
-                    <TableHead className="w-24 text-center">
+                    <TableHead className="w-24 text-center font-semibold text-foreground border-r border-border/30">
                       <div className="flex items-center justify-center gap-1">
                         <Users className="w-4 h-4" />
                         Equipe
                       </div>
                     </TableHead>
-                    <TableHead className="w-28 text-center">
+                    <TableHead className="w-28 text-center font-semibold text-foreground border-r border-border/30">
                       <div className="flex items-center justify-center gap-1">
                         <Calendar className="w-4 h-4" />
                         Início Prev.
                       </div>
                     </TableHead>
-                    <TableHead className="w-[200px]">Observações</TableHead>
+                    <TableHead className="w-[200px] font-semibold text-foreground">Observações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentItems.map((atividade: AtividadeStatus) => (
-                    <TableRow key={atividade.id}>
-                      <TableCell className="max-w-[250px]">
+                  {currentItems.map((atividade: AtividadeStatus, index: number) => (
+                    <TableRow
+                      key={atividade.id}
+                      className={cn(
+                        "transition-all duration-200 border-b",
+                        index % 2 === 0 ? "bg-background" : "bg-muted/20",
+                        "hover:bg-accent/50 hover:shadow-sm"
+                      )}
+                    >
+                      <TableCell className="max-w-[250px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate font-medium">
+                            <div className="truncate font-semibold text-foreground">
                               {atividade.description}
                             </div>
                           </TooltipTrigger>
@@ -157,46 +164,46 @@ export const AtividadesProgramadasTable = () => {
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="max-w-[150px]">
+                      <TableCell className="max-w-[150px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">
-                              {typeof atividade.macroTask === 'string' 
-                                ? atividade.macroTask 
+                            <div className="truncate text-muted-foreground">
+                              {typeof atividade.macroTask === 'string'
+                                ? atividade.macroTask
                                 : atividade.macroTask?.name || '-'}
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{typeof atividade.macroTask === 'string' 
-                              ? atividade.macroTask 
+                            <p>{typeof atividade.macroTask === 'string'
+                              ? atividade.macroTask
                               : atividade.macroTask?.name || '-'}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="max-w-[120px]">
+                      <TableCell className="max-w-[120px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate">
-                              {typeof atividade.process === 'string' 
-                                ? atividade.process 
+                            <div className="truncate text-muted-foreground">
+                              {typeof atividade.process === 'string'
+                                ? atividade.process
                                 : atividade.process?.name || '-'}
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{typeof atividade.process === 'string' 
-                              ? atividade.process 
+                            <p>{typeof atividade.process === 'string'
+                              ? atividade.process
                               : atividade.process?.name || '-'}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="text-center text-sm">
+                      <TableCell className="text-center text-sm py-4 font-medium border-r border-border/30">
                         {atividade.serviceOrder?.serviceOrderNumber || 'N/A'}
                       </TableCell>
-                      <TableCell className="max-w-[180px]">
+                      <TableCell className="max-w-[180px] py-4 border-r border-border/30">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate flex items-center gap-1">
-                              <Building2 className="w-3 h-3 text-gray-500" />
+                            <div className="truncate flex items-center gap-1 text-muted-foreground">
+                              <Building2 className="w-3 h-3" />
                               {atividade.project?.name || 'N/A'}
                             </div>
                           </TooltipTrigger>
@@ -205,16 +212,16 @@ export const AtividadesProgramadasTable = () => {
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="text-center text-sm">
+                      <TableCell className="text-center text-sm py-4 font-bold tabular-nums border-r border-border/30">
                         {formatTime(atividade.estimatedTime)}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center py-4 border-r border-border/30">
                         <div className="flex items-center justify-center gap-1 text-sm">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="flex items-center gap-1">
                                 <Users className="w-3 h-3" />
-                                {formatTeam(atividade.collaborators)}
+                                <span className="font-medium">{formatTeam(atividade.collaborators)}</span>
                               </div>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -223,13 +230,13 @@ export const AtividadesProgramadasTable = () => {
                           </Tooltip>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center text-sm">
+                      <TableCell className="text-center text-sm py-4 font-medium tabular-nums border-r border-border/30">
                         {formatDate(atividade.startDate)}
                       </TableCell>
-                      <TableCell className="max-w-[200px]">
+                      <TableCell className="max-w-[200px] py-4">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="truncate text-sm text-gray-600">
+                            <div className="truncate text-sm text-muted-foreground">
                               {atividade.observation || '-'}
                             </div>
                           </TooltipTrigger>

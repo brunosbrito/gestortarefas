@@ -2,8 +2,8 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FilteredServiceOrder } from '@/interfaces/DashboardFilters';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { ClipboardList } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FilteredServiceOrderTableProps {
   serviceOrders: FilteredServiceOrder[];
@@ -11,85 +11,118 @@ interface FilteredServiceOrderTableProps {
 }
 
 export const FilteredServiceOrderTable = ({ serviceOrders, loading }: FilteredServiceOrderTableProps) => {
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
       case 'em_andamento':
-        return 'bg-green-100 text-green-800 border-green-300';
+        return {
+          label: 'Em andamento',
+          bgColor: 'bg-green-100 dark:bg-green-900/30',
+          textColor: 'text-green-700 dark:text-green-300',
+          dotColor: 'bg-green-500',
+        };
       case 'concluida':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
+        return {
+          label: 'Concluída',
+          bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+          textColor: 'text-blue-700 dark:text-blue-300',
+          dotColor: 'bg-blue-500',
+        };
       case 'pausada':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        return {
+          label: 'Pausada',
+          bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+          textColor: 'text-yellow-700 dark:text-yellow-300',
+          dotColor: 'bg-yellow-500',
+        };
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'em_andamento':
-        return 'Em andamento';
-      case 'concluida':
-        return 'Concluída';
-      case 'pausada':
-        return 'Pausada';
-      default:
-        return status;
+        return {
+          label: status,
+          bgColor: 'bg-muted',
+          textColor: 'text-muted-foreground',
+          dotColor: 'bg-muted-foreground',
+        };
     }
   };
 
   if (loading) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center mb-4">
-          <ClipboardList className="w-5 h-5 mr-2 text-[#FF7F0E]" />
-          <h3 className="text-lg font-semibold">Ordens de Serviço</h3>
+      <div className="flex items-center justify-center p-12">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm text-muted-foreground">Carregando ordens de serviço...</span>
         </div>
-        <div className="flex justify-center items-center h-40">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF7F0E]"></div>
-        </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center mb-4">
-        <ClipboardList className="w-5 h-5 mr-2 text-[#FF7F0E]" />
-        <h3 className="text-lg font-semibold">Ordens de Serviço</h3>
-      </div>
-      
+    <>
       {serviceOrders.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nº OS</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Projeto</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Atividades</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {serviceOrders.map((so) => (
-              <TableRow key={so.id}>
-                <TableCell>{so.serviceOrderNumber}</TableCell>
-                <TableCell>{so.description}</TableCell>
-                <TableCell>{so.projectName}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getStatusColor(so.status)}>
-                    {getStatusText(so.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{so.activityCount}</TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50 border-b-2">
+                <TableHead className="font-semibold text-foreground border-r border-border/30">Nº OS</TableHead>
+                <TableHead className="font-semibold text-foreground border-r border-border/30">Descrição</TableHead>
+                <TableHead className="font-semibold text-foreground border-r border-border/30">Projeto</TableHead>
+                <TableHead className="font-semibold text-foreground border-r border-border/30">Status</TableHead>
+                <TableHead className="font-semibold text-foreground">Atividades</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {serviceOrders.map((so, index) => {
+                const statusConfig = getStatusConfig(so.status);
+
+                return (
+                  <TableRow
+                    key={so.id}
+                    className={cn(
+                      "transition-all duration-200 border-b",
+                      index % 2 === 0 ? "bg-background" : "bg-muted/20",
+                      "hover:bg-accent/50 hover:shadow-sm"
+                    )}
+                  >
+                    <TableCell className="font-bold text-foreground py-4 border-r border-border/30">{so.serviceOrderNumber}</TableCell>
+                    <TableCell className="py-4 border-r border-border/30">{so.description}</TableCell>
+                    <TableCell className="text-muted-foreground py-4 border-r border-border/30">{so.projectName}</TableCell>
+                    <TableCell className="py-4 border-r border-border/30">
+                      <Badge
+                        className={cn(
+                          "flex items-center gap-1.5 w-fit px-3 py-1.5 font-medium",
+                          statusConfig.bgColor,
+                          statusConfig.textColor
+                        )}
+                      >
+                        <span className={cn("w-1.5 h-1.5 rounded-full", statusConfig.dotColor)} />
+                        {statusConfig.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-bold tabular-nums">
+                        {so.activityCount}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       ) : (
-        <div className="flex justify-center items-center h-40 bg-gray-50 rounded-md">
-          <p className="text-gray-500">Nenhuma ordem de serviço encontrada com os filtros selecionados</p>
+        <div className="flex flex-col items-center justify-center p-12 gap-4">
+          <div className="p-4 rounded-full bg-muted/50">
+            <ClipboardList className="w-12 h-12 text-muted-foreground opacity-50" />
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-lg font-semibold text-foreground">
+              Nenhuma ordem de serviço encontrada
+            </p>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Tente ajustar os filtros para ver mais resultados
+            </p>
+          </div>
         </div>
       )}
-    </Card>
+    </>
   );
 };

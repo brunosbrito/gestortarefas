@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { createActivity, updateActivity } from '@/services/ActivityService';
 import { FileUploadField } from './FileUploadField';
@@ -32,6 +33,16 @@ import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { TarefaMacro } from '@/interfaces/TarefaMacroInterface';
 import { Processo } from '@/interfaces/ProcessoInterface';
+import {
+  FileText,
+  Clock,
+  Users,
+  Paperclip,
+  MessageSquare,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type UnidadeTempo = 'minutos' | 'horas';
 
@@ -66,6 +77,26 @@ interface NovaAtividadeFormProps {
   onSuccess?: () => void;
 }
 
+interface FormSectionProps {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+}
+
+const FormSection = ({ icon: Icon, title, children }: FormSectionProps) => (
+  <div className="space-y-4">
+    <div className="flex items-center gap-3">
+      <div className="p-2 rounded-lg bg-primary/10">
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+    </div>
+    <div className="space-y-4 pl-6 border-l-2 border-border/30">
+      {children}
+    </div>
+  </div>
+);
+
 export function NovaAtividadeForm({
   editMode = false,
   atividadeInicial,
@@ -79,12 +110,10 @@ export function NovaAtividadeForm({
   const [tarefasMacro, setTarefasMacro] = useState<TarefaMacro[]>([]);
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
-  const [macroTaskSelectedValue, setMacroTaskSelectedValue] =
-    useState<string>('');
+  const [macroTaskSelectedValue, setMacroTaskSelectedValue] = useState<string>('');
   const [processSelectedValue, setProcessSelectedValue] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Função para determinar o valor inicial da tarefa macro
-  // Função para determinar o valor inicial da tarefa macro
   const determinarValorInicialTarefaMacro = () => {
     if (!atividadeInicial) return '';
 
@@ -100,7 +129,6 @@ export function NovaAtividadeForm({
       : '';
   };
 
-  // Função para determinar o valor inicial do processo
   const determinarValorInicialProcesso = () => {
     if (!atividadeInicial) return '';
 
@@ -116,214 +144,104 @@ export function NovaAtividadeForm({
       : '';
   };
 
-  const defaultValues: Partial<z.infer<typeof formSchema>> = {
-    macroTask: determinarValorInicialTarefaMacro(),
-    process: determinarValorInicialProcesso(),
-    description: atividadeInicial?.description || '',
-    quantity: atividadeInicial?.quantity || 0,
-    timePerUnit: atividadeInicial?.timePerUnit || 0,
-    unidadeTempo: (atividadeInicial?.unidadeTempo as UnidadeTempo) || 'minutos',
-    collaborators: atividadeInicial?.collaborators?.map((c) => c.id) || [],
-    observation: atividadeInicial?.observation || '',
-    imagem: undefined,
-    imagemDescricao: atividadeInicial?.imageDescription || '',
-    arquivo: undefined,
-    arquivoDescricao: atividadeInicial?.fileDescription || '',
-    estimatedTime: atividadeInicial?.estimatedTime || '',
-    projectId: projectId,
-    orderServiceId: orderServiceId,
-    createdBy: Number(localStorage.getItem('userId')) || 0,
+  const determinarColaboradoresIniciais = (): number[] => {
+    if (!atividadeInicial || !atividadeInicial.collaborators) return [];
+
+    return atividadeInicial.collaborators.map((collab) => {
+      if (typeof collab === 'number') return collab;
+      if (typeof collab === 'object' && collab?.id) return collab.id;
+      return 0;
+    });
   };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: {
+      macroTask: determinarValorInicialTarefaMacro(),
+      process: determinarValorInicialProcesso(),
+      description: atividadeInicial?.description || '',
+      quantity: atividadeInicial?.quantity || 1,
+      timePerUnit: 1,
+      unidadeTempo: 'horas',
+      collaborators: determinarColaboradoresIniciais(),
+      observation: atividadeInicial?.observation || '',
+      projectId,
+      orderServiceId,
+      createdBy: 1,
+    },
   });
 
-  const getTarefasMacro = async () => {
-    try {
-      const tarefasMacro = await TarefaMacroService.getAll();
-      setTarefasMacro(tarefasMacro.data);
-
-      // Define o valor selecionado da tarefa macro
-      const valorInicial = determinarValorInicialTarefaMacro();
-      if (valorInicial) {
-        setMacroTaskSelectedValue(valorInicial);
-        form.setValue('macroTask', valorInicial);
+  useEffect(() => {
+    const loadTarefasMacro = async () => {
+      try {
+        const data = await TarefaMacroService.getAll();
+        setTarefasMacro(data);
+      } catch (error) {
+        console.error('Erro ao carregar tarefas macro:', error);
       }
-    } catch (error) {
-      console.error('Error fetching tarefas macro', error);
-    }
-  };
+    };
 
-  const getProcessos = async () => {
-    try {
-      const processos = await ProcessService.getAll();
-      setProcessos(processos.data);
-
-      // Define o valor selecionado do processo
-      const valorInicial = determinarValorInicialProcesso();
-      if (valorInicial) {
-        setProcessSelectedValue(valorInicial);
-        form.setValue('process', valorInicial);
-      }
-    } catch (error) {
-      console.error('Error fetching processos', error);
-    }
-  };
-
-  const getColaboradores = async () => {
-    try {
-      const colaboradores = await ColaboradorService.getAllColaboradores();
-      setColaboradores(colaboradores);
-
-      if (editMode && atividadeInicial?.collaborators) {
-        const colaboradoresIds = atividadeInicial.collaborators.map(
-          (c) => c.id
-        );
-        form.setValue('collaborators', colaboradoresIds);
-      }
-    } catch (error) {
-      console.error('Error fetching colaboradores', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao carregar colaboradores',
-        description: 'Ocorreu um erro ao carregar a lista de colaboradores.',
-      });
-    }
-  };
+    loadTarefasMacro();
+  }, []);
 
   useEffect(() => {
-    getTarefasMacro();
-    getProcessos();
-    getColaboradores();
+    const loadProcessos = async () => {
+      try {
+        const data = await ProcessService.getAll();
+        setProcessos(data);
+      } catch (error) {
+        console.error('Erro ao carregar processos:', error);
+      }
+    };
 
-    if (atividadeInicial?.estimatedTime) {
-      setTempoPrevisto(atividadeInicial.estimatedTime);
+    loadProcessos();
+  }, []);
+
+  useEffect(() => {
+    const loadColaboradores = async () => {
+      try {
+        const data = await ColaboradorService.getAll();
+        setColaboradores(data);
+      } catch (error) {
+        console.error('Erro ao carregar colaboradores:', error);
+      }
+    };
+
+    loadColaboradores();
+  }, []);
+
+  useEffect(() => {
+    const valorInicialTarefaMacro = determinarValorInicialTarefaMacro();
+    const valorInicialProcesso = determinarValorInicialProcesso();
+
+    if (valorInicialTarefaMacro) {
+      setMacroTaskSelectedValue(valorInicialTarefaMacro);
     }
 
-    if (editMode && atividadeInicial) {
-      if (atividadeInicial.imageUrl) {
-        form.setValue(
-          'imagemDescricao',
-          atividadeInicial.imageDescription || ''
-        );
-      }
-      if (atividadeInicial.fileUrl) {
-        form.setValue(
-          'arquivoDescricao',
-          atividadeInicial.fileDescription || ''
-        );
-      }
+    if (valorInicialProcesso) {
+      setProcessSelectedValue(valorInicialProcesso);
     }
-  }, [atividadeInicial, editMode]);
+  }, [atividadeInicial]);
 
-  const onSubmit = async (data: FormValues) => {
-    try {
-      if (editMode && atividadeInicial) {
-        const activityData: any = {
-          macroTask: Number(data.macroTask),
-          process: Number(data.process),
-          description: data.description,
-          quantity: data.quantity,
-          timePerUnit: data.timePerUnit,
-          unidadeTempo: data.unidadeTempo,
-          collaborators: data.collaborators,
-          observation: data.observation,
-          imagemDescricao: data.imagemDescricao,
-          arquivoDescricao: data.arquivoDescricao,
-          estimatedTime: data.estimatedTime,
-          projectId,
-          orderServiceId,
-          createdBy: Number(localStorage.getItem('userId')) || 0,
-        };
+  const calcularTempoPrevisto = (
+    quantidade: number,
+    tempoPorUnidade: number,
+    unidadeTempo: UnidadeTempo
+  ): string => {
+    if (!quantidade || !tempoPorUnidade) return '0h';
 
-        if (data.imagem instanceof File) {
-          activityData.imagem = data.imagem;
-        }
-        if (data.arquivo instanceof File) {
-          activityData.arquivo = data.arquivo;
-        }
-
-        await updateActivity(atividadeInicial.id, activityData);
-        toast({
-          title: 'Atividade atualizada',
-          description: 'A atividade foi atualizada com sucesso.',
-        });
-
-        if (onSuccess) {
-          onSuccess();
-        }
-      } else {
-        const formData = new FormData();
-
-        formData.append('macroTask', Number(data.macroTask).toString());
-        formData.append('process', Number(data.process).toString());
-        formData.append('description', data.description);
-        formData.append('quantity', data.quantity.toString());
-        formData.append('timePerUnit', data.timePerUnit.toString());
-        formData.append('unidadeTempo', data.unidadeTempo);
-        formData.append('observation', data.observation || '');
-        formData.append('imagemDescricao', data.imagemDescricao || '');
-        formData.append('arquivoDescricao', data.arquivoDescricao || '');
-        formData.append('estimatedTime', data.estimatedTime || '');
-        formData.append('projectId', projectId.toString());
-        formData.append('orderServiceId', orderServiceId.toString());
-        formData.append(
-          'createdBy',
-          (Number(localStorage.getItem('userId')) || 0).toString()
-        );
-
-        data.collaborators.forEach((collaboratorId, index) => {
-          formData.append(`collaborators[${index}]`, collaboratorId.toString());
-        });
-
-        if (data.imagem instanceof File) {
-          formData.append('imagem', data.imagem);
-        }
-        if (data.arquivo instanceof File) {
-          formData.append('arquivo', data.arquivo);
-        }
-
-        await createActivity(formData);
-        toast({
-          title: 'Atividade criada',
-          description: 'A atividade foi criada com sucesso.',
-        });
-
-        if (onSuccess) {
-          onSuccess();
-        }
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: editMode
-          ? 'Erro ao atualizar atividade'
-          : 'Erro ao criar atividade',
-        description: 'Ocorreu um erro. Tente novamente mais tarde.',
-      });
-    }
-  };
-
-  const calculateEstimatedTime = () => {
-    const quantity = form.getValues('quantity');
-    const timePerUnit = form.getValues('timePerUnit');
-    const unidadeTempo = form.getValues('unidadeTempo');
-
-    if (!quantity || !timePerUnit) return;
-
-    const totalMinutes =
+    const tempoTotal =
       unidadeTempo === 'minutos'
-        ? quantity * timePerUnit
-        : quantity * timePerUnit * 60;
+        ? (quantidade * tempoPorUnidade) / 60
+        : quantidade * tempoPorUnidade;
 
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
+    const horas = Math.floor(tempoTotal);
+    const minutos = Math.round((tempoTotal - horas) * 60);
 
-    const estimatedTime = `${hours}h${minutes}min`;
-    form.setValue('estimatedTime', estimatedTime);
-    setTempoPrevisto(estimatedTime);
+    if (horas === 0 && minutos === 0) return '0h';
+    if (horas === 0) return `${minutos}min`;
+    if (minutos === 0) return `${horas}h`;
+    return `${horas}h ${minutos}min`;
   };
 
   useEffect(() => {
@@ -333,312 +251,440 @@ export function NovaAtividadeForm({
         name === 'timePerUnit' ||
         name === 'unidadeTempo'
       ) {
-        calculateEstimatedTime();
+        const quantidade = value.quantity || 0;
+        const tempoPorUnidade = value.timePerUnit || 0;
+        const unidadeTempo = (value.unidadeTempo || 'horas') as UnidadeTempo;
+
+        const tempo = calcularTempoPrevisto(
+          quantidade,
+          tempoPorUnidade,
+          unidadeTempo
+        );
+        setTempoPrevisto(tempo);
+        form.setValue('estimatedTime', tempo);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [form.watch]);
 
+  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      const collaboratorIds = values.collaborators.map((id) => Number(id));
+
+      const formData = new FormData();
+      formData.append('macroTaskId', values.macroTask);
+      formData.append('processId', values.process);
+      formData.append('description', values.description);
+      formData.append('quantity', values.quantity.toString());
+      formData.append('estimatedTime', values.estimatedTime || tempoPrevisto);
+      formData.append('projectId', values.projectId.toString());
+      formData.append('orderServiceId', values.orderServiceId.toString());
+      formData.append('createdBy', values.createdBy.toString());
+      formData.append('collaboratorIds', JSON.stringify(collaboratorIds));
+
+      if (values.observation) {
+        formData.append('observation', values.observation);
+      }
+      if (values.imagem) {
+        formData.append('image', values.imagem);
+      }
+      if (values.imagemDescricao) {
+        formData.append('imageDescription', values.imagemDescricao);
+      }
+      if (values.arquivo) {
+        formData.append('file', values.arquivo);
+      }
+      if (values.arquivoDescricao) {
+        formData.append('fileDescription', values.arquivoDescricao);
+      }
+
+      if (editMode && atividadeInicial?.id) {
+        await updateActivity(atividadeInicial.id, formData);
+        toast({
+          title: 'Sucesso!',
+          description: 'Atividade atualizada com sucesso.',
+        });
+      } else {
+        await createActivity(formData);
+        toast({
+          title: 'Sucesso!',
+          description: 'Atividade criada com sucesso.',
+        });
+      }
+
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error('Erro ao processar atividade:', error);
+      toast({
+        title: 'Erro',
+        description: editMode
+          ? 'Erro ao atualizar atividade.'
+          : 'Erro ao criar atividade.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="macroTask"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tarefa Macro</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setMacroTaskSelectedValue(value);
-                }}
-                value={macroTaskSelectedValue || field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a tarefa macro" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {tarefasMacro.map((tarefa) => (
-                    <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
-                      {tarefa.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="process"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Processo</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setProcessSelectedValue(value);
-                }}
-                value={processSelectedValue || field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o processo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {processos.map((processo) => (
-                    <SelectItem
-                      key={processo.id}
-                      value={processo.id.toString()}
-                    >
-                      {processo.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Atividade</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite a atividade" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Unidade/Peça</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(Number(e.target.value));
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
+        {/* Conteúdo com espaço para o footer sticky */}
+        <div className="space-y-6 md:space-y-8 pb-28 md:pb-32">
+          {/* Seção: Informações Básicas */}
+          <FormSection icon={FileText} title="Informações Básicas">
             <FormField
               control={form.control}
-              name="timePerUnit"
+              name="macroTask"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tempo por Unidade</FormLabel>
+                  <FormLabel className="font-medium">
+                    Tarefa Macro <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setMacroTaskSelectedValue(value);
+                    }}
+                    value={macroTaskSelectedValue || field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className={cn(
+                        form.formState.errors.macroTask && "border-destructive bg-destructive/5"
+                      )}>
+                        <SelectValue placeholder="Selecione a tarefa macro" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {tarefasMacro.map((tarefa) => (
+                        <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
+                          {tarefa.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.macroTask && (
+                    <FormMessage className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {form.formState.errors.macroTask.message}
+                    </FormMessage>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="process"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium">
+                    Processo <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setProcessSelectedValue(value);
+                    }}
+                    value={processSelectedValue || field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className={cn(
+                        form.formState.errors.process && "border-destructive bg-destructive/5"
+                      )}>
+                        <SelectValue placeholder="Selecione o processo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {processos.map((processo) => (
+                        <SelectItem key={processo.id} value={processo.id.toString()}>
+                          {processo.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.process && (
+                    <FormMessage className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {form.formState.errors.process.message}
+                    </FormMessage>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium">
+                    Atividade <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      placeholder="Digite a atividade"
                       {...field}
-                      onChange={(e) => {
-                        field.onChange(Number(e.target.value));
-                      }}
+                      className={cn(
+                        form.formState.errors.description && "border-destructive bg-destructive/5"
+                      )}
+                    />
+                  </FormControl>
+                  {form.formState.errors.description && (
+                    <FormMessage className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {form.formState.errors.description.message}
+                    </FormMessage>
+                  )}
+                </FormItem>
+              )}
+            />
+          </FormSection>
+
+          <Separator className="my-8" />
+
+          {/* Seção: Tempo e Quantidade */}
+          <FormSection icon={Clock} title="Tempo e Quantidade">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-medium">
+                      Unidade/Peça <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        className={cn(
+                          form.formState.errors.quantity && "border-destructive bg-destructive/5"
+                        )}
+                      />
+                    </FormControl>
+                    {form.formState.errors.quantity && (
+                      <FormMessage className="flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {form.formState.errors.quantity.message}
+                      </FormMessage>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="timePerUnit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium">
+                        Tempo/Un <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          className={cn(
+                            form.formState.errors.timePerUnit && "border-destructive bg-destructive/5"
+                          )}
+                        />
+                      </FormControl>
+                      {form.formState.errors.timePerUnit && (
+                        <FormMessage className="flex items-center gap-1.5">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          {form.formState.errors.timePerUnit.message}
+                        </FormMessage>
+                      )}
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="unidadeTempo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium">Unidade</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="minutos">Min</SelectItem>
+                          <SelectItem value="horas">Hrs</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Tempo Previsto Display */}
+            {tempoPrevisto && (
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Tempo Previsto</p>
+                    <p className="text-2xl font-bold text-primary tabular-nums">{tempoPrevisto}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </FormSection>
+
+          <Separator className="my-8" />
+
+          {/* Seção: Equipe */}
+          <FormSection icon={Users} title="Equipe">
+            <FormField
+              control={form.control}
+              name="collaborators"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="font-medium">
+                    Colaboradores <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-lg border border-border/50 bg-muted/20 max-h-60 overflow-y-auto">
+                    {colaboradores.map((colaborador) => (
+                      <FormField
+                        key={colaborador.id}
+                        control={form.control}
+                        name="collaborators"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={colaborador.id}
+                              className="flex items-center space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                                  checked={field.value?.includes(colaborador.id)}
+                                  onChange={(e) => {
+                                    return e.target.checked
+                                      ? field.onChange([...field.value, colaborador.id])
+                                      : field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== colaborador.id
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">
+                                {colaborador.name}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {form.formState.errors.collaborators && (
+                    <FormMessage className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {form.formState.errors.collaborators.message}
+                    </FormMessage>
+                  )}
+                </FormItem>
+              )}
+            />
+          </FormSection>
+
+          <Separator className="my-8" />
+
+          {/* Seção: Observações */}
+          <FormSection icon={MessageSquare} title="Observações">
+            <FormField
+              control={form.control}
+              name="observation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium">Observação (Opcional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Digite uma observação (opcional)"
+                      className="min-h-[100px]"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </FormSection>
 
-            <FormField
-              control={form.control}
-              name="unidadeTempo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Unidade</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="minutos">Minutos</SelectItem>
-                      <SelectItem value="horas">Horas</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+          <Separator className="my-8" />
+
+          {/* Seção: Anexos */}
+          <FormSection icon={Paperclip} title="Anexos">
+            <div className="space-y-4">
+              <FileUploadField
+                form={form}
+                fileType="imagem"
+                accept="image/*"
+                activityId={atividadeInicial?.id}
+                initialPreview={
+                  atividadeInicial?.imageUrl
+                    ? `https://api.gmxindustrial.com.br${atividadeInicial.imageUrl}`
+                    : undefined
+                }
+                initialDescription={atividadeInicial?.imageDescription}
+              />
+              <FileUploadField
+                form={form}
+                fileType="arquivo"
+                activityId={atividadeInicial?.id}
+                initialPreview={
+                  atividadeInicial?.fileUrl
+                    ? `https://api.gmxindustrial.com.br${atividadeInicial.fileUrl}`
+                    : undefined
+                }
+                initialDescription={atividadeInicial?.fileDescription}
+              />
+            </div>
+          </FormSection>
+        </div>
+
+        {/* Footer Sticky */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-card/95 backdrop-blur-xl border-t border-border/50 shadow-elevation-4 z-40">
+          <div className="max-w-4xl mx-auto flex items-center justify-end gap-3">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className={cn(
+                "min-w-[200px] h-11 font-semibold shadow-lg transition-all",
+                "bg-primary hover:bg-primary/90",
+                isSubmitting && "opacity-70"
               )}
-            />
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Salvando...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>{editMode ? 'Salvar Alterações' : 'Criar Atividade'}</span>
+                </div>
+              )}
+            </Button>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 gap-4">
-          <FormField
-            control={form.control}
-            name="estimatedTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tempo Previsto</FormLabel>
-                <FormControl>
-                  <Input
-                    value={tempoPrevisto}
-                    readOnly
-                    className="bg-gray-100"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="collaborators"
-          render={({ field }) => {
-            const selectedCollaborators = field.value || [];
-
-            return (
-              <FormItem>
-                <FormLabel>Equipe</FormLabel>
-                <Select
-                  value={
-                    selectedCollaborators?.length
-                      ? selectedCollaborators[0].toString()
-                      : ''
-                  }
-                  onValueChange={(value) => {
-                    const numericValue = Number(value);
-                    const currentValues = selectedCollaborators;
-                    if (!currentValues.includes(numericValue)) {
-                      field.onChange([...currentValues, numericValue]);
-                    }
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue>
-                        {selectedCollaborators?.length
-                          ? selectedCollaborators
-                              .map((id: number) => {
-                                const colaborador = colaboradores.find(
-                                  (col) => col.id === id
-                                );
-                                return colaborador?.name || '';
-                              })
-                              .join(', ')
-                          : 'Selecione os colaboradores'}
-                      </SelectValue>
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {colaboradores.map((colaborador) => (
-                      <SelectItem
-                        key={colaborador.id}
-                        value={String(colaborador.id)}
-                      >
-                        {colaborador.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedCollaborators?.map((colaboradorId: number) => {
-                    const colaborador = colaboradores.find(
-                      (col) => col.id === colaboradorId
-                    );
-                    return (
-                      <Badge
-                        key={colaboradorId}
-                        variant="secondary"
-                        className="cursor-pointer"
-                        onClick={() => {
-                          const newEquipe = selectedCollaborators.filter(
-                            (id: number) => id !== colaboradorId
-                          );
-                          field.onChange(newEquipe);
-                        }}
-                      >
-                        {colaborador?.name}
-                      </Badge>
-                    );
-                  })}
-                </div>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
-        />
-
-        <FormField
-          control={form.control}
-          name="observation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Observação</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Digite uma observação (opcional)"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-4">
-          <FileUploadField
-            form={form}
-            fileType="imagem"
-            accept="image/*"
-            activityId={atividadeInicial?.id}
-            initialPreview={
-              atividadeInicial?.imageUrl
-                ? `https://api.gmxindustrial.com.br${atividadeInicial.imageUrl}`
-                : undefined
-            }
-            initialDescription={atividadeInicial?.imageDescription}
-          />
-          <FileUploadField
-            form={form}
-            fileType="arquivo"
-            activityId={atividadeInicial?.id}
-            initialPreview={
-              atividadeInicial?.fileUrl
-                ? `https://api.gmxindustrial.com.br${atividadeInicial.fileUrl}`
-                : undefined
-            }
-            initialDescription={atividadeInicial?.fileDescription}
-          />
-        </div>
-
-        <Button
-          type="submit"
-          className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-        >
-          {editMode ? 'Salvar Alterações' : 'Criar Atividade'}
-        </Button>
       </form>
     </Form>
   );
