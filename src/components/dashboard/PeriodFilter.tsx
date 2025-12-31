@@ -23,6 +23,8 @@ import { DashboardFilters } from '@/types/dashboard';
 import ObrasService from '@/services/ObrasService';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { Filter } from 'lucide-react';
+import { HelpTooltip } from '@/components/tooltips/HelpTooltip';
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent';
 
 // Exportando o tipo PeriodFilterType para uso em outros lugares
 export type PeriodFilterType = 'todos' | '7dias' | '1mes' | '3meses' | 'personalizado';
@@ -120,8 +122,9 @@ export const PeriodFilter = ({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
           <div className="space-y-2">
-            <label htmlFor="obra" className="block text-sm font-medium">
+            <label htmlFor="obra" className="flex items-center gap-1.5 text-sm font-medium">
               Obra
+              <HelpTooltip content={TOOLTIP_CONTENT.FILTER_PROJECT} />
             </label>
             <Select
               value={currentFilters.obraId?.toString() || 'todos'}
@@ -143,8 +146,9 @@ export const PeriodFilter = ({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="startDate" className="block text-sm font-medium">
+            <label htmlFor="startDate" className="flex items-center gap-1.5 text-sm font-medium">
               Data Início
+              <HelpTooltip content={TOOLTIP_CONTENT.FILTER_PERIOD} />
             </label>
             <Popover>
               <PopoverTrigger asChild>
@@ -177,8 +181,9 @@ export const PeriodFilter = ({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="endDate" className="block text-sm font-medium">
+            <label htmlFor="endDate" className="flex items-center gap-1.5 text-sm font-medium">
               Data Fim
+              <HelpTooltip content={TOOLTIP_CONTENT.FILTER_PERIOD} />
             </label>
             <Popover>
               <PopoverTrigger asChild>

@@ -257,3 +257,124 @@
     @apply text-xs font-medium;
   }
 }
+
+/* ============================================
+   MODO DE ALTO CONTRASTE
+   ============================================ */
+.high-contrast {
+  /* Cores de alto contraste WCAG AAA */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+
+  --primary: 0 0% 0%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 20%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 15%;
+
+  --accent: 0 0% 0%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 100% 30%;
+  --destructive-foreground: 0 0% 100%;
+
+  --warning: 45 100% 30%;
+  --warning-foreground: 0 0% 100%;
+
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
+  --ring: 0 0% 0%;
+}
+
+.high-contrast.dark {
+  /* Alto contraste no modo escuro */
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+
+  --popover: 0 0% 0%;
+  --popover-foreground: 0 0% 100%;
+
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 0%;
+
+  --secondary: 0 0% 80%;
+  --secondary-foreground: 0 0% 0%;
+
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 85%;
+
+  --accent: 0 0% 100%;
+  --accent-foreground: 0 0% 0%;
+
+  --destructive: 0 100% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --warning: 45 100% 60%;
+  --warning-foreground: 0 0% 0%;
+
+  --border: 0 0% 100%;
+  --input: 0 0% 100%;
+  --ring: 0 0% 100%;
+}
+
+/* Aumentar espessura de bordas no alto contraste */
+.high-contrast * {
+  border-width: max(1px, 0.0625rem);
+}
+
+.high-contrast button,
+.high-contrast a,
+.high-contrast input,
+.high-contrast select,
+.high-contrast textarea {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.high-contrast button:focus,
+.high-contrast a:focus,
+.high-contrast input:focus,
+.high-contrast select:focus,
+.high-contrast textarea:focus {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* Remover sombras e gradientes no alto contraste */
+.high-contrast {
+  --gradient-primary: none;
+  --gradient-secondary: none;
+  --gradient-card: none;
+}
+
+.high-contrast [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+.high-contrast [class*="bg-gradient-"] {
+  background-image: none !important;
+}
+
+/* Indicadores visuais mais fortes */
+.high-contrast [aria-current="page"] {
+  border: 3px solid currentColor !important;
+  font-weight: 700 !important;
+}
+
+.high-contrast [aria-selected="true"] {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 700 !important;
+}

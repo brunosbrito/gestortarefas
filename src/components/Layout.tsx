@@ -2,15 +2,28 @@ import React, { useState, useEffect } from "react";
 import { Header } from "./layout/Header";
 import { Sidebar } from "./layout/Sidebar";
 import { useUser } from "./layout/useUser";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Keyboard } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { getStoredToken } from "@/services/AuthService";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useSystemHighContrast } from "@/hooks/useHighContrast";
+import { ShortcutsModal } from "./shortcuts/ShortcutsModal";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const user = useUser();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+
+  // Atalhos de teclado globais
+  useKeyboardShortcuts({
+    onOpenShortcutsModal: () => setIsShortcutsModalOpen(true),
+    onToggleSidebar: () => setIsSidebarOpen(prev => !prev),
+  });
+
+  // Detectar preferência de alto contraste do sistema
+  useSystemHighContrast();
 
   useEffect(() => {
     const token = getStoredToken();
@@ -76,12 +89,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             Sistema de Gestão
           </h1>
 
-          {/* Spacer for symmetry */}
-          <div className="w-10"></div>
+          {/* Botão de ajuda */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsShortcutsModalOpen(true)}
+            className="hover:bg-accent rounded-lg"
+            aria-label="Mostrar atalhos de teclado"
+          >
+            <Keyboard className="h-5 w-5" />
+          </Button>
         </div>
 
         <div className="container mx-auto p-4 md:p-6 max-w-7xl">{children}</div>
       </main>
+
+      {/* Modal de Atalhos */}
+      <ShortcutsModal
+        open={isShortcutsModalOpen}
+        onOpenChange={setIsShortcutsModalOpen}
+      />
     </div>
   );
 };

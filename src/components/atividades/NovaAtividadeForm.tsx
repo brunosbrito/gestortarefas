@@ -43,6 +43,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HelpTooltip } from '@/components/tooltips/HelpTooltip';
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent';
 
 type UnidadeTempo = 'minutos' | 'horas';
 
@@ -341,8 +343,9 @@ export function NovaAtividadeForm({
               name="macroTask"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-medium">
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
                     Tarefa Macro <span className="text-destructive">*</span>
+                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_MACRO_TASK} />
                   </FormLabel>
                   <Select
                     onValueChange={(value) => {
@@ -381,8 +384,9 @@ export function NovaAtividadeForm({
               name="process"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-medium">
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
                     Processo <span className="text-destructive">*</span>
+                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_PROCESS} />
                   </FormLabel>
                   <Select
                     onValueChange={(value) => {
@@ -421,8 +425,9 @@ export function NovaAtividadeForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-medium">
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
                     Atividade <span className="text-destructive">*</span>
+                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_DESCRIPTION} />
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -454,8 +459,9 @@ export function NovaAtividadeForm({
                 name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">
+                    <FormLabel className="flex items-center gap-1.5 font-medium">
                       Unidade/Peça <span className="text-destructive">*</span>
+                      <HelpTooltip content={TOOLTIP_CONTENT.FORM_QUANTITY} />
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -483,8 +489,9 @@ export function NovaAtividadeForm({
                   name="timePerUnit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-medium">
+                      <FormLabel className="flex items-center gap-1.5 font-medium">
                         Tempo/Un <span className="text-destructive">*</span>
+                        <HelpTooltip content={TOOLTIP_CONTENT.FORM_TIME_PER_UNIT} />
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -553,8 +560,9 @@ export function NovaAtividadeForm({
               name="collaborators"
               render={() => (
                 <FormItem>
-                  <FormLabel className="font-medium">
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
                     Colaboradores <span className="text-destructive">*</span>
+                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_COLLABORATORS} />
                   </FormLabel>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-lg border border-border/50 bg-muted/20 max-h-60 overflow-y-auto">
                     {colaboradores.map((colaborador) => (
@@ -613,7 +621,10 @@ export function NovaAtividadeForm({
               name="observation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-medium">Observação (Opcional)</FormLabel>
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
+                    Observação (Opcional)
+                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_OBSERVATION} />
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Digite uma observação (opcional)"

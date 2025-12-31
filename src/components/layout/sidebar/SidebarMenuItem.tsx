@@ -30,6 +30,10 @@ export const SidebarMenuItem = ({
             onToggle();
           }
         }}
+        role={hasSubItems ? "button" : undefined}
+        aria-expanded={hasSubItems ? isExpanded : undefined}
+        aria-current={isActive && !hasSubItems ? "page" : undefined}
+        aria-label={hasSubItems ? `${item.label} - ${isExpanded ? 'expandido' : 'recolhido'}` : item.label}
         className={cn(
           // Base styles - minimum 44px touch target
           "group flex items-center w-full gap-3 px-3 py-3 min-h-[48px] rounded-xl",
@@ -77,6 +81,8 @@ export const SidebarMenuItem = ({
             <Link
               key={subItem.path}
               to={subItem.path}
+              aria-current={location.pathname === subItem.path ? "page" : undefined}
+              aria-label={subItem.label}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm",
                 "transition-all duration-200",

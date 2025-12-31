@@ -1,5 +1,6 @@
-import { Settings, Moon, Sun, User, HelpCircle, LogOut } from 'lucide-react';
+import { Settings, Moon, Sun, User, HelpCircle, LogOut, Contrast } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useHighContrast } from '@/hooks/useHighContrast';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -7,13 +8,34 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { showInfo, showActionSuccess } from '@/lib/feedback';
+import { cn } from '@/lib/utils';
 
 export const SettingsDropdown = () => {
   const { theme, toggleTheme } = useTheme();
+  const { isHighContrast, toggleHighContrast } = useHighContrast();
   const navigate = useNavigate();
+
+  const handleThemeToggle = () => {
+    toggleTheme();
+    const newTheme = theme === 'light' ? 'escuro' : 'claro';
+    showInfo({
+      title: 'Tema Alterado',
+      description: `Modo ${newTheme} ativado.`,
+      duration: 2000,
+    });
+  };
+
+  const handleHighContrastToggle = () => {
+    toggleHighContrast();
+    const message = !isHighContrast
+      ? 'Modo de alto contraste ativado.'
+      : 'Modo de alto contraste desativado.';
+    showActionSuccess(message);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -21,7 +43,7 @@ export const SettingsDropdown = () => {
     localStorage.removeItem('userEmail');
     sessionStorage.removeItem('authToken');
 
-    toast({
+    showInfo({
       description: 'Você foi desconectado com sucesso.',
     });
 
@@ -39,12 +61,16 @@ export const SettingsDropdown = () => {
           <Settings className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end" 
+      <DropdownMenuContent
+        align="end"
         className="w-48 md:w-56 bg-card/95 backdrop-blur-sm border-border/50 z-50"
         sideOffset={4}
       >
-        <DropdownMenuItem onClick={toggleTheme} className="flex items-center gap-3 cursor-pointer">
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+          Aparência
+        </DropdownMenuLabel>
+
+        <DropdownMenuItem onClick={handleThemeToggle} className="flex items-center gap-3 cursor-pointer">
           {theme === 'light' ? (
             <Moon className="h-4 w-4" />
           ) : (
@@ -52,7 +78,21 @@ export const SettingsDropdown = () => {
           )}
           <span>Alterar para {theme === 'light' ? 'Escuro' : 'Claro'}</span>
         </DropdownMenuItem>
-        
+
+        <DropdownMenuItem
+          onClick={handleHighContrastToggle}
+          className={cn(
+            "flex items-center gap-3 cursor-pointer",
+            isHighContrast && "bg-accent"
+          )}
+        >
+          <Contrast className="h-4 w-4" />
+          <span>Alto Contraste</span>
+          {isHighContrast && (
+            <span className="ml-auto text-xs text-muted-foreground">✓</span>
+          )}
+        </DropdownMenuItem>
+
         <DropdownMenuSeparator />
         
         <DropdownMenuItem className="flex items-center gap-3 cursor-pointer opacity-50">

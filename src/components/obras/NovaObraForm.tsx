@@ -14,6 +14,8 @@ import { Obra } from "@/interfaces/ObrasInterface";
 import { Building2, Users, MapPin, Calendar, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { HelpTooltip } from "@/components/tooltips/HelpTooltip";
+import { TOOLTIP_CONTENT } from "@/constants/tooltipContent";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -91,8 +93,9 @@ export const NovaObraForm = ({ onSuccess, type }: NovaObraFormProps) => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium">
+                <FormLabel className="flex items-center gap-1.5 font-medium">
                   Nome da {type} <span className="text-destructive">*</span>
+                  <HelpTooltip content={TOOLTIP_CONTENT.FORM_PROJECT_NAME} />
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -118,8 +121,9 @@ export const NovaObraForm = ({ onSuccess, type }: NovaObraFormProps) => {
             name="groupNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium">
+                <FormLabel className="flex items-center gap-1.5 font-medium">
                   Número do Grupo <span className="text-destructive">*</span>
+                  <HelpTooltip content={TOOLTIP_CONTENT.FORM_PROJECT_GROUP} />
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -145,8 +149,9 @@ export const NovaObraForm = ({ onSuccess, type }: NovaObraFormProps) => {
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium">
+                <FormLabel className="flex items-center gap-1.5 font-medium">
                   Status <span className="text-destructive">*</span>
+                  <HelpTooltip content={TOOLTIP_CONTENT.FORM_PROJECT_STATUS} />
                 </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
@@ -182,8 +187,9 @@ export const NovaObraForm = ({ onSuccess, type }: NovaObraFormProps) => {
             name="client"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium">
+                <FormLabel className="flex items-center gap-1.5 font-medium">
                   Cliente <span className="text-destructive">*</span>
+                  <HelpTooltip content={TOOLTIP_CONTENT.FORM_PROJECT_CLIENT} />
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -214,8 +220,9 @@ export const NovaObraForm = ({ onSuccess, type }: NovaObraFormProps) => {
             name="address"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium">
+                <FormLabel className="flex items-center gap-1.5 font-medium">
                   Endereço <span className="text-destructive">*</span>
+                  <HelpTooltip content={TOOLTIP_CONTENT.FORM_PROJECT_ADDRESS} />
                 </FormLabel>
                 <FormControl>
                   <Input

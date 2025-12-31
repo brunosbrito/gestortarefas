@@ -6,7 +6,10 @@
       "Bash(npm run dev:*)",
       "Bash(tree:*)",
       "Bash(cat:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

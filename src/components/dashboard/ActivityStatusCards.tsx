@@ -1,6 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, PlayCircle, CheckCircle, PauseCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem, hoverScale, tapScale } from '@/lib/animations';
 
 interface ActivityStatusCardsProps {
   activitiesByStatus: {
@@ -56,21 +58,31 @@ export const ActivityStatusCards = ({ activitiesByStatus }: ActivityStatusCardsP
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <motion.div
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+    >
       {statusCards.map((card, index) => {
         const Icon = card.icon;
 
         return (
-          <Card
+          <motion.div
             key={index}
-            className={cn(
-              "border-l-4 border-y border-r",
-              "transition-all duration-200",
-              "hover:scale-105 hover:shadow-elevation-3",
-              card.borderColor,
-              card.bgTint
-            )}
+            variants={staggerItem}
+            whileHover={hoverScale}
+            whileTap={tapScale}
           >
+            <Card
+              className={cn(
+                "border-l-4 border-y border-r",
+                "shadow-elevation-2 cursor-pointer",
+                card.borderColor,
+                card.bgTint
+              )}
+            >
             <CardContent className="p-6">
               <div className="flex items-center justify-between gap-4">
                 {/* Icon + Title */}
@@ -99,8 +111,9 @@ export const ActivityStatusCards = ({ activitiesByStatus }: ActivityStatusCardsP
               </div>
             </CardContent>
           </Card>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 };

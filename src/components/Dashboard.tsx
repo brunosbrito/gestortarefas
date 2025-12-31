@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/collapsible";
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import { useTour } from '@/hooks/useTour';
+import { dashboardTourSteps } from '@/lib/tourSteps';
+import { TourButton } from './tour/TourButton';
 
 /**
  * Dashboard refatorado - integrado com store centralizado e sistema de filtros unificado
@@ -51,6 +54,14 @@ const Dashboard = () => {
 
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [swotOpen, setSwotOpen] = useState(false);
+
+  // Hook do tour (deve ser chamado ANTES de qualquer return)
+  const { startTour } = useTour({
+    steps: dashboardTourSteps,
+    onComplete: () => {
+      console.log('✅ Tour do Dashboard concluído!');
+    }
+  });
 
   // Carregar dados iniciais ao montar o componente
   useEffect(() => {
@@ -92,26 +103,31 @@ const Dashboard = () => {
   return (
     <div className="p-4 md:p-6">
       <div className="max-w-[1600px] mx-auto space-y-8">
-        {/* Header com informações sobre filtros ativos */}
-        {hasActiveFilters && (
-          <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  {activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''}
-                </span>
+        {/* Header com informações sobre filtros ativos e Tour */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            {hasActiveFilters && (
+              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      {activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs text-blue-600 dark:text-blue-300">
+                    {filteredData.activities.length} de {totals.activities} atividades
+                  </span>
+                </div>
               </div>
-              <span className="text-xs text-blue-600 dark:text-blue-300">
-                {filteredData.activities.length} de {totals.activities} atividades
-              </span>
-            </div>
+            )}
           </div>
-        )}
+          <TourButton onClick={startTour} variant="outline" size="default" />
+        </div>
 
         {/* Filtros - Collapsible no mobile */}
         <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden">
+          <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden" data-tour="filters">
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
@@ -160,15 +176,23 @@ const Dashboard = () => {
         </Collapsible>
 
         {/* Cards de Estatísticas Principais */}
-        <StatsSummary stats={stats} />
+        <div data-tour="stats-summary">
+          <StatsSummary stats={stats} />
+        </div>
 
         {/* Cards de Status das Atividades */}
-        <ActivityStatusCards activitiesByStatus={activityStatus} />
+        <div data-tour="activity-status">
+          <ActivityStatusCards activitiesByStatus={activityStatus} />
+        </div>
 
         {/* Gráficos de Estatísticas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MacroTasksChart macroTasks={statistics.macroTasks || []} />
-          <ProcessHoursChart processes={statistics.processes || []} />
+          <div data-tour="macro-tasks-chart">
+            <MacroTasksChart macroTasks={statistics.macroTasks || []} />
+          </div>
+          <div data-tour="process-chart">
+            <ProcessHoursChart processes={statistics.processes || []} />
+          </div>
         </div>
 
         {/* Análise SWOT - Collapsible */}
@@ -195,7 +219,7 @@ const Dashboard = () => {
         </Collapsible>
 
         {/* Tabela de Atividades Filtradas */}
-        <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden">
+        <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden" data-tour="activities-table">
           <div className="p-4 md:p-6 border-b border-border/50 bg-muted/30">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">

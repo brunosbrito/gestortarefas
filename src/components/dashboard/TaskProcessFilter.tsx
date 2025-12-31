@@ -10,6 +10,8 @@ import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
 import { Filter } from 'lucide-react';
 import { DashboardFilters } from '@/types/dashboard';
+import { HelpTooltip } from '@/components/tooltips/HelpTooltip';
+import { TOOLTIP_CONTENT } from '@/constants/tooltipContent';
 
 interface TaskProcessFilterProps {
   onFilterChange: (filters: Partial<DashboardFilters>) => void;
@@ -69,8 +71,11 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-          <div>
-            <label htmlFor="macroTask" className="block text-sm mb-1">Tarefa Macro</label>
+          <div className="space-y-2">
+            <label htmlFor="macroTask" className="flex items-center gap-1.5 text-sm font-medium">
+              Tarefa Macro
+              <HelpTooltip content={TOOLTIP_CONTENT.FILTER_MACRO_TASK} />
+            </label>
             <Select 
               value={currentFilters.macroTaskId?.toString() || 'todos'} 
               onValueChange={handleMacroTaskChange}
@@ -90,8 +95,11 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
             </Select>
           </div>
           
-          <div>
-            <label htmlFor="process" className="block text-sm mb-1">Processo</label>
+          <div className="space-y-2">
+            <label htmlFor="process" className="flex items-center gap-1.5 text-sm font-medium">
+              Processo
+              <HelpTooltip content={TOOLTIP_CONTENT.FILTER_PROCESS} />
+            </label>
             <Select 
               value={currentFilters.processId?.toString() || 'todos'} 
               onValueChange={handleProcessChange}
@@ -111,8 +119,11 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
             </Select>
           </div>
 
-          <div>
-            <label htmlFor="collaborator" className="block text-sm mb-1">Colaborador</label>
+          <div className="space-y-2">
+            <label htmlFor="collaborator" className="flex items-center gap-1.5 text-sm font-medium">
+              Colaborador
+              <HelpTooltip content={TOOLTIP_CONTENT.FILTER_COLLABORATOR} />
+            </label>
             <Select 
               value={currentFilters.collaboratorId?.toString() || 'todos'} 
               onValueChange={handleCollaboratorChange}

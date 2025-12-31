@@ -43,7 +43,7 @@ export const Sidebar = ({ user }: SidebarProps) => {
 
   return (
     <ScrollArea className="flex-1 min-h-0">
-      <nav className="p-4 space-y-1">
+      <nav className="p-4 space-y-1" aria-label="Menu de navegação principal">
         {filteredNavItems.map((item) => (
           <SidebarMenuItem
             key={item.label}
