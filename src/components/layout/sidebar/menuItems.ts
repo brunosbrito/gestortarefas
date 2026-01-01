@@ -13,53 +13,84 @@ import {
   Calendar,
   ClipboardList,
   Bot,
+  Boxes,
+  ShieldCheck,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
 export const navItems: MenuItem[] = [
+  // MÓDULO PCP (Planejamento e Controle da Produção)
   {
-    icon: LayoutDashboard,
-    label: 'Dashboard',
-    path: '/dashboard',
+    icon: Boxes,
+    label: 'PCP',
+    subItems: [
+      {
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        path: '/dashboard',
+      },
+      {
+        icon: ClipboardList,
+        label: 'Atividades',
+        path: '/atividade',
+      },
+      {
+        icon: Bot,
+        label: 'Assistente IA',
+        path: '/assistente-ia',
+      },
+      {
+        icon: Users,
+        label: 'Usuários',
+        path: '/users',
+      },
+      {
+        icon: Building2,
+        label: 'Obras',
+        path: '/obras',
+      },
+      {
+        icon: Factory,
+        label: 'Fábrica',
+        path: '/fabricas',
+      },
+      {
+        icon: Mountain,
+        label: 'Mineradoras',
+        path: '/mineradoras',
+      },
+    ],
   },
+
+  // MÓDULO QUALIDADE
   {
-    icon: ClipboardList,
-    label: 'Atividades',
-    path: '/atividade',
+    icon: ShieldCheck,
+    label: 'Qualidade',
+    subItems: [
+      {
+        icon: Bot,
+        label: 'Assistente IA',
+        path: '/qualidade/assistente-ia',
+      },
+      {
+        icon: AlertOctagon,
+        label: 'RNC',
+        path: '/nao-conformidades',
+      },
+      // FUTURO: Análise e Ações Corretivas
+      // FUTURO: Inspeções
+      // FUTURO: Planos de Inspeção
+      // FUTURO: Certificados de Qualidade
+      // FUTURO: Envio de Certificados
+      // FUTURO: Indicadores/Dashboard
+      // FUTURO: Databook
+    ],
   },
-  {
-    icon: Bot,
-    label: 'Assistente IA',
-    path: '/assistente-ia',
-  },
-  {
-    icon: Users,
-    label: 'Usuários',
-    path: '/users',
-  },
-  {
-    icon: Building2,
-    label: 'Obras',
-    path: '/obras',
-  },
-  {
-    icon: Factory,
-    label: 'Fábrica',
-    path: '/fabricas',
-  },
-  {
-    icon: Mountain,
-    label: 'Mineradoras',
-    path: '/mineradoras',
-  },
-  {
-    icon: AlertOctagon,
-    label: 'RNC',
-    path: '/nao-conformidades',
-  },
+
+  // CONFIGURAÇÕES (renomeado de "Gerenciamento")
   {
     icon: Settings,
-    label: 'Gerenciamento',
+    label: 'Configurações',
     subItems: [
       {
         icon: Users,
@@ -81,9 +112,10 @@ export const navItems: MenuItem[] = [
         label: 'Valor por Cargo',
         path: '/gerenciamento/valor-por-cargo',
       }
-      
     ],
   },
+
+  // STANDALONE - Registro de Ponto
   {
     icon: Clock,
     label: 'Registro de Ponto',

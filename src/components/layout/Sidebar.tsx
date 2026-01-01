@@ -14,14 +14,30 @@ export const Sidebar = ({ user }: SidebarProps) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   useEffect(() => {
-    const shouldExpandObras = location.pathname.includes('/obras');
-    const shouldExpandGerenciamento = location.pathname.includes('/gerenciamento');
-    
-    if (shouldExpandObras && !expandedItems.includes('Obras')) {
-      setExpandedItems(prev => [...prev, 'Obras']);
+    const shouldExpandPCP =
+      location.pathname.includes('/dashboard') ||
+      location.pathname.includes('/atividade') ||
+      location.pathname.includes('/assistente-ia') ||
+      location.pathname.includes('/users') ||
+      location.pathname.includes('/obras') ||
+      location.pathname.includes('/fabricas') ||
+      location.pathname.includes('/mineradoras');
+
+    const shouldExpandQualidade =
+      location.pathname.includes('/nao-conformidades') ||
+      location.pathname.includes('/qualidade');
+
+    const shouldExpandConfiguracoes =
+      location.pathname.includes('/gerenciamento');
+
+    if (shouldExpandPCP && !expandedItems.includes('PCP')) {
+      setExpandedItems(prev => [...prev, 'PCP']);
     }
-    if (shouldExpandGerenciamento && !expandedItems.includes('Gerenciamento')) {
-      setExpandedItems(prev => [...prev, 'Gerenciamento']);
+    if (shouldExpandQualidade && !expandedItems.includes('Qualidade')) {
+      setExpandedItems(prev => [...prev, 'Qualidade']);
+    }
+    if (shouldExpandConfiguracoes && !expandedItems.includes('Configurações')) {
+      setExpandedItems(prev => [...prev, 'Configurações']);
     }
   }, [location.pathname]);
 
