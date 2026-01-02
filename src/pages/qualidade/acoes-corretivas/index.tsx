@@ -41,7 +41,7 @@ const AcoesCorretivas = () => {
   const { toast } = useToast();
   const [analises, setAnalises] = useState<AnaliseAcaoCorretiva[]>([]);
   const [projetos, setProjetos] = useState<Obra[]>([]);
-  const [projetoSelecionado, setProjetoSelecionado] = useState<string>('');
+  const [projetoSelecionado, setProjetoSelecionado] = useState<string>('todas');
   const [statusFiltro, setStatusFiltro] = useState<string>('todas');
   const [loading, setLoading] = useState(true);
   const [showNovaAnaliseDialog, setShowNovaAnaliseDialog] = useState(false);
@@ -80,7 +80,7 @@ const AcoesCorretivas = () => {
   }, []);
 
   const analisesFiltradas = analises.filter((analise) => {
-    const filtroProjeto = projetoSelecionado
+    const filtroProjeto = projetoSelecionado !== 'todas'
       ? analise.rnc?.project?.id === projetoSelecionado
       : true;
 
@@ -177,7 +177,7 @@ const AcoesCorretivas = () => {
                   <SelectValue placeholder="Todas as obras" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as obras</SelectItem>
+                  <SelectItem value="todas">Todas as obras</SelectItem>
                   {projetos.map((projeto) => (
                     <SelectItem key={projeto.id} value={projeto.id}>
                       {projeto.name}
@@ -216,7 +216,7 @@ const AcoesCorretivas = () => {
                 <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Nenhuma análise encontrada</p>
                 <p className="text-sm mt-2">
-                  {statusFiltro !== 'todas' || projetoSelecionado
+                  {statusFiltro !== 'todas' || projetoSelecionado !== 'todas'
                     ? 'Tente ajustar os filtros'
                     : 'Crie uma nova análise para começar'}
                 </p>
