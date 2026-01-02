@@ -35,6 +35,7 @@ import { AnaliseAcaoCorretiva } from '@/interfaces/QualidadeInterfaces';
 import AnaliseAcaoCorretivaService from '@/services/AnaliseAcaoCorretivaService';
 import { Badge } from '@/components/ui/badge';
 import { NovaAnaliseDialog } from './NovaAnaliseDialog';
+import { DetalhesAnaliseDialog } from './DetalhesAnaliseDialog';
 
 const AcoesCorretivas = () => {
   const { toast } = useToast();
@@ -44,6 +45,8 @@ const AcoesCorretivas = () => {
   const [statusFiltro, setStatusFiltro] = useState<string>('todas');
   const [loading, setLoading] = useState(true);
   const [showNovaAnaliseDialog, setShowNovaAnaliseDialog] = useState(false);
+  const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
+  const [analiseSelecionada, setAnaliseSelecionada] = useState<AnaliseAcaoCorretiva | null>(null);
 
   const getAllAnalises = async () => {
     try {
@@ -230,7 +233,10 @@ const AcoesCorretivas = () => {
                 <Card
                   key={analise.id}
                   className="hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => {}}
+                  onClick={() => {
+                    setAnaliseSelecionada(analise);
+                    setShowDetalhesDialog(true);
+                  }}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
@@ -322,6 +328,14 @@ const AcoesCorretivas = () => {
           open={showNovaAnaliseDialog}
           onOpenChange={setShowNovaAnaliseDialog}
           onSuccess={getAllAnalises}
+        />
+
+        {/* Dialog de Detalhes */}
+        <DetalhesAnaliseDialog
+          open={showDetalhesDialog}
+          onOpenChange={setShowDetalhesDialog}
+          analise={analiseSelecionada}
+          onUpdate={getAllAnalises}
         />
       </div>
     </Layout>

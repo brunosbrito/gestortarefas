@@ -10,7 +10,15 @@
       "Bash(npm install:*)",
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:dev:*)"
+      "Bash(npm run build:dev:*)",
+      "Bash(rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nCorrigir estrutura do Módulo Qualidade conforme PRD\n\n- Remover \"Envio de Certificados\" como item separado \\(funcionalidade integrada em Certificados Qualidade\\)\n- Adicionar módulo \"Calibração\" para controle de instrumentos e equipamentos\n- Atualizar rotas em App.tsx \\(remover envio-certificados, adicionar calibracao\\)\n- Melhorar lógica de auto-expansão do menu Qualidade no Sidebar\n- Substituir ícone Mail por Gauge para Calibração\n\nMudanças baseadas no PRD do Módulo Qualidade que define 9 funcionalidades:\n1. Assistente IA\n2. RNC\n3. Análise e Ações Corretivas\n4. Inspeções\n5. Planos de Inspeção\n6. Certificados Qualidade \\(com envio integrado\\)\n7. Calibração\n8. Indicadores/Dashboard\n9. Databook\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(GIT_SEQUENCE_EDITOR='cp /tmp/git-rebase-todo' GIT_EDITOR='cp /tmp/git-commit-msg' git rebase -i HEAD~2)",
+      "Bash(git stash:*)",
+      "Bash(npm run lint:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nImplementar Módulo Qualidade - Análise e Ações Corretivas \\(Fase 1\\)\n\n- Criar interfaces TypeScript completas para módulo Qualidade\n  - AnaliseAcaoCorretiva, CincoPorques, DiagramaIshikawa\n  - AcaoCorretiva com 5W2H\n  - Inspecoes, PlanoInspecao, Certificados, Calibracao\n  - Dashboard e Databook\n  \n- Criar serviço AnaliseAcaoCorretivaService\n  - CRUD de análises e ações corretivas\n  - Métodos para atualizar status e eficácia\n  - Consultas para ações atrasadas e relatórios\n  \n- Criar página de Análise e Ações Corretivas\n  - Lista de análises com cards informativos\n  - Filtros por obra e status\n  - Indicadores de progresso por análise\n  - Contadores de ações \\(pendentes, em andamento, concluídas\\)\n  \n- Atualizar App.tsx com lazy loading da nova página\n\nPróximos passos \\(Fase 1\\):\n- Componentes para 5 Porquês e Ishikawa\n- Componente de Plano de Ação \\(5W2H\\)\n- Integração com RNC\n- Dashboard Qualidade básico\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
