@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -148,9 +149,9 @@ export const GerarDatabookDialog = ({
             </div>
             <div>
               <DialogTitle>Gerar Databook Automaticamente</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
+              <DialogDescription>
                 Coleta automática de todos os documentos de qualidade da obra
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>

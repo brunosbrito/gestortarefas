@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -220,6 +221,9 @@ export const UploadCertificadoDialog = ({
             <Upload className="w-5 h-5" />
             Upload de Certificado
           </DialogTitle>
+          <DialogDescription>
+            Faça o upload de certificados de qualidade recebidos de fornecedores ou laboratórios
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

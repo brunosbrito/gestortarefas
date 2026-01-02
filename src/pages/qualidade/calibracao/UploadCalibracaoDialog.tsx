@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -186,6 +187,9 @@ export const UploadCalibracaoDialog = ({
             <Upload className="w-5 h-5" />
             Nova Calibração - {equipamento.nome}
           </DialogTitle>
+          <DialogDescription>
+            Registre o certificado de calibração e atualize o status do equipamento
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

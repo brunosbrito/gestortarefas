@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -185,6 +186,9 @@ export const NovaInspecaoDialog = ({
               )}
             </Button>
           </div>
+          <DialogDescription>
+            Registre uma nova inspeção de qualidade para materiais ou processos
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

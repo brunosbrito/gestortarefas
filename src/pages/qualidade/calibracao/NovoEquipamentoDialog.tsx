@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -240,6 +241,9 @@ export const NovoEquipamentoDialog = ({
             <Gauge className="w-5 h-5" />
             Novo Equipamento
           </DialogTitle>
+          <DialogDescription>
+            Cadastre um novo equipamento de medição e controle de calibração
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
