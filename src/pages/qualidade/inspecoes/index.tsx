@@ -36,6 +36,7 @@ import { Inspecao } from '@/interfaces/QualidadeInterfaces';
 import InspecaoService from '@/services/InspecaoService';
 import { Badge } from '@/components/ui/badge';
 import { NovaInspecaoDialog } from './NovaInspecaoDialog';
+import { DetalhesInspecaoDialog } from './DetalhesInspecaoDialog';
 
 const Inspecoes = () => {
   const { toast } = useToast();
@@ -46,6 +47,8 @@ const Inspecoes = () => {
   const [resultadoFiltro, setResultadoFiltro] = useState<string>('todos');
   const [loading, setLoading] = useState(true);
   const [showNovaInspecaoDialog, setShowNovaInspecaoDialog] = useState(false);
+  const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
+  const [inspecaoSelecionada, setInspecaoSelecionada] = useState<Inspecao | null>(null);
 
   const getAllInspecoes = async () => {
     try {
@@ -306,7 +309,15 @@ const Inspecoes = () => {
                   <span className="text-xs text-muted-foreground">
                     {inspecao.campos?.length || 0} campos inspecionados
                   </span>
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      setInspecaoSelecionada(inspecao);
+                      setShowDetalhesDialog(true);
+                    }}
+                  >
                     <Eye className="w-4 h-4" />
                     Ver Detalhes
                   </Button>
@@ -321,6 +332,13 @@ const Inspecoes = () => {
           open={showNovaInspecaoDialog}
           onOpenChange={setShowNovaInspecaoDialog}
           onSuccess={getAllInspecoes}
+        />
+
+        {/* Dialog de Detalhes */}
+        <DetalhesInspecaoDialog
+          open={showDetalhesDialog}
+          onOpenChange={setShowDetalhesDialog}
+          inspecao={inspecaoSelecionada}
         />
       </div>
     </Layout>
