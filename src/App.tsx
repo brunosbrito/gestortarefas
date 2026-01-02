@@ -23,6 +23,7 @@ const Atividade = lazy(() => import('./pages/Atividade'));
 const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
 const EmConstrucao = lazy(() => import('./pages/EmConstrucao'));
 const DashboardQualidade = lazy(() => import('./pages/qualidade'));
+const AssistenteIAQualidade = lazy(() => import('./pages/qualidade/assistente-ia'));
 const AcoesCorretivas = lazy(() => import('./pages/qualidade/acoes-corretivas'));
 const Inspecoes = lazy(() => import('./pages/qualidade/inspecoes'));
 const PlanosInspecao = lazy(() => import('./pages/qualidade/planos-inspecao'));
@@ -55,7 +56,7 @@ function App() {
           <Route path="/mineradoras" element={<Mineradoras />} />
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
           <Route path="/qualidade" element={<DashboardQualidade />} />
-          <Route path="/qualidade/assistente-ia" element={<EmConstrucao />} />
+          <Route path="/qualidade/assistente-ia" element={<AssistenteIAQualidade />} />
           <Route path="/qualidade/acoes-corretivas" element={<AcoesCorretivas />} />
           <Route path="/qualidade/inspecoes" element={<Inspecoes />} />
           <Route path="/qualidade/planos-inspecao" element={<PlanosInspecao />} />
