@@ -10,6 +10,8 @@ import {
   Building2,
   ChevronDown,
   Calendar,
+  BarChart3,
+  Target,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,21 @@ import ObrasService from '@/services/ObrasService';
 import DashboardQualidadeService from '@/services/DashboardQualidadeService';
 import { format, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 
 const DashboardQualidade = () => {
   const { toast } = useToast();
@@ -37,8 +54,8 @@ const DashboardQualidade = () => {
 
   const [filtros, setFiltros] = useState({
     obraId: 'todas',
-    periodo: 'mes_atual',
-    inicio: format(subMonths(new Date(), 1), 'yyyy-MM-dd'),
+    periodo: 'semestre',
+    inicio: format(subMonths(new Date(), 6), 'yyyy-MM-dd'),
     fim: format(new Date(), 'yyyy-MM-dd'),
   });
 
@@ -79,6 +96,10 @@ const DashboardQualidade = () => {
     },
   });
 
+  const [tendenciaData, setTendenciaData] = useState<any[]>([]);
+  const [topCausasNC, setTopCausasNC] = useState<any[]>([]);
+  const [performancePorObra, setPerformancePorObra] = useState<any[]>([]);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -109,6 +130,18 @@ const DashboardQualidade = () => {
 
       const data = await DashboardQualidadeService.getMetrics(periodo, obraId);
       setMetrics(data);
+
+      // Carregar dados de tendência (últimos 6 meses)
+      const tendencia = await DashboardQualidadeService.getTendencia(periodo, obraId);
+      setTendenciaData(tendencia);
+
+      // Carregar Top 5 causas de NC
+      const topCausas = await DashboardQualidadeService.getTopCausasNC(periodo, obraId);
+      setTopCausasNC(topCausas);
+
+      // Carregar Performance por Obra
+      const performance = await DashboardQualidadeService.getPerformancePorObra(periodo);
+      setPerformancePorObra(performance);
     } catch (error) {
       console.error('Erro ao carregar métricas:', error);
       toast({
@@ -144,7 +177,7 @@ const DashboardQualidade = () => {
         inicio = subMonths(hoje, 12);
         break;
       default:
-        inicio = subMonths(hoje, 1);
+        inicio = subMonths(hoje, 6);
     }
 
     setFiltros({
@@ -190,6 +223,9 @@ const DashboardQualidade = () => {
       trend: metrics.calibracao.emDia > 0 ? `${metrics.calibracao.emDia} em dia` : null,
     },
   ];
+
+  // Cores para gráficos
+  const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   if (loading && metrics.rncs.total === 0) {
     return (
@@ -321,6 +357,174 @@ const DashboardQualidade = () => {
               </Card>
             ))}
           </div>
+
+          {/* Gráficos de Tendência */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-2 border-b">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BarChart3 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Análises e Tendências</h2>
+                <p className="text-sm text-muted-foreground">Evolução temporal dos indicadores</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Gráfico de Tendência - RNCs e Inspeções */}
+              <Card className="shadow-elevation-2">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    Tendência - RNCs e Inspeções
+                  </CardTitle>
+                  <CardDescription>Evolução mensal dos últimos {filtros.periodo === 'ano' ? '12' : filtros.periodo === 'semestre' ? '6' : '3'} meses</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {tendenciaData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={tendenciaData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis
+                          dataKey="mes"
+                          tick={{ fontSize: 12 }}
+                          stroke="#888"
+                        />
+                        <YAxis tick={{ fontSize: 12 }} stroke="#888" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #ddd',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="rncs"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          name="RNCs"
+                          dot={{ fill: '#ef4444', r: 4 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="inspecoes"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          name="Inspeções"
+                          dot={{ fill: '#3b82f6', r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      Sem dados para exibir
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Gráfico de Pareto - Top 5 Causas de NC */}
+              <Card className="shadow-elevation-2">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Target className="w-4 h-4" />
+                    Top 5 Causas de Não Conformidades
+                  </CardTitle>
+                  <CardDescription>Análise de Pareto - Causas mais frequentes</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {topCausasNC.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={topCausasNC}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis
+                          dataKey="causa"
+                          tick={{ fontSize: 11 }}
+                          angle={-15}
+                          textAnchor="end"
+                          height={80}
+                          stroke="#888"
+                        />
+                        <YAxis tick={{ fontSize: 12 }} stroke="#888" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #ddd',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Legend />
+                        <Bar
+                          dataKey="quantidade"
+                          fill="#ef4444"
+                          name="Ocorrências"
+                          radius={[8, 8, 0, 0]}
+                        >
+                          {topCausasNC.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      Sem dados para exibir
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Performance por Obra */}
+          {performancePorObra.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 pb-2 border-b">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Building2 className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">Performance por Obra</h2>
+                  <p className="text-sm text-muted-foreground">Comparativo de indicadores entre obras</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {performancePorObra.map((obra, index) => (
+                  <Card key={index} className="hover:shadow-lg transition-all">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-primary" />
+                        {obra.obraNome}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-950/20 rounded">
+                          <span className="text-sm font-medium">RNCs</span>
+                          <span className="text-lg font-bold text-red-600">{obra.totalNCs || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/20 rounded">
+                          <span className="text-sm font-medium">Inspeções</span>
+                          <span className="text-lg font-bold text-blue-600">{obra.totalInspecoes || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded">
+                          <span className="text-sm font-medium">Cert. Pendentes</span>
+                          <span className="text-lg font-bold text-yellow-600">{obra.certificadosPendentes || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950/20 rounded">
+                          <span className="text-sm font-medium">Taxa Conformidade</span>
+                          <span className="text-lg font-bold text-green-600">{obra.taxaConformidade?.toFixed(0) || 0}%</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Grid de Métricas Detalhadas */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -59,34 +59,95 @@ class DashboardQualidadeService {
     }
   }
 
-  async getTopCausasNC(limit: number = 5): Promise<{
-    causa: string;
-    quantidade: number;
-    percentual: number;
+  async getTendencia(
+    periodo?: { inicio: string; fim: string },
+    obraId?: string
+  ): Promise<{
+    mes: string;
+    rncs: number;
+    inspecoes: number;
   }[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/top-causas-nc?limit=${limit}`);
+      const params = new URLSearchParams();
+
+      if (periodo) {
+        params.append('inicio', periodo.inicio);
+        params.append('fim', periodo.fim);
+      }
+
+      if (obraId) {
+        params.append('obraId', obraId);
+      }
+
+      const url = params.toString() ? `${this.baseURL}/tendencia?${params.toString()}` : `${this.baseURL}/tendencia`;
+      const response = await axios.get(url);
       return response.data;
     } catch (error) {
-      console.error('Erro ao buscar top causas de NC:', error);
-      throw error;
+      console.error('Erro ao buscar tendência:', error);
+      // Retornar array vazio em caso de erro
+      return [];
     }
   }
 
-  async getPerformancePorObra(): Promise<{
+  async getTopCausasNC(
+    periodo?: { inicio: string; fim: string },
+    obraId?: string,
+    limit: number = 5
+  ): Promise<{
+    causa: string;
+    quantidade: number;
+    percentual?: number;
+  }[]> {
+    try {
+      const params = new URLSearchParams();
+      params.append('limit', limit.toString());
+
+      if (periodo) {
+        params.append('inicio', periodo.inicio);
+        params.append('fim', periodo.fim);
+      }
+
+      if (obraId) {
+        params.append('obraId', obraId);
+      }
+
+      const url = `${this.baseURL}/top-causas-nc?${params.toString()}`;
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar top causas de NC:', error);
+      // Retornar array vazio em caso de erro
+      return [];
+    }
+  }
+
+  async getPerformancePorObra(
+    periodo?: { inicio: string; fim: string }
+  ): Promise<{
     obraId: string;
     obraNome: string;
     totalNCs: number;
+    totalInspecoes?: number;
     certificadosPendentes: number;
-    inspecoesReprovadas: number;
-    score: number;
+    inspecoesReprovadas?: number;
+    taxaConformidade?: number;
+    score?: number;
   }[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/performance-obras`);
+      const params = new URLSearchParams();
+
+      if (periodo) {
+        params.append('inicio', periodo.inicio);
+        params.append('fim', periodo.fim);
+      }
+
+      const url = params.toString() ? `${this.baseURL}/performance-obras?${params.toString()}` : `${this.baseURL}/performance-obras`;
+      const response = await axios.get(url);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar performance por obra:', error);
-      throw error;
+      // Retornar array vazio em caso de erro
+      return [];
     }
   }
 
