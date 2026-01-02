@@ -237,11 +237,21 @@ const Inspecoes = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {inspecoesFiltradas.map((inspecao) => (
-              <Card
-                key={inspecao.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-              >
+            {inspecoesFiltradas.map((inspecao) => {
+              // Determinar cor da borda baseado no resultado
+              const getBorderColor = () => {
+                if (inspecao.resultado === 'aprovado') return 'border-l-green-500 bg-green-50/30';
+                if (inspecao.resultado === 'aprovado_com_ressalvas') return 'border-l-yellow-500 bg-yellow-50/30';
+                if (inspecao.resultado === 'reprovado') return 'border-l-red-500 bg-red-50/30';
+                return 'border-l-gray-300 bg-gray-50/30';
+              };
+
+              return (
+                <Card
+                  key={inspecao.id}
+                  className={`hover:shadow-lg transition-all cursor-pointer border-l-4 ${getBorderColor()}`}
+                >
+
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
@@ -323,7 +333,8 @@ const Inspecoes = () => {
                   </Button>
                 </CardFooter>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
 

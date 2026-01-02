@@ -287,12 +287,19 @@ const Calibracao = () => {
                 ? getDiasProximaCalibracao(ultimaCalibracao.proximaCalibracao)
                 : null;
 
+              // Determinar cor da borda baseado no status
+              const getBorderColor = () => {
+                if (equipamento.status === 'em_dia') return 'border-l-green-500 bg-green-50/30';
+                if (equipamento.status === 'proximo_vencimento') return 'border-l-yellow-500 bg-yellow-50/30';
+                if (equipamento.status === 'vencido') return 'border-l-red-500 bg-red-50/30';
+                if (equipamento.status === 'reprovado') return 'border-l-gray-500 bg-gray-50/30';
+                return 'border-l-gray-300 bg-gray-50/30';
+              };
+
               return (
                 <Card
                   key={equipamento.id}
-                  className={`hover:shadow-lg transition-shadow ${
-                    equipamento.status === 'vencido' ? 'border-red-300' : ''
-                  }`}
+                  className={`hover:shadow-lg transition-all border-l-4 ${getBorderColor()}`}
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2 mb-2">

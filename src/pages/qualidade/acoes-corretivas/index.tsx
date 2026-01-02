@@ -229,10 +229,18 @@ const AcoesCorretivas = () => {
               const { total, pendentes, emAndamento, concluidas } = contarAcoesPorStatus(analise);
               const progressoPercentual = total > 0 ? (concluidas / total) * 100 : 0;
 
+              // Determinar cor da borda baseado no progresso
+              const getBorderColor = () => {
+                if (progressoPercentual === 100) return 'border-l-green-500 bg-green-50/30';
+                if (pendentes > 0) return 'border-l-yellow-500 bg-yellow-50/30';
+                if (emAndamento > 0) return 'border-l-blue-500 bg-blue-50/30';
+                return 'border-l-gray-300 bg-gray-50/30';
+              };
+
               return (
                 <Card
                   key={analise.id}
-                  className="hover:shadow-lg transition-shadow cursor-pointer"
+                  className={`hover:shadow-lg transition-all cursor-pointer border-l-4 ${getBorderColor()}`}
                   onClick={() => {
                     setAnaliseSelecionada(analise);
                     setShowDetalhesDialog(true);

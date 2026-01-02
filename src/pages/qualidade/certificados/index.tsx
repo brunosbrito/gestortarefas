@@ -301,11 +301,24 @@ const Certificados = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {certificados.map((certificado) => (
-              <Card
-                key={certificado.id}
-                className="hover:shadow-lg transition-shadow"
-              >
+            {certificados.map((certificado) => {
+              // Determinar cor da borda baseado no status
+              const getBorderColor = () => {
+                if (certificado.status === 'aprovado') return 'border-l-green-500 bg-green-50/30';
+                if (certificado.status === 'enviado') return 'border-l-purple-500 bg-purple-50/30';
+                if (certificado.status === 'recebido') return 'border-l-blue-500 bg-blue-50/30';
+                if (certificado.status === 'pendente') return 'border-l-gray-400 bg-gray-50/30';
+                if (certificado.status === 'em_analise') return 'border-l-yellow-500 bg-yellow-50/30';
+                if (certificado.status === 'reprovado') return 'border-l-red-500 bg-red-50/30';
+                return 'border-l-gray-300 bg-gray-50/30';
+              };
+
+              return (
+                <Card
+                  key={certificado.id}
+                  className={`hover:shadow-lg transition-all border-l-4 ${getBorderColor()}`}
+                >
+
                 <CardHeader>
                   <div className="flex items-start gap-2">
                     <Checkbox
@@ -403,7 +416,8 @@ const Certificados = () => {
                   )}
                 </CardFooter>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
 

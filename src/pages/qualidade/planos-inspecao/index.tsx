@@ -234,13 +234,23 @@ const PlanosInspecao = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {planosFiltrados.map((plano) => (
-              <Card
-                key={plano.id}
-                className={`hover:shadow-lg transition-shadow ${
-                  !plano.ativo ? 'opacity-60' : ''
-                }`}
-              >
+            {planosFiltrados.map((plano) => {
+              // Determinar cor da borda baseado no tipo e status
+              const getBorderColor = () => {
+                if (!plano.ativo) return 'border-l-gray-400 bg-gray-50/30';
+                if (plano.tipo === 'recebimento') return 'border-l-blue-500 bg-blue-50/30';
+                if (plano.tipo === 'em_processo') return 'border-l-purple-500 bg-purple-50/30';
+                if (plano.tipo === 'final') return 'border-l-green-500 bg-green-50/30';
+                if (plano.tipo === 'auditoria') return 'border-l-orange-500 bg-orange-50/30';
+                return 'border-l-gray-300 bg-gray-50/30';
+              };
+
+              return (
+                <Card
+                  key={plano.id}
+                  className={`hover:shadow-lg transition-all border-l-4 ${getBorderColor()}`}
+                >
+
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
@@ -349,8 +359,9 @@ const PlanosInspecao = () => {
                     )}
                   </Button>
                 </CardFooter>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
 
