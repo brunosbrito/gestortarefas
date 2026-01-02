@@ -22,7 +22,7 @@ import { Obra } from '@/interfaces/ObrasInterface';
 import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ObrasService from '@/services/ObrasService';
-import ServiceOrderService from '@/services/ServiceOrderService';
+import * as ServiceOrderService from '@/services/ServiceOrderService';
 import ColaboradorService from '@/services/ColaboradorService';
 import InspecaoService from '@/services/InspecaoService';
 
