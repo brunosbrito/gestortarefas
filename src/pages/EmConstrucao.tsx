@@ -6,7 +6,7 @@ interface EmConstrucaoProps {
   descricao?: string;
 }
 
-export const EmConstrucao = ({
+const EmConstrucao = ({
   titulo = "Em Construção",
   descricao = "Esta funcionalidade está sendo desenvolvida e estará disponível em breve."
 }: EmConstrucaoProps) => {
@@ -29,3 +29,5 @@ export const EmConstrucao = ({
     </div>
   );
 };
+
+export default EmConstrucao;
