@@ -19,7 +19,7 @@ import {
   ClipboardCheck,
   FileCheck,
   Award,
-  Mail,
+  Gauge,
   BarChart3,
   BookOpen,
 } from 'lucide-react';
@@ -105,9 +105,9 @@ export const navItems: MenuItem[] = [
         path: '/qualidade/certificados',
       },
       {
-        icon: Mail,
-        label: 'Envio de Certificados',
-        path: '/qualidade/envio-certificados',
+        icon: Gauge,
+        label: 'Calibração',
+        path: '/qualidade/calibracao',
       },
       {
         icon: BarChart3,

@@ -25,7 +25,14 @@ export const Sidebar = ({ user }: SidebarProps) => {
 
     const shouldExpandQualidade =
       location.pathname.includes('/nao-conformidades') ||
-      location.pathname.includes('/qualidade');
+      location.pathname.includes('/qualidade/assistente-ia') ||
+      location.pathname.includes('/qualidade/acoes-corretivas') ||
+      location.pathname.includes('/qualidade/inspecoes') ||
+      location.pathname.includes('/qualidade/planos-inspecao') ||
+      location.pathname.includes('/qualidade/certificados') ||
+      location.pathname.includes('/qualidade/calibracao') ||
+      location.pathname.includes('/qualidade/indicadores') ||
+      location.pathname.includes('/qualidade/databook');
 
     const shouldExpandConfiguracoes =
       location.pathname.includes('/gerenciamento');
