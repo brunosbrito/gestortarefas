@@ -22,10 +22,12 @@ const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
 const Atividade = lazy(() => import('./pages/Atividade'));
 const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
 const EmConstrucao = lazy(() => import('./pages/EmConstrucao'));
+const DashboardQualidade = lazy(() => import('./pages/qualidade'));
 const AcoesCorretivas = lazy(() => import('./pages/qualidade/acoes-corretivas'));
 const Inspecoes = lazy(() => import('./pages/qualidade/inspecoes'));
 const PlanosInspecao = lazy(() => import('./pages/qualidade/planos-inspecao'));
 const Certificados = lazy(() => import('./pages/qualidade/certificados'));
+const Calibracao = lazy(() => import('./pages/qualidade/calibracao'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -52,13 +54,14 @@ function App() {
           <Route path="/fabricas" element={<Fabricas />} />
           <Route path="/mineradoras" element={<Mineradoras />} />
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
+          <Route path="/qualidade" element={<DashboardQualidade />} />
           <Route path="/qualidade/assistente-ia" element={<EmConstrucao />} />
           <Route path="/qualidade/acoes-corretivas" element={<AcoesCorretivas />} />
           <Route path="/qualidade/inspecoes" element={<Inspecoes />} />
           <Route path="/qualidade/planos-inspecao" element={<PlanosInspecao />} />
           <Route path="/qualidade/certificados" element={<Certificados />} />
-          <Route path="/qualidade/calibracao" element={<EmConstrucao />} />
-          <Route path="/qualidade/indicadores" element={<EmConstrucao />} />
+          <Route path="/qualidade/calibracao" element={<Calibracao />} />
+          <Route path="/qualidade/indicadores" element={<DashboardQualidade />} />
           <Route path="/qualidade/databook" element={<EmConstrucao />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
