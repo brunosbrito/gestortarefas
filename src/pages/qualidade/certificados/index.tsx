@@ -234,6 +234,67 @@ const Certificados = () => {
           </div>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Total</CardDescription>
+              <CardTitle className="text-3xl">{certificados.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Certificados</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Pendentes</CardDescription>
+              <CardTitle className="text-3xl text-yellow-700">
+                {certificados.filter(c => c.status === 'pendente').length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm text-yellow-700">Aguardando</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Aprovados</CardDescription>
+              <CardTitle className="text-3xl text-green-700">
+                {certificados.filter(c => c.status === 'aprovado').length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-green-700">Validados</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-purple-500 bg-purple-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Enviados</CardDescription>
+              <CardTitle className="text-3xl text-purple-700">
+                {certificados.filter(c => c.status === 'enviado').length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-purple-600" />
+                <span className="text-sm text-purple-700">Entregues</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filtros */}
         <Card>
           <CardHeader>

@@ -172,6 +172,67 @@ const PlanosInspecao = () => {
           </Button>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Total</CardDescription>
+              <CardTitle className="text-3xl">{planos.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Planos</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Ativos</CardDescription>
+              <CardTitle className="text-3xl text-green-700">
+                {planos.filter(p => p.ativo).length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Power className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-green-700">Em uso</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-gray-500 bg-gray-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Inativos</CardDescription>
+              <CardTitle className="text-3xl text-gray-700">
+                {planos.filter(p => !p.ativo).length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <PowerOff className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-700">Desativados</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-blue-500 bg-blue-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Campos</CardDescription>
+              <CardTitle className="text-3xl text-blue-700">
+                {planos.reduce((acc, p) => acc + (p.campos?.length || 0), 0)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-blue-600" />
+                <span className="text-sm text-blue-700">Configurados</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filtros */}
         <Card>
           <CardHeader>

@@ -162,7 +162,7 @@ const Calibracao = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
               <CardTitle className="text-3xl">{stats.total}</CardTitle>
@@ -175,7 +175,7 @@ const Calibracao = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-green-200 bg-green-50/50">
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
             <CardHeader className="pb-2">
               <CardDescription>Em Dia</CardDescription>
               <CardTitle className="text-3xl text-green-700">{stats.emDia}</CardTitle>
@@ -188,7 +188,7 @@ const Calibracao = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-yellow-200 bg-yellow-50/50">
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
             <CardHeader className="pb-2">
               <CardDescription>Próximo Vencimento</CardDescription>
               <CardTitle className="text-3xl text-yellow-700">{stats.proximo}</CardTitle>
@@ -201,7 +201,7 @@ const Calibracao = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-red-200 bg-red-50/50">
+          <Card className="border-l-4 border-l-red-500 bg-red-50/30">
             <CardHeader className="pb-2">
               <CardDescription>Vencidos</CardDescription>
               <CardTitle className="text-3xl text-red-700">{stats.vencido}</CardTitle>
