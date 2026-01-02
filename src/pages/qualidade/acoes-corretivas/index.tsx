@@ -34,6 +34,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AnaliseAcaoCorretiva } from '@/interfaces/QualidadeInterfaces';
 import AnaliseAcaoCorretivaService from '@/services/AnaliseAcaoCorretivaService';
 import { Badge } from '@/components/ui/badge';
+import { NovaAnaliseDialog } from './NovaAnaliseDialog';
 
 const AcoesCorretivas = () => {
   const { toast } = useToast();
@@ -42,6 +43,7 @@ const AcoesCorretivas = () => {
   const [projetoSelecionado, setProjetoSelecionado] = useState<string>('');
   const [statusFiltro, setStatusFiltro] = useState<string>('todas');
   const [loading, setLoading] = useState(true);
+  const [showNovaAnaliseDialog, setShowNovaAnaliseDialog] = useState(false);
 
   const getAllAnalises = async () => {
     try {
@@ -150,7 +152,7 @@ const AcoesCorretivas = () => {
               Análise de causa raiz e planos de ação
             </p>
           </div>
-          <Button onClick={() => {}} className="gap-2">
+          <Button onClick={() => setShowNovaAnaliseDialog(true)} className="gap-2">
             <Plus className="w-4 h-4" />
             Nova Análise
           </Button>
@@ -314,6 +316,13 @@ const AcoesCorretivas = () => {
             })}
           </div>
         )}
+
+        {/* Dialog de Nova Análise */}
+        <NovaAnaliseDialog
+          open={showNovaAnaliseDialog}
+          onOpenChange={setShowNovaAnaliseDialog}
+          onSuccess={getAllAnalises}
+        />
       </div>
     </Layout>
   );
