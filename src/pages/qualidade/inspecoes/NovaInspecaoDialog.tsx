@@ -86,7 +86,7 @@ export const NovaInspecaoDialog = ({
 
   const loadOrdens = async (projectId: string) => {
     try {
-      const ordensData = await ServiceOrderService.getServiceOrdersByProjectId(projectId);
+      const ordensData = await ServiceOrderService.getServiceOrderByProjectId(projectId);
       setOrdens(ordensData);
     } catch (error) {
       console.error('Erro ao carregar ordens:', error);
