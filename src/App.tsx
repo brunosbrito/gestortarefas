@@ -53,7 +53,7 @@ function App() {
           <Route path="/qualidade/inspecoes" element={<EmConstrucao />} />
           <Route path="/qualidade/planos-inspecao" element={<EmConstrucao />} />
           <Route path="/qualidade/certificados" element={<EmConstrucao />} />
-          <Route path="/qualidade/envio-certificados" element={<EmConstrucao />} />
+          <Route path="/qualidade/calibracao" element={<EmConstrucao />} />
           <Route path="/qualidade/indicadores" element={<EmConstrucao />} />
           <Route path="/qualidade/databook" element={<EmConstrucao />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
