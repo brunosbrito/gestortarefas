@@ -18,7 +18,9 @@
       "Bash(git stash:*)",
       "Bash(npm run lint:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nImplementar Módulo Qualidade - Análise e Ações Corretivas \\(Fase 1\\)\n\n- Criar interfaces TypeScript completas para módulo Qualidade\n  - AnaliseAcaoCorretiva, CincoPorques, DiagramaIshikawa\n  - AcaoCorretiva com 5W2H\n  - Inspecoes, PlanoInspecao, Certificados, Calibracao\n  - Dashboard e Databook\n  \n- Criar serviço AnaliseAcaoCorretivaService\n  - CRUD de análises e ações corretivas\n  - Métodos para atualizar status e eficácia\n  - Consultas para ações atrasadas e relatórios\n  \n- Criar página de Análise e Ações Corretivas\n  - Lista de análises com cards informativos\n  - Filtros por obra e status\n  - Indicadores de progresso por análise\n  - Contadores de ações \\(pendentes, em andamento, concluídas\\)\n  \n- Atualizar App.tsx com lazy loading da nova página\n\nPróximos passos \\(Fase 1\\):\n- Componentes para 5 Porquês e Ishikawa\n- Componente de Plano de Ação \\(5W2H\\)\n- Integração com RNC\n- Dashboard Qualidade básico\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(dir \"c:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\\\\src\\\\pages\\\\qualidade\\\\acoes-corretivas\")",
+      "Bash(dir \"c:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\\\\src\\\\pages\\\\qualidade\\\\acoes-corretivas\\\\components\")"
     ]
   }
 }
