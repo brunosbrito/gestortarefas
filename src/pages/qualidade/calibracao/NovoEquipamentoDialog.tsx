@@ -74,8 +74,43 @@ export const NovoEquipamentoDialog = ({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (e.target.files && e.target.files[0]) {
-      setArquivo(e.target.files[0]);
+      const file = e.target.files[0];
+
+      // Validar tamanho (máximo 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'Arquivo muito grande',
+          description: 'O arquivo deve ter no máximo 10MB.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Validar tipo (apenas PDF para certificados de calibração)
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: 'Tipo de arquivo inválido',
+          description: 'Apenas arquivos PDF são permitidos.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setArquivo(file);
+    }
+    // Limpar o input para permitir selecionar o mesmo arquivo novamente
+    e.target.value = '';
+  };
+
+  const handleClickUpload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const fileInput = document.getElementById('file-upload-cert') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
     }
   };
 
