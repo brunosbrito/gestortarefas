@@ -42,7 +42,7 @@ const Inspecoes = () => {
   const { toast } = useToast();
   const [inspecoes, setInspecoes] = useState<Inspecao[]>([]);
   const [projetos, setProjetos] = useState<Obra[]>([]);
-  const [projetoSelecionado, setProjetoSelecionado] = useState<string>('');
+  const [projetoSelecionado, setProjetoSelecionado] = useState<string>('todas');
   const [tipoFiltro, setTipoFiltro] = useState<string>('todas');
   const [resultadoFiltro, setResultadoFiltro] = useState<string>('todos');
   const [loading, setLoading] = useState(true);
@@ -82,7 +82,7 @@ const Inspecoes = () => {
   }, []);
 
   const inspecoesFiltradas = inspecoes.filter((inspecao) => {
-    const filtroProjeto = projetoSelecionado
+    const filtroProjeto = projetoSelecionado !== 'todas'
       ? inspecao.project?.id === projetoSelecionado
       : true;
 
@@ -171,7 +171,7 @@ const Inspecoes = () => {
                   <SelectValue placeholder="Todas as obras" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as obras</SelectItem>
+                  <SelectItem value="todas">Todas as obras</SelectItem>
                   {projetos.map((projeto) => (
                     <SelectItem key={projeto.id} value={projeto.id}>
                       {projeto.name}
@@ -228,7 +228,7 @@ const Inspecoes = () => {
                 <ClipboardCheck className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Nenhuma inspeção encontrada</p>
                 <p className="text-sm mt-2">
-                  {tipoFiltro !== 'todas' || resultadoFiltro !== 'todos' || projetoSelecionado
+                  {tipoFiltro !== 'todas' || resultadoFiltro !== 'todos' || projetoSelecionado !== 'todas'
                     ? 'Tente ajustar os filtros'
                     : 'Crie uma nova inspeção para começar'}
                 </p>

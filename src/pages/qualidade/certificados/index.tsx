@@ -45,7 +45,7 @@ const Certificados = () => {
   const { toast } = useToast();
   const [certificados, setCertificados] = useState<Certificado[]>([]);
   const [projetos, setProjetos] = useState<Obra[]>([]);
-  const [projetoSelecionado, setProjetoSelecionado] = useState<string>('');
+  const [projetoSelecionado, setProjetoSelecionado] = useState<string>('todas');
   const [statusFiltro, setStatusFiltro] = useState<string>('todos');
   const [loading, setLoading] = useState(true);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
@@ -58,7 +58,7 @@ const Certificados = () => {
     try {
       setLoading(true);
       const filtros = {
-        projectId: projetoSelecionado || undefined,
+        projectId: projetoSelecionado !== 'todas' ? projetoSelecionado : undefined,
         status: statusFiltro !== 'todos' ? statusFiltro : undefined,
       };
       const data = await CertificadoService.getAll(filtros);
@@ -250,7 +250,7 @@ const Certificados = () => {
                   <SelectValue placeholder="Todas as obras" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as obras</SelectItem>
+                  <SelectItem value="todas">Todas as obras</SelectItem>
                   {projetos.map((projeto) => (
                     <SelectItem key={projeto.id} value={projeto.id}>
                       {projeto.name}
@@ -292,7 +292,7 @@ const Certificados = () => {
                 <FileCheck className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Nenhum certificado encontrado</p>
                 <p className="text-sm mt-2">
-                  {statusFiltro !== 'todos' || projetoSelecionado
+                  {statusFiltro !== 'todos' || projetoSelecionado !== 'todas'
                     ? 'Tente ajustar os filtros'
                     : 'Faça upload de um certificado para começar'}
                 </p>
