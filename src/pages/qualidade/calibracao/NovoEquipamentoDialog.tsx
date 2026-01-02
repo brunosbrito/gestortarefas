@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -20,7 +21,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import ColaboradorService from '@/services/ColaboradorService';
 import EquipamentoService from '@/services/EquipamentoService';
-import { Gauge } from 'lucide-react';
+import { Gauge, FileCheck, Upload } from 'lucide-react';
+import { addMonths, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface NovoEquipamentoDialogProps {
   open: boolean;
@@ -36,6 +39,8 @@ export const NovoEquipamentoDialog = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [incluirCertificado, setIncluirCertificado] = useState(false);
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -46,6 +51,11 @@ export const NovoEquipamentoDialog = ({
     responsavelId: '',
     frequenciaCalibracao: '12',
     laboratorioCalibrador: '',
+    // Campos do certificado inicial (opcionais)
+    numeroCertificado: '',
+    dataCalibracao: new Date().toISOString().split('T')[0],
+    resultado: 'aprovado',
+    observacoes: '',
   });
 
   useEffect(() => {
@@ -63,6 +73,12 @@ export const NovoEquipamentoDialog = ({
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setArquivo(e.target.files[0]);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       nome: '',
@@ -73,7 +89,13 @@ export const NovoEquipamentoDialog = ({
       responsavelId: '',
       frequenciaCalibracao: '12',
       laboratorioCalibrador: '',
+      numeroCertificado: '',
+      dataCalibracao: new Date().toISOString().split('T')[0],
+      resultado: 'aprovado',
+      observacoes: '',
     });
+    setArquivo(null);
+    setIncluirCertificado(false);
   };
 
   const handleSubmit = async () => {
@@ -95,21 +117,69 @@ export const NovoEquipamentoDialog = ({
       return;
     }
 
+    // Validações se incluir certificado
+    if (incluirCertificado) {
+      if (!formData.numeroCertificado.trim()) {
+        toast({
+          title: 'Erro',
+          description: 'O número do certificado é obrigatório.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!arquivo) {
+        toast({
+          title: 'Erro',
+          description: 'Selecione o arquivo do certificado.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
-      const data = {
-        ...formData,
+      const equipamentoData = {
+        nome: formData.nome,
+        tipo: formData.tipo,
+        numeroSerie: formData.numeroSerie,
+        patrimonio: formData.patrimonio,
+        setor: formData.setor,
+        responsavelId: formData.responsavelId,
         frequenciaCalibracao: parseInt(formData.frequenciaCalibracao),
+        laboratorioCalibrador: formData.laboratorioCalibrador,
         ativo: true,
-        status: 'vencido', // Novo equipamento sem calibração inicial
+        status: incluirCertificado && formData.resultado === 'aprovado' ? 'em_dia' : 'vencido',
       };
 
-      await EquipamentoService.create(data);
+      const equipamento = await EquipamentoService.create(equipamentoData);
+
+      // Se incluir certificado, fazer upload após criar equipamento
+      if (incluirCertificado && arquivo) {
+        const dataCalibracao = new Date(formData.dataCalibracao);
+        const proximaCalibracao = addMonths(dataCalibracao, parseInt(formData.frequenciaCalibracao));
+
+        const formDataToSend = new FormData();
+        formDataToSend.append('file', arquivo);
+        formDataToSend.append('numeroCertificado', formData.numeroCertificado);
+        formDataToSend.append('laboratorio', formData.laboratorioCalibrador || 'Não informado');
+        formDataToSend.append('dataCalibracao', formData.dataCalibracao);
+        formDataToSend.append('proximaCalibracao', proximaCalibracao.toISOString().split('T')[0]);
+        formDataToSend.append('resultado', formData.resultado);
+        if (formData.observacoes) {
+          formDataToSend.append('observacoes', formData.observacoes);
+        }
+
+        await EquipamentoService.addCalibracao(equipamento.id, formDataToSend);
+      }
 
       toast({
         title: 'Sucesso',
-        description: 'Equipamento cadastrado com sucesso.',
+        description: incluirCertificado
+          ? 'Equipamento cadastrado e certificado registrado com sucesso.'
+          : 'Equipamento cadastrado com sucesso.',
       });
 
       onSuccess();
@@ -239,12 +309,148 @@ export const NovoEquipamentoDialog = ({
             </div>
           </div>
 
-          <div className="bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded border border-yellow-200">
-            <p className="text-sm text-yellow-800 dark:text-yellow-500">
-              <strong>Atenção:</strong> Após cadastrar o equipamento, faça o upload do certificado
-              de calibração para definir a próxima data de calibração e o status do equipamento.
-            </p>
+          {/* Seção Opcional: Incluir Certificado Inicial */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="font-medium">Incluir Certificado Inicial (Opcional)</h4>
+                <p className="text-sm text-muted-foreground">
+                  Adicione o certificado de calibração já no cadastro
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant={incluirCertificado ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setIncluirCertificado(!incluirCertificado)}
+              >
+                {incluirCertificado ? 'Remover Certificado' : 'Adicionar Certificado'}
+              </Button>
+            </div>
+
+            {incluirCertificado && (
+              <div className="space-y-4 bg-blue-50/50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Número do Certificado *</Label>
+                    <Input
+                      placeholder="Ex: CERT-2024-001"
+                      value={formData.numeroCertificado}
+                      onChange={(e) =>
+                        setFormData({ ...formData, numeroCertificado: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Data da Calibração *</Label>
+                    <Input
+                      type="date"
+                      value={formData.dataCalibracao}
+                      onChange={(e) =>
+                        setFormData({ ...formData, dataCalibracao: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Resultado *</Label>
+                    <Select
+                      value={formData.resultado}
+                      onValueChange={(value) => setFormData({ ...formData, resultado: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o resultado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="aprovado">Aprovado</SelectItem>
+                        <SelectItem value="reprovado">Reprovado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Próxima Calibração</Label>
+                    <Input
+                      value={
+                        formData.dataCalibracao
+                          ? format(
+                              addMonths(
+                                new Date(formData.dataCalibracao),
+                                parseInt(formData.frequenciaCalibracao)
+                              ),
+                              'dd/MM/yyyy',
+                              { locale: ptBR }
+                            )
+                          : ''
+                      }
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Observações</Label>
+                    <Textarea
+                      placeholder="Observações adicionais sobre a calibração..."
+                      value={formData.observacoes}
+                      onChange={(e) =>
+                        setFormData({ ...formData, observacoes: e.target.value })
+                      }
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Certificado de Calibração (PDF) *</Label>
+                  <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                    <Input
+                      id="file-upload-cert"
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label htmlFor="file-upload-cert" className="cursor-pointer">
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="w-8 h-8 text-muted-foreground" />
+                        <div>
+                          <span className="text-primary font-medium">
+                            Clique para selecionar
+                          </span>
+                          <span className="text-muted-foreground"> ou arraste o arquivo</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Apenas PDF (máx. 10MB)
+                        </p>
+                      </div>
+                    </label>
+                    {arquivo && (
+                      <div className="mt-3 p-2 bg-muted rounded flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileCheck className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium">{arquivo.name}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {(arquivo.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
+          {!incluirCertificado && (
+            <div className="bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded border border-yellow-200">
+              <p className="text-sm text-yellow-800 dark:text-yellow-500">
+                <strong>Atenção:</strong> Após cadastrar o equipamento, faça o upload do certificado
+                de calibração para definir a próxima data de calibração e o status do equipamento.
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
