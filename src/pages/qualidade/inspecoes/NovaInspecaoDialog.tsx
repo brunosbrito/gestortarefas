@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ export const NovaInspecaoDialog = ({
 }: NovaInspecaoDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [maximized, setMaximized] = useState(false);
   const [projetos, setProjetos] = useState<Obra[]>([]);
   const [ordens, setOrdens] = useState<ServiceOrder[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -166,9 +168,23 @@ export const NovaInspecaoDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={maximized ? "max-w-[95vw] max-h-[95vh] overflow-y-auto" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
-          <DialogTitle>Nova Inspeção</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Nova Inspeção</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setMaximized(!maximized)}
+            >
+              {maximized ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

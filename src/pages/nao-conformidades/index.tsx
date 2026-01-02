@@ -9,6 +9,10 @@ import {
   Eye,
   Edit,
   ClipboardCheck,
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NovaRNCDialog } from './NovaRNCDialog';
@@ -145,6 +149,80 @@ const NaoConformidades = () => {
           </Button>
         </div>
 
+        {/* Indicadores de Performance */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">Indicadores de Performance</h2>
+              <p className="text-sm text-muted-foreground">Métricas agregadas das não conformidades</p>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Total</CardDescription>
+              <CardTitle className="text-3xl">{dadosRnc.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">RNCs</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Em Andamento</CardDescription>
+              <CardTitle className="text-3xl text-yellow-700">
+                {dadosRnc.filter(r => !r.dateConclusion).length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm text-yellow-700">Abertas</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Finalizadas</CardDescription>
+              <CardTitle className="text-3xl text-green-700">
+                {dadosRnc.filter(r => r.dateConclusion).length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-green-700">Concluídas</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-red-500 bg-red-50/30">
+            <CardHeader className="pb-2">
+              <CardDescription>Com Ação Corretiva</CardDescription>
+              <CardTitle className="text-3xl text-red-700">
+                {dadosRnc.filter(r => r.correctiveAction).length}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <span className="text-sm text-red-700">Ações definidas</span>
+              </div>
+            </CardContent>
+          </Card>
+          </div>
+        </div>
+
         <div className="flex items-center gap-4 p-4 bg-construction-100 rounded-lg">
           <Filter className="h-5 w-5 text-construction-600" />
           <RadioGroup
@@ -186,8 +264,15 @@ const NaoConformidades = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rncsFiltradas.map((rnc) => (
-            <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
+          {rncsFiltradas.map((rnc) => {
+            // Determinar cor da borda baseado no status
+            const getBorderColor = () => {
+              if (rnc.dateConclusion) return 'border-l-green-500 bg-green-50/30';
+              return 'border-l-yellow-500 bg-yellow-50/30';
+            };
+
+            return (
+            <Card key={rnc.id} className={`hover:shadow-lg transition-all border-l-4 ${getBorderColor()}`}>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-construction-800 flex justify-between items-center">
                   <span>RNC #{String(rnc.code).padStart(3, '0')}</span>
@@ -273,7 +358,8 @@ const NaoConformidades = () => {
                 </Button>
               </CardFooter>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         <NovaRNCDialog

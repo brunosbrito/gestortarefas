@@ -172,8 +172,20 @@ const PlanosInspecao = () => {
           </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Indicadores de Performance */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">Indicadores de Performance</h2>
+              <p className="text-sm text-muted-foreground">Métricas agregadas dos planos de inspeção</p>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
@@ -231,6 +243,7 @@ const PlanosInspecao = () => {
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
 
         {/* Filtros */}
