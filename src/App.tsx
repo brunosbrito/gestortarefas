@@ -22,6 +22,7 @@ const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
 const Atividade = lazy(() => import('./pages/Atividade'));
 const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
 const EmConstrucao = lazy(() => import('./pages/EmConstrucao'));
+const AcoesCorretivas = lazy(() => import('./pages/qualidade/acoes-corretivas'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -49,7 +50,7 @@ function App() {
           <Route path="/mineradoras" element={<Mineradoras />} />
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
           <Route path="/qualidade/assistente-ia" element={<EmConstrucao />} />
-          <Route path="/qualidade/acoes-corretivas" element={<EmConstrucao />} />
+          <Route path="/qualidade/acoes-corretivas" element={<AcoesCorretivas />} />
           <Route path="/qualidade/inspecoes" element={<EmConstrucao />} />
           <Route path="/qualidade/planos-inspecao" element={<EmConstrucao />} />
           <Route path="/qualidade/certificados" element={<EmConstrucao />} />
