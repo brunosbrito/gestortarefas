@@ -53,6 +53,7 @@
     "embla-carousel-react": "^8.3.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "framer-motion": "^12.23.26",
+    "frappe-gantt": "^1.0.4",
     "input-otp": "^1.2.4",
     "jspdf": "^3.0.0",
     "jspdf-autotable": "^5.0.2",
