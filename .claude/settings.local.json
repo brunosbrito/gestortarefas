@@ -22,7 +22,9 @@
       "Bash(dir \"c:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\\\\src\\\\pages\\\\qualidade\\\\acoes-corretivas\")",
       "Bash(dir \"c:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\\\\src\\\\pages\\\\qualidade\\\\acoes-corretivas\\\\components\")",
       "Bash(grep:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(claude mcp add --transport stdio filesystem -- npx -y @modelcontextprotocol/server-filesystem \"C:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\")",
+      "Bash(claude mcp list:*)"
     ]
   }
 }
