@@ -16,6 +16,8 @@ import {
   Filter,
   Settings,
   AlertCircle,
+  Plus,
+  FileDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +28,8 @@ import CronogramaService from '@/services/CronogramaService';
 import TarefaCronogramaService from '@/services/TarefaCronogramaService';
 import type { Cronograma, TarefaCronograma, DashboardCronograma } from '@/interfaces/CronogramaInterfaces';
 import GanttChart from './GanttChart';
+import { NovaTarefaDialog } from '../tarefas/NovaTarefaDialog';
+import { ImportarAtividadesDialog } from '../configuracoes/ImportarAtividadesDialog';
 
 type ViewMode = 'Day' | 'Week' | 'Month';
 
@@ -40,6 +44,8 @@ export default function GanttView() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('Week');
+  const [novaTarefaOpen, setNovaTarefaOpen] = useState(false);
+  const [importarOpen, setImportarOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -218,6 +224,22 @@ export default function GanttView() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setImportarOpen(true)}
+          >
+            <FileDown className="w-4 h-4 mr-2" />
+            Importar Atividades
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setNovaTarefaOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Tarefa
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -405,6 +427,32 @@ export default function GanttView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      {id && (
+        <>
+          <NovaTarefaDialog
+            open={novaTarefaOpen}
+            onOpenChange={setNovaTarefaOpen}
+            cronogramaId={id}
+            onSaveSuccess={() => {
+              loadTarefas();
+              loadDashboard();
+            }}
+          />
+
+          <ImportarAtividadesDialog
+            open={importarOpen}
+            onOpenChange={setImportarOpen}
+            cronogramaId={id}
+            projectId={cronograma?.projectId || ''}
+            onImportSuccess={() => {
+              loadTarefas();
+              loadDashboard();
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
