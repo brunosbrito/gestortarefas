@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import CronogramaService from '@/services/CronogramaService';
 import type { Cronograma } from '@/interfaces/CronogramaInterfaces';
 import { useToast } from '@/hooks/use-toast';
+import { NovoCronogramaDialog } from './NovoCronogramaDialog';
 
 export default function DashboardCronogramas() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function DashboardCronogramas() {
 
   const [cronogramas, setCronogramas] = useState<Cronograma[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     loadCronogramas();
@@ -92,7 +94,7 @@ export default function DashboardCronogramas() {
             Planejamento e controle de cronogramas de projetos
           </p>
         </div>
-        <Button size="lg">
+        <Button size="lg" onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Novo Cronograma
         </Button>
@@ -109,7 +111,7 @@ export default function DashboardCronogramas() {
             <p className="text-sm text-muted-foreground mb-4">
               Crie seu primeiro cronograma para começar
             </p>
-            <Button>
+            <Button onClick={() => setDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Criar Primeiro Cronograma
             </Button>
@@ -170,6 +172,13 @@ export default function DashboardCronogramas() {
           ))}
         </div>
       )}
+
+      {/* Dialog Novo Cronograma */}
+      <NovoCronogramaDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSaveSuccess={loadCronogramas}
+      />
     </div>
   );
 }
