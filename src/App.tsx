@@ -22,6 +22,9 @@ const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
 const Atividade = lazy(() => import('./pages/Atividade'));
 const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
 
+// Módulo Cronogramas
+const DashboardCronogramas = lazy(() => import('./pages/cronograma'));
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -47,6 +50,7 @@ function App() {
           <Route path="/fabricas" element={<Fabricas />} />
           <Route path="/mineradoras" element={<Mineradoras />} />
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
+          <Route path="/cronograma" element={<DashboardCronogramas />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
             path="/obras/:projectId/os/:serviceOrderId/atividades"

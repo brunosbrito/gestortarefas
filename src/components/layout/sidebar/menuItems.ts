@@ -15,6 +15,7 @@ import {
   Bot,
   Boxes,
   ShieldCheck,
+  GanttChartSquare,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -84,6 +85,34 @@ export const navItems: MenuItem[] = [
       // FUTURO: Envio de Certificados
       // FUTURO: Indicadores/Dashboard
       // FUTURO: Databook
+    ],
+  },
+
+  // MÓDULO CRONOGRAMAS
+  {
+    icon: GanttChartSquare,
+    label: 'Cronogramas',
+    subItems: [
+      {
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        path: '/cronograma',
+      },
+      {
+        icon: Calendar,
+        label: 'Gantt / Timeline',
+        path: '/cronograma/gantt',
+      },
+      {
+        icon: ListTodo,
+        label: 'Tarefas',
+        path: '/cronograma/tarefas',
+      },
+      {
+        icon: Users,
+        label: 'Recursos',
+        path: '/cronograma/recursos',
+      },
     ],
   },
 
