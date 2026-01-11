@@ -106,6 +106,10 @@ export interface TarefaCronograma {
   ordem: number;
   nivel: number;
   tarefaPaiId?: string;
+  eap?: string; // Estrutura Analítica do Projeto (ex: 1.1.2)
+
+  // Recursos/Equipe
+  equipe?: string; // Nome da equipe/disciplina (ex: "Caldeiraria", "Soldagem")
 
   // Relacionamentos
   dependencias?: Dependencia[];
@@ -284,6 +288,7 @@ export interface ImportacaoAtividades {
   cronogramaId: string;
   projectId: string;
   serviceOrderIds: number[]; // IDs das OS para importar
+  atividadeIds?: number[]; // IDs específicos das atividades a importar (opcional)
   configuracao: {
     criarDependencias: boolean; // Criar dependências automáticas (sequencial)
     mapearResponsaveis: boolean; // Mapear colaboradores das atividades

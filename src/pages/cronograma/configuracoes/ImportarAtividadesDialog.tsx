@@ -29,7 +29,7 @@ import { Loader2, Download, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { Activity } from '@/interfaces/AtividadeInterface';
 import { getServiceOrderByProjectId } from '@/services/ServiceOrderService';
-import ActivityService from '@/services/AtividadeService';
+import { getActivitiesByServiceOrderId } from '@/services/ActivityService';
 import TarefaCronogramaService from '@/services/TarefaCronogramaService';
 import type { ImportacaoAtividades } from '@/interfaces/CronogramaInterfaces';
 
@@ -92,7 +92,7 @@ export function ImportarAtividadesDialog({
     setSelectedAtividades([]);
 
     try {
-      const data = await ActivityService.getByServiceOrder(parseInt(serviceOrderId));
+      const data = await getActivitiesByServiceOrderId(serviceOrderId);
       setAtividades(data);
     } catch (error) {
       console.error('Erro ao carregar atividades:', error);
@@ -145,6 +145,7 @@ export function ImportarAtividadesDialog({
         cronogramaId,
         projectId,
         serviceOrderIds: [parseInt(selectedOS)],
+        atividadeIds: selectedAtividades, // Enviar IDs das atividades selecionadas
         configuracao: {
           criarDependencias,
           mapearResponsaveis,

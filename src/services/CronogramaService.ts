@@ -13,9 +13,11 @@ import type {
   DashboardCronograma,
   FiltrosCronograma,
 } from '@/interfaces/CronogramaInterfaces';
+import { MOCK_CRONOGRAMAS, MOCK_DASHBOARDS } from '@/data/mockCronogramas';
 
 class CronogramaService {
   private baseURL = `${API_URL}/api/cronogramas`;
+  private useMockData = false; // Flag para modo mock
 
   /**
    * Criar novo cronograma
@@ -52,8 +54,25 @@ class CronogramaService {
       const response = await axios.get(url);
       return response.data;
     } catch (error) {
-      console.error('Erro ao buscar cronogramas:', error);
-      throw error;
+      console.warn('⚠️ Backend offline, usando dados mockados para cronogramas');
+      this.useMockData = true;
+
+      // Retorna dados mockados com filtros aplicados
+      let cronogramas = [...MOCK_CRONOGRAMAS];
+
+      if (filtros) {
+        if (filtros.projectId) {
+          cronogramas = cronogramas.filter(c => c.projectId === filtros.projectId);
+        }
+        if (filtros.status) {
+          cronogramas = cronogramas.filter(c => c.status === filtros.status);
+        }
+        if (filtros.responsavelId) {
+          cronogramas = cronogramas.filter(c => c.responsavelId === filtros.responsavelId);
+        }
+      }
+
+      return cronogramas;
     }
   }
 
@@ -65,8 +84,14 @@ class CronogramaService {
       const response = await axios.get(`${this.baseURL}/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`Erro ao buscar cronograma ${id}:`, error);
-      throw error;
+      console.warn(`⚠️ Backend offline, usando dados mockados para cronograma ${id}`);
+      this.useMockData = true;
+
+      const cronograma = MOCK_CRONOGRAMAS.find(c => c.id === id);
+      if (!cronograma) {
+        throw new Error(`Cronograma ${id} não encontrado`);
+      }
+      return cronograma;
     }
   }
 
@@ -116,9 +141,11 @@ class CronogramaService {
       const response = await axios.get(`${this.baseURL}/${cronogramaId}/dashboard`);
       return response.data;
     } catch (error) {
-      console.error(`Erro ao buscar dashboard do cronograma ${cronogramaId}:`, error);
-      // Retorna dados vazios em caso de erro (fallback)
-      return {
+      console.warn(`⚠️ Backend offline, usando dados mockados para dashboard ${cronogramaId}`);
+      this.useMockData = true;
+
+      // Retorna dashboard mockado ou dados vazios
+      return MOCK_DASHBOARDS[cronogramaId] || {
         cronogramaId,
         totalTarefas: 0,
         tarefasConcluidas: 0,

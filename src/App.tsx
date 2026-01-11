@@ -25,6 +25,7 @@ const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
 // Módulo Cronogramas
 const DashboardCronogramas = lazy(() => import('./pages/cronograma'));
 const GanttView = lazy(() => import('./pages/cronograma/gantt'));
+const GanttTestVanilla = lazy(() => import('./pages/cronograma/gantt/GanttTestVanilla'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -53,6 +54,7 @@ function App() {
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
           <Route path="/cronograma" element={<DashboardCronogramas />} />
           <Route path="/cronograma/:id/gantt" element={<GanttView />} />
+          <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
             path="/obras/:projectId/os/:serviceOrderId/atividades"

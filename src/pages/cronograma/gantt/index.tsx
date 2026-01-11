@@ -4,17 +4,13 @@
  * Módulo: Cronogramas
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Calendar,
   ArrowLeft,
   RefreshCw,
   Download,
-  ZoomIn,
-  ZoomOut,
-  Filter,
-  Settings,
   AlertCircle,
   Plus,
   FileDown,
@@ -22,7 +18,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import CronogramaService from '@/services/CronogramaService';
 import TarefaCronogramaService from '@/services/TarefaCronogramaService';
@@ -46,16 +41,9 @@ export default function GanttView() {
   const [viewMode, setViewMode] = useState<ViewMode>('Week');
   const [novaTarefaOpen, setNovaTarefaOpen] = useState(false);
   const [importarOpen, setImportarOpen] = useState(false);
+  const [tarefaParaEditar, setTarefaParaEditar] = useState<TarefaCronograma | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      loadCronograma();
-      loadTarefas();
-      loadDashboard();
-    }
-  }, [id]);
-
-  const loadCronograma = async () => {
+  const loadCronograma = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -69,9 +57,9 @@ export default function GanttView() {
         variant: 'destructive',
       });
     }
-  };
+  }, [id, toast]);
 
-  const loadTarefas = async () => {
+  const loadTarefas = useCallback(async () => {
     if (!id) return;
 
     setLoading(true);
@@ -88,9 +76,9 @@ export default function GanttView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, toast]);
 
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -99,7 +87,15 @@ export default function GanttView() {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadCronograma();
+      loadTarefas();
+      loadDashboard();
+    }
+  }, [id, loadCronograma, loadTarefas, loadDashboard]);
 
   const handleSincronizar = async () => {
     if (!id) return;
@@ -156,6 +152,51 @@ export default function GanttView() {
     }
   };
 
+  const handleTaskClick = (tarefa: TarefaCronograma) => {
+    setTarefaParaEditar(tarefa);
+    setNovaTarefaOpen(true);
+  };
+
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      await TarefaCronogramaService.delete(taskId);
+      toast({
+        title: 'Tarefa deletada',
+        description: 'A tarefa foi removida com sucesso.',
+      });
+      await loadTarefas();
+      await loadDashboard();
+    } catch (error: any) {
+      console.error('Erro ao deletar tarefa:', error);
+
+      // Extrair mensagem específica do backend
+      let errorMessage = 'Erro ao deletar tarefa';
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // Mensagens amigáveis para erros comuns
+      if (errorMessage.includes('dependenc')) {
+        errorMessage = 'Esta tarefa não pode ser deletada pois outras tarefas dependem dela.';
+      } else if (errorMessage.includes('subtarefa') || errorMessage.includes('filha')) {
+        errorMessage = 'Esta tarefa possui subtarefas. Delete as subtarefas primeiro.';
+      } else if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_CONNECTION')) {
+        errorMessage = 'Erro de conexão com o servidor.';
+      }
+
+      toast({
+        title: 'Erro ao deletar',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const colors = {
       planejamento: 'bg-gray-100 text-gray-700',
@@ -192,72 +233,71 @@ export default function GanttView() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/cronograma')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold flex items-center gap-2">
-                <Calendar className="w-8 h-8" />
-                {cronograma.nome}
-              </h1>
-              <Badge className={getStatusColor(cronograma.status)}>
-                {getStatusLabel(cronograma.status)}
-              </Badge>
-            </div>
-            {cronograma.descricao && (
-              <p className="text-muted-foreground mt-1">{cronograma.descricao}</p>
-            )}
-            <p className="text-sm text-muted-foreground mt-1">
-              Obra: <span className="font-medium">{cronograma.project?.name || 'N/A'}</span>
-              {' • '}
-              {new Date(cronograma.dataInicio).toLocaleDateString('pt-BR')} até{' '}
-              {new Date(cronograma.dataFim).toLocaleDateString('pt-BR')}
-            </p>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/cronograma')}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Calendar className="w-8 h-8" />
+              {cronograma.nome}
+            </h1>
+            <Badge className={getStatusColor(cronograma.status)}>
+              {getStatusLabel(cronograma.status)}
+            </Badge>
           </div>
+          {cronograma.descricao && (
+            <p className="text-muted-foreground mt-1">{cronograma.descricao}</p>
+          )}
+          <p className="text-sm text-muted-foreground mt-1">
+            Obra: <span className="font-medium">{cronograma.project?.name || 'N/A'}</span>
+            {' • '}
+            {new Date(cronograma.dataInicio).toLocaleDateString('pt-BR')} até{' '}
+            {new Date(cronograma.dataFim).toLocaleDateString('pt-BR')}
+          </p>
         </div>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setImportarOpen(true)}
-          >
-            <FileDown className="w-4 h-4 mr-2" />
-            Importar Atividades
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setNovaTarefaOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Tarefa
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSincronizar}
-            disabled={syncing}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-            Sincronizar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportPDF}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Exportar PDF
-          </Button>
-        </div>
+      {/* Barra de Ações */}
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setImportarOpen(true)}
+        >
+          <FileDown className="w-4 h-4 mr-2" />
+          Importar Atividades
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setNovaTarefaOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nova Tarefa
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSincronizar}
+          disabled={syncing}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+          Sincronizar
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportPDF}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Exportar PDF
+        </Button>
       </div>
 
       {/* KPIs */}
@@ -273,7 +313,7 @@ export default function GanttView() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Concluídas</CardDescription>
-              <CardTitle className="text-3xl text-green-600">
+              <CardTitle className="text-3xl text-green-600 dark:text-green-400">
                 {dashboard.tarefasConcluidas}
               </CardTitle>
             </CardHeader>
@@ -282,7 +322,7 @@ export default function GanttView() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Em Andamento</CardDescription>
-              <CardTitle className="text-3xl text-blue-600">
+              <CardTitle className="text-3xl text-blue-600 dark:text-blue-400">
                 {dashboard.tarefasEmAndamento}
               </CardTitle>
             </CardHeader>
@@ -291,7 +331,7 @@ export default function GanttView() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Atrasadas</CardDescription>
-              <CardTitle className="text-3xl text-red-600">
+              <CardTitle className="text-3xl text-red-600 dark:text-red-400">
                 {dashboard.tarefasAtrasadas}
               </CardTitle>
             </CardHeader>
@@ -300,7 +340,7 @@ export default function GanttView() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Bloqueadas</CardDescription>
-              <CardTitle className="text-3xl text-orange-600">
+              <CardTitle className="text-3xl text-orange-600 dark:text-orange-400">
                 {dashboard.tarefasBloqueadas}
               </CardTitle>
             </CardHeader>
@@ -310,20 +350,26 @@ export default function GanttView() {
 
       {/* Alertas Críticos */}
       {dashboard && dashboard.alertas && dashboard.alertas.length > 0 && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-orange-600" />
-              Alertas ({dashboard.alertas.length})
+              <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+              <span className="text-orange-900 dark:text-orange-100">
+                Alertas ({dashboard.alertas.length})
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {dashboard.alertas.slice(0, 3).map((alerta) => (
                 <div key={alerta.id} className="text-sm">
-                  <span className="font-medium">{alerta.titulo}</span>
+                  <span className="font-medium text-orange-900 dark:text-orange-100">
+                    {alerta.titulo}
+                  </span>
                   {' - '}
-                  <span className="text-muted-foreground">{alerta.descricao}</span>
+                  <span className="text-orange-700 dark:text-orange-300">
+                    {alerta.descricao}
+                  </span>
                 </div>
               ))}
             </div>
@@ -331,45 +377,10 @@ export default function GanttView() {
         </Card>
       )}
 
-      <Separator />
-
-      {/* Controles do Gantt */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant={viewMode === 'Day' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('Day')}
-          >
-            Dia
-          </Button>
-          <Button
-            variant={viewMode === 'Week' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('Week')}
-          >
-            Semana
-          </Button>
-          <Button
-            variant={viewMode === 'Month' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('Month')}
-          >
-            Mês
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {tarefas.length} tarefas
-          </span>
-        </div>
-      </div>
-
       {/* Gráfico de Gantt */}
-      <Card>
-        <CardContent className="p-6">
-          {tarefas.length === 0 ? (
+      {tarefas.length === 0 ? (
+        <Card>
+          <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Calendar className="w-16 h-16 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-muted-foreground mb-2">
@@ -378,66 +389,52 @@ export default function GanttView() {
               <p className="text-sm text-muted-foreground mb-4">
                 Importe atividades ou crie tarefas manualmente para visualizar o cronograma
               </p>
-              <Button onClick={() => navigate(`/cronograma/${id}/tarefas`)}>
-                Gerenciar Tarefas
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setImportarOpen(true)}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Importar Atividades
+                </Button>
+                <Button onClick={() => setNovaTarefaOpen(true)} variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Tarefa
+                </Button>
+              </div>
             </div>
-          ) : (
-            <GanttChart
-              tarefas={tarefas}
-              viewMode={viewMode}
-              onTaskClick={(tarefa) => {
-                toast({
-                  title: tarefa.nome,
-                  description: `Progresso: ${tarefa.progresso}% • Status: ${tarefa.status}`,
-                });
-              }}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Legenda */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Legenda</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-400 rounded"></div>
-              <span className="text-sm">Planejada</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded"></div>
-              <span className="text-sm">Em Andamento</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-600 rounded"></div>
-              <span className="text-sm">Concluída</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-600 rounded"></div>
-              <span className="text-sm">Atrasada</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-orange-600 rounded"></div>
-              <span className="text-sm">Bloqueada</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        <GanttChart
+          tarefas={tarefas}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onTaskClick={handleTaskClick}
+          onAddTask={() => {
+            setTarefaParaEditar(null);
+            setNovaTarefaOpen(true);
+          }}
+          onTaskDelete={handleTaskDelete}
+          onReload={() => {
+            loadTarefas();
+            loadDashboard();
+          }}
+        />
+      )}
 
       {/* Dialogs */}
       {id && (
         <>
           <NovaTarefaDialog
             open={novaTarefaOpen}
-            onOpenChange={setNovaTarefaOpen}
+            onOpenChange={(open) => {
+              setNovaTarefaOpen(open);
+              if (!open) setTarefaParaEditar(null);
+            }}
             cronogramaId={id}
+            tarefaParaEditar={tarefaParaEditar}
             onSaveSuccess={() => {
               loadTarefas();
               loadDashboard();
+              setTarefaParaEditar(null);
             }}
           />
 

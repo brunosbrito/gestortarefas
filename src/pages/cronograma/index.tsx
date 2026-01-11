@@ -5,9 +5,10 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import CronogramaService from '@/services/CronogramaService';
 import type { Cronograma } from '@/interfaces/CronogramaInterfaces';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ export default function DashboardCronogramas() {
   const [cronogramas, setCronogramas] = useState<Cronograma[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isMockMode, setIsMockMode] = useState(false);
 
   useEffect(() => {
     loadCronogramas();
@@ -30,6 +32,8 @@ export default function DashboardCronogramas() {
     try {
       const data = await CronogramaService.getAll();
       setCronogramas(data);
+      // Detecta se está usando mock data (array com dados e console tem warning)
+      setIsMockMode(data.length > 0 && data[0].id?.startsWith('crono-'));
     } catch (error) {
       console.error(error);
       toast({
@@ -86,12 +90,21 @@ export default function DashboardCronogramas() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <CalendarIcon className="w-8 h-8" />
-            Cronogramas
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <CalendarIcon className="w-8 h-8" />
+              Cronogramas
+            </h1>
+            {isMockMode && (
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
+                <Database className="w-3 h-3 mr-1" />
+                Modo Demonstração
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground mt-1">
             Planejamento e controle de cronogramas de projetos
+            {isMockMode && ' • Usando dados de teste'}
           </p>
         </div>
         <Button size="lg" onClick={() => setDialogOpen(true)}>

@@ -92,28 +92,7 @@ export const navItems: MenuItem[] = [
   {
     icon: GanttChartSquare,
     label: 'Cronogramas',
-    subItems: [
-      {
-        icon: LayoutDashboard,
-        label: 'Dashboard',
-        path: '/cronograma',
-      },
-      {
-        icon: Calendar,
-        label: 'Gantt / Timeline',
-        path: '/cronograma/gantt',
-      },
-      {
-        icon: ListTodo,
-        label: 'Tarefas',
-        path: '/cronograma/tarefas',
-      },
-      {
-        icon: Users,
-        label: 'Recursos',
-        path: '/cronograma/recursos',
-      },
-    ],
+    path: '/cronograma',
   },
 
   // CONFIGURAÇÕES (renomeado de "Gerenciamento")
