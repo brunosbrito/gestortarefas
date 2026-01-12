@@ -34,6 +34,7 @@ import {
   FileCode,
 } from "lucide-react";
 import { useNFs, useNFStats, useValidateNF, useRejectNF, useDownloadNFXML, useDownloadNFPDF } from "@/hooks/suprimentos/useNF";
+import '@/styles/suprimentos-animations.css';
 
 const NotasFiscais = () => {
   const navigate = useNavigate();
@@ -160,7 +161,7 @@ const NotasFiscais = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 suprimentos-page">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Notas Fiscais</h1>
@@ -180,7 +181,7 @@ const NotasFiscais = () => {
       {/* Estatísticas */}
       {!statsLoading && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card>
+          <Card className="suprimentos-kpi-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total de NFs</CardTitle>
             </CardHeader>
@@ -188,7 +189,7 @@ const NotasFiscais = () => {
               <p className="text-2xl font-bold">{stats.total_nfs}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="suprimentos-kpi-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Validadas</CardTitle>
             </CardHeader>
@@ -196,7 +197,7 @@ const NotasFiscais = () => {
               <p className="text-2xl font-bold text-green-600">{stats.validated}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="suprimentos-kpi-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
             </CardHeader>
@@ -204,7 +205,7 @@ const NotasFiscais = () => {
               <p className="text-2xl font-bold text-yellow-600">{stats.pending_validation}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="suprimentos-kpi-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Rejeitadas</CardTitle>
             </CardHeader>

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useContracts, useContractKPIs } from "@/hooks/suprimentos/useContracts";
 import { useNFStats } from "@/hooks/suprimentos/useNF";
+import '@/styles/suprimentos-animations.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 suprimentos-page">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -85,9 +86,9 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpisLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="bg-gradient-card border-0 shadow-card-hover">
+            <Card key={i} className="bg-gradient-card border-0 shadow-card-hover suprimentos-skeleton">
               <CardContent className="p-6">
-                <div className="animate-pulse">
+                <div>
                   <div className="h-4 bg-muted rounded mb-2"></div>
                   <div className="h-8 bg-muted rounded mb-2"></div>
                   <div className="h-3 bg-muted rounded w-2/3"></div>
@@ -97,22 +98,23 @@ const Dashboard = () => {
           ))
         ) : (
           kpis.map((kpi, index) => (
-            <MetricCard
-              key={index}
-              title={kpi.title}
-              value={kpi.value}
-              format={kpi.format}
-              trend={kpi.trend}
-              trendValue={kpi.trendValue}
-              icon={kpi.icon}
-            />
+            <div key={index} className="suprimentos-kpi-card">
+              <MetricCard
+                title={kpi.title}
+                value={kpi.value}
+                format={kpi.format}
+                trend={kpi.trend}
+                trendValue={kpi.trendValue}
+                icon={kpi.icon}
+              />
+            </div>
           ))
         )}
       </div>
 
       {/* Notas Fiscais Stats */}
       {nfStatsData?.data && !nfStatsError && (
-        <Card className="bg-gradient-card border-0 shadow-card-hover">
+        <Card className="bg-gradient-card border-0 shadow-card-hover suprimentos-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Receipt className="h-5 w-5 text-primary" />
@@ -154,7 +156,7 @@ const Dashboard = () => {
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
-                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-green-500 h-2 rounded-full transition-all duration-300 suprimentos-progress-bar"
                     style={{
                       width: `${(nfStatsData.data.validated / nfStatsData.data.total_nfs) * 100}%`
                     }}
@@ -167,7 +169,7 @@ const Dashboard = () => {
       )}
 
       {/* Contratos Ativos */}
-      <Card className="bg-gradient-card border-0 shadow-card-hover">
+      <Card className="bg-gradient-card border-0 shadow-card-hover suprimentos-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
@@ -197,7 +199,7 @@ const Dashboard = () => {
                 const contractName = contract.name || 'Nome não disponível';
 
                 return (
-                  <div key={contract.id || index} className="p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                  <div key={contract.id || index} className="p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer suprimentos-list-item"
                     onClick={() => navigate('/suprimentos/contratos')}>
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -208,7 +210,7 @@ const Dashboard = () => {
                     </div>
                     <div className="w-full bg-muted rounded-full h-2 mb-2">
                       <div
-                        className="bg-gradient-primary h-2 rounded-full transition-all duration-300"
+                        className="bg-gradient-primary h-2 rounded-full transition-all duration-300 suprimentos-progress-bar"
                         style={{ width: `${contractProgress}%` }}
                       />
                     </div>

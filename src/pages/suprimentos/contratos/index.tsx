@@ -7,6 +7,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreateContractModal } from "./components/CreateContractModal";
 import { ContractDetailsModal } from "./components/ContractDetailsModal";
+import '@/styles/suprimentos-animations.css';
 import {
   Dialog,
   DialogContent,
@@ -135,7 +136,7 @@ const ContractProgressBar = ({ contractId }: ContractProgressBarProps) => {
         </div>
         <div className="w-full bg-muted rounded-full h-2">
           <div
-            className="h-2 rounded-full bg-blue-500 transition-all duration-300"
+            className="h-2 rounded-full bg-blue-500 transition-all duration-300 suprimentos-progress-bar"
             style={{ width: '100%' }}
           />
         </div>
@@ -151,7 +152,7 @@ const ContractProgressBar = ({ contractId }: ContractProgressBarProps) => {
         </div>
         <div className="w-full bg-muted rounded-full h-2">
           <div
-            className={`h-2 rounded-full transition-all duration-300 ${
+            className={`h-2 rounded-full transition-all duration-300 suprimentos-progress-bar ${
               isOverBudget ? 'bg-destructive' : 'bg-gradient-primary'
             }`}
             style={{ width: `${Math.min(progress, 100)}%` }}
@@ -236,7 +237,7 @@ const Contratos = () => {
   const hasActiveFilters = filters.status || filters.client || filters.startDateFrom || filters.startDateTo;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 suprimentos-page">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestão de Contratos</h1>
@@ -280,33 +281,39 @@ const Contratos = () => {
           ))
         ) : (
           <>
-            <MetricCard
-              title="Valor Total dos Contratos"
-              value={totalValue}
-              format="currency"
-              icon={<Building2 className="h-5 w-5 text-primary" />}
-            />
-            <MetricCard
-              title="Total Realizado"
-              value={totalSpent}
-              format="currency"
-              trend="up"
-              icon={<Building2 className="h-5 w-5 text-success" />}
-            />
-            <MetricCard
-              title="Progresso Médio"
-              value={avgProgress.toFixed(1)}
-              format="percentage"
-              trend="up"
-              trendValue="+5% este mês"
-              icon={<Building2 className="h-5 w-5 text-accent" />}
-            />
+            <div className="suprimentos-kpi-card">
+              <MetricCard
+                title="Valor Total dos Contratos"
+                value={totalValue}
+                format="currency"
+                icon={<Building2 className="h-5 w-5 text-primary" />}
+              />
+            </div>
+            <div className="suprimentos-kpi-card">
+              <MetricCard
+                title="Total Realizado"
+                value={totalSpent}
+                format="currency"
+                trend="up"
+                icon={<Building2 className="h-5 w-5 text-success" />}
+              />
+            </div>
+            <div className="suprimentos-kpi-card">
+              <MetricCard
+                title="Progresso Médio"
+                value={avgProgress.toFixed(1)}
+                format="percentage"
+                trend="up"
+                trendValue="+5% este mês"
+                icon={<Building2 className="h-5 w-5 text-accent" />}
+              />
+            </div>
           </>
         )}
       </div>
 
       {/* Contracts Table */}
-      <Card className="bg-gradient-card border-0 shadow-card-hover">
+      <Card className="bg-gradient-card border-0 shadow-card-hover suprimentos-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
@@ -346,7 +353,7 @@ const Contratos = () => {
           ) : (
             <div className="space-y-4">
               {contracts.map((contract) => (
-                <div key={contract.id} className="p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                <div key={contract.id} className="p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors suprimentos-list-item">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-semibold text-foreground">{contract.name}</h3>
