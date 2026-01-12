@@ -25,6 +25,7 @@ import {
 } from '@/hooks/suprimentos/usePurchases';
 import { PurchaseRequest, Quotation } from '@/interfaces/suprimentos/PurchaseInterface';
 import { ConfirmDialog } from '@/components/suprimentos/ConfirmDialog';
+import { CreatePurchaseModal } from './components/CreatePurchaseModal';
 
 const Compras = () => {
   const [selectedRequest, setSelectedRequest] = useState<PurchaseRequest | null>(null);
@@ -488,10 +489,7 @@ const Compras = () => {
         <TabsContent value="pedidos" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Pedidos de Compra (PO)</h3>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Pedido
-            </Button>
+            <CreatePurchaseModal />
           </div>
 
           {loadingPurchases ? (
