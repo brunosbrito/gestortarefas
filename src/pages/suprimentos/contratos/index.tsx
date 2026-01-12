@@ -1,11 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "../components/MetricCard";
-import { Building2, TrendingUp, TrendingDown, Receipt, Plus, Filter } from "lucide-react";
+import { Building2, TrendingUp, TrendingDown, Receipt, Plus, Filter, X } from "lucide-react";
 import { useContracts, useContractKPIs, useContractRealizedValue } from "@/hooks/suprimentos/useContracts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreateContractModal } from "./components/CreateContractModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ContractRealizedValueProps {
   contractId: number;
@@ -155,11 +172,64 @@ const Contratos = () => {
   const { data: contractsData, isLoading: contractsLoading } = useContracts();
   const { data: kpisData, isLoading: kpisLoading } = useContractKPIs();
 
+  // Filter state
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    client: '',
+    startDateFrom: '',
+    startDateTo: '',
+  });
+
   // Safely extract contracts array
-  const contracts = contractsData?.data?.contracts || [];
+  const allContracts = contractsData?.data?.contracts || [];
+
+  // Apply filters
+  const contracts = useMemo(() => {
+    let filtered = [...allContracts];
+
+    // Filter by status
+    if (filters.status && filters.status !== 'todos') {
+      filtered = filtered.filter(c => c.status === filters.status);
+    }
+
+    // Filter by client (case-insensitive search)
+    if (filters.client.trim()) {
+      const clientLower = filters.client.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.client?.toLowerCase().includes(clientLower) ||
+        c.name.toLowerCase().includes(clientLower)
+      );
+    }
+
+    // Filter by start date range
+    if (filters.startDateFrom) {
+      const fromDate = new Date(filters.startDateFrom);
+      filtered = filtered.filter(c => new Date(c.startDate) >= fromDate);
+    }
+
+    if (filters.startDateTo) {
+      const toDate = new Date(filters.startDateTo);
+      filtered = filtered.filter(c => new Date(c.startDate) <= toDate);
+    }
+
+    return filtered;
+  }, [allContracts, filters]);
+
   const totalValue = kpisData?.data?.totalValue || 0;
   const totalSpent = kpisData?.data?.totalSpent || 0;
   const avgProgress = kpisData?.data?.avgProgress || 0;
+
+  const handleClearFilters = () => {
+    setFilters({
+      status: '',
+      client: '',
+      startDateFrom: '',
+      startDateTo: '',
+    });
+  };
+
+  const hasActiveFilters = filters.status || filters.client || filters.startDateFrom || filters.startDateTo;
 
   return (
     <div className="space-y-6">
@@ -171,10 +241,21 @@ const Contratos = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
-            <Filter className="h-4 w-4" />
+          <Button variant="outline" onClick={() => setShowFilterDialog(true)}>
+            <Filter className="h-4 w-4 mr-2" />
             Filtrar
+            {hasActiveFilters && (
+              <span className="ml-2 px-1.5 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
+                {Object.values(filters).filter(v => v).length}
+              </span>
+            )}
           </Button>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+              <X className="h-4 w-4 mr-1" />
+              Limpar Filtros
+            </Button>
+          )}
           <CreateContractModal />
         </div>
       </div>
@@ -318,6 +399,89 @@ const Contratos = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Filter Dialog */}
+      <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filtrar Contratos</DialogTitle>
+            <DialogDescription>
+              Configure os filtros para refinar a lista de contratos
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-status">Status</Label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+              >
+                <SelectTrigger id="filter-status">
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                  <SelectItem value="Concluído">Concluído</SelectItem>
+                  <SelectItem value="Pausado">Pausado</SelectItem>
+                  <SelectItem value="Finalizando">Finalizando</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Client/Contract Name Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-client">Cliente ou Nome do Contrato</Label>
+              <Input
+                id="filter-client"
+                placeholder="Buscar por cliente ou nome..."
+                value={filters.client}
+                onChange={(e) => setFilters(prev => ({ ...prev, client: e.target.value }))}
+              />
+            </div>
+
+            {/* Start Date Range */}
+            <div className="space-y-2">
+              <Label>Data de Início</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="filter-date-from" className="text-xs text-muted-foreground">
+                    De
+                  </Label>
+                  <Input
+                    id="filter-date-from"
+                    type="date"
+                    value={filters.startDateFrom}
+                    onChange={(e) => setFilters(prev => ({ ...prev, startDateFrom: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="filter-date-to" className="text-xs text-muted-foreground">
+                    Até
+                  </Label>
+                  <Input
+                    id="filter-date-to"
+                    type="date"
+                    value={filters.startDateTo}
+                    onChange={(e) => setFilters(prev => ({ ...prev, startDateTo: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClearFilters}>
+              Limpar Tudo
+            </Button>
+            <Button onClick={() => setShowFilterDialog(false)}>
+              Aplicar Filtros
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

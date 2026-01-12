@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,26 @@ import {
   TrendingUp,
   DollarSign,
   Loader2,
+  Filter,
+  X,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   usePurchaseRequests,
   usePurchases,
@@ -34,10 +53,81 @@ const Compras = () => {
     quotationId: number;
   } | null>(null);
 
-  const { data: requests, isLoading: loadingRequests } = usePurchaseRequests();
-  const { data: purchases, isLoading: loadingPurchases } = usePurchases();
+  // Filter state
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    urgency: '',
+    requestedBy: '',
+    purchaseStatus: '',
+    supplier: '',
+  });
+
+  const { data: allRequests, isLoading: loadingRequests } = usePurchaseRequests();
+  const { data: allPurchases, isLoading: loadingPurchases } = usePurchases();
   const { data: stats, isLoading: loadingStats } = usePurchaseStats();
   const selectQuotation = useSelectQuotation();
+
+  // Apply filters to requests
+  const requests = useMemo(() => {
+    if (!allRequests) return [];
+    let filtered = [...allRequests];
+
+    if (filters.status && filters.status !== 'todos') {
+      filtered = filtered.filter(r => r.status === filters.status);
+    }
+
+    if (filters.urgency && filters.urgency !== 'todos') {
+      filtered = filtered.filter(r => r.urgency === filters.urgency);
+    }
+
+    if (filters.requestedBy.trim()) {
+      const search = filters.requestedBy.toLowerCase();
+      filtered = filtered.filter(r =>
+        r.requestedBy.toLowerCase().includes(search) ||
+        r.contractName.toLowerCase().includes(search)
+      );
+    }
+
+    return filtered;
+  }, [allRequests, filters]);
+
+  // Apply filters to purchases
+  const purchases = useMemo(() => {
+    if (!allPurchases) return [];
+    let filtered = [...allPurchases];
+
+    if (filters.purchaseStatus && filters.purchaseStatus !== 'todos') {
+      filtered = filtered.filter(p => p.status === filters.purchaseStatus);
+    }
+
+    if (filters.supplier.trim()) {
+      const search = filters.supplier.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.supplier.toLowerCase().includes(search) ||
+        p.contract.toLowerCase().includes(search)
+      );
+    }
+
+    return filtered;
+  }, [allPurchases, filters]);
+
+  const handleClearFilters = () => {
+    setFilters({
+      status: '',
+      urgency: '',
+      requestedBy: '',
+      purchaseStatus: '',
+      supplier: '',
+    });
+  };
+
+  const hasActiveFilters =
+    filters.status ||
+    filters.urgency ||
+    filters.requestedBy ||
+    filters.purchaseStatus ||
+    filters.supplier;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -211,10 +301,27 @@ const Compras = () => {
         <TabsContent value="requisicoes" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Requisições de Compra</h3>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Requisição
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setShowFilterDialog(true)}>
+                <Filter className="h-4 w-4 mr-2" />
+                Filtrar
+                {hasActiveFilters && (
+                  <span className="ml-2 px-1.5 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
+                    {Object.values(filters).filter(v => v).length}
+                  </span>
+                )}
+              </Button>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+                  <X className="h-4 w-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Requisição
+              </Button>
+            </div>
           </div>
 
           {selectedRequest ? (
@@ -489,7 +596,24 @@ const Compras = () => {
         <TabsContent value="pedidos" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Pedidos de Compra (PO)</h3>
-            <CreatePurchaseModal />
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setShowFilterDialog(true)}>
+                <Filter className="h-4 w-4 mr-2" />
+                Filtrar
+                {hasActiveFilters && (
+                  <span className="ml-2 px-1.5 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
+                    {Object.values(filters).filter(v => v).length}
+                  </span>
+                )}
+              </Button>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+                  <X className="h-4 w-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+              <CreatePurchaseModal />
+            </div>
           </div>
 
           {loadingPurchases ? (
@@ -597,6 +721,120 @@ const Compras = () => {
         cancelText="Cancelar"
         loading={selectQuotation.isPending}
       />
+
+      {/* Filter Dialog */}
+      <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filtrar Compras</DialogTitle>
+            <DialogDescription>
+              Configure os filtros para requisições e pedidos de compra
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="font-semibold text-sm text-muted-foreground">Requisições</div>
+
+            {/* Status Filter (Requisições) */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-status">Status da Requisição</Label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+              >
+                <SelectTrigger id="filter-status">
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="draft">Rascunho</SelectItem>
+                  <SelectItem value="submitted">Enviado</SelectItem>
+                  <SelectItem value="approved">Aprovado</SelectItem>
+                  <SelectItem value="in_quotation">Em Cotação</SelectItem>
+                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="rejected">Rejeitado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Urgency Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-urgency">Urgência</Label>
+              <Select
+                value={filters.urgency}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, urgency: value }))}
+              >
+                <SelectTrigger id="filter-urgency">
+                  <SelectValue placeholder="Todas as urgências" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas as urgências</SelectItem>
+                  <SelectItem value="low">Baixa</SelectItem>
+                  <SelectItem value="medium">Média</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="critical">Crítica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Requested By Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-requestedBy">Solicitante ou Contrato</Label>
+              <Input
+                id="filter-requestedBy"
+                placeholder="Buscar por solicitante ou contrato..."
+                value={filters.requestedBy}
+                onChange={(e) => setFilters(prev => ({ ...prev, requestedBy: e.target.value }))}
+              />
+            </div>
+
+            <div className="border-t pt-4 mt-4">
+              <div className="font-semibold text-sm text-muted-foreground mb-4">Pedidos</div>
+
+              {/* Purchase Status Filter */}
+              <div className="space-y-2">
+                <Label htmlFor="filter-purchase-status">Status do Pedido</Label>
+                <Select
+                  value={filters.purchaseStatus}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, purchaseStatus: value }))}
+                >
+                  <SelectTrigger id="filter-purchase-status">
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os status</SelectItem>
+                    <SelectItem value="Pendente">Pendente</SelectItem>
+                    <SelectItem value="Aprovado">Aprovado</SelectItem>
+                    <SelectItem value="Enviado">Enviado</SelectItem>
+                    <SelectItem value="Recebido">Recebido</SelectItem>
+                    <SelectItem value="Cancelado">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Supplier Filter */}
+              <div className="space-y-2">
+                <Label htmlFor="filter-supplier">Fornecedor ou Contrato</Label>
+                <Input
+                  id="filter-supplier"
+                  placeholder="Buscar por fornecedor ou contrato..."
+                  value={filters.supplier}
+                  onChange={(e) => setFilters(prev => ({ ...prev, supplier: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClearFilters}>
+              Limpar Tudo
+            </Button>
+            <Button onClick={() => setShowFilterDialog(false)}>
+              Aplicar Filtros
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
