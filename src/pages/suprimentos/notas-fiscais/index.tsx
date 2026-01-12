@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   FileText,
   Upload,
@@ -15,7 +17,9 @@ import {
   Truck,
   Calendar,
   Package,
-  Plus
+  ChevronDown,
+  ChevronRight,
+  Hash,
 } from "lucide-react";
 import { useNFs, useNFStats, useValidateNF } from "@/hooks/suprimentos/useNF";
 
@@ -23,6 +27,7 @@ const NotasFiscais = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedNFs, setExpandedNFs] = useState<Set<number>>(new Set());
 
   // Pegar contractId do state se vier da navegação de contratos
   const contractIdFromState = location.state?.contractId;
@@ -38,6 +43,16 @@ const NotasFiscais = () => {
     pending_validation: 0,
     rejected: 0,
     total_value: 0
+  };
+
+  const toggleNFExpansion = (nfId: number) => {
+    const newExpanded = new Set(expandedNFs);
+    if (newExpanded.has(nfId)) {
+      newExpanded.delete(nfId);
+    } else {
+      newExpanded.add(nfId);
+    }
+    setExpandedNFs(newExpanded);
   };
 
   const getStatusBadge = (status: string) => {
@@ -66,6 +81,11 @@ const NotasFiscais = () => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
+  const formatPeso = (peso?: number) => {
+    if (!peso) return 'Sem peso';
+    return `${peso.toFixed(2)} kg`;
+  };
+
   const filteredNFs = nfs.filter((nf: any) => {
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
@@ -82,7 +102,10 @@ const NotasFiscais = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Notas Fiscais</h1>
           <p className="text-muted-foreground">
-            Gestão e validação de notas fiscais importadas
+            {contractIdFromState
+              ? `Notas fiscais do contrato #${contractIdFromState}`
+              : "Gestão e validação de notas fiscais importadas"
+            }
           </p>
         </div>
         <Button onClick={() => navigate('/suprimentos/notas-fiscais/importar')}>
@@ -181,80 +204,208 @@ const NotasFiscais = () => {
                   ? "Nenhuma nota fiscal encontrada com os filtros aplicados"
                   : "Nenhuma nota fiscal importada ainda"}
               </p>
-              {!searchTerm && (
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => navigate('/suprimentos/notas-fiscais/importar')}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Importar Primeira NF
-                </Button>
-              )}
             </div>
           ) : (
             <div className="space-y-4">
               {filteredNFs.map((nf: any) => (
-                <div key={nf.id} className="p-4 border rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-lg">
-                          NF {nf.numero}/{nf.serie}
-                        </h4>
-                        {getStatusBadge(nf.status_processamento)}
+                <Collapsible
+                  key={nf.id}
+                  open={expandedNFs.has(nf.id)}
+                  onOpenChange={() => toggleNFExpansion(nf.id)}
+                >
+                  <div className="border rounded-lg hover:bg-muted/30 transition-colors">
+                    {/* NF Header */}
+                    <CollapsibleTrigger asChild>
+                      <div className="p-4 cursor-pointer">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              {expandedNFs.has(nf.id) ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              <h4 className="font-semibold text-lg">
+                                NF {nf.numero}/{nf.serie}
+                              </h4>
+                              {getStatusBadge(nf.status_processamento)}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-muted-foreground ml-7">
+                              <div className="flex items-center gap-2">
+                                <Truck className="h-4 w-4" />
+                                <span>{nf.nome_fornecedor || nf.fornecedor}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4" />
+                                <span>{formatDate(nf.data_emissao)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4" />
+                                <span className="font-medium">{formatCurrency(nf.valor_total)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4" />
+                                <span>{nf.items?.length || 0} itens</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {nf.status_processamento === 'processado' && (
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  validateNF.mutate(nf.id);
+                                }}
+                                disabled={validateNF.isPending}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Validar
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
+                    </CollapsibleTrigger>
 
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Truck className="h-4 w-4" />
-                          <span>{nf.nome_fornecedor || nf.fornecedor}</span>
+                    {/* NF Details */}
+                    <CollapsibleContent>
+                      <Separator />
+                      <div className="p-4">
+                        {/* Informações da NF */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                          <div>
+                            <h5 className="font-medium mb-3">Informações da NF</h5>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">CNPJ Fornecedor:</span>
+                                <span className="font-medium">{nf.cnpj_fornecedor}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Fornecedor:</span>
+                                <span className="font-medium">{nf.nome_fornecedor || nf.fornecedor}</span>
+                              </div>
+                              {nf.chave_acesso && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Chave Acesso:</span>
+                                  <span className="font-mono text-xs">{nf.chave_acesso}</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Pasta:</span>
+                                <span className="font-medium">{nf.pasta_origem}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Criada em:</span>
+                                <span>{formatDate(nf.created_at)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h5 className="font-medium mb-3">Valores</h5>
+                            <div className="space-y-2 text-sm">
+                              {nf.valor_produtos && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Produtos:</span>
+                                  <span>{formatCurrency(nf.valor_produtos)}</span>
+                                </div>
+                              )}
+                              {nf.valor_impostos && nf.valor_impostos > 0 && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Impostos:</span>
+                                  <span>{formatCurrency(nf.valor_impostos)}</span>
+                                </div>
+                              )}
+                              {nf.peso_total && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Peso Total:</span>
+                                  <span>{formatPeso(nf.peso_total)}</span>
+                                </div>
+                              )}
+                              <Separator />
+                              <div className="flex justify-between font-medium text-base">
+                                <span>Total:</span>
+                                <span>{formatCurrency(nf.valor_total)}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>{formatDate(nf.data_emissao)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4" />
-                          <span className="font-medium">{formatCurrency(nf.valor_total)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          <span>{nf.items?.length || 0} itens</span>
-                        </div>
+
+                        {/* Itens/Produtos */}
+                        {nf.items && nf.items.length > 0 && (
+                          <div>
+                            <h5 className="font-medium mb-3 flex items-center gap-2">
+                              <Package className="h-4 w-4" />
+                              Itens/Produtos ({nf.items.length})
+                            </h5>
+                            <div className="space-y-3">
+                              {nf.items.map((item: any) => (
+                                <div key={item.id} className="border rounded-lg p-3 bg-muted/20">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex-1">
+                                      <h6 className="font-medium">{item.descricao}</h6>
+                                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                                        {item.numero_item && (
+                                          <div className="flex items-center gap-1">
+                                            <span className="text-xs">#{item.numero_item.toString().padStart(3, '0')}</span>
+                                          </div>
+                                        )}
+                                        {item.codigo_produto && (
+                                          <div className="flex items-center gap-1">
+                                            <Hash className="h-3 w-3" />
+                                            <span>{item.codigo_produto}</span>
+                                          </div>
+                                        )}
+                                        {item.ncm && (
+                                          <div className="flex items-center gap-1">
+                                            <span>NCM: {item.ncm}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <Badge variant={item.status_integracao === 'integrado' ? 'default' : 'secondary'}>
+                                      {item.status_integracao === 'integrado' ? 'Integrado' : item.status_integracao}
+                                    </Badge>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                      <span className="text-muted-foreground">Qtd:</span>
+                                      <p className="font-medium">{item.quantidade} {item.unidade}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Valor Unit.:</span>
+                                      <p className="font-medium">{formatCurrency(item.valor_unitario)}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Total:</span>
+                                      <p className="font-medium">{formatCurrency(item.valor_total)}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Centro Custo:</span>
+                                      <p className="font-medium">{item.centro_custo || 'Material'}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Observações */}
+                        {nf.observacoes && (
+                          <div className="mt-6 pt-4 border-t">
+                            <h5 className="font-medium mb-2">Observações</h5>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{nf.observacoes}</p>
+                          </div>
+                        )}
                       </div>
-
-                      {nf.contrato_id && (
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          Contrato: {nf.contrato_id}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      {nf.status_processamento === 'processado' && (
-                        <Button
-                          size="sm"
-                          onClick={() => validateNF.mutate(nf.id)}
-                          disabled={validateNF.isPending}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Validar
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          // TODO: Abrir modal de detalhes
-                          console.log('Ver detalhes NF:', nf.id);
-                        }}
-                      >
-                        Ver Detalhes
-                      </Button>
-                    </div>
+                    </CollapsibleContent>
                   </div>
-                </div>
+                </Collapsible>
               ))}
             </div>
           )}
