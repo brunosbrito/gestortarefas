@@ -96,12 +96,12 @@ export const navItems: MenuItem[] = [
     path: '/comercial',
   },
 
-  // MÓDULO CRONOGRAMAS
-  {
-    icon: GanttChartSquare,
-    label: 'Cronogramas',
-    path: '/cronograma',
-  },
+  // MÓDULO CRONOGRAMAS (desabilitado nesta branch - existe apenas na branch Modulo_Cronograma)
+  // {
+  //   icon: GanttChartSquare,
+  //   label: 'Cronogramas',
+  //   path: '/cronograma',
+  // },
 
   // CONFIGURAÇÕES (renomeado de "Gerenciamento")
   {

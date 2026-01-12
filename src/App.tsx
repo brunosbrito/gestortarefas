@@ -22,10 +22,10 @@ const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
 const Atividade = lazy(() => import('./pages/Atividade'));
 const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
 
-// Módulo Cronogramas
-const DashboardCronogramas = lazy(() => import('./pages/cronograma'));
-const GanttView = lazy(() => import('./pages/cronograma/gantt'));
-const GanttTestVanilla = lazy(() => import('./pages/cronograma/gantt/GanttTestVanilla'));
+// Módulo Cronogramas (desabilitado nesta branch - existe apenas na branch Modulo_Cronograma)
+// const DashboardCronogramas = lazy(() => import('./pages/cronograma'));
+// const GanttView = lazy(() => import('./pages/cronograma/gantt'));
+// const GanttTestVanilla = lazy(() => import('./pages/cronograma/gantt/GanttTestVanilla'));
 
 // Módulo Comercial
 const Comercial = lazy(() => import('./pages/comercial'));
@@ -55,9 +55,10 @@ function App() {
           <Route path="/fabricas" element={<Fabricas />} />
           <Route path="/mineradoras" element={<Mineradoras />} />
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
-          <Route path="/cronograma" element={<DashboardCronogramas />} />
-          <Route path="/cronograma/:id/gantt" element={<GanttView />} />
-          <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} />
+          {/* Rotas de Cronograma desabilitadas nesta branch */}
+          {/* <Route path="/cronograma" element={<DashboardCronogramas />} /> */}
+          {/* <Route path="/cronograma/:id/gantt" element={<GanttView />} /> */}
+          {/* <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} /> */}
           <Route path="/comercial/*" element={<Comercial />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
