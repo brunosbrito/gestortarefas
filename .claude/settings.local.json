@@ -10,7 +10,9 @@
       "Bash(npm install:*)",
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:dev:*)"
+      "Bash(npm run build:dev:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
