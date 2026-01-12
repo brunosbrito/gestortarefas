@@ -31,7 +31,7 @@ const NotasFiscais = () => {
   const { data: statsData, isLoading: statsLoading } = useNFStats();
   const validateNF = useValidateNF();
 
-  const nfs = nfsData?.data?.nfs || [];
+  const nfs = nfsData?.data || [];
   const stats = statsData?.data || {
     total_nfs: 0,
     validated: 0,
