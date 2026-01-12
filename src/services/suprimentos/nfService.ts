@@ -349,6 +349,71 @@ class NFService {
     return response.data;
   }
 
+  // Download XML da NF
+  async downloadXML(id: number): Promise<Blob> {
+    if (USE_MOCK) {
+      // Gerar XML mock
+      const nf = mockNFs.find((n) => n.id === id);
+      if (!nf) throw new Error('NF não encontrada');
+
+      const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe>
+    <infNFe>
+      <ide>
+        <nNF>${nf.numero}</nNF>
+        <serie>${nf.serie}</serie>
+        <dhEmi>${nf.data_emissao}T10:00:00-03:00</dhEmi>
+      </ide>
+      <emit>
+        <CNPJ>${nf.cnpj_fornecedor?.replace(/\D/g, '')}</CNPJ>
+        <xNome>${nf.nome_fornecedor}</xNome>
+      </emit>
+      <total>
+        <ICMSTot>
+          <vNF>${nf.valor_total}</vNF>
+        </ICMSTot>
+      </total>
+    </infNFe>
+  </NFe>
+</nfeProc>`;
+
+      return Promise.resolve(new Blob([xmlContent], { type: 'application/xml' }));
+    }
+
+    const response = await axios.get(`${URL}/${id}/download/xml`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  // Download PDF da NF
+  async downloadPDF(id: number): Promise<Blob> {
+    if (USE_MOCK) {
+      // Gerar PDF mock (texto simples como placeholder)
+      const nf = mockNFs.find((n) => n.id === id);
+      if (!nf) throw new Error('NF não encontrada');
+
+      const pdfContent = `DANFE - Documento Auxiliar da Nota Fiscal Eletrônica
+
+Nota Fiscal: ${nf.numero}
+Série: ${nf.serie}
+Data de Emissão: ${nf.data_emissao}
+Fornecedor: ${nf.nome_fornecedor}
+CNPJ: ${nf.cnpj_fornecedor}
+Valor Total: R$ ${nf.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+
+⚠️ Este é um arquivo mock. O PDF real será gerado pelo backend.`;
+
+      return Promise.resolve(new Blob([pdfContent], { type: 'application/pdf' }));
+    }
+
+    const response = await axios.get(`${URL}/${id}/download/pdf`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
   // Processo de pasta via N8N webhook
   async processFolder(folderName: string): Promise<
     ApiResponse<{

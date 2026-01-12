@@ -30,8 +30,10 @@ import {
   ChevronDown,
   ChevronRight,
   Hash,
+  Download,
+  FileCode,
 } from "lucide-react";
-import { useNFs, useNFStats, useValidateNF, useRejectNF } from "@/hooks/suprimentos/useNF";
+import { useNFs, useNFStats, useValidateNF, useRejectNF, useDownloadNFXML, useDownloadNFPDF } from "@/hooks/suprimentos/useNF";
 
 const NotasFiscais = () => {
   const navigate = useNavigate();
@@ -50,6 +52,8 @@ const NotasFiscais = () => {
   const { data: statsData, isLoading: statsLoading } = useNFStats();
   const validateNF = useValidateNF();
   const rejectNF = useRejectNF();
+  const { downloadXML } = useDownloadNFXML();
+  const { downloadPDF } = useDownloadNFPDF();
 
   const nfs = nfsData?.data || [];
   const stats = statsData?.data || {
@@ -375,6 +379,28 @@ const NotasFiscais = () => {
                                 </Button>
                               </>
                             )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                downloadXML(nf.id, nf.numero);
+                              }}
+                            >
+                              <FileCode className="h-4 w-4 mr-1" />
+                              XML
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                downloadPDF(nf.id, nf.numero);
+                              }}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              PDF
+                            </Button>
                           </div>
                         </div>
                       </div>

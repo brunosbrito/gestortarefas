@@ -130,5 +130,68 @@ export const useContractNFsDetailed = (contractId: number) => {
   });
 };
 
+// Download de XML e PDF
+export const useDownloadNFXML = () => {
+  const { toast } = useToast();
+
+  const downloadXML = async (nfId: number, nfNumero: string) => {
+    try {
+      const blob = await nfService.downloadXML(nfId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `NF_${nfNumero}.xml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Download Concluído',
+        description: 'Arquivo XML baixado com sucesso',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro no Download',
+        description: error.message || 'Erro ao baixar XML',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return { downloadXML };
+};
+
+export const useDownloadNFPDF = () => {
+  const { toast } = useToast();
+
+  const downloadPDF = async (nfId: number, nfNumero: string) => {
+    try {
+      const blob = await nfService.downloadPDF(nfId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `DANFE_${nfNumero}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Download Concluído',
+        description: 'Arquivo PDF baixado com sucesso',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro no Download',
+        description: error.message || 'Erro ao baixar PDF',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return { downloadPDF };
+};
+
 // Alias para compatibilidade com componentes originais
 export const useValidateNotaFiscal = useValidateNF;
