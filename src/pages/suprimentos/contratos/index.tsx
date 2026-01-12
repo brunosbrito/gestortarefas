@@ -6,6 +6,7 @@ import { useContracts, useContractKPIs, useContractRealizedValue } from "@/hooks
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreateContractModal } from "./components/CreateContractModal";
+import { ContractDetailsModal } from "./components/ContractDetailsModal";
 import {
   Dialog,
   DialogContent,
@@ -180,6 +181,9 @@ const Contratos = () => {
     startDateFrom: '',
     startDateTo: '',
   });
+
+  // Details modal state
+  const [selectedContractForDetails, setSelectedContractForDetails] = useState<any>(null);
 
   // Safely extract contracts array
   const allContracts = contractsData?.data?.contracts || [];
@@ -372,7 +376,7 @@ const Contratos = () => {
                   <ContractProgressBar contractId={contract.id} />
 
                   <div className="flex gap-2 mt-3">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/suprimentos/contratos/${contract.id}`)}>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedContractForDetails(contract)}>
                       Ver Detalhes
                     </Button>
                     <Button
@@ -482,6 +486,13 @@ const Contratos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Contract Details Modal */}
+      <ContractDetailsModal
+        contract={selectedContractForDetails}
+        open={!!selectedContractForDetails}
+        onOpenChange={(open) => !open && setSelectedContractForDetails(null)}
+      />
     </div>
   );
 };
