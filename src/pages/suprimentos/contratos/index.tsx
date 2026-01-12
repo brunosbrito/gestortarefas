@@ -5,6 +5,7 @@ import { Building2, TrendingUp, TrendingDown, Receipt, Plus, Filter } from "luci
 import { useContracts, useContractKPIs, useContractRealizedValue } from "@/hooks/suprimentos/useContracts";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CreateContractModal } from "./components/CreateContractModal";
 
 interface ContractRealizedValueProps {
   contractId: number;
@@ -174,10 +175,7 @@ const Contratos = () => {
             <Filter className="h-4 w-4" />
             Filtrar
           </Button>
-          <Button variant="default" onClick={() => navigate('/suprimentos/contratos/novo')}>
-            <Plus className="h-4 w-4" />
-            Novo Contrato
-          </Button>
+          <CreateContractModal />
         </div>
       </div>
 
@@ -311,14 +309,9 @@ const Contratos = () => {
                 <div className="text-center py-8 text-muted-foreground">
                   <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Nenhum contrato encontrado</p>
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => navigate('/suprimentos/contratos/novo')}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Criar Primeiro Contrato
-                  </Button>
+                  <div className="mt-4">
+                    <CreateContractModal />
+                  </div>
                 </div>
               )}
             </div>
