@@ -11,12 +11,16 @@ import {
   Calculator,
   BarChart3,
   Settings,
-  Download
+  Download,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
+import AdicionarComposicaoDialog from './AdicionarComposicaoDialog';
+import AdicionarItemDialog from './AdicionarItemDialog';
 
 const EditarOrcamento = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +31,11 @@ const EditarOrcamento = () => {
   const [saving, setSaving] = useState(false);
   const [orcamento, setOrcamento] = useState<Orcamento | null>(null);
   const [activeTab, setActiveTab] = useState('composicoes');
+
+  // Dialog states
+  const [dialogComposicao, setDialogComposicao] = useState(false);
+  const [dialogItem, setDialogItem] = useState(false);
+  const [composicaoSelecionada, setComposicaoSelecionada] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -50,6 +59,11 @@ const EditarOrcamento = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAdicionarItem = (composicaoId: string) => {
+    setComposicaoSelecionada(composicaoId);
+    setDialogItem(true);
   };
 
   if (loading) {
@@ -242,6 +256,7 @@ const EditarOrcamento = () => {
                   <Button
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-blue-500"
+                    onClick={() => setDialogComposicao(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar Composição
@@ -266,9 +281,15 @@ const EditarOrcamento = () => {
                         <CardHeader className="bg-blue-50/50">
                           <div className="flex items-center justify-between">
                             <div>
-                              <CardTitle className="text-lg">{composicao.nome}</CardTitle>
+                              <div className="flex items-center gap-2">
+                                <CardTitle className="text-lg">{composicao.nome}</CardTitle>
+                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">
+                                  {composicao.tipo.replace('_', ' ')}
+                                </span>
+                              </div>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {composicao.itens.length} itens • BDI: {formatPercentage(composicao.bdi.percentual)}
+                                {composicao.itens.length} itens • BDI: {formatPercentage(composicao.bdi.percentual)} •
+                                Custo Direto: {formatCurrency(composicao.custoDirecto)}
                               </p>
                             </div>
                             <div className="text-right">
@@ -279,10 +300,82 @@ const EditarOrcamento = () => {
                             </div>
                           </div>
                         </CardHeader>
-                        <CardContent className="pt-4">
-                          <p className="text-sm text-muted-foreground">
-                            Detalhes dos itens serão exibidos aqui
-                          </p>
+                        <CardContent className="pt-4 space-y-3">
+                          {composicao.itens.length === 0 ? (
+                            <div className="text-center py-6 border-2 border-dashed border-muted rounded-lg">
+                              <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                              <p className="text-sm text-muted-foreground">
+                                Nenhum item adicionado
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="mt-3"
+                                onClick={() => handleAdicionarItem(composicao.id)}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Adicionar Item
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="space-y-2">
+                                {composicao.itens.map((item, index) => (
+                                  <div
+                                    key={item.id}
+                                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                                  >
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                                        {item.codigo && (
+                                          <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">
+                                            {item.codigo}
+                                          </span>
+                                        )}
+                                        <span className="font-medium">{item.descricao}</span>
+                                      </div>
+                                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                        <span>{item.quantidade} {item.unidade}</span>
+                                        <span>×</span>
+                                        <span>{formatCurrency(item.valorUnitario)}</span>
+                                        {item.material && <span>• {item.material}</span>}
+                                        {item.cargo && <span>• {item.cargo}</span>}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <div className="text-right">
+                                        <p className="text-sm font-bold">
+                                          {formatCurrency(item.subtotal)}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {formatPercentage(item.percentual)}
+                                        </p>
+                                      </div>
+                                      <div className="flex gap-1">
+                                        <Button size="sm" variant="ghost">
+                                          <Edit className="h-3 w-3" />
+                                        </Button>
+                                        <Button size="sm" variant="ghost">
+                                          <Trash2 className="h-3 w-3 text-red-600" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="flex justify-end pt-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleAdicionarItem(composicao.id)}
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Adicionar Item
+                                </Button>
+                              </div>
+                            </>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -360,6 +453,23 @@ const EditarOrcamento = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Dialogs */}
+        <AdicionarComposicaoDialog
+          open={dialogComposicao}
+          onOpenChange={setDialogComposicao}
+          orcamentoId={orcamento.id}
+          onSuccess={carregarOrcamento}
+        />
+
+        {composicaoSelecionada && (
+          <AdicionarItemDialog
+            open={dialogItem}
+            onOpenChange={setDialogItem}
+            composicaoId={composicaoSelecionada}
+            onSuccess={carregarOrcamento}
+          />
+        )}
       </div>
     </div>
   );
