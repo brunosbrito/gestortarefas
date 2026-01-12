@@ -4,8 +4,9 @@
 
 export interface Orcamento {
   id: string;
-  numero: string;                    // Auto-gerado: AAAA-XXX
+  numero: string;                    // Auto-gerado: S-001|2026 (serviço) ou P-001|2026 (produto)
   nome: string;                      // Nome do orçamento
+  tipo: 'servico' | 'produto';       // Tipo do orçamento (separa numeração e organização)
 
   // Dados do projeto
   areaTotalM2?: number;
@@ -136,6 +137,7 @@ export interface TemplateComposicao {
 // DTOs para criação/atualização
 export interface CreateOrcamento {
   nome: string;
+  tipo: 'servico' | 'produto';       // OBRIGATÓRIO: Define a numeração (S-xxx ou P-xxx)
   areaTotalM2?: number;
   metrosLineares?: number;
   pesoTotalProjeto?: number;         // CALDEIRARIA

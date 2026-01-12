@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, ArrowRight, Save, FileText } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ArrowLeft, ArrowRight, Save, FileText, Wrench, Package } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
 import { CreateOrcamento } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,7 @@ const NovoOrcamento = () => {
   // Form state
   const [formData, setFormData] = useState({
     nome: '',
+    tipo: 'servico' as 'servico' | 'produto', // Padrão: serviço
     clienteNome: '',
     codigoProjeto: '',
     areaTotalM2: '',
@@ -50,6 +52,7 @@ const NovoOrcamento = () => {
 
       const data: CreateOrcamento = {
         nome: formData.nome,
+        tipo: formData.tipo,
         clienteNome: formData.clienteNome || undefined,
         codigoProjeto: formData.codigoProjeto || undefined,
         areaTotalM2: formData.areaTotalM2 ? parseFloat(formData.areaTotalM2) : undefined,
@@ -133,6 +136,43 @@ const NovoOrcamento = () => {
                     onChange={(e) => handleChange('nome', e.target.value)}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>
+                    Tipo de Orçamento <span className="text-red-500">*</span>
+                  </Label>
+                  <RadioGroup
+                    value={formData.tipo}
+                    onValueChange={(value) => handleChange('tipo', value as 'servico' | 'produto')}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2 flex-1">
+                      <RadioGroupItem value="servico" id="servico" />
+                      <Label
+                        htmlFor="servico"
+                        className="flex items-center gap-2 cursor-pointer font-normal"
+                      >
+                        <Wrench className="h-4 w-4 text-blue-600" />
+                        <span>Serviço</span>
+                        <span className="text-xs text-muted-foreground">(S-001|2026)</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 flex-1">
+                      <RadioGroupItem value="produto" id="produto" />
+                      <Label
+                        htmlFor="produto"
+                        className="flex items-center gap-2 cursor-pointer font-normal"
+                      >
+                        <Package className="h-4 w-4 text-green-600" />
+                        <span>Produto</span>
+                        <span className="text-xs text-muted-foreground">(P-001|2026)</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  <p className="text-xs text-muted-foreground">
+                    O tipo define a numeração sequencial do orçamento
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -13,7 +13,9 @@ import {
   Settings,
   Download,
   Edit,
-  Trash2
+  Trash2,
+  Wrench,
+  Package
 } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
@@ -114,6 +116,18 @@ const EditarOrcamento = () => {
                   <h1 className="text-2xl font-bold">{orcamento.nome}</h1>
                   <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full">
                     {orcamento.numero}
+                  </span>
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full flex items-center gap-1.5 ${
+                    orcamento.tipo === 'servico'
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-green-50 text-green-700'
+                  }`}>
+                    {orcamento.tipo === 'servico' ? (
+                      <Wrench className="h-3.5 w-3.5" />
+                    ) : (
+                      <Package className="h-3.5 w-3.5" />
+                    )}
+                    {orcamento.tipo === 'servico' ? 'Serviço' : 'Produto'}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">

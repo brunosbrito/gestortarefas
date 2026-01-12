@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, FileText, Filter, X, Eye, Copy, Trash2, ArrowUpDown, ChevronRight, Download } from 'lucide-react';
+import { Plus, FileText, Filter, X, Eye, Copy, Trash2, ArrowUpDown, ChevronRight, Download, Wrench, Package } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
@@ -34,6 +34,7 @@ const OrcamentosListPage = () => {
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
   const [filtroViabilidade, setFiltroViabilidade] = useState<string>('todos');
   const [sortField, setSortField] = useState<SortField>('numero');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -117,6 +118,11 @@ const OrcamentosListPage = () => {
       orc.nome.toLowerCase().includes(busca.toLowerCase()) ||
       orc.numero.toLowerCase().includes(busca.toLowerCase());
 
+    const matchTipo =
+      filtroTipo === 'todos' ||
+      (filtroTipo === 'servico' && orc.tipo === 'servico') ||
+      (filtroTipo === 'produto' && orc.tipo === 'produto');
+
     const status = getStatusViabilidade(orc.dre);
     const matchViabilidade =
       filtroViabilidade === 'todos' ||
@@ -125,7 +131,7 @@ const OrcamentosListPage = () => {
       (filtroViabilidade === 'aceitavel' && orc.dre.margemLiquida >= 5 && orc.dre.margemLiquida < 15) ||
       (filtroViabilidade === 'bom' && orc.dre.margemLiquida >= 15);
 
-    return matchBusca && matchViabilidade;
+    return matchBusca && matchTipo && matchViabilidade;
   });
 
   // Ordenação
@@ -170,6 +176,7 @@ const OrcamentosListPage = () => {
 
   const limparFiltros = () => {
     setBusca('');
+    setFiltroTipo('todos');
     setFiltroViabilidade('todos');
   };
 
@@ -215,6 +222,30 @@ const OrcamentosListPage = () => {
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
               />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Tipo</label>
+              <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="servico">
+                    <div className="flex items-center gap-2">
+                      <Wrench className="h-4 w-4 text-blue-600" />
+                      Serviço
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="produto">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-green-600" />
+                      Produto
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -290,6 +321,7 @@ const OrcamentosListPage = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
+                  <TableHead className="w-[100px]">Tipo</TableHead>
                   <TableHead>
                     <Button
                       variant="ghost"
@@ -341,7 +373,7 @@ const OrcamentosListPage = () => {
               <TableBody>
                 {orcamentosPaginados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                       Nenhum orçamento encontrado
                     </TableCell>
                   </TableRow>
@@ -351,6 +383,20 @@ const OrcamentosListPage = () => {
                     return (
                       <TableRow key={orc.id} className="hover:bg-muted/50">
                         <TableCell className="font-medium">{orc.numero}</TableCell>
+                        <TableCell>
+                          <Badge className={`${
+                            orc.tipo === 'servico'
+                              ? 'bg-blue-50 text-blue-700 border-blue-300'
+                              : 'bg-green-50 text-green-700 border-green-300'
+                          } flex items-center gap-1.5 w-fit`}>
+                            {orc.tipo === 'servico' ? (
+                              <Wrench className="h-3 w-3" />
+                            ) : (
+                              <Package className="h-3 w-3" />
+                            )}
+                            {orc.tipo === 'servico' ? 'Serviço' : 'Produto'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{orc.nome}</TableCell>
                         <TableCell className="text-right font-semibold text-blue-600">
                           {formatCurrency(orc.totalVenda)}

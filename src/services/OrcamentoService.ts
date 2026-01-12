@@ -14,15 +14,29 @@ const USE_MOCK = true; // Alterar para false quando backend estiver funcionando
 
 const mockOrcamentos: Orcamento[] = [];
 let mockIdCounter = 1;
+let mockServicoCounter = 0; // Contador separado para S-xxx|2026
+let mockProdutoCounter = 0; // Contador separado para P-xxx|2026
 
 const generateMockOrcamento = (data: CreateOrcamento): Orcamento => {
   const id = `mock-${mockIdCounter++}`;
-  const numero = `2026-${String(mockIdCounter).padStart(3, '0')}`;
+
+  // Gerar número no formato: S-001|2026 (serviço) ou P-001|2026 (produto)
+  const ano = new Date().getFullYear();
+  let numero: string;
+
+  if (data.tipo === 'servico') {
+    mockServicoCounter++;
+    numero = `S-${String(mockServicoCounter).padStart(3, '0')}|${ano}`;
+  } else {
+    mockProdutoCounter++;
+    numero = `P-${String(mockProdutoCounter).padStart(3, '0')}|${ano}`;
+  }
 
   const orcamento: Orcamento = {
     id,
     numero,
     nome: data.nome,
+    tipo: data.tipo,
     clienteNome: data.clienteNome,
     codigoProjeto: data.codigoProjeto,
     areaTotalM2: data.areaTotalM2,
