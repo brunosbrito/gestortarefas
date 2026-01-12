@@ -55,35 +55,35 @@ interface CategoryTrend {
 // Mock Analytics Data
 const mockCostsByCategory: CostByCategory[] = [
   {
-    category: 'Materiais de Construção',
+    category: 'Matéria-Prima Metalúrgica',
     value: 285000,
     percentage: 42.5,
     items: 156,
     avgTicket: 1826.92,
   },
   {
-    category: 'Mão de Obra',
+    category: 'Mão de Obra Especializada',
     value: 195000,
     percentage: 29.1,
     items: 45,
     avgTicket: 4333.33,
   },
   {
-    category: 'Equipamentos',
+    category: 'Consumíveis de Soldagem',
     value: 98000,
     percentage: 14.6,
     items: 23,
     avgTicket: 4260.87,
   },
   {
-    category: 'Serviços Especializados',
+    category: 'Serviços de Usinagem',
     value: 62000,
     percentage: 9.2,
     items: 18,
     avgTicket: 3444.44,
   },
   {
-    category: 'Administrativo',
+    category: 'Tratamento Superficial',
     value: 30500,
     percentage: 4.6,
     items: 89,
@@ -103,7 +103,7 @@ const mockCostEvolution: CostEvolution[] = [
 const mockSupplierAnalysis: SupplierAnalysis[] = [
   {
     id: 1,
-    name: 'Construtora ABC Materiais',
+    name: 'Gerdau Aços Longos S.A.',
     totalValue: 124500,
     orders: 18,
     avgDeliveryTime: 5.2,
@@ -114,7 +114,7 @@ const mockSupplierAnalysis: SupplierAnalysis[] = [
   },
   {
     id: 2,
-    name: 'Distribuidora XYZ',
+    name: 'Usiminas Mecânica S.A.',
     totalValue: 98750,
     orders: 15,
     avgDeliveryTime: 6.8,
@@ -125,7 +125,7 @@ const mockSupplierAnalysis: SupplierAnalysis[] = [
   },
   {
     id: 3,
-    name: 'Materiais Premium Ltda',
+    name: 'ESAB Soldas do Brasil',
     totalValue: 87200,
     orders: 12,
     avgDeliveryTime: 4.5,
@@ -136,7 +136,7 @@ const mockSupplierAnalysis: SupplierAnalysis[] = [
   },
   {
     id: 4,
-    name: 'Fornecedor Econômico',
+    name: 'White Martins Gases Industriais',
     totalValue: 65300,
     orders: 22,
     avgDeliveryTime: 7.5,
@@ -147,7 +147,7 @@ const mockSupplierAnalysis: SupplierAnalysis[] = [
   },
   {
     id: 5,
-    name: 'Casa dos Materiais',
+    name: 'Sherwin-Williams do Brasil',
     totalValue: 54200,
     orders: 14,
     avgDeliveryTime: 6.0,
@@ -161,7 +161,7 @@ const mockSupplierAnalysis: SupplierAnalysis[] = [
 const mockContractPerformance: ContractPerformance[] = [
   {
     contractId: 1,
-    contractName: 'Obra Shopping Center ABC',
+    contractName: 'Reforma Britador - Mina Vale do Rio Doce',
     budget: 2500000,
     spent: 2235000,
     variance: -265000,
@@ -171,7 +171,7 @@ const mockContractPerformance: ContractPerformance[] = [
   },
   {
     contractId: 2,
-    contractName: 'Reforma Edifício Comercial XYZ',
+    contractName: 'Fabricação Estrutura Metálica - Planta CSN',
     budget: 850000,
     spent: 892000,
     variance: 42000,
@@ -181,7 +181,7 @@ const mockContractPerformance: ContractPerformance[] = [
   },
   {
     contractId: 3,
-    contractName: 'Construção Galpão Industrial',
+    contractName: 'Reparo Correias Transportadoras - Usiminas',
     budget: 1200000,
     spent: 1185000,
     variance: -15000,
@@ -193,7 +193,7 @@ const mockContractPerformance: ContractPerformance[] = [
 
 const mockCategoryTrends: CategoryTrend[] = [
   {
-    category: 'Materiais de Construção',
+    category: 'Matéria-Prima Metalúrgica',
     data: [
       { month: 'Jan', value: 42000 },
       { month: 'Fev', value: 48000 },
@@ -204,7 +204,7 @@ const mockCategoryTrends: CategoryTrend[] = [
     ],
   },
   {
-    category: 'Mão de Obra',
+    category: 'Mão de Obra Especializada',
     data: [
       { month: 'Jan', value: 28000 },
       { month: 'Fev', value: 32000 },
@@ -215,7 +215,7 @@ const mockCategoryTrends: CategoryTrend[] = [
     ],
   },
   {
-    category: 'Equipamentos',
+    category: 'Consumíveis de Soldagem',
     data: [
       { month: 'Jan', value: 12000 },
       { month: 'Fev', value: 18000 },
