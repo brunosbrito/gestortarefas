@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 const Dashboard = lazy(() => import('./Dashboard'));
 const OrcamentosList = lazy(() => import('./orcamentos'));
 const NovoOrcamento = lazy(() => import('./orcamentos/novo'));
+const EditarOrcamento = lazy(() => import('./orcamentos/[id]'));
 const PropostasList = lazy(() => import('./propostas'));
 
 const PageLoader = () => (
@@ -24,7 +25,7 @@ const Comercial = () => {
         <Route path="orcamentos">
           <Route index element={<OrcamentosList />} />
           <Route path="novo" element={<NovoOrcamento />} />
-          {/* <Route path=":id" element={<EditarOrcamento />} /> */}
+          <Route path=":id" element={<EditarOrcamento />} />
         </Route>
         <Route path="propostas" element={<PropostasList />} />
         <Route path="*" element={<Navigate to="/comercial" replace />} />
