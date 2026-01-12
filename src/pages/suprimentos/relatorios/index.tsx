@@ -29,6 +29,7 @@ import {
   FileDown,
   Clock,
   TrendingUp,
+  Eye,
 } from 'lucide-react';
 import {
   useReportTemplates,
@@ -52,6 +53,7 @@ const Relatorios = () => {
 
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate | null>(null);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [exportFormat, setExportFormat] = useState<'pdf' | 'excel' | 'csv'>('pdf');
   const [selectedFilters, setSelectedFilters] = useState<Record<string, any>>({});
   const [deleteReportId, setDeleteReportId] = useState<string | null>(null);
@@ -109,6 +111,52 @@ const Relatorios = () => {
         },
       });
     }
+  };
+
+  const handlePreview = () => {
+    setShowPreviewDialog(true);
+  };
+
+  const getMockPreviewData = () => {
+    if (!selectedTemplate) return null;
+
+    // Generate mock data based on template category and type
+    const mockData: any = {
+      title: selectedTemplate.name,
+      generatedAt: new Date().toLocaleString('pt-BR'),
+      filters: selectedFilters,
+      format: exportFormat,
+      category: selectedTemplate.category,
+    };
+
+    // Mock table data based on category
+    if (selectedTemplate.category === 'contract') {
+      mockData.tableData = [
+        { contrato: 'Contrato 001', fornecedor: 'Fornecedor A', valor: 'R$ 150.000', status: 'Em Andamento' },
+        { contrato: 'Contrato 002', fornecedor: 'Fornecedor B', valor: 'R$ 320.000', status: 'Concluído' },
+        { contrato: 'Contrato 003', fornecedor: 'Fornecedor C', valor: 'R$ 85.000', status: 'Em Andamento' },
+      ];
+    } else if (selectedTemplate.category === 'purchase') {
+      mockData.tableData = [
+        { pedido: 'PO-001', fornecedor: 'Fornecedor X', item: 'Material A', valor: 'R$ 12.500' },
+        { pedido: 'PO-002', fornecedor: 'Fornecedor Y', item: 'Material B', valor: 'R$ 8.300' },
+        { pedido: 'PO-003', fornecedor: 'Fornecedor Z', item: 'Material C', valor: 'R$ 15.700' },
+      ];
+    } else if (selectedTemplate.category === 'financial') {
+      mockData.tableData = [
+        { categoria: 'Material', previsto: 'R$ 100.000', realizado: 'R$ 95.000', variacao: '-5%' },
+        { categoria: 'Mão de Obra', previsto: 'R$ 200.000', realizado: 'R$ 215.000', variacao: '+7.5%' },
+        { categoria: 'Equipamento', previsto: 'R$ 50.000', realizado: 'R$ 48.000', variacao: '-4%' },
+      ];
+    } else {
+      mockData.tableData = [
+        { indicador: 'Métrica A', valor: '85%', meta: '80%', status: 'Acima da Meta' },
+        { indicador: 'Métrica B', valor: '92%', meta: '90%', status: 'Acima da Meta' },
+        { indicador: 'Métrica C', valor: '75%', meta: '85%', status: 'Abaixo da Meta' },
+      ];
+    }
+
+    return mockData;
   };
 
   const getCategoryIcon = (category: string) => {
@@ -543,12 +591,151 @@ const Relatorios = () => {
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>
-              Cancelar
+          <DialogFooter className="flex-row justify-between">
+            <Button variant="outline" onClick={handlePreview}>
+              <Eye className="h-4 w-4 mr-2" />
+              Visualizar Preview
             </Button>
-            <Button onClick={handleGenerateReport} disabled={generateMutation.isPending}>
-              {generateMutation.isPending ? 'Gerando...' : 'Gerar Relatório'}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleGenerateReport} disabled={generateMutation.isPending}>
+                {generateMutation.isPending ? 'Gerando...' : 'Gerar Relatório'}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Preview do Relatório
+            </DialogTitle>
+            <DialogDescription>
+              Visualização prévia baseada nos filtros e configurações selecionadas
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedTemplate && (() => {
+            const previewData = getMockPreviewData();
+            if (!previewData) return null;
+
+            return (
+              <div className="space-y-6 py-4">
+                {/* Report Header */}
+                <div className="border-b pb-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">{previewData.title}</h2>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Gerado em: {previewData.generatedAt}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="capitalize">
+                      {previewData.format.toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  {/* Applied Filters Summary */}
+                  {Object.keys(selectedFilters).length > 0 && (
+                    <div className="bg-muted/50 p-3 rounded-lg">
+                      <p className="text-sm font-medium mb-2">Filtros Aplicados:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(selectedFilters).map(([key, value]) => (
+                          <Badge key={key} variant="secondary" className="text-xs">
+                            {key}: {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Report Content Preview */}
+                <div>
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    {getCategoryIcon(previewData.category)}
+                    Dados do Relatório (Preview com dados mockados)
+                  </h3>
+
+                  {/* Mock Data Table */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted">
+                          <tr>
+                            {previewData.tableData.length > 0 &&
+                              Object.keys(previewData.tableData[0]).map((header) => (
+                                <th key={header} className="text-left py-3 px-4 font-medium capitalize">
+                                  {header}
+                                </th>
+                              ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {previewData.tableData.map((row: any, idx: number) => (
+                            <tr key={idx} className="border-t hover:bg-muted/30">
+                              {Object.values(row).map((value: any, colIdx: number) => (
+                                <td key={colIdx} className="py-3 px-4">
+                                  {String(value)}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Info Note */}
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>Nota:</strong> Este é um preview com dados de exemplo. O relatório real será gerado com os dados atuais do sistema quando você clicar em "Gerar Relatório".
+                    </p>
+                  </div>
+                </div>
+
+                {/* Format Options Preview */}
+                {selectedTemplate.formatOptions.includeCharts && (
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      Gráficos (serão incluídos)
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-6 bg-muted/50 rounded-lg text-center">
+                        <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Gráfico de Barras</p>
+                      </div>
+                      <div className="p-6 bg-muted/50 rounded-lg text-center">
+                        <TrendingUp className="h-16 w-16 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Gráfico de Tendências</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPreviewDialog(false)}>
+              Fechar Preview
+            </Button>
+            <Button
+              onClick={() => {
+                setShowPreviewDialog(false);
+                handleGenerateReport();
+              }}
+              disabled={generateMutation.isPending}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Gerar Relatório Completo
             </Button>
           </DialogFooter>
         </DialogContent>
