@@ -10,7 +10,11 @@
       "Bash(npm install:*)",
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:dev:*)"
+      "Bash(npm run build:dev:*)",
+      "Bash(git show:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(wc:*)",
+      "Bash(npm run lint:*)"
     ]
   }
 }
