@@ -10,6 +10,9 @@ export interface Orcamento {
   // Dados do projeto
   areaTotalM2?: number;
   metrosLineares?: number;
+  pesoTotalProjeto?: number;         // CALDEIRARIA: Peso total em KG
+  codigoProjeto?: string;            // CALDEIRARIA: Código do projeto (ex: M-15706)
+  clienteNome?: string;              // CALDEIRARIA: Nome do cliente
 
   // Composições de custos (core do orçamento)
   composicoes: ComposicaoCustos[];
@@ -85,13 +88,17 @@ export interface ItemComposicao {
   composicaoId: string;
 
   // Identificação
-  codigo?: string;                   // Código do item (ex: "MAT-001")
+  codigo?: string;                   // Código do item (ex: "MAT-001", "PERFIL-001")
   descricao: string;
 
   // Quantidades
   quantidade: number;
-  unidade: string;                   // "kg", "h", "un", "m²", etc.
+  unidade: string;                   // "kg", "h", "un", "m²", "m", etc.
   peso?: number;                     // Para materiais (kg)
+
+  // CALDEIRARIA: Material e especificações
+  material?: string;                 // ASTM A 36, ASTM A 572, ASTM A 106, etc.
+  especificacao?: string;            // Ex: "CALANDRAR CILINDRICO", "SCH 40"
 
   // Valores
   valorUnitario: number;
@@ -102,8 +109,9 @@ export interface ItemComposicao {
   classeABC?: 'A' | 'B' | 'C';
   percentualAcumulado?: number;
 
-  // Tipo específico
+  // Tipo específico e cálculo
   tipoItem: 'material' | 'mao_obra' | 'ferramenta' | 'consumivel' | 'outros';
+  tipoCalculo?: 'kg' | 'hh' | 'un' | 'm2' | 'm';  // CALDEIRARIA: KG (material) ou HH (hora-homem)
 
   // Para Mão de Obra: cargo e encargos
   cargo?: string;                    // "Soldador", "Ajudante", etc.
@@ -130,6 +138,9 @@ export interface CreateOrcamento {
   nome: string;
   areaTotalM2?: number;
   metrosLineares?: number;
+  pesoTotalProjeto?: number;         // CALDEIRARIA
+  codigoProjeto?: string;            // CALDEIRARIA
+  clienteNome?: string;              // CALDEIRARIA
   tributos?: {
     temISS: boolean;
     aliquotaISS: number;
@@ -179,4 +190,68 @@ export interface ItemCSV {
   peso?: number;
   valorUnitario: number;
   tipoItem?: ItemComposicao['tipoItem'];
+  material?: string;
+  especificacao?: string;
+}
+
+// ============================================
+// CATÁLOGO DE PRODUTOS/SERVIÇOS (Reutilizável)
+// ============================================
+
+export interface CatalogoProduto {
+  id: string;
+  codigo: string;                     // Código único do produto (ex: "PERFIL-W150", "CH-3/4-A36")
+  nome: string;                       // Nome/descrição principal
+  descricao: string;                  // Descrição completa
+  categoria: 'perfil' | 'chapa' | 'tubo' | 'cantoneira' | 'servico' | 'mao_obra' | 'outro';
+
+  // Especificações técnicas (CALDEIRARIA)
+  material?: string;                  // ASTM A 36, ASTM A 572, ASTM A 106, etc.
+  especificacao?: string;             // Dimensões, processos (ex: "W150 X 22,5 Kg/m", "SCH 40 Ø6")
+
+  // Unidade e preço
+  unidade: string;                    // kg, h, un, m, m², m³
+  precoUnitarioPadrao: number;        // Preço padrão (pode ser editado no orçamento)
+
+  // Tipo de cálculo
+  tipoItem: ItemComposicao['tipoItem'];
+  tipoCalculo: 'kg' | 'hh' | 'un' | 'm' | 'm2' | 'm3';
+
+  // Peso específico (para cálculos)
+  pesoPorUnidade?: number;            // kg/m, kg/m², etc.
+
+  // Mão de obra (se aplicável)
+  cargo?: string;                     // "Soldador", "Ajudante", "Pintor", etc.
+  encargosPercentual?: number;        // 50.72% padrão
+
+  // Metadata
+  ativo: boolean;
+  fornecedor?: string;
+  observacoes?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+}
+
+export interface CreateCatalogoProduto {
+  codigo: string;
+  nome: string;
+  descricao: string;
+  categoria: CatalogoProduto['categoria'];
+  material?: string;
+  especificacao?: string;
+  unidade: string;
+  precoUnitarioPadrao: number;
+  tipoItem: ItemComposicao['tipoItem'];
+  tipoCalculo: CatalogoProduto['tipoCalculo'];
+  pesoPorUnidade?: number;
+  cargo?: string;
+  encargosPercentual?: number;
+  fornecedor?: string;
+  observacoes?: string;
+}
+
+export interface UpdateCatalogoProduto extends Partial<CreateCatalogoProduto> {
+  id: string;
+  ativo?: boolean;
 }
