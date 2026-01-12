@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   ShoppingCart,
   FileText,
@@ -14,6 +15,7 @@ import {
   AlertCircle,
   TrendingUp,
   DollarSign,
+  Loader2,
 } from 'lucide-react';
 import {
   usePurchaseRequests,
@@ -22,12 +24,18 @@ import {
   useSelectQuotation,
 } from '@/hooks/suprimentos/usePurchases';
 import { PurchaseRequest, Quotation } from '@/interfaces/suprimentos/PurchaseInterface';
+import { ConfirmDialog } from '@/components/suprimentos/ConfirmDialog';
 
 const Compras = () => {
   const [selectedRequest, setSelectedRequest] = useState<PurchaseRequest | null>(null);
+  const [selectingQuotation, setSelectingQuotation] = useState<{
+    requestId: number;
+    quotationId: number;
+  } | null>(null);
+
   const { data: requests, isLoading: loadingRequests } = usePurchaseRequests();
   const { data: purchases, isLoading: loadingPurchases } = usePurchases();
-  const { data: stats } = usePurchaseStats();
+  const { data: stats, isLoading: loadingStats } = usePurchaseStats();
   const selectQuotation = useSelectQuotation();
 
   const formatCurrency = (value: number) => {
@@ -87,11 +95,24 @@ const Compras = () => {
   };
 
   const handleSelectQuotation = (request: PurchaseRequest, quotationId: number) => {
-    selectQuotation.mutate({
-      purchaseRequestId: request.id,
-      quotationId,
-      reviewedBy: 'Usuario Atual', // TODO: Get from auth context
-    });
+    setSelectingQuotation({ requestId: request.id, quotationId });
+  };
+
+  const confirmSelectQuotation = () => {
+    if (selectingQuotation) {
+      selectQuotation.mutate(
+        {
+          purchaseRequestId: selectingQuotation.requestId,
+          quotationId: selectingQuotation.quotationId,
+          reviewedBy: 'Usuario Atual', // TODO: Get from auth context
+        },
+        {
+          onSuccess: () => {
+            setSelectingQuotation(null);
+          },
+        }
+      );
+    }
   };
 
   const getBestQuotation = (quotations: Quotation[]) => {
@@ -113,45 +134,63 @@ const Compras = () => {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Requisições</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats?.totalRequests || 0}</p>
-            <p className="text-xs text-muted-foreground">Todas as solicitações</p>
-          </CardContent>
-        </Card>
+        {loadingStats ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-32" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-20 mb-2" />
+                  <Skeleton className="h-3 w-28" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total Requisições</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{stats?.totalRequests || 0}</p>
+                <p className="text-xs text-muted-foreground">Todas as solicitações</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-orange-600">{stats?.pendingRequests || 0}</p>
-            <p className="text-xs text-muted-foreground">Aguardando ação</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-orange-600">{stats?.pendingRequests || 0}</p>
+                <p className="text-xs text-muted-foreground">Aguardando ação</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pedidos Finalizados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">{stats?.totalOrders || 0}</p>
-            <p className="text-xs text-muted-foreground">Purchase orders</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Pedidos Finalizados</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-green-600">{stats?.totalOrders || 0}</p>
+                <p className="text-xs text-muted-foreground">Purchase orders</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats?.totalValue || 0)}</p>
-            <p className="text-xs text-muted-foreground">Em pedidos</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats?.totalValue || 0)}</p>
+                <p className="text-xs text-muted-foreground">Em pedidos</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Main Content */}
@@ -343,12 +382,43 @@ const Compras = () => {
             // Lista de Requisições
             <div className="space-y-3">
               {loadingRequests ? (
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Carregando requisições...</p>
-                  </CardContent>
-                </Card>
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-5 w-32" />
+                              <Skeleton className="h-5 w-20" />
+                              <Skeleton className="h-5 w-16" />
+                            </div>
+                            <Skeleton className="h-4 w-48" />
+                            <div className="grid grid-cols-4 gap-4">
+                              <div className="space-y-1">
+                                <Skeleton className="h-3 w-20" />
+                                <Skeleton className="h-4 w-24" />
+                              </div>
+                              <div className="space-y-1">
+                                <Skeleton className="h-3 w-16" />
+                                <Skeleton className="h-4 w-12" />
+                              </div>
+                              <div className="space-y-1">
+                                <Skeleton className="h-3 w-24" />
+                                <Skeleton className="h-4 w-20" />
+                              </div>
+                              <div className="space-y-1">
+                                <Skeleton className="h-3 w-20" />
+                                <Skeleton className="h-4 w-12" />
+                              </div>
+                            </div>
+                          </div>
+                          <Skeleton className="h-9 w-28" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </>
               ) : requests && requests.length > 0 ? (
                 requests.map((request) => (
                   <Card key={request.id}>
@@ -425,12 +495,42 @@ const Compras = () => {
           </div>
 
           {loadingPurchases ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Carregando pedidos...</p>
-              </CardContent>
-            </Card>
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-5 w-40" />
+                          <Skeleton className="h-5 w-24" />
+                        </div>
+                        <Skeleton className="h-4 w-64" />
+                        <div className="grid grid-cols-4 gap-4">
+                          <div className="space-y-1">
+                            <Skeleton className="h-3 w-20" />
+                            <Skeleton className="h-4 w-28" />
+                          </div>
+                          <div className="space-y-1">
+                            <Skeleton className="h-3 w-20" />
+                            <Skeleton className="h-4 w-32" />
+                          </div>
+                          <div className="space-y-1">
+                            <Skeleton className="h-3 w-16" />
+                            <Skeleton className="h-4 w-24" />
+                          </div>
+                          <div className="space-y-1">
+                            <Skeleton className="h-3 w-16" />
+                            <Skeleton className="h-4 w-20" />
+                          </div>
+                        </div>
+                      </div>
+                      <Skeleton className="h-9 w-24" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           ) : purchases && purchases.length > 0 ? (
             <div className="space-y-3">
               {purchases.map((purchase) => (
@@ -487,6 +587,18 @@ const Compras = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Quotation Selection Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!selectingQuotation}
+        onOpenChange={(open) => !open && setSelectingQuotation(null)}
+        onConfirm={confirmSelectQuotation}
+        title="Selecionar Cotação"
+        description="Tem certeza que deseja selecionar esta cotação? Esta ação marcará as outras cotações como rejeitadas e criará um pedido de compra automaticamente."
+        confirmText="Selecionar Cotação"
+        cancelText="Cancelar"
+        loading={selectQuotation.isPending}
+      />
     </div>
   );
 };
