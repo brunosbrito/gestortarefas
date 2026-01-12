@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   FileText,
   Upload,
   Search,
@@ -21,7 +31,7 @@ import {
   ChevronRight,
   Hash,
 } from "lucide-react";
-import { useNFs, useNFStats, useValidateNF } from "@/hooks/suprimentos/useNF";
+import { useNFs, useNFStats, useValidateNF, useRejectNF } from "@/hooks/suprimentos/useNF";
 
 const NotasFiscais = () => {
   const navigate = useNavigate();
@@ -29,6 +39,9 @@ const NotasFiscais = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedNFs, setExpandedNFs] = useState<Set<number>>(new Set());
   const [expandedSubpastas, setExpandedSubpastas] = useState<Set<string>>(new Set());
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [nfToReject, setNfToReject] = useState<number | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   // Pegar contractId do state se vier da navegação de contratos
   const contractIdFromState = location.state?.contractId;
@@ -36,6 +49,7 @@ const NotasFiscais = () => {
   const { data: nfsData, isLoading: nfsLoading } = useNFs(contractIdFromState);
   const { data: statsData, isLoading: statsLoading } = useNFStats();
   const validateNF = useValidateNF();
+  const rejectNF = useRejectNF();
 
   const nfs = nfsData?.data || [];
   const stats = statsData?.data || {
@@ -64,6 +78,23 @@ const NotasFiscais = () => {
       newExpanded.add(subpasta);
     }
     setExpandedSubpastas(newExpanded);
+  };
+
+  const handleRejectClick = (nfId: number) => {
+    setNfToReject(nfId);
+    setRejectionReason("");
+    setShowRejectDialog(true);
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!nfToReject || !rejectionReason.trim()) {
+      return;
+    }
+
+    await rejectNF.mutateAsync({ id: nfToReject, reason: rejectionReason });
+    setShowRejectDialog(false);
+    setNfToReject(null);
+    setRejectionReason("");
   };
 
   const getStatusBadge = (status: string) => {
@@ -318,17 +349,31 @@ const NotasFiscais = () => {
 
                           <div className="flex items-center gap-2">
                             {nf.status_processamento === 'processado' && (
-                              <Button
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  validateNF.mutate(nf.id);
-                                }}
-                                disabled={validateNF.isPending}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Validar
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    validateNF.mutate(nf.id);
+                                  }}
+                                  disabled={validateNF.isPending}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Validar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRejectClick(nf.id);
+                                  }}
+                                  disabled={rejectNF.isPending}
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Rejeitar
+                                </Button>
+                              </>
                             )}
                           </div>
                         </div>
@@ -482,6 +527,59 @@ const NotasFiscais = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Rejeição */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejeitar Nota Fiscal</DialogTitle>
+            <DialogDescription>
+              Por favor, informe o motivo da rejeição desta nota fiscal.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejection-reason">Motivo da Rejeição *</Label>
+              <Textarea
+                id="rejection-reason"
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Ex: Valores incorretos, produto não corresponde, falta de documentação..."
+                rows={4}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Este motivo ficará registrado no histórico da nota fiscal.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectDialog(false)}
+              disabled={rejectNF.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRejectSubmit}
+              disabled={!rejectionReason.trim() || rejectNF.isPending}
+            >
+              {rejectNF.isPending ? (
+                <>Rejeitando...</>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Rejeitar NF
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
