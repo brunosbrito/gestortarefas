@@ -15,9 +15,9 @@ const USE_MOCK = true; // ⚠️ Backend será implementado depois
 let mockContracts: ContractSuprimentos[] = [
   {
     id: 1,
-    name: 'Contrato de Fornecimento de Aço',
-    client: 'Construtora ABC Ltda',
-    contractType: 'material',
+    name: 'Reforma Britador - Mina Vale do Rio Doce',
+    client: 'Vale S.A.',
+    contractType: 'service',
     value: 500000,
     spent: 125000,
     progress: 25,
@@ -28,9 +28,9 @@ let mockContracts: ContractSuprimentos[] = [
   },
   {
     id: 2,
-    name: 'Contrato de Serviços de Montagem',
-    client: 'Indústria XYZ S/A',
-    contractType: 'service',
+    name: 'Fabricação Estrutura Metálica - Planta Siderúrgica CSN',
+    client: 'Companhia Siderúrgica Nacional',
+    contractType: 'material',
     value: 350000,
     spent: 280000,
     progress: 80,
@@ -41,9 +41,9 @@ let mockContracts: ContractSuprimentos[] = [
   },
   {
     id: 3,
-    name: 'Contrato de Fornecimento de Concreto',
-    client: 'Obras & Construções ME',
-    contractType: 'material',
+    name: 'Reparo Correias Transportadoras - Usiminas',
+    client: 'Usiminas S.A.',
+    contractType: 'service',
     value: 750000,
     spent: 0,
     progress: 0,
