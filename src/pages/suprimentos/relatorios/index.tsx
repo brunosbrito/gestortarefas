@@ -39,6 +39,7 @@ import {
   useDeleteReport,
 } from '@/hooks/suprimentos/useReports';
 import { ReportTemplate } from '@/interfaces/suprimentos/ReportInterface';
+import { ConfirmDialog } from '@/components/suprimentos/ConfirmDialog';
 
 const Relatorios = () => {
   const { data: templates, isLoading: loadingTemplates } = useReportTemplates();
@@ -53,6 +54,7 @@ const Relatorios = () => {
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [exportFormat, setExportFormat] = useState<'pdf' | 'excel' | 'csv'>('pdf');
   const [selectedFilters, setSelectedFilters] = useState<Record<string, any>>({});
+  const [deleteReportId, setDeleteReportId] = useState<string | null>(null);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -96,8 +98,16 @@ const Relatorios = () => {
   };
 
   const handleDelete = (reportId: string) => {
-    if (confirm('Tem certeza que deseja excluir este relatório?')) {
-      deleteMutation.mutate(reportId);
+    setDeleteReportId(reportId);
+  };
+
+  const confirmDelete = () => {
+    if (deleteReportId) {
+      deleteMutation.mutate(deleteReportId, {
+        onSuccess: () => {
+          setDeleteReportId(null);
+        },
+      });
     }
   };
 
@@ -543,6 +553,19 @@ const Relatorios = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!deleteReportId}
+        onOpenChange={(open) => !open && setDeleteReportId(null)}
+        onConfirm={confirmDelete}
+        title="Excluir Relatório"
+        description="Tem certeza que deseja excluir este relatório? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 };
