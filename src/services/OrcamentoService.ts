@@ -5,11 +5,68 @@ import {
   UpdateOrcamento,
 } from '@/interfaces/OrcamentoInterface';
 import axios from 'axios';
+import { calcularValoresOrcamento, calcularDRE } from '@/lib/calculosOrcamento';
 
 const URL = `${API_URL}/api/orcamentos`;
 
+// MOCK DATA - Remover quando backend estiver pronto
+const USE_MOCK = true; // Alterar para false quando backend estiver funcionando
+
+const mockOrcamentos: Orcamento[] = [];
+let mockIdCounter = 1;
+
+const generateMockOrcamento = (data: CreateOrcamento): Orcamento => {
+  const id = `mock-${mockIdCounter++}`;
+  const numero = `2026-${String(mockIdCounter).padStart(3, '0')}`;
+
+  const orcamento: Orcamento = {
+    id,
+    numero,
+    nome: data.nome,
+    clienteNome: data.clienteNome,
+    codigoProjeto: data.codigoProjeto,
+    areaTotalM2: data.areaTotalM2,
+    metrosLineares: data.metrosLineares,
+    pesoTotalProjeto: data.pesoTotalProjeto,
+    composicoes: [],
+    tributos: data.tributos || {
+      temISS: false,
+      aliquotaISS: 3,
+      aliquotaSimples: 11.8,
+    },
+    custoDirectoTotal: 0,
+    bdiTotal: 0,
+    subtotal: 0,
+    tributosTotal: 0,
+    totalVenda: 0,
+    dre: {
+      receitaLiquida: 0,
+      lucroBruto: 0,
+      margemBruta: 0,
+      lucroLiquido: 0,
+      margemLiquida: 0,
+    },
+    bdiMedio: 0,
+    custoPorM2: undefined,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: 1,
+  };
+
+  return orcamento;
+};
+
 class OrcamentoService {
   async create(data: CreateOrcamento): Promise<Orcamento> {
+    if (USE_MOCK) {
+      // Simular delay de rede
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const orcamento = generateMockOrcamento(data);
+      mockOrcamentos.push(orcamento);
+      return orcamento;
+    }
+
     try {
       const response = await axios.post(URL, data);
       return response.data;
@@ -20,6 +77,11 @@ class OrcamentoService {
   }
 
   async getAll(): Promise<Orcamento[]> {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return [...mockOrcamentos];
+    }
+
     try {
       const response = await axios.get(URL);
       return response.data;
@@ -30,6 +92,25 @@ class OrcamentoService {
   }
 
   async getById(id: string): Promise<Orcamento> {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const orcamento = mockOrcamentos.find((o) => o.id === id);
+      if (!orcamento) {
+        throw new Error('Orçamento não encontrado');
+      }
+
+      // Recalcular valores antes de retornar
+      const valores = calcularValoresOrcamento(orcamento);
+      const dre = calcularDRE(orcamento);
+
+      return {
+        ...orcamento,
+        ...valores,
+        dre,
+      };
+    }
+
     try {
       const response = await axios.get(`${URL}/${id}`);
       return response.data;
@@ -40,6 +121,23 @@ class OrcamentoService {
   }
 
   async update(id: string, data: Partial<UpdateOrcamento>): Promise<Orcamento> {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const index = mockOrcamentos.findIndex((o) => o.id === id);
+      if (index === -1) {
+        throw new Error('Orçamento não encontrado');
+      }
+
+      mockOrcamentos[index] = {
+        ...mockOrcamentos[index],
+        ...data,
+        updatedAt: new Date().toISOString(),
+      };
+
+      return mockOrcamentos[index];
+    }
+
     try {
       const response = await axios.put(`${URL}/${id}`, data);
       return response.data;
@@ -50,6 +148,16 @@ class OrcamentoService {
   }
 
   async delete(id: string): Promise<void> {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const index = mockOrcamentos.findIndex((o) => o.id === id);
+      if (index !== -1) {
+        mockOrcamentos.splice(index, 1);
+      }
+      return;
+    }
+
     try {
       await axios.delete(`${URL}/${id}`);
     } catch (error) {
@@ -59,6 +167,29 @@ class OrcamentoService {
   }
 
   async clonar(id: string): Promise<Orcamento> {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const original = mockOrcamentos.find((o) => o.id === id);
+      if (!original) {
+        throw new Error('Orçamento não encontrado');
+      }
+
+      const clonado = generateMockOrcamento({
+        nome: `${original.nome} (Cópia)`,
+        clienteNome: original.clienteNome,
+        codigoProjeto: original.codigoProjeto,
+        areaTotalM2: original.areaTotalM2,
+        metrosLineares: original.metrosLineares,
+        pesoTotalProjeto: original.pesoTotalProjeto,
+        tributos: original.tributos,
+      });
+
+      clonado.composicoes = JSON.parse(JSON.stringify(original.composicoes));
+      mockOrcamentos.push(clonado);
+      return clonado;
+    }
+
     try {
       const response = await axios.post(`${URL}/${id}/clonar`);
       return response.data;
