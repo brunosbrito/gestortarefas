@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
+import { ErrorBoundary } from '@/components/suprimentos/ErrorBoundary';
 
 const Dashboard = lazy(() => import('./Dashboard'));
 const Contratos = lazy(() => import('./contratos'));
@@ -30,8 +31,9 @@ const PageLoader = () => (
 const Suprimentos = () => {
   return (
     <Layout>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           <Route index element={<Dashboard />} />
 
           {/* Contratos de Suprimentos */}
@@ -59,8 +61,9 @@ const Suprimentos = () => {
           <Route path="ai-chat" element={<AIChat />} />
 
           <Route path="*" element={<Navigate to="/suprimentos" replace />} />
-        </Routes>
-      </Suspense>
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </Layout>
   );
 };
