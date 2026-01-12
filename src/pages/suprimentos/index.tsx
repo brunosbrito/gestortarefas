@@ -6,7 +6,8 @@ import { ErrorBoundary } from '@/components/suprimentos/ErrorBoundary';
 const Dashboard = lazy(() => import('./Dashboard'));
 const Contratos = lazy(() => import('./contratos'));
 const NovoContrato = lazy(() => import('./contratos/novo'));
-const EditarContrato = lazy(() => import('./contratos/[id]'));
+const DetalhesContrato = lazy(() => import('./contratos/[id]'));
+const EditarContratoForm = lazy(() => import('./contratos/[id]/editar'));
 const NotasFiscais = lazy(() => import('./notas-fiscais'));
 const ImportarNF = lazy(() => import('./notas-fiscais/importar'));
 const OrcadoRealizado = lazy(() => import('./orcado-realizado'));
@@ -40,7 +41,8 @@ const Suprimentos = () => {
           <Route path="contratos">
             <Route index element={<Contratos />} />
             <Route path="novo" element={<NovoContrato />} />
-            <Route path=":id" element={<EditarContrato />} />
+            <Route path=":id" element={<DetalhesContrato />} />
+            <Route path=":id/editar" element={<EditarContratoForm />} />
           </Route>
 
           {/* Notas Fiscais */}

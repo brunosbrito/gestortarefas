@@ -263,7 +263,10 @@ const DetalhesContrato = () => {
         >
           Ver Notas Fiscais
         </Button>
-        <Button variant="default">
+        <Button
+          variant="default"
+          onClick={() => navigate(`/suprimentos/contratos/${contract.id}/editar`)}
+        >
           Editar Contrato
         </Button>
       </div>
