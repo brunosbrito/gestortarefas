@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +34,11 @@ import {
   Clock,
   TrendingUp,
   Eye,
+  CalendarClock,
+  Mail,
+  Play,
+  Pause,
+  X,
 } from 'lucide-react';
 import {
   useReportTemplates,
@@ -41,6 +50,25 @@ import {
 } from '@/hooks/suprimentos/useReports';
 import { ReportTemplate } from '@/interfaces/suprimentos/ReportInterface';
 import { ConfirmDialog } from '@/components/suprimentos/ConfirmDialog';
+
+interface ScheduledReport {
+  id: string;
+  name: string;
+  templateId: string;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  dayOfWeek?: number; // 0-6 for Sunday-Saturday
+  dayOfMonth?: number; // 1-31
+  time: string; // HH:MM format
+  recipients: string[];
+  filters: Record<string, any>;
+  exportFormat: 'pdf' | 'excel' | 'csv';
+  active: boolean;
+  createdAt: Date;
+  lastRun?: Date;
+  nextRun?: Date;
+}
+
+const SCHEDULES_STORAGE_KEY = 'suprimentos-report-schedules';
 
 const Relatorios = () => {
   const { data: templates, isLoading: loadingTemplates } = useReportTemplates();
@@ -58,6 +86,18 @@ const Relatorios = () => {
   const [selectedFilters, setSelectedFilters] = useState<Record<string, any>>({});
   const [deleteReportId, setDeleteReportId] = useState<string | null>(null);
 
+  // Scheduling state
+  const [scheduledReports, setScheduledReports] = useState<ScheduledReport[]>([]);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<ScheduledReport | null>(null);
+  const [scheduleName, setScheduleName] = useState('');
+  const [scheduleFrequency, setScheduleFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState<number>(1);
+  const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState<number>(1);
+  const [scheduleTime, setScheduleTime] = useState('09:00');
+  const [scheduleRecipients, setScheduleRecipients] = useState<string[]>([]);
+  const [newRecipient, setNewRecipient] = useState('');
+
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -74,6 +114,168 @@ const Relatorios = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // Load scheduled reports from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(SCHEDULES_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const schedules: ScheduledReport[] = parsed.map((s: any) => ({
+          ...s,
+          createdAt: new Date(s.createdAt),
+          lastRun: s.lastRun ? new Date(s.lastRun) : undefined,
+          nextRun: s.nextRun ? new Date(s.nextRun) : undefined,
+        }));
+        setScheduledReports(schedules);
+      } catch (error) {
+        console.error('Error loading scheduled reports:', error);
+      }
+    }
+  }, []);
+
+  // Save scheduled reports to localStorage
+  const saveScheduledReports = (schedules: ScheduledReport[]) => {
+    setScheduledReports(schedules);
+    localStorage.setItem(SCHEDULES_STORAGE_KEY, JSON.stringify(schedules));
+  };
+
+  // Calculate next run date
+  const calculateNextRun = (
+    frequency: 'daily' | 'weekly' | 'monthly',
+    time: string,
+    dayOfWeek?: number,
+    dayOfMonth?: number
+  ): Date => {
+    const now = new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    const nextRun = new Date();
+    nextRun.setHours(hours, minutes, 0, 0);
+
+    if (frequency === 'daily') {
+      // If time has passed today, schedule for tomorrow
+      if (nextRun <= now) {
+        nextRun.setDate(nextRun.getDate() + 1);
+      }
+    } else if (frequency === 'weekly' && dayOfWeek !== undefined) {
+      // Calculate next occurrence of the specified day
+      const currentDay = now.getDay();
+      let daysUntilNext = dayOfWeek - currentDay;
+      if (daysUntilNext < 0 || (daysUntilNext === 0 && nextRun <= now)) {
+        daysUntilNext += 7;
+      }
+      nextRun.setDate(nextRun.getDate() + daysUntilNext);
+    } else if (frequency === 'monthly' && dayOfMonth !== undefined) {
+      // Schedule for the specified day of month
+      nextRun.setDate(dayOfMonth);
+      if (nextRun <= now) {
+        nextRun.setMonth(nextRun.getMonth() + 1);
+      }
+    }
+
+    return nextRun;
+  };
+
+  // Open schedule dialog
+  const handleSchedule = (template: ReportTemplate) => {
+    setSelectedTemplate(template);
+    setShowScheduleDialog(true);
+    setEditingSchedule(null);
+    setScheduleName(`${template.name} - Agendado`);
+    setScheduleFrequency('daily');
+    setScheduleDayOfWeek(1);
+    setScheduleDayOfMonth(1);
+    setScheduleTime('09:00');
+    setScheduleRecipients([]);
+    setNewRecipient('');
+  };
+
+  // Save schedule
+  const handleSaveSchedule = () => {
+    if (!selectedTemplate || !scheduleName.trim() || scheduleRecipients.length === 0) {
+      return;
+    }
+
+    const nextRun = calculateNextRun(
+      scheduleFrequency,
+      scheduleTime,
+      scheduleDayOfWeek,
+      scheduleDayOfMonth
+    );
+
+    if (editingSchedule) {
+      // Update existing schedule
+      const updated = scheduledReports.map((s) =>
+        s.id === editingSchedule.id
+          ? {
+              ...s,
+              name: scheduleName,
+              frequency: scheduleFrequency,
+              dayOfWeek: scheduleDayOfWeek,
+              dayOfMonth: scheduleDayOfMonth,
+              time: scheduleTime,
+              recipients: scheduleRecipients,
+              filters: selectedFilters,
+              exportFormat,
+              nextRun,
+            }
+          : s
+      );
+      saveScheduledReports(updated);
+    } else {
+      // Create new schedule
+      const newSchedule: ScheduledReport = {
+        id: Date.now().toString(),
+        name: scheduleName,
+        templateId: selectedTemplate.id,
+        frequency: scheduleFrequency,
+        dayOfWeek: scheduleDayOfWeek,
+        dayOfMonth: scheduleDayOfMonth,
+        time: scheduleTime,
+        recipients: scheduleRecipients,
+        filters: selectedFilters,
+        exportFormat,
+        active: true,
+        createdAt: new Date(),
+        nextRun,
+      };
+      saveScheduledReports([newSchedule, ...scheduledReports]);
+    }
+
+    setShowScheduleDialog(false);
+    setSelectedTemplate(null);
+    setEditingSchedule(null);
+  };
+
+  // Toggle schedule active/inactive
+  const toggleScheduleActive = (scheduleId: string) => {
+    const updated = scheduledReports.map((s) =>
+      s.id === scheduleId ? { ...s, active: !s.active } : s
+    );
+    saveScheduledReports(updated);
+  };
+
+  // Delete schedule
+  const deleteSchedule = (scheduleId: string) => {
+    const updated = scheduledReports.filter((s) => s.id !== scheduleId);
+    saveScheduledReports(updated);
+  };
+
+  // Add recipient
+  const handleAddRecipient = () => {
+    const email = newRecipient.trim();
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (!scheduleRecipients.includes(email)) {
+        setScheduleRecipients([...scheduleRecipients, email]);
+      }
+      setNewRecipient('');
+    }
+  };
+
+  // Remove recipient
+  const handleRemoveRecipient = (email: string) => {
+    setScheduleRecipients(scheduleRecipients.filter((r) => r !== email));
   };
 
   const handleGenerateReport = () => {
@@ -205,6 +407,20 @@ const Relatorios = () => {
     );
   };
 
+  const getFrequencyLabel = (frequency: 'daily' | 'weekly' | 'monthly') => {
+    const labels = {
+      daily: 'Diário',
+      weekly: 'Semanal',
+      monthly: 'Mensal',
+    };
+    return labels[frequency];
+  };
+
+  const getDayOfWeekLabel = (day: number) => {
+    const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    return days[day];
+  };
+
   if (loadingTemplates || loadingStats) {
     return (
       <div className="space-y-6">
@@ -234,7 +450,7 @@ const Relatorios = () => {
       <div>
         <h1 className="text-3xl font-bold text-foreground">Relatórios</h1>
         <p className="text-muted-foreground">
-          Geração e gerenciamento de relatórios customizáveis
+          Geração, agendamento e gerenciamento de relatórios customizáveis
         </p>
       </div>
 
@@ -297,56 +513,212 @@ const Relatorios = () => {
         </Card>
       </div>
 
-      {/* Report Templates */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Templates de Relatórios</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates?.map((template) => (
-            <Card key={template.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div
-                    className={`p-2 rounded-lg bg-muted ${getCategoryColor(template.category)}`}
-                  >
-                    {getCategoryIcon(template.category)}
-                  </div>
-                  <Badge variant="outline">{getTypeLabel(template.type)}</Badge>
-                </div>
-                <CardTitle className="mt-4">{template.name}</CardTitle>
-                <CardDescription>{template.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 mb-4">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Campos:</strong> {template.fields.length} campos
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Filtros:</strong> {template.filters.length} disponíveis
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Formato:</strong> {template.formatOptions.pageOrientation}
-                  </p>
-                </div>
-                <Button
-                  onClick={() => {
-                    setSelectedTemplate(template);
-                    setShowGenerateDialog(true);
-                  }}
-                  className="w-full"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Gerar Relatório
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      {/* Main Tabs */}
+      <Tabs defaultValue="generate" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="generate">Gerar Relatórios</TabsTrigger>
+          <TabsTrigger value="scheduled">
+            Agendamentos
+            {scheduledReports.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {scheduledReports.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="history">Histórico</TabsTrigger>
+        </TabsList>
 
-      {/* Report History */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Histórico de Relatórios</h2>
-        <Card>
+        {/* Generate Reports Tab */}
+        <TabsContent value="generate" className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Templates de Relatórios</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates?.map((template) => (
+                <Card key={template.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div
+                        className={`p-2 rounded-lg bg-muted ${getCategoryColor(template.category)}`}
+                      >
+                        {getCategoryIcon(template.category)}
+                      </div>
+                      <Badge variant="outline">{getTypeLabel(template.type)}</Badge>
+                    </div>
+                    <CardTitle className="mt-4">{template.name}</CardTitle>
+                    <CardDescription>{template.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Campos:</strong> {template.fields.length} campos
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Filtros:</strong> {template.filters.length} disponíveis
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Formato:</strong> {template.formatOptions.pageOrientation}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          setShowGenerateDialog(true);
+                        }}
+                        className="w-full"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Gerar Agora
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleSchedule(template)}
+                        className="w-full"
+                      >
+                        <CalendarClock className="h-4 w-4 mr-2" />
+                        Agendar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Scheduled Reports Tab */}
+        <TabsContent value="scheduled" className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Relatórios Agendados</h2>
+            </div>
+
+            {scheduledReports.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <CalendarClock className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                  <p className="text-muted-foreground mb-2">
+                    Nenhum relatório agendado ainda
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Clique em "Agendar" em qualquer template para criar um agendamento
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {scheduledReports.map((schedule) => {
+                  const template = templates?.find((t) => t.id === schedule.templateId);
+                  return (
+                    <Card key={schedule.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-lg">{schedule.name}</h3>
+                              <Badge variant={schedule.active ? 'default' : 'secondary'}>
+                                {schedule.active ? 'Ativo' : 'Pausado'}
+                              </Badge>
+                              <Badge variant="outline">{getFrequencyLabel(schedule.frequency)}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              Template: {template?.name || 'N/A'}
+                            </p>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground mb-1">Horário</p>
+                                <p className="font-medium flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {schedule.time}
+                                </p>
+                              </div>
+
+                              {schedule.frequency === 'weekly' && schedule.dayOfWeek !== undefined && (
+                                <div>
+                                  <p className="text-muted-foreground mb-1">Dia da Semana</p>
+                                  <p className="font-medium">{getDayOfWeekLabel(schedule.dayOfWeek)}</p>
+                                </div>
+                              )}
+
+                              {schedule.frequency === 'monthly' && schedule.dayOfMonth !== undefined && (
+                                <div>
+                                  <p className="text-muted-foreground mb-1">Dia do Mês</p>
+                                  <p className="font-medium">Dia {schedule.dayOfMonth}</p>
+                                </div>
+                              )}
+
+                              <div>
+                                <p className="text-muted-foreground mb-1">Formato</p>
+                                <p className="font-medium uppercase">{schedule.exportFormat}</p>
+                              </div>
+
+                              {schedule.nextRun && (
+                                <div>
+                                  <p className="text-muted-foreground mb-1">Próxima Execução</p>
+                                  <p className="font-medium">
+                                    {new Date(schedule.nextRun).toLocaleDateString('pt-BR')}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="mt-3">
+                              <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                Destinatários ({schedule.recipients.length}):
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {schedule.recipients.map((email) => (
+                                  <Badge key={email} variant="outline" className="text-xs">
+                                    {email}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 ml-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => toggleScheduleActive(schedule.id)}
+                            >
+                              {schedule.active ? (
+                                <>
+                                  <Pause className="h-4 w-4 mr-1" />
+                                  Pausar
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="h-4 w-4 mr-1" />
+                                  Ativar
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => deleteSchedule(schedule.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history" className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Histórico de Relatórios</h2>
+            <Card>
           <CardContent className="p-0">
             {loadingReports ? (
               <div className="p-8 text-center">
@@ -429,7 +801,9 @@ const Relatorios = () => {
             )}
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Generate Report Dialog */}
       <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
@@ -753,6 +1127,206 @@ const Relatorios = () => {
         variant="destructive"
         loading={deleteMutation.isPending}
       />
+
+      {/* Schedule Report Dialog */}
+      <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5" />
+              Agendar Relatório: {selectedTemplate?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Configure a frequência e destinatários para geração automática deste relatório
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Schedule Name */}
+            <div className="space-y-2">
+              <Label htmlFor="schedule-name">Nome do Agendamento *</Label>
+              <Input
+                id="schedule-name"
+                placeholder="Ex: Relatório Mensal de Contratos"
+                value={scheduleName}
+                onChange={(e) => setScheduleName(e.target.value)}
+              />
+            </div>
+
+            {/* Frequency */}
+            <div className="space-y-2">
+              <Label>Frequência *</Label>
+              <Select
+                value={scheduleFrequency}
+                onValueChange={(value: any) => setScheduleFrequency(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Diário
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="weekly">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Semanal
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="monthly">
+                    <div className="flex items-center gap-2">
+                      <CalendarClock className="h-4 w-4" />
+                      Mensal
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Day of Week (for weekly) */}
+            {scheduleFrequency === 'weekly' && (
+              <div className="space-y-2">
+                <Label>Dia da Semana</Label>
+                <Select
+                  value={scheduleDayOfWeek.toString()}
+                  onValueChange={(value) => setScheduleDayOfWeek(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Domingo</SelectItem>
+                    <SelectItem value="1">Segunda-feira</SelectItem>
+                    <SelectItem value="2">Terça-feira</SelectItem>
+                    <SelectItem value="3">Quarta-feira</SelectItem>
+                    <SelectItem value="4">Quinta-feira</SelectItem>
+                    <SelectItem value="5">Sexta-feira</SelectItem>
+                    <SelectItem value="6">Sábado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Day of Month (for monthly) */}
+            {scheduleFrequency === 'monthly' && (
+              <div className="space-y-2">
+                <Label>Dia do Mês</Label>
+                <Select
+                  value={scheduleDayOfMonth.toString()}
+                  onValueChange={(value) => setScheduleDayOfMonth(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                      <SelectItem key={day} value={day.toString()}>
+                        Dia {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Time */}
+            <div className="space-y-2">
+              <Label htmlFor="schedule-time">Horário *</Label>
+              <Input
+                id="schedule-time"
+                type="time"
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+              />
+            </div>
+
+            {/* Export Format */}
+            <div className="space-y-2">
+              <Label>Formato de Exportação</Label>
+              <Select
+                value={exportFormat}
+                onValueChange={(value: any) => setExportFormat(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                  <SelectItem value="excel">Excel (XLSX)</SelectItem>
+                  <SelectItem value="csv">CSV</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Recipients */}
+            <div className="space-y-2">
+              <Label>Destinatários (E-mail) *</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="email@exemplo.com"
+                  value={newRecipient}
+                  onChange={(e) => setNewRecipient(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddRecipient();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={handleAddRecipient} variant="outline">
+                  Adicionar
+                </Button>
+              </div>
+
+              {scheduleRecipients.length > 0 && (
+                <div className="mt-3 p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-2">
+                    Destinatários ({scheduleRecipients.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {scheduleRecipients.map((email) => (
+                      <Badge key={email} variant="secondary" className="text-xs">
+                        {email}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRecipient(email)}
+                          className="ml-2 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Info Note */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Nota:</strong> Esta é uma configuração de agendamento mockada para demonstração da interface.
+                A geração automática de relatórios requer configuração do backend com serviço de agendamento (cron jobs).
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowScheduleDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveSchedule}
+              disabled={!scheduleName.trim() || scheduleRecipients.length === 0}
+            >
+              <CalendarClock className="h-4 w-4 mr-2" />
+              Salvar Agendamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
