@@ -11,8 +11,11 @@
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run build:dev:*)",
-      "Bash(git checkout:*)",
-      "Bash(git stash:*)"
+      "Bash(mkdir:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(dir \"C:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\" /B)"
     ]
   }
 }

@@ -15,13 +15,8 @@ import {
   Bot,
   Boxes,
   ShieldCheck,
-  Target,
-  ClipboardCheck,
-  FileCheck,
-  Award,
-  Gauge,
-  BarChart3,
-  BookOpen,
+  GanttChartSquare,
+  FileText,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -84,42 +79,28 @@ export const navItems: MenuItem[] = [
         label: 'RNC',
         path: '/nao-conformidades',
       },
-      {
-        icon: Target,
-        label: 'Análise e Ações Corretivas',
-        path: '/qualidade/acoes-corretivas',
-      },
-      {
-        icon: ClipboardCheck,
-        label: 'Inspeções',
-        path: '/qualidade/inspecoes',
-      },
-      {
-        icon: FileCheck,
-        label: 'Planos de Inspeção',
-        path: '/qualidade/planos-inspecao',
-      },
-      {
-        icon: Award,
-        label: 'Certificados de Qualidade',
-        path: '/qualidade/certificados',
-      },
-      {
-        icon: Gauge,
-        label: 'Calibração',
-        path: '/qualidade/calibracao',
-      },
-      {
-        icon: BarChart3,
-        label: 'Indicadores/Dashboard',
-        path: '/qualidade/indicadores',
-      },
-      {
-        icon: BookOpen,
-        label: 'Databook',
-        path: '/qualidade/databook',
-      },
+      // FUTURO: Análise e Ações Corretivas
+      // FUTURO: Inspeções
+      // FUTURO: Planos de Inspeção
+      // FUTURO: Certificados de Qualidade
+      // FUTURO: Envio de Certificados
+      // FUTURO: Indicadores/Dashboard
+      // FUTURO: Databook
     ],
+  },
+
+  // MÓDULO COMERCIAL
+  {
+    icon: FileText,
+    label: 'Comercial',
+    path: '/comercial',
+  },
+
+  // MÓDULO CRONOGRAMAS
+  {
+    icon: GanttChartSquare,
+    label: 'Cronogramas',
+    path: '/cronograma',
   },
 
   // CONFIGURAÇÕES (renomeado de "Gerenciamento")
