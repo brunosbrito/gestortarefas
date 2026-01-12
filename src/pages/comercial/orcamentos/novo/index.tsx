@@ -18,8 +18,11 @@ const NovoOrcamento = () => {
   // Form state
   const [formData, setFormData] = useState({
     nome: '',
+    clienteNome: '',
+    codigoProjeto: '',
     areaTotalM2: '',
     metrosLineares: '',
+    pesoTotalProjeto: '',
     temISS: false,
     aliquotaISS: '3',
     aliquotaSimples: '11.8',
@@ -47,8 +50,11 @@ const NovoOrcamento = () => {
 
       const data: CreateOrcamento = {
         nome: formData.nome,
+        clienteNome: formData.clienteNome || undefined,
+        codigoProjeto: formData.codigoProjeto || undefined,
         areaTotalM2: formData.areaTotalM2 ? parseFloat(formData.areaTotalM2) : undefined,
         metrosLineares: formData.metrosLineares ? parseFloat(formData.metrosLineares) : undefined,
+        pesoTotalProjeto: formData.pesoTotalProjeto ? parseFloat(formData.pesoTotalProjeto) : undefined,
         tributos: {
           temISS: formData.temISS,
           aliquotaISS: parseFloat(formData.aliquotaISS),
@@ -130,6 +136,43 @@ const NovoOrcamento = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="clienteNome">Cliente</Label>
+                    <Input
+                      id="clienteNome"
+                      placeholder="Ex: Mineração Esperança Ltda"
+                      value={formData.clienteNome}
+                      onChange={(e) => handleChange('clienteNome', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="codigoProjeto">Código do Projeto</Label>
+                    <Input
+                      id="codigoProjeto"
+                      placeholder="Ex: M-15706"
+                      value={formData.codigoProjeto}
+                      onChange={(e) => handleChange('codigoProjeto', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pesoTotalProjeto">Peso Total (KG)</Label>
+                    <Input
+                      id="pesoTotalProjeto"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formData.pesoTotalProjeto}
+                      onChange={(e) => handleChange('pesoTotalProjeto', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Para cálculo por KG
+                    </p>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="areaTotalM2">Área Total (m²)</Label>
                     <Input
