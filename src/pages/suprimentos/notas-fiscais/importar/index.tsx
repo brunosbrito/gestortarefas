@@ -13,13 +13,18 @@ import {
   AlertCircle,
   Loader2
 } from "lucide-react";
-import { useImportNFXML } from "@/hooks/suprimentos/useNF";
+import { useImportNFXML, useProcessFolder } from "@/hooks/suprimentos/useNF";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Folder } from "lucide-react";
 
 const ImportarNF = () => {
   const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [folderName, setFolderName] = useState("");
+  const [folderError, setFolderError] = useState<string | null>(null);
   const importMutation = useImportNFXML();
+  const processFolderMutation = useProcessFolder();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -69,6 +74,23 @@ const ImportarNF = () => {
     }
   };
 
+  const handleProcessFolder = async () => {
+    if (!folderName.trim()) {
+      setFolderError('Digite o nome da pasta');
+      return;
+    }
+
+    setFolderError(null);
+
+    try {
+      await processFolderMutation.mutateAsync(folderName);
+      setFolderName("");
+      // Não navegar automaticamente, pois o processamento é assíncrono via n8n
+    } catch (error) {
+      // Error já é tratado pelo hook
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -87,10 +109,24 @@ const ImportarNF = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form */}
-        <div className="lg:col-span-2">
-          <Card>
+      <Tabs defaultValue="individual" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="individual">
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Individual
+          </TabsTrigger>
+          <TabsTrigger value="batch">
+            <Folder className="h-4 w-4 mr-2" />
+            Processamento em Lote (N8N)
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Upload Individual Tab */}
+        <TabsContent value="individual" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Form */}
+            <div className="lg:col-span-2">
+              <Card>
             <CardHeader>
               <CardTitle>Upload de Arquivos XML</CardTitle>
               <CardDescription>
@@ -252,6 +288,144 @@ const ImportarNF = () => {
           </Alert>
         </div>
       </div>
+        </TabsContent>
+
+        {/* Batch Processing Tab */}
+        <TabsContent value="batch" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Form */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Processamento em Lote via N8N</CardTitle>
+                  <CardDescription>
+                    Processe uma pasta inteira de XMLs via webhook N8N
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      <p className="font-medium mb-2">⚠️ Backend Necessário</p>
+                      <p>Esta funcionalidade requer integração com N8N no backend. Atualmente usando dados mockados para demonstração.</p>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-4">
+                    <Label htmlFor="folder-name">Nome da Pasta *</Label>
+                    <Input
+                      id="folder-name"
+                      value={folderName}
+                      onChange={(e) => {
+                        setFolderName(e.target.value);
+                        setFolderError(null);
+                      }}
+                      placeholder="Ex: NFsMaio2024 ou ContratosVale/Semana1"
+                      disabled={processFolderMutation.isPending}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Digite o nome da pasta no OneDrive/servidor onde estão os XMLs
+                    </p>
+
+                    {folderError && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{folderError}</AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate('/suprimentos/notas-fiscais')}
+                      disabled={processFolderMutation.isPending}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleProcessFolder}
+                      disabled={!folderName.trim() || processFolderMutation.isPending}
+                    >
+                      {processFolderMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Processando...
+                        </>
+                      ) : (
+                        <>
+                          <Folder className="h-4 w-4 mr-2" />
+                          Processar Pasta
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Info Sidebar */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Como Funciona</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                      1
+                    </div>
+                    <div>
+                      <p className="font-medium">Digite o nome da pasta</p>
+                      <p className="text-muted-foreground">
+                        Pasta onde os XMLs de NF-e estão armazenados
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                      2
+                    </div>
+                    <div>
+                      <p className="font-medium">N8N processa em background</p>
+                      <p className="text-muted-foreground">
+                        Webhook N8N lê todos XMLs da pasta automaticamente
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                      3
+                    </div>
+                    <div>
+                      <p className="font-medium">NFs aparecem na lista</p>
+                      <p className="text-muted-foreground">
+                        Após processamento, as NFs ficam disponíveis para validação
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  <p className="font-medium mb-2">Vantagens do N8N</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>Processa centenas de XMLs automaticamente</li>
+                    <li>Execução em background (não trava a interface)</li>
+                    <li>Ideal para importações em lote periódicas</li>
+                    <li>Integração com OneDrive/SharePoint</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
