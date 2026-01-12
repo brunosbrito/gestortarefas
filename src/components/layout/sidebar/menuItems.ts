@@ -22,6 +22,12 @@ import {
   Gauge,
   BarChart3,
   BookOpen,
+  Package,
+  ShoppingCart,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  MessageSquare,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -118,6 +124,54 @@ export const navItems: MenuItem[] = [
         icon: BookOpen,
         label: 'Databook',
         path: '/qualidade/databook',
+      },
+    ],
+  },
+
+  // MÓDULO SUPRIMENTOS
+  {
+    icon: Package,
+    label: 'Suprimentos',
+    subItems: [
+      {
+        icon: BarChart3,
+        label: 'Dashboard',
+        path: '/suprimentos',
+      },
+      {
+        icon: FileText,
+        label: 'Contratos',
+        path: '/suprimentos/contratos',
+      },
+      {
+        icon: FileText,
+        label: 'Notas Fiscais',
+        path: '/suprimentos/notas-fiscais',
+      },
+      {
+        icon: TrendingUp,
+        label: 'Orçado vs Realizado',
+        path: '/suprimentos/orcado-realizado',
+      },
+      {
+        icon: DollarSign,
+        label: 'Centros de Custo',
+        path: '/suprimentos/centros-custo',
+      },
+      {
+        icon: ShoppingCart,
+        label: 'Compras',
+        path: '/suprimentos/compras',
+      },
+      {
+        icon: BarChart3,
+        label: 'Analytics',
+        path: '/suprimentos/analytics',
+      },
+      {
+        icon: MessageSquare,
+        label: 'AI Assistant',
+        path: '/suprimentos/ai-chat',
       },
     ],
   },

@@ -34,6 +34,9 @@ export const Sidebar = ({ user }: SidebarProps) => {
       location.pathname.includes('/qualidade/indicadores') ||
       location.pathname.includes('/qualidade/databook');
 
+    const shouldExpandSuprimentos =
+      location.pathname.includes('/suprimentos');
+
     const shouldExpandConfiguracoes =
       location.pathname.includes('/gerenciamento');
 
@@ -42,6 +45,9 @@ export const Sidebar = ({ user }: SidebarProps) => {
     }
     if (shouldExpandQualidade && !expandedItems.includes('Qualidade')) {
       setExpandedItems(prev => [...prev, 'Qualidade']);
+    }
+    if (shouldExpandSuprimentos && !expandedItems.includes('Suprimentos')) {
+      setExpandedItems(prev => [...prev, 'Suprimentos']);
     }
     if (shouldExpandConfiguracoes && !expandedItems.includes('Configurações')) {
       setExpandedItems(prev => [...prev, 'Configurações']);
