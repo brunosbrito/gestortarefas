@@ -32,7 +32,22 @@ import {
   Tag,
   TrendingUp,
   AlertCircle,
+  BarChart3,
+  PieChart,
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import {
   useCostCenters,
   useCreateCostCenter,
@@ -43,6 +58,8 @@ import {
   useDeleteClassificationRule,
 } from '@/hooks/suprimentos/useCostCenters';
 import { CostCenter, ClassificationRule } from '@/interfaces/suprimentos/CostCenterInterface';
+
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
 
 const CentrosCusto = () => {
   const [activeTab, setActiveTab] = useState('centers');
@@ -385,6 +402,10 @@ const CentrosCusto = () => {
         <TabsList>
           <TabsTrigger value="centers">Centros de Custo</TabsTrigger>
           <TabsTrigger value="rules">Regras de Classificação</TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </TabsTrigger>
         </TabsList>
 
         {/* Tab: Centros de Custo */}
@@ -492,6 +513,280 @@ const CentrosCusto = () => {
                   </Card>
                 );
               })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Tab: Analytics */}
+        <TabsContent value="analytics" className="space-y-6">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              Análise visual dos centros de custo e distribuição orçamentária
+            </p>
+          </div>
+
+          {centersLoading ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Carregando analytics...</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Distribuição por Categoria */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5" />
+                    Distribuição por Categoria
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const categoryData = Object.entries(
+                      (costCenters || []).reduce((acc, center) => {
+                        const category = center.category || 'Outros';
+                        acc[category] = (acc[category] || 0) + (center.budget?.consumed || 0);
+                        return acc;
+                      }, {} as Record<string, number>)
+                    ).map(([name, value]) => ({ name, value }));
+
+                    if (categoryData.length === 0 || categoryData.every(d => d.value === 0)) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>Nenhum gasto registrado ainda</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <RePieChart>
+                          <Pie
+                            data={categoryData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {categoryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        </RePieChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Budget vs Consumido */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Budget vs Consumido
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const budgetData = (costCenters || [])
+                      .filter(center => (center.budget?.allocated || 0) > 0)
+                      .slice(0, 8)
+                      .map(center => ({
+                        name: center.code || center.name.substring(0, 12),
+                        Alocado: center.budget?.allocated || 0,
+                        Consumido: center.budget?.consumed || 0,
+                      }));
+
+                    if (budgetData.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>Nenhum orçamento alocado ainda</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={budgetData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                          <YAxis tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+                          <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                          <Legend />
+                          <Bar dataKey="Alocado" fill="#3b82f6" />
+                          <Bar dataKey="Consumido" fill="#10b981" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Top 5 Centros por Consumo */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Top 10 Centros por Consumo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const topCenters = (costCenters || [])
+                      .filter(center => (center.budget?.consumed || 0) > 0)
+                      .sort((a, b) => (b.budget?.consumed || 0) - (a.budget?.consumed || 0))
+                      .slice(0, 10);
+
+                    if (topCenters.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>Nenhum consumo registrado ainda</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {topCenters.map((center, index) => {
+                          const percentage = center.budget?.percentage || 0;
+                          const isOverBudget = percentage > 100;
+                          return (
+                            <div key={center.id} className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-2xl font-bold text-muted-foreground w-8">
+                                    #{index + 1}
+                                  </span>
+                                  <div
+                                    className="w-3 h-3 rounded-full"
+                                    style={{ backgroundColor: center.color }}
+                                  />
+                                  <div>
+                                    <p className="font-medium">{center.name}</p>
+                                    <p className="text-xs text-muted-foreground">{center.code}</p>
+                                  </div>
+                                  {getCategoryBadge(center.category)}
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold text-lg">
+                                    {formatCurrency(center.budget?.consumed || 0)}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    de {formatCurrency(center.budget?.allocated || 0)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-muted rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full transition-all ${
+                                      isOverBudget ? 'bg-red-500' : 'bg-blue-500'
+                                    }`}
+                                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                                  />
+                                </div>
+                                <span
+                                  className={`text-sm font-medium min-w-[60px] text-right ${
+                                    isOverBudget ? 'text-red-600' : ''
+                                  }`}
+                                >
+                                  {percentage.toFixed(1)}%
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Resumo Estatístico */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Layers className="h-5 w-5" />
+                    Resumo Estatístico
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const totalAllocated = (costCenters || []).reduce(
+                      (sum, c) => sum + (c.budget?.allocated || 0),
+                      0
+                    );
+                    const totalConsumed = (costCenters || []).reduce(
+                      (sum, c) => sum + (c.budget?.consumed || 0),
+                      0
+                    );
+                    const totalRemaining = totalAllocated - totalConsumed;
+                    const avgUtilization = totalAllocated > 0 ? (totalConsumed / totalAllocated) * 100 : 0;
+                    const centersOverBudget = (costCenters || []).filter(
+                      (c) => (c.budget?.percentage || 0) > 100
+                    ).length;
+                    const centersNearLimit = (costCenters || []).filter(
+                      (c) => {
+                        const pct = c.budget?.percentage || 0;
+                        return pct >= 80 && pct <= 100;
+                      }
+                    ).length;
+
+                    return (
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-muted-foreground">Total Alocado</p>
+                          <p className="text-xl font-bold">{formatCurrency(totalAllocated)}</p>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-muted-foreground">Total Consumido</p>
+                          <p className="text-xl font-bold text-blue-600">
+                            {formatCurrency(totalConsumed)}
+                          </p>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-muted-foreground">Total Restante</p>
+                          <p className={`text-xl font-bold ${totalRemaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            {formatCurrency(totalRemaining)}
+                          </p>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-muted-foreground">Utilização Média</p>
+                          <p className="text-xl font-bold">{avgUtilization.toFixed(1)}%</p>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-muted-foreground">Alertas</p>
+                          <div className="flex items-center justify-center gap-2">
+                            {centersOverBudget > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                {centersOverBudget} Over
+                              </Badge>
+                            )}
+                            {centersNearLimit > 0 && (
+                              <Badge className="bg-yellow-500 text-xs">
+                                {centersNearLimit} ≥80%
+                              </Badge>
+                            )}
+                            {centersOverBudget === 0 && centersNearLimit === 0 && (
+                              <Badge className="bg-green-500 text-xs">OK</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
             </div>
           )}
         </TabsContent>
