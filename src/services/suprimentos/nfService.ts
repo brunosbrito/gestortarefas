@@ -59,6 +59,7 @@ let mockNFs: NotaFiscal[] = [
     valor_produtos: 37000,
     valor_impostos: 1500,
     pasta_origem: 'NFsMaio2024',
+    subpasta: 'Semana1',
     status_processamento: 'validado',
     contrato_id: 2,
     items: [
@@ -95,6 +96,7 @@ let mockNFs: NotaFiscal[] = [
     valor_total: 12000,
     valor_produtos: 12000,
     pasta_origem: 'NFsMaio2024',
+    subpasta: 'Semana2',
     status_processamento: 'processado',
     contrato_id: 1,
     items: [
@@ -122,6 +124,7 @@ let mockNFs: NotaFiscal[] = [
     valor_produtos: 118000,
     valor_impostos: 7000,
     pasta_origem: 'NFsMaio2024',
+    subpasta: 'Semana2',
     status_processamento: 'rejeitado',
     contrato_id: 3,
     observacoes: 'Divergência de valores com pedido de compra',
@@ -160,6 +163,7 @@ let mockNFs: NotaFiscal[] = [
     valor_produtos: 27500,
     valor_impostos: 1250,
     pasta_origem: 'NFsMaio2024',
+    subpasta: 'Semana3',
     status_processamento: 'processado',
     contrato_id: 2,
     items: [
@@ -197,6 +201,7 @@ let mockNFs: NotaFiscal[] = [
     valor_produtos: 18500,
     valor_impostos: 700,
     pasta_origem: 'NFsMaio2024',
+    subpasta: 'Semana1',
     status_processamento: 'validado',
     contrato_id: 1,
     items: [

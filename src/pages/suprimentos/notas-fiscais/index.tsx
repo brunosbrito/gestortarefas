@@ -28,6 +28,7 @@ const NotasFiscais = () => {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedNFs, setExpandedNFs] = useState<Set<number>>(new Set());
+  const [expandedSubpastas, setExpandedSubpastas] = useState<Set<string>>(new Set());
 
   // Pegar contractId do state se vier da navegação de contratos
   const contractIdFromState = location.state?.contractId;
@@ -53,6 +54,16 @@ const NotasFiscais = () => {
       newExpanded.add(nfId);
     }
     setExpandedNFs(newExpanded);
+  };
+
+  const toggleSubpastaExpansion = (subpasta: string) => {
+    const newExpanded = new Set(expandedSubpastas);
+    if (newExpanded.has(subpasta)) {
+      newExpanded.delete(subpasta);
+    } else {
+      newExpanded.add(subpasta);
+    }
+    setExpandedSubpastas(newExpanded);
   };
 
   const getStatusBadge = (status: string) => {
@@ -94,6 +105,23 @@ const NotasFiscais = () => {
       nf.nome_fornecedor?.toLowerCase().includes(search) ||
       nf.fornecedor?.toLowerCase().includes(search)
     );
+  });
+
+  // Group NFs by subpasta
+  const groupedBySubpasta = filteredNFs.reduce((groups: Record<string, any[]>, nf: any) => {
+    const key = nf.subpasta || 'Sem Subpasta';
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(nf);
+    return groups;
+  }, {});
+
+  const subpastaKeys = Object.keys(groupedBySubpasta).sort((a, b) => {
+    // "Sem Subpasta" always comes last
+    if (a === 'Sem Subpasta') return 1;
+    if (b === 'Sem Subpasta') return -1;
+    return a.localeCompare(b);
   });
 
   return (
@@ -206,8 +234,45 @@ const NotasFiscais = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredNFs.map((nf: any) => (
+            <div className="space-y-6">
+              {subpastaKeys.map((subpasta) => {
+                const nfsInSubpasta = groupedBySubpasta[subpasta];
+                const totalValue = nfsInSubpasta.reduce((sum: number, nf: any) => sum + (nf.valor_total || 0), 0);
+
+                return (
+                  <div key={subpasta} className="border rounded-lg bg-card">
+                    {/* Subpasta Header */}
+                    <Collapsible
+                      open={expandedSubpastas.has(subpasta)}
+                      onOpenChange={() => toggleSubpastaExpansion(subpasta)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <div className="p-4 bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors rounded-t-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {expandedSubpastas.has(subpasta) ? (
+                                <ChevronDown className="h-5 w-5" />
+                              ) : (
+                                <ChevronRight className="h-5 w-5" />
+                              )}
+                              <div>
+                                <h3 className="font-semibold text-lg">{subpasta}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {nfsInSubpasta.length} {nfsInSubpasta.length === 1 ? 'nota fiscal' : 'notas fiscais'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-muted-foreground">Valor Total</p>
+                              <p className="font-semibold text-lg">{formatCurrency(totalValue)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="p-4 space-y-3">
+                          {nfsInSubpasta.map((nf: any) => (
                 <Collapsible
                   key={nf.id}
                   open={expandedNFs.has(nf.id)}
@@ -406,7 +471,13 @@ const NotasFiscais = () => {
                     </CollapsibleContent>
                   </div>
                 </Collapsible>
-              ))}
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
