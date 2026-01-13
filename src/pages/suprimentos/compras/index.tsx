@@ -52,6 +52,7 @@ const Compras = () => {
     requestId: number;
     quotationId: number;
   } | null>(null);
+  const [showCreateRequestDialog, setShowCreateRequestDialog] = useState(false);
 
   // Filter state
   const [showFilterDialog, setShowFilterDialog] = useState(false);
@@ -317,7 +318,7 @@ const Compras = () => {
                   Limpar
                 </Button>
               )}
-              <Button>
+              <Button onClick={() => setShowCreateRequestDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Requisição
               </Button>
@@ -581,7 +582,7 @@ const Compras = () => {
                     <p className="text-muted-foreground mb-4">
                       Crie sua primeira requisição de compra
                     </p>
-                    <Button>
+                    <Button onClick={() => setShowCreateRequestDialog(true)}>
                       <Plus className="h-4 w-4 mr-2" />
                       Nova Requisição
                     </Button>
@@ -721,6 +722,37 @@ const Compras = () => {
         cancelText="Cancelar"
         loading={selectQuotation.isPending}
       />
+
+      {/* Create Request Dialog (Placeholder) */}
+      <Dialog open={showCreateRequestDialog} onOpenChange={setShowCreateRequestDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Requisição de Compra</DialogTitle>
+            <DialogDescription>
+              Criação de nova requisição de compra
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-6 text-center space-y-4">
+            <AlertCircle className="h-16 w-16 mx-auto text-blue-500" />
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Funcionalidade em Desenvolvimento</h3>
+              <p className="text-sm text-muted-foreground">
+                O formulário completo de criação de requisição de compra será implementado em breve.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Por enquanto, você pode visualizar as requisições existentes e gerenciar cotações.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setShowCreateRequestDialog(false)}>
+              Entendido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filter Dialog */}
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
