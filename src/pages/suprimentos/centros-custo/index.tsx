@@ -34,7 +34,9 @@ import {
   AlertCircle,
   BarChart3,
   PieChart,
+  GripVertical,
 } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import {
   BarChart,
   Bar,
@@ -110,6 +112,53 @@ const CentrosCusto = () => {
     setExpandedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
+  };
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+
+    const { draggableId, source, destination } = result;
+    const centerId = parseInt(draggableId.replace('center-', ''));
+
+    // Se solto no mesmo lugar, não fazer nada
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return;
+    }
+
+    // Encontrar o centro arrastado
+    const draggedCenter = costCenters?.find(c => c.id === centerId);
+    if (!draggedCenter) return;
+
+    // Determinar novo parentId baseado no droppableId de destino
+    const newParentId = destination.droppableId === 'root'
+      ? null
+      : parseInt(destination.droppableId.replace('parent-', ''));
+
+    // Evitar circularidade: não pode arrastar um pai para dentro de seu próprio filho
+    if (newParentId !== null) {
+      let checkParent = newParentId;
+      while (checkParent !== null) {
+        if (checkParent === centerId) {
+          alert('Não é possível mover um centro para dentro de seus próprios filhos');
+          return;
+        }
+        const parentCenter = costCenters?.find(c => c.id === checkParent);
+        checkParent = parentCenter?.parentId || null;
+      }
+    }
+
+    // Calcular novo level baseado no parent
+    const newLevel = newParentId === null ? 1 : (costCenters?.find(c => c.id === newParentId)?.level || 0) + 1;
+
+    // Atualizar o centro de custo
+    await updateCenter.mutateAsync({
+      id: centerId,
+      data: {
+        ...draggedCenter,
+        parentId: newParentId,
+        level: newLevel,
+      },
+    });
   };
 
   const handleCreateCenter = () => {
@@ -201,126 +250,158 @@ const CentrosCusto = () => {
 
   const renderCostCenterTree = (parentId: number | null = null, level: number = 1) => {
     const centers = (costCenters || []).filter((c) => c.parentId === parentId);
+    const droppableId = parentId === null ? 'root' : `parent-${parentId}`;
 
-    return centers.map((center) => {
-      const hasChildren = (costCenters || []).some((c) => c.parentId === center.id);
-      const isExpanded = expandedIds.includes(center.id);
-      const budgetPercent = center.budget?.percentage || 0;
-      const isOverBudget = budgetPercent > 90;
+    return (
+      <Droppable droppableId={droppableId} type={`level-${level}`}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`${snapshot.isDraggingOver ? 'bg-blue-50 dark:bg-blue-950/20 rounded-lg p-2' : ''}`}
+          >
+            {centers.map((center, index) => {
+              const hasChildren = (costCenters || []).some((c) => c.parentId === center.id);
+              const isExpanded = expandedIds.includes(center.id);
+              const budgetPercent = center.budget?.percentage || 0;
+              const isOverBudget = budgetPercent > 90;
 
-      return (
-        <div key={center.id} className={`${level > 1 ? 'ml-8' : ''}`}>
-          <Card className="mb-3">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    {hasChildren && (
-                      <button
-                        onClick={() => toggleExpand(center.id)}
-                        className="p-1 hover:bg-muted rounded"
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </button>
-                    )}
+              return (
+                <Draggable
+                  key={center.id}
+                  draggableId={`center-${center.id}`}
+                  index={index}
+                >
+                  {(provided, snapshot) => (
                     <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: center.color }}
-                    />
-                    <h4 className="font-semibold text-lg">{center.name}</h4>
-                    <Badge variant="outline">{center.code}</Badge>
-                    {getCategoryBadge(center.category)}
-                    {!center.isActive && (
-                      <Badge variant="destructive">Inativo</Badge>
-                    )}
-                  </div>
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      className={`${level > 1 ? 'ml-8' : ''}`}
+                    >
+                      <Card className={`mb-3 ${snapshot.isDragging ? 'shadow-2xl opacity-90 rotate-2' : ''}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
+                                <GripVertical className="h-5 w-5 text-muted-foreground hover:text-foreground" />
+                              </div>
+                            </div>
 
-                  <p className="text-sm text-muted-foreground mb-3 ml-7">
-                    {center.description}
-                  </p>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                {hasChildren && (
+                                  <button
+                                    onClick={() => toggleExpand(center.id)}
+                                    className="p-1 hover:bg-muted rounded"
+                                  >
+                                    {isExpanded ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                )}
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: center.color }}
+                                />
+                                <h4 className="font-semibold text-lg">{center.name}</h4>
+                                <Badge variant="outline">{center.code}</Badge>
+                                {getCategoryBadge(center.category)}
+                                {!center.isActive && (
+                                  <Badge variant="destructive">Inativo</Badge>
+                                )}
+                              </div>
 
-                  {/* Budget Tracking */}
-                  {center.budget && (
-                    <div className="ml-7 space-y-2">
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Alocado</p>
-                          <p className="font-medium">{formatCurrency(center.budget.allocated)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Consumido</p>
-                          <p className="font-medium text-blue-600">
-                            {formatCurrency(center.budget.consumed)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Restante</p>
-                          <p className={`font-medium ${isOverBudget ? 'text-red-600' : 'text-green-600'}`}>
-                            {formatCurrency(center.budget.remaining)}
-                          </p>
-                        </div>
-                      </div>
+                              <p className="text-sm text-muted-foreground mb-3 ml-7">
+                                {center.description}
+                              </p>
 
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-muted rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${isOverBudget ? 'bg-red-500' : 'bg-blue-500'}`}
-                            style={{ width: `${Math.min(budgetPercent, 100)}%` }}
-                          />
-                        </div>
-                        <span className={`text-sm font-medium ${isOverBudget ? 'text-red-600' : ''}`}>
-                          {budgetPercent.toFixed(1)}%
-                        </span>
-                      </div>
+                              {/* Budget Tracking */}
+                              {center.budget && (
+                                <div className="ml-7 space-y-2">
+                                  <div className="grid grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                      <p className="text-muted-foreground">Alocado</p>
+                                      <p className="font-medium">{formatCurrency(center.budget.allocated)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground">Consumido</p>
+                                      <p className="font-medium text-blue-600">
+                                        {formatCurrency(center.budget.consumed)}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground">Restante</p>
+                                      <p className={`font-medium ${isOverBudget ? 'text-red-600' : 'text-green-600'}`}>
+                                        {formatCurrency(center.budget.remaining)}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-1 bg-muted rounded-full h-2">
+                                      <div
+                                        className={`h-2 rounded-full ${isOverBudget ? 'bg-red-500' : 'bg-blue-500'}`}
+                                        style={{ width: `${Math.min(budgetPercent, 100)}%` }}
+                                      />
+                                    </div>
+                                    <span className={`text-sm font-medium ${isOverBudget ? 'text-red-600' : ''}`}>
+                                      {budgetPercent.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Keywords */}
+                              {center.keywords && center.keywords.length > 0 && (
+                                <div className="mt-3 ml-7 flex flex-wrap gap-1">
+                                  {center.keywords.slice(0, 5).map((keyword, idx) => (
+                                    <Badge key={idx} variant="secondary" className="text-xs">
+                                      {keyword}
+                                    </Badge>
+                                  ))}
+                                  {center.keywords.length > 5 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      +{center.keywords.length - 5}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditCenter(center)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteCenter(center.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Render children recursively */}
+                      {hasChildren && isExpanded && renderCostCenterTree(center.id, level + 1)}
                     </div>
                   )}
-
-                  {/* Keywords */}
-                  {center.keywords && center.keywords.length > 0 && (
-                    <div className="mt-3 ml-7 flex flex-wrap gap-1">
-                      {center.keywords.slice(0, 5).map((keyword, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">
-                          {keyword}
-                        </Badge>
-                      ))}
-                      {center.keywords.length > 5 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{center.keywords.length - 5}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditCenter(center)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteCenter(center.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Render children recursively */}
-          {hasChildren && isExpanded && renderCostCenterTree(center.id, level + 1)}
-        </div>
-      );
-    });
+                </Draggable>
+              );
+            })}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    );
   };
 
   return (
@@ -411,9 +492,15 @@ const CentrosCusto = () => {
         {/* Tab: Centros de Custo */}
         <TabsContent value="centers" className="space-y-4">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              Visualização hierárquica dos centros de custo
-            </p>
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Visualização hierárquica dos centros de custo
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <GripVertical className="h-3 w-3" />
+                Arraste os centros para reorganizar a hierarquia
+              </p>
+            </div>
             <Button onClick={handleCreateCenter}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Centro
@@ -428,7 +515,9 @@ const CentrosCusto = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-2">{renderCostCenterTree()}</div>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <div className="space-y-2">{renderCostCenterTree()}</div>
+            </DragDropContext>
           )}
         </TabsContent>
 
