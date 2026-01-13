@@ -1,6 +1,15 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   BarChart3,
   PieChart,
@@ -13,6 +22,10 @@ import {
   AlertCircle,
   CheckCircle2,
   Lightbulb,
+  Maximize2,
+  Filter,
+  CalendarIcon,
+  X,
 } from 'lucide-react';
 import {
   useAnalytics,
@@ -41,7 +54,23 @@ import {
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
+interface AnalyticsFilters {
+  startDate?: Date;
+  endDate?: Date;
+  type?: string;
+  category?: string;
+  obra?: string;
+  fornecedor?: string;
+}
+
 const Analytics = () => {
+  const [filters, setFilters] = useState<AnalyticsFilters>({});
+  const [showFilters, setShowFilters] = useState(false);
+  const [fullscreenChart, setFullscreenChart] = useState<{
+    title: string;
+    content: React.ReactNode;
+  } | null>(null);
+
   const { data: analytics, isLoading: loadingAnalytics } = useAnalytics();
   const { data: costsByCategory, isLoading: loadingCategory } = useCostsByCategory();
   const { data: costEvolution, isLoading: loadingEvolution } = useCostEvolution();
@@ -68,6 +97,16 @@ const Analytics = () => {
 
   const formatPercent = (value: number) => {
     return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+  };
+
+  const hasActiveFilters = Object.values(filters).some((value) => value !== undefined);
+
+  const openFullscreen = (title: string, content: React.ReactNode) => {
+    setFullscreenChart({ title, content });
   };
 
   if (isLoading) {
@@ -98,12 +137,225 @@ const Analytics = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
-        <p className="text-muted-foreground">
-          Análise avançada de custos e performance de suprimentos
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
+          <p className="text-muted-foreground">
+            Análise avançada de custos e performance de suprimentos
+          </p>
+        </div>
+        <Button
+          variant={showFilters ? 'default' : 'outline'}
+          onClick={() => setShowFilters(!showFilters)}
+          className="gap-2"
+        >
+          <Filter className="h-4 w-4" />
+          Filtros
+          {hasActiveFilters && (
+            <Badge variant="secondary" className="ml-1">
+              {Object.values(filters).filter(Boolean).length}
+            </Badge>
+          )}
+        </Button>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Filtros de Análise</CardTitle>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Limpar Filtros
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Period Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Período - Início</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !filters.startDate && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.startDate ? (
+                        format(filters.startDate, 'PPP', { locale: ptBR })
+                      ) : (
+                        <span>Selecione a data</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={filters.startDate}
+                      onSelect={(date) =>
+                        setFilters((prev) => ({ ...prev, startDate: date }))
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Período - Fim</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !filters.endDate && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {filters.endDate ? (
+                        format(filters.endDate, 'PPP', { locale: ptBR })
+                      ) : (
+                        <span>Selecione a data</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={filters.endDate}
+                      onSelect={(date) =>
+                        setFilters((prev) => ({ ...prev, endDate: date }))
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Type Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo</label>
+                <Select
+                  value={filters.type}
+                  onValueChange={(value) =>
+                    setFilters((prev) => ({ ...prev, type: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os tipos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="material">Material</SelectItem>
+                    <SelectItem value="servico">Serviço</SelectItem>
+                    <SelectItem value="equipamento">Equipamento</SelectItem>
+                    <SelectItem value="mao_obra">Mão de Obra</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Categoria</label>
+                <Select
+                  value={filters.category}
+                  onValueChange={(value) =>
+                    setFilters((prev) => ({ ...prev, category: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="estrutura">Estrutura</SelectItem>
+                    <SelectItem value="acabamento">Acabamento</SelectItem>
+                    <SelectItem value="instalacoes">Instalações</SelectItem>
+                    <SelectItem value="fundacao">Fundação</SelectItem>
+                    <SelectItem value="cobertura">Cobertura</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Obra/Project Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Obra</label>
+                <Select
+                  value={filters.obra}
+                  onValueChange={(value) =>
+                    setFilters((prev) => ({ ...prev, obra: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as obras" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="obra_1">Obra 1 - Shopping Center</SelectItem>
+                    <SelectItem value="obra_2">Obra 2 - Residencial</SelectItem>
+                    <SelectItem value="obra_3">Obra 3 - Industrial</SelectItem>
+                    <SelectItem value="obra_4">Obra 4 - Comercial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Supplier Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Fornecedor</label>
+                <Select
+                  value={filters.fornecedor}
+                  onValueChange={(value) =>
+                    setFilters((prev) => ({ ...prev, fornecedor: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os fornecedores" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="fornecedor_1">ABC Materiais</SelectItem>
+                    <SelectItem value="fornecedor_2">XYZ Construções</SelectItem>
+                    <SelectItem value="fornecedor_3">Master Steel</SelectItem>
+                    <SelectItem value="fornecedor_4">Construtora Prime</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {hasActiveFilters && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Filtros ativos:</strong>{' '}
+                  {filters.startDate && `Data início: ${format(filters.startDate, 'dd/MM/yyyy')}`}
+                  {filters.startDate && filters.endDate && ' • '}
+                  {filters.endDate && `Data fim: ${format(filters.endDate, 'dd/MM/yyyy')}`}
+                  {(filters.startDate || filters.endDate) && filters.type && ' • '}
+                  {filters.type && filters.type !== 'all' && `Tipo: ${filters.type}`}
+                  {filters.type && filters.category && ' • '}
+                  {filters.category && filters.category !== 'all' && `Categoria: ${filters.category}`}
+                  {filters.category && filters.obra && ' • '}
+                  {filters.obra && filters.obra !== 'all' && `Obra: ${filters.obra}`}
+                  {filters.obra && filters.fornecedor && ' • '}
+                  {filters.fornecedor && filters.fornecedor !== 'all' && `Fornecedor: ${filters.fornecedor}`}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -194,10 +446,48 @@ const Analytics = () => {
         {/* Costs by Category - Pie Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              Custos por Categoria
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                Custos por Categoria
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  openFullscreen(
+                    'Custos por Categoria',
+                    <ResponsiveContainer width="100%" height={600}>
+                      <RePieChart>
+                        <Pie
+                          data={costsByCategory}
+                          dataKey="value"
+                          nameKey="category"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={200}
+                          label={({ category, percentage }) =>
+                            `${category}: ${percentage.toFixed(1)}%`
+                          }
+                        >
+                          {costsByCategory?.map((_, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: number) => formatCurrency(value)}
+                        />
+                      </RePieChart>
+                    </ResponsiveContainer>
+                  )
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -252,10 +542,36 @@ const Analytics = () => {
         {/* Cost Evolution - Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Evolução de Custos (Planejado vs Real)
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Evolução de Custos (Planejado vs Real)
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  openFullscreen(
+                    'Evolução de Custos (Planejado vs Real)',
+                    <ResponsiveContainer width="100%" height={600}>
+                      <BarChart data={costEvolution}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`} />
+                        <Tooltip
+                          formatter={(value: number) => formatCurrency(value)}
+                        />
+                        <Legend />
+                        <Bar dataKey="planned" fill="#94a3b8" name="Planejado" />
+                        <Bar dataKey="actual" fill="#3b82f6" name="Real" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -292,10 +608,38 @@ const Analytics = () => {
         {/* Supplier Performance - Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Performance de Fornecedores
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Performance de Fornecedores
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  openFullscreen(
+                    'Performance de Fornecedores',
+                    <ResponsiveContainer width="100%" height={600}>
+                      <BarChart
+                        data={supplierAnalysis}
+                        layout="vertical"
+                        margin={{ left: 120 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis dataKey="name" type="category" width={110} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="onTimeDelivery" fill="#10b981" name="Pontualidade (%)" />
+                        <Bar dataKey="qualityScore" fill="#3b82f6" name="Qualidade (x10)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -339,10 +683,49 @@ const Analytics = () => {
         {/* Category Trends - Line Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Tendências por Categoria
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Tendências por Categoria
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  openFullscreen(
+                    'Tendências por Categoria',
+                    <ResponsiveContainer width="100%" height={600}>
+                      <LineChart>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="month"
+                          type="category"
+                          allowDuplicatedCategory={false}
+                        />
+                        <YAxis tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`} />
+                        <Tooltip
+                          formatter={(value: number) => formatCurrency(value)}
+                        />
+                        <Legend />
+                        {categoryTrends?.map((trend, index) => (
+                          <Line
+                            key={trend.category}
+                            data={trend.data}
+                            type="monotone"
+                            dataKey="value"
+                            name={trend.category}
+                            stroke={COLORS[index % COLORS.length]}
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )
+                }
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -552,6 +935,21 @@ const Analytics = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Fullscreen Chart Dialog */}
+      <Dialog
+        open={!!fullscreenChart}
+        onOpenChange={(open) => !open && setFullscreenChart(null)}
+      >
+        <DialogContent className="max-w-[95vw] max-h-[95vh] h-[95vh]">
+          <DialogHeader>
+            <DialogTitle>{fullscreenChart?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 pb-4">
+            {fullscreenChart?.content}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
