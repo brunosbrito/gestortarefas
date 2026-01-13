@@ -129,9 +129,9 @@ const Atividades = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-construction-800">
+          <h1 className="text-2xl font-bold text-construction-800">
             Atividades
           </h1>
           {obra?.status !== 'finalizado' && (
@@ -142,7 +142,7 @@ const Atividades = () => {
                   Nova Atividade
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Nova Atividade</DialogTitle>
                 </DialogHeader>
@@ -160,7 +160,7 @@ const Atividades = () => {
         </div>
 
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-6 overflow-x-auto pb-4">
+          <div className="flex gap-4 overflow-x-auto pb-4">
             {statusListas.map((status) => (
               <StatusList
                 key={status}

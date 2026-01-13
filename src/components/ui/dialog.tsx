@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { X } from "lucide-react"
+import { X, GripHorizontal } from "lucide-react"
+import { motion, useDragControls } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -106,6 +107,59 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
+interface DraggableDialogContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  showDragHandle?: boolean;
+}
+
+const DraggableDialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  DraggableDialogContentProps
+>(({ className, children, showDragHandle = true, ...props }, ref) => {
+  const dragControls = useDragControls();
+
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        asChild
+        {...props}
+      >
+        <motion.div
+          drag
+          dragControls={dragControls}
+          dragMomentum={false}
+          dragElastic={0}
+          initial={{ opacity: 0, scale: 0.95, x: "-50%", y: "-50%" }}
+          animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className={cn(
+            "fixed left-[50%] top-[50%] z-50 grid w-[95%] max-w-3xl gap-4 border bg-background p-6 shadow-lg sm:rounded-lg md:w-full max-h-[90vh] overflow-y-auto mx-auto cursor-default",
+            className
+          )}
+          style={{ x: "-50%", y: "-50%" }}
+        >
+          {showDragHandle && (
+            <div
+              className="absolute top-0 left-0 right-0 h-10 flex items-center justify-center cursor-grab active:cursor-grabbing"
+              onPointerDown={(e) => dragControls.start(e)}
+            >
+              <GripHorizontal className="w-5 h-5 text-muted-foreground/50" />
+            </div>
+          )}
+          {children}
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Fechar</span>
+          </DialogPrimitive.Close>
+        </motion.div>
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  );
+});
+DraggableDialogContent.displayName = "DraggableDialogContent"
+
 export {
   Dialog,
   DialogPortal,
@@ -113,6 +167,7 @@ export {
   DialogClose,
   DialogTrigger,
   DialogContent,
+  DraggableDialogContent,
   DialogHeader,
   DialogFooter,
   DialogTitle,

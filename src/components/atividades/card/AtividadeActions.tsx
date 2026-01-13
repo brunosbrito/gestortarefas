@@ -67,14 +67,14 @@ export const AtividadeActions = ({
   };
 
   return (
-    <div className="flex gap-2 w-full">
+    <div className="flex gap-1.5 w-full">
       <Button
         variant="outline"
         size="sm"
         onClick={onMoveClick}
-        className="flex-1"
+        className="flex-1 h-8"
       >
-        <MoveHorizontal className="w-4 h-4" />
+        <MoveHorizontal className="w-3.5 h-3.5" />
       </Button>
 
       <Dialog
@@ -82,8 +82,8 @@ export const AtividadeActions = ({
         onOpenChange={setIsEditDialogOpen}
       >
         <DialogTrigger asChild>
-          <Button variant="secondary" size="sm" className="flex-1">
-            <Edit2 className="w-4 h-4" />
+          <Button variant="secondary" size="sm" className="flex-1 h-8">
+            <Edit2 className="w-3.5 h-3.5" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-2xl">
@@ -112,11 +112,11 @@ export const AtividadeActions = ({
           <Button
             variant="outline"
             size="sm"
-            className="w-full cursor-pointer"
+            className="w-full cursor-pointer h-8"
             asChild
           >
             <span>
-              <Upload className="w-4 h-4" />
+              <Upload className="w-3.5 h-3.5" />
             </span>
           </Button>
         </label>
@@ -124,8 +124,8 @@ export const AtividadeActions = ({
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="destructive" size="sm" className="flex-1">
-            <Trash2 className="w-4 h-4" />
+          <Button variant="destructive" size="sm" className="flex-1 h-8">
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </DialogTrigger>
         <DialogContent>

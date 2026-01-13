@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
+  DraggableDialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -169,7 +169,7 @@ export function AtualizarStatusDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90%] sm:max-w-[600px]">
+      <DraggableDialogContent className="max-w-[90%] sm:max-w-[600px] pt-10">
         <DialogHeader>
           <DialogTitle>
             {novoStatus === 'Em execução' && 'Iniciar Atividade'}
@@ -416,7 +416,7 @@ export function AtualizarStatusDialog({
             </Button>
           </form>
         </Form>
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   );
 }

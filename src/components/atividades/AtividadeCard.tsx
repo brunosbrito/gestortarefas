@@ -102,8 +102,15 @@ export const AtividadeCard = ({
 
   const formatEstimatedTime = (estimatedTime: string) => {
     if (!estimatedTime) return '00:00';
-    const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
-    return `${hours.padStart(2, '0')}:${minutes?.padStart(2, '0')}`;
+
+    // Extrair horas e minutos do formato "8h", "8h 30min", "30min"
+    const hoursMatch = estimatedTime.match(/(\d+)\s*h/);
+    const minutesMatch = estimatedTime.match(/(\d+)\s*min/);
+
+    const hours = hoursMatch ? hoursMatch[1] : '0';
+    const minutes = minutesMatch ? minutesMatch[1] : '0';
+
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
   };
 
   const calculateProgress = () => {
@@ -115,9 +122,16 @@ export const AtividadeCard = ({
   const calculatePercentage = (elapsedTime: number, estimatedTime: string) => {
     if (!estimatedTime) return 0;
 
-    const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
-    const totalEstimatedSeconds =
-      parseInt(hours) * 3600 + parseInt(minutes) * 60;
+    // Extrair horas e minutos do formato "8h", "8h 30min", "30min"
+    const hoursMatch = estimatedTime.match(/(\d+)\s*h/);
+    const minutesMatch = estimatedTime.match(/(\d+)\s*min/);
+
+    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+
+    const totalEstimatedSeconds = hours * 3600 + minutes * 60;
+
+    if (totalEstimatedSeconds === 0) return 0;
 
     const elapsedTimeInSeconds = elapsedTime * 3600;
 
@@ -156,7 +170,7 @@ export const AtividadeCard = ({
               calculatePercentage={calculatePercentage}
             />
 
-            <CardFooter className="p-4 pt-0 flex flex-col gap-3">
+            <CardFooter className="px-3 pb-3 pt-0 flex flex-col gap-2">
               <AtividadeActions
                 atividade={atividade}
                 projectId={projectId}
