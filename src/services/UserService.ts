@@ -23,7 +23,7 @@ class UserService {
 
   async getUserById(id: string) {
     try {
-      const token = getStoredToken(); // ✅ Busca token dinamicamente
+      const token = getStoredToken();
       const response = await axios.get(`${URL}${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
