@@ -20,7 +20,8 @@ const Fabricas = lazy(() => import('./pages/Fabricas'));
 const Mineradoras = lazy(() => import('./pages/Mineradoras'));
 const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
 const Atividade = lazy(() => import('./pages/Atividade'));
-const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
+const PCPAssistenteIA = lazy(() => import('./pages/pcp/assistente-ia'));
+const QualidadeAssistenteIA = lazy(() => import('./pages/qualidade/assistente-ia'));
 const EmConstrucao = lazy(() => import('./pages/EmConstrucao'));
 const Suprimentos = lazy(() => import('./pages/suprimentos'));
 
@@ -42,14 +43,14 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/atividade" element={<Atividade />} />
-          <Route path="/assistente-ia" element={<AssistenteIA />} />
+          <Route path="/assistente-ia" element={<PCPAssistenteIA />} />
           <Route path="/programacao" element={<Atividade />} />
           <Route path="/users" element={<Users />} />
           <Route path="/obras" element={<Obras />} />
           <Route path="/fabricas" element={<Fabricas />} />
           <Route path="/mineradoras" element={<Mineradoras />} />
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
-          <Route path="/qualidade/assistente-ia" element={<EmConstrucao />} />
+          <Route path="/qualidade/assistente-ia" element={<QualidadeAssistenteIA />} />
           <Route path="/qualidade/acoes-corretivas" element={<EmConstrucao />} />
           <Route path="/qualidade/inspecoes" element={<EmConstrucao />} />
           <Route path="/qualidade/planos-inspecao" element={<EmConstrucao />} />
