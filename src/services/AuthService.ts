@@ -2,8 +2,6 @@ import API_URL from '@/config';
 import { User } from '@/interfaces/UserInterface';
 import axios from 'axios';
 
-const token = localStorage.getItem('authToken');
-
 export const login = async (email: string, password: string) => {
   try {
     const response = await axios.post(`${API_URL}/auth/login`, {
@@ -19,6 +17,7 @@ export const login = async (email: string, password: string) => {
 };
 
 export const createUser = async (data: Partial<User>) => {
+  const token = getStoredToken(); // ✅ Busca token dinamicamente
   await axios.post(
     `${API_URL}/auth/register`,
     {

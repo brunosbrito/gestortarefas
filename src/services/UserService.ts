@@ -1,13 +1,14 @@
 import API_URL from '@/config';
 import { User } from '@/interfaces/UserInterface';
+import { getStoredToken } from '@/services/AuthService';
 import axios from 'axios';
 
 const URL = `${API_URL}/users/`;
-const token = localStorage.getItem('authToken');
 
 class UserService {
   async getAllUsers() {
     try {
+      const token = getStoredToken(); // ✅ Busca token dinamicamente
       const response = await axios.get(URL, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -22,6 +23,7 @@ class UserService {
 
   async getUserById(id: string) {
     try {
+      const token = getStoredToken(); // ✅ Busca token dinamicamente
       const response = await axios.get(`${URL}${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -36,6 +38,7 @@ class UserService {
 
   async updateUser(id: string, user: User) {
     try {
+      const token = getStoredToken(); // ✅ Busca token dinamicamente
       const response = await axios.put(`${URL}${id}`, user, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -51,6 +54,7 @@ class UserService {
 
   async deleteUser(id: string) {
     try {
+      const token = getStoredToken(); // ✅ Busca token dinamicamente
       const response = await axios.delete(`${URL}${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
