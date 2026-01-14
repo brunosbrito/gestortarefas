@@ -3,14 +3,15 @@ import { User } from '@/interfaces/UserInterface';
 import axios from 'axios';
 
 const URL = `${API_URL}/users/`;
-const token = localStorage.getItem('authToken');
+
+const getToken = () => localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 
 class UserService {
   async getAllUsers() {
     try {
       const response = await axios.get(URL, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
       });
       return response.data;
@@ -24,7 +25,7 @@ class UserService {
     try {
       const response = await axios.get(`${URL}${id}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
       });
       return response.data;
@@ -38,7 +39,7 @@ class UserService {
     try {
       const response = await axios.put(`${URL}${id}`, user, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
           'Content-Type': 'application/json',
         },
       });
@@ -53,7 +54,7 @@ class UserService {
     try {
       const response = await axios.delete(`${URL}${id}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
       });
       return response.data;

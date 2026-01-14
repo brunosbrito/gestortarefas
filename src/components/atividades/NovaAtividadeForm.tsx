@@ -137,6 +137,34 @@ export function NovaAtividadeForm({
     });
   };
 
+  // Função para parsear estimatedTime e calcular timePerUnit
+  const parseEstimatedTime = (estimatedTime: string, quantity: number): { timePerUnit: number; unidadeTempo: UnidadeTempo } => {
+    if (!estimatedTime || !quantity || quantity === 0) {
+      return { timePerUnit: 1, unidadeTempo: 'horas' };
+    }
+
+    // Parse do formato "Xh Ymin" ou "Xh" ou "Ymin"
+    const hoursMatch = estimatedTime.match(/(\d+)\s*h/);
+    const minutesMatch = estimatedTime.match(/(\d+)\s*min/);
+
+    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+
+    // Converter tudo para horas
+    const totalHours = hours + (minutes / 60);
+
+    // Calcular tempo por unidade
+    const timePerUnitHours = totalHours / quantity;
+
+    // Se o tempo por unidade for menor que 1 hora, usar minutos
+    if (timePerUnitHours < 1) {
+      const timePerUnitMinutes = Math.round(timePerUnitHours * 60);
+      return { timePerUnit: timePerUnitMinutes || 1, unidadeTempo: 'minutos' };
+    }
+
+    return { timePerUnit: Math.round(timePerUnitHours * 10) / 10, unidadeTempo: 'horas' };
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -221,14 +249,25 @@ export function NovaAtividadeForm({
       setMacroTaskSelectedValue(macroTaskValue);
       setProcessSelectedValue(processValue);
 
+      // Determinar timePerUnit e unidadeTempo
+      let timePerUnitValue = atividadeInicial.timePerUnit;
+      let unidadeTempoValue = atividadeInicial.unidadeTempo;
+
+      // Se não tiver timePerUnit, calcular a partir do estimatedTime
+      if (!timePerUnitValue && atividadeInicial.estimatedTime && atividadeInicial.quantity) {
+        const parsed = parseEstimatedTime(atividadeInicial.estimatedTime, atividadeInicial.quantity);
+        timePerUnitValue = parsed.timePerUnit;
+        unidadeTempoValue = parsed.unidadeTempo;
+      }
+
       // Reset do formulário com os valores da atividade
       form.reset({
         macroTask: macroTaskValue,
         process: processValue,
         description: atividadeInicial.description || '',
         quantity: atividadeInicial.quantity || 1,
-        timePerUnit: atividadeInicial.timePerUnit || 1,
-        unidadeTempo: atividadeInicial.unidadeTempo || 'horas',
+        timePerUnit: timePerUnitValue || 1,
+        unidadeTempo: unidadeTempoValue || 'horas',
         collaborators: colaboradoresIniciais,
         observation: atividadeInicial.observation || '',
         projectId,
@@ -241,12 +280,14 @@ export function NovaAtividadeForm({
         setShowOptional(true);
       }
 
-      // Calcular tempo previsto inicial
-      if (atividadeInicial.quantity && atividadeInicial.timePerUnit) {
+      // Calcular e exibir tempo previsto
+      if (atividadeInicial.estimatedTime) {
+        setTempoPrevisto(atividadeInicial.estimatedTime);
+      } else if (atividadeInicial.quantity && timePerUnitValue) {
         const tempo = calcularTempoPrevisto(
           atividadeInicial.quantity,
-          atividadeInicial.timePerUnit,
-          atividadeInicial.unidadeTempo || 'horas'
+          timePerUnitValue,
+          unidadeTempoValue || 'horas'
         );
         setTempoPrevisto(tempo);
       }
@@ -538,7 +579,7 @@ export function NovaAtividadeForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-medium">Unidade</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="h-9">
                       <SelectValue />

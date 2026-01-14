@@ -2,7 +2,7 @@ import API_URL from '@/config';
 import { User } from '@/interfaces/UserInterface';
 import axios from 'axios';
 
-const token = localStorage.getItem('authToken');
+const getToken = () => localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 
 export const login = async (email: string, password: string) => {
   try {
@@ -29,7 +29,7 @@ export const createUser = async (data: Partial<User>) => {
     },
     {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${getToken()}`,
         'Content-Type': 'application/json',
       },
     }

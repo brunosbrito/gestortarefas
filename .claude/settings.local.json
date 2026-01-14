@@ -11,6 +11,9 @@
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run build:dev:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\bruno\\Desktop\\dev\\gestor tarefas api\\gestor-tarefas-api\\src\\modules\\user"
     ]
   }
 }
