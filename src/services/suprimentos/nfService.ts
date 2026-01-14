@@ -2,6 +2,8 @@ import API_URL from '@/config';
 import axios from 'axios';
 import { ApiResponse } from '@/interfaces/suprimentos/CommonInterface';
 import { NotaFiscal, NFStats } from '@/interfaces/suprimentos/NotaFiscalInterface';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const URL = `${API_URL}/api/suprimentos/nf`;
 const USE_MOCK = true;
@@ -390,22 +392,154 @@ class NFService {
   // Download PDF da NF
   async downloadPDF(id: number): Promise<Blob> {
     if (USE_MOCK) {
-      // Gerar PDF mock (texto simples como placeholder)
+      // Gerar PDF mock válido com jsPDF
       const nf = mockNFs.find((n) => n.id === id);
       if (!nf) throw new Error('NF não encontrada');
 
-      const pdfContent = `DANFE - Documento Auxiliar da Nota Fiscal Eletrônica
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 20;
 
-Nota Fiscal: ${nf.numero}
-Série: ${nf.serie}
-Data de Emissão: ${nf.data_emissao}
-Fornecedor: ${nf.nome_fornecedor}
-CNPJ: ${nf.cnpj_fornecedor}
-Valor Total: R$ ${nf.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+      // Header - DANFE
+      doc.setFillColor(220, 220, 220);
+      doc.rect(10, yPos, pageWidth - 20, 15, 'F');
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DANFE', pageWidth / 2, yPos + 10, { align: 'center' });
+      doc.setFontSize(8);
+      doc.text('Documento Auxiliar da Nota Fiscal Eletrônica', pageWidth / 2, yPos + 14, { align: 'center' });
+      yPos += 20;
 
-⚠️ Este é um arquivo mock. O PDF real será gerado pelo backend.`;
+      // Mock Warning
+      doc.setFillColor(255, 243, 205);
+      doc.rect(10, yPos, pageWidth - 20, 10, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(150, 100, 0);
+      doc.text('⚠ MOCK: Este é um PDF de desenvolvimento. O DANFE real será gerado pelo backend.', pageWidth / 2, yPos + 6, { align: 'center' });
+      doc.setTextColor(0, 0, 0);
+      yPos += 15;
 
-      return Promise.resolve(new Blob([pdfContent], { type: 'application/pdf' }));
+      // Informações da NF
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('NOTA FISCAL ELETRÔNICA', 15, yPos);
+      yPos += 7;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Nº: ${nf.numero}`, 15, yPos);
+      doc.text(`Série: ${nf.serie || '1'}`, 50, yPos);
+      yPos += 5;
+      doc.text(`Data de Emissão: ${new Date(nf.data_emissao || '').toLocaleDateString('pt-BR')}`, 15, yPos);
+      yPos += 10;
+
+      // Dados do Fornecedor
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('DADOS DO EMITENTE (FORNECEDOR)', 15, yPos);
+      yPos += 7;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Razão Social: ${nf.nome_fornecedor || 'Fornecedor Mock'}`, 15, yPos);
+      yPos += 5;
+      doc.text(`CNPJ: ${nf.cnpj_fornecedor || '00.000.000/0001-00'}`, 15, yPos);
+      yPos += 10;
+
+      // Chave de Acesso (se existir)
+      if (nf.chave_acesso) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('CHAVE DE ACESSO:', 15, yPos);
+        yPos += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(nf.chave_acesso, 15, yPos);
+        yPos += 10;
+        doc.setFontSize(9);
+      }
+
+      // Valores
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('VALORES', 15, yPos);
+      yPos += 7;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      if (nf.valor_produtos) {
+        doc.text(`Valor dos Produtos:`, 15, yPos);
+        doc.text(`R$ ${nf.valor_produtos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 100, yPos);
+        yPos += 5;
+      }
+      if (nf.valor_impostos && nf.valor_impostos > 0) {
+        doc.text(`Valor dos Impostos:`, 15, yPos);
+        doc.text(`R$ ${nf.valor_impostos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 100, yPos);
+        yPos += 5;
+      }
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Valor Total da NF:`, 15, yPos);
+      doc.text(`R$ ${nf.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 100, yPos);
+      yPos += 10;
+
+      // Itens/Produtos
+      if (nf.items && nf.items.length > 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('PRODUTOS / SERVIÇOS', 15, yPos);
+        yPos += 5;
+
+        // Criar tabela com autoTable
+        autoTable(doc, {
+          startY: yPos,
+          head: [['#', 'Descrição', 'Qtd', 'Un', 'Vl. Unit.', 'Vl. Total']],
+          body: nf.items.map((item) => [
+            item.numero_item?.toString() || '-',
+            item.descricao || 'Produto',
+            item.quantidade?.toString() || '0',
+            item.unidade || 'UN',
+            `R$ ${(item.valor_unitario || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            `R$ ${(item.valor_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          ]),
+          theme: 'striped',
+          headStyles: { fillColor: [66, 139, 202], fontSize: 8 },
+          bodyStyles: { fontSize: 8 },
+          columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 70 },
+            2: { cellWidth: 15 },
+            3: { cellWidth: 15 },
+            4: { cellWidth: 30 },
+            5: { cellWidth: 30 },
+          },
+        });
+
+        yPos = (doc as any).lastAutoTable.finalY + 10;
+      }
+
+      // Observações
+      if (nf.observacoes) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('OBSERVAÇÕES:', 15, yPos);
+        yPos += 7;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        const splitObs = doc.splitTextToSize(nf.observacoes, pageWidth - 30);
+        doc.text(splitObs, 15, yPos);
+        yPos += splitObs.length * 4;
+      }
+
+      // Footer
+      yPos = doc.internal.pageSize.getHeight() - 20;
+      doc.setFontSize(7);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Gerado por: Gestor de Tarefas - GML Estruturas', pageWidth / 2, yPos, { align: 'center' });
+      doc.text(`Data de Geração: ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, yPos + 4, { align: 'center' });
+
+      // Converter para Blob
+      const pdfBlob = doc.output('blob');
+      return Promise.resolve(pdfBlob);
     }
 
     const response = await axios.get(`${URL}/${id}/download/pdf`, {
