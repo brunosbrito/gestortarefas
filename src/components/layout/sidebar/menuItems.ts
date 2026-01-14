@@ -164,6 +164,11 @@ export const navItems: MenuItem[] = [
         path: '/suprimentos/compras',
       },
       {
+        icon: FileText,
+        label: 'Relatórios',
+        path: '/suprimentos/relatorios',
+      },
+      {
         icon: BarChart3,
         label: 'Analytics',
         path: '/suprimentos/analytics',
