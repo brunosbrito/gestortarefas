@@ -26,6 +26,7 @@ const Motoristas = lazy(() => import('./logistica/motoristas'));
 const Transportadoras = lazy(() => import('./logistica/transportadoras'));
 const TiposManutencao = lazy(() => import('./logistica/tipos-manutencao'));
 const FornecedoresServicos = lazy(() => import('./logistica/fornecedores-servicos'));
+const Rotas = lazy(() => import('./logistica/rotas'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -76,6 +77,7 @@ const Suprimentos = () => {
             <Route path="transportadoras" element={<Transportadoras />} />
             <Route path="tipos-manutencao" element={<TiposManutencao />} />
             <Route path="fornecedores-servicos" element={<FornecedoresServicos />} />
+            <Route path="rotas" element={<Rotas />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/suprimentos" replace />} />

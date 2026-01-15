@@ -358,3 +358,57 @@ export const serviceProviderSchema = z.object({
 });
 
 export type ServiceProviderFormData = z.infer<typeof serviceProviderSchema>;
+
+// ===== VALIDAÇÕES DE ROTAS/DESTINOS =====
+
+export const routeSchema = z.object({
+  nome: z
+    .string()
+    .min(3, 'Nome deve ter pelo menos 3 caracteres')
+    .max(100, 'Nome deve ter no máximo 100 caracteres'),
+  descricao: z.string().max(500, 'Descrição deve ter no máximo 500 caracteres').optional(),
+  origem: z
+    .string()
+    .min(3, 'Origem é obrigatória')
+    .max(200, 'Origem deve ter no máximo 200 caracteres'),
+  destino: z
+    .string()
+    .min(3, 'Destino é obrigatório')
+    .max(200, 'Destino deve ter no máximo 200 caracteres'),
+  km_previsto: z
+    .number()
+    .min(1, 'Distância deve ser pelo menos 1 KM')
+    .max(9999, 'Distância muito alta'),
+  tempo_medio: z
+    .number()
+    .int('Tempo deve ser um número inteiro')
+    .min(1, 'Tempo deve ser pelo menos 1 minuto')
+    .max(1440, 'Tempo não pode exceder 24 horas (1440 minutos)'),
+  custo_estimado: z
+    .number()
+    .min(0, 'Custo não pode ser negativo')
+    .max(999999.99, 'Custo muito alto')
+    .optional(),
+  pedagios_quantidade: z
+    .number()
+    .int('Quantidade deve ser um número inteiro')
+    .min(0, 'Quantidade não pode ser negativa')
+    .max(50, 'Quantidade muito alta')
+    .optional(),
+  pedagios_valor: z
+    .number()
+    .min(0, 'Valor não pode ser negativo')
+    .max(9999.99, 'Valor muito alto')
+    .optional(),
+  tipo_via: z.enum(['urbana', 'rodovia', 'mista'], {
+    errorMap: () => ({ message: 'Selecione um tipo de via válido' }),
+  }).optional(),
+  observacoes: z.string().max(500, 'Observações devem ter no máximo 500 caracteres').optional(),
+  pontos_referencia: z
+    .array(z.string())
+    .optional()
+    .default([]),
+  ativo: z.boolean().default(true),
+});
+
+export type RouteFormData = z.infer<typeof routeSchema>;
