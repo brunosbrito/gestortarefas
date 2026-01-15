@@ -24,6 +24,8 @@ const AIChat = lazy(() => import('./ai-chat'));
 const Veiculos = lazy(() => import('./logistica/veiculos'));
 const Motoristas = lazy(() => import('./logistica/motoristas'));
 const Transportadoras = lazy(() => import('./logistica/transportadoras'));
+const TiposManutencao = lazy(() => import('./logistica/tipos-manutencao'));
+const FornecedoresServicos = lazy(() => import('./logistica/fornecedores-servicos'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -72,6 +74,8 @@ const Suprimentos = () => {
             <Route path="veiculos" element={<Veiculos />} />
             <Route path="motoristas" element={<Motoristas />} />
             <Route path="transportadoras" element={<Transportadoras />} />
+            <Route path="tipos-manutencao" element={<TiposManutencao />} />
+            <Route path="fornecedores-servicos" element={<FornecedoresServicos />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/suprimentos" replace />} />

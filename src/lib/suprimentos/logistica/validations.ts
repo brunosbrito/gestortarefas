@@ -238,4 +238,123 @@ export const masks = {
       .replace(/([A-Z]{3})(\d)/, '$1-$2')
       .slice(0, 8);
   },
+  cep: (value: string) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{3})\d+?$/, '$1');
+  },
 };
+
+// ===== VALIDAÇÕES DE TIPOS DE MANUTENÇÃO =====
+
+export const maintenanceTypeSchema = z.object({
+  nome: z
+    .string()
+    .min(3, 'Nome deve ter pelo menos 3 caracteres')
+    .max(100, 'Nome deve ter no máximo 100 caracteres'),
+  categoria: z.enum(['preventiva', 'corretiva', 'preditiva', 'emergencial'], {
+    errorMap: () => ({ message: 'Selecione uma categoria válida' }),
+  }),
+  descricao: z.string().max(500, 'Descrição deve ter no máximo 500 caracteres').optional(),
+  frequencia: z.enum(['diaria', 'semanal', 'quinzenal', 'mensal', 'bimestral', 'trimestral', 'semestral', 'anual', 'sob_demanda'], {
+    errorMap: () => ({ message: 'Selecione uma frequência válida' }),
+  }),
+  periodicidade_km: z
+    .number()
+    .int('KM deve ser um número inteiro')
+    .min(0, 'KM não pode ser negativo')
+    .max(999999, 'KM muito alto')
+    .optional(),
+  periodicidade_dias: z
+    .number()
+    .int('Dias deve ser um número inteiro')
+    .min(1, 'Deve ter pelo menos 1 dia')
+    .max(3650, 'Máximo 10 anos (3650 dias)')
+    .optional(),
+  checklist_items: z
+    .array(z.string())
+    .optional()
+    .default([]),
+  custo_estimado: z
+    .number()
+    .min(0, 'Custo não pode ser negativo')
+    .max(999999.99, 'Custo muito alto')
+    .optional(),
+  tempo_estimado: z
+    .number()
+    .int('Tempo deve ser um número inteiro')
+    .min(1, 'Tempo deve ser pelo menos 1 minuto')
+    .max(1440, 'Tempo não pode exceder 24 horas (1440 minutos)')
+    .optional(),
+  ativo: z.boolean().default(true),
+  observacoes: z.string().max(500, 'Observações devem ter no máximo 500 caracteres').optional(),
+});
+
+export type MaintenanceTypeFormData = z.infer<typeof maintenanceTypeSchema>;
+
+// ===== VALIDAÇÕES DE FORNECEDORES DE SERVIÇOS =====
+
+export const serviceProviderSchema = z.object({
+  razao_social: z
+    .string()
+    .min(3, 'Razão Social deve ter pelo menos 3 caracteres')
+    .max(200, 'Razão Social deve ter no máximo 200 caracteres'),
+  nome_fantasia: z.string().max(100, 'Nome Fantasia deve ter no máximo 100 caracteres').optional(),
+  cnpj: z
+    .string()
+    .regex(/^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/, 'Formato de CNPJ inválido (xx.xxx.xxx/xxxx-xx)')
+    .refine(validateCNPJ, { message: 'CNPJ inválido' })
+    .transform((val) => val.replace(/\D/g, ''))
+    .optional()
+    .or(z.literal('')),
+  cpf: z
+    .string()
+    .regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, 'Formato de CPF inválido (xxx.xxx.xxx-xx)')
+    .refine(validateCPF, { message: 'CPF inválido' })
+    .transform((val) => val.replace(/\D/g, ''))
+    .optional()
+    .or(z.literal('')),
+  tipo: z.enum(['oficina', 'borracharia', 'funilaria', 'eletrica', 'mecanica', 'seguradora', 'despachante', 'outros'], {
+    errorMap: () => ({ message: 'Selecione um tipo válido' }),
+  }),
+  telefone: z
+    .string()
+    .regex(/^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/, 'Formato de telefone inválido (ex: (11) 98765-4321)'),
+  email: z
+    .string()
+    .email('E-mail inválido')
+    .max(100, 'E-mail deve ter no máximo 100 caracteres')
+    .optional()
+    .or(z.literal('')),
+  contato_nome: z.string().max(100, 'Nome do contato deve ter no máximo 100 caracteres').optional(),
+  endereco: z.string().max(200, 'Endereço deve ter no máximo 200 caracteres').optional(),
+  cidade: z.string().max(100, 'Cidade deve ter no máximo 100 caracteres').optional(),
+  estado: z.string().max(2, 'Estado deve ter 2 caracteres (ex: SP)').optional(),
+  cep: z.string().regex(/^\d{5}-?\d{3}$/, 'Formato de CEP inválido (xxxxx-xxx)').optional().or(z.literal('')),
+  rating: z
+    .number()
+    .min(1, 'Avaliação mínima é 1')
+    .max(5, 'Avaliação máxima é 5')
+    .optional(),
+  ativo: z.boolean().default(true),
+  credenciado: z.boolean().default(false),
+  especialidades: z
+    .array(z.string())
+    .optional()
+    .default([]),
+  prazo_pagamento: z
+    .number()
+    .int('Prazo deve ser um número inteiro')
+    .min(0, 'Prazo não pode ser negativo')
+    .max(365, 'Prazo não pode exceder 1 ano')
+    .optional(),
+  desconto_padrao: z
+    .number()
+    .min(0, 'Desconto não pode ser negativo')
+    .max(100, 'Desconto não pode exceder 100%')
+    .optional(),
+  observacoes: z.string().max(500, 'Observações devem ter no máximo 500 caracteres').optional(),
+});
+
+export type ServiceProviderFormData = z.infer<typeof serviceProviderSchema>;
