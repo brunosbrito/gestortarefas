@@ -1,7 +1,8 @@
 // Página de Listagem de Transportadoras - Logística
-import { useState, useEffect } from 'react';
-import transportadorasService from '@/services/suprimentos/logistica/transportadorasService';
+import { useState, useMemo } from 'react';
+import { useTransportadoras, useDeleteTransportadora } from '@/hooks/suprimentos/logistica/useTransportadoras';
 import { Transportadora } from '@/interfaces/suprimentos/logistica/TransportInterface';
+import TransportadoraFormDialog from './components/TransportadoraFormDialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -11,37 +12,45 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, Plus, Search, Star } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Loader2, Plus, Search, Star, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 export default function TransportadorasPage() {
-  const [transportadoras, setTransportadoras] = useState<Transportadora[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: transportadoras = [], isLoading, isError } = useTransportadoras();
+  const deleteMutation = useDeleteTransportadora();
+
   const [searchTerm, setSearchTerm] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [selectedTransportadora, setSelectedTransportadora] = useState<Transportadora | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [transportadoraToDelete, setTransportadoraToDelete] = useState<Transportadora | null>(null);
 
-  useEffect(() => {
-    loadTransportadoras();
-  }, []);
-
-  const loadTransportadoras = async () => {
-    try {
-      setLoading(true);
-      const response = await transportadorasService.getAll();
-      if (response.success) {
-        setTransportadoras(response.data.transportadoras);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar transportadoras:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredTransportadoras = transportadoras.filter(
-    (t) =>
-      t.razao_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.cnpj.includes(searchTerm)
-  );
+  const filteredTransportadoras = useMemo(() => {
+    return transportadoras.filter(
+      (t) =>
+        t.razao_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.cnpj.includes(searchTerm)
+    );
+  }, [transportadoras, searchTerm]);
 
   const renderStars = (rating: number | undefined) => {
     if (!rating) return <span className="text-muted-foreground text-sm">Sem avaliação</span>;
@@ -61,10 +70,49 @@ export default function TransportadorasPage() {
     );
   };
 
-  if (loading) {
+  const handleCreateTransportadora = () => {
+    setDialogMode('create');
+    setSelectedTransportadora(null);
+    setDialogOpen(true);
+  };
+
+  const handleEditTransportadora = (transportadora: Transportadora) => {
+    setDialogMode('edit');
+    setSelectedTransportadora(transportadora);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteClick = (transportadora: Transportadora) => {
+    setTransportadoraToDelete(transportadora);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (transportadoraToDelete) {
+      deleteMutation.mutate(transportadoraToDelete.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setTransportadoraToDelete(null);
+        },
+      });
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-lg">
+          <p className="font-semibold">Erro ao carregar transportadoras</p>
+          <p className="text-sm">Tente novamente mais tarde ou contate o suporte.</p>
+        </div>
       </div>
     );
   }
@@ -78,7 +126,7 @@ export default function TransportadorasPage() {
             Gerencie as empresas de transporte parceiras
           </p>
         </div>
-        <Button>
+        <Button onClick={handleCreateTransportadora}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Transportadora
         </Button>
@@ -103,14 +151,14 @@ export default function TransportadorasPage() {
               <TableHead>Telefone</TableHead>
               <TableHead>E-mail</TableHead>
               <TableHead>Avaliação</TableHead>
-              <TableHead>Ações</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredTransportadoras.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Nenhuma transportadora encontrada
+                  {searchTerm ? 'Nenhuma transportadora encontrada' : 'Nenhuma transportadora cadastrada'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -123,10 +171,29 @@ export default function TransportadorasPage() {
                   <TableCell>{transportadora.telefone}</TableCell>
                   <TableCell>{transportadora.email || '-'}</TableCell>
                   <TableCell>{renderStars(transportadora.rating)}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      Ver Detalhes
-                    </Button>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleEditTransportadora(transportadora)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteClick(transportadora)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Deletar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -139,6 +206,39 @@ export default function TransportadorasPage() {
         Mostrando {filteredTransportadoras.length} de {transportadoras.length}{' '}
         transportadoras
       </div>
+
+      {/* Dialog de Criação/Edição */}
+      <TransportadoraFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        transportadora={selectedTransportadora}
+        mode={dialogMode}
+      />
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar a transportadora{' '}
+              <span className="font-semibold">{transportadoraToDelete?.razao_social}</span>? Esta
+              ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
