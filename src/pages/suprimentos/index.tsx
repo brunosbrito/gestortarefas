@@ -21,12 +21,16 @@ const OneDrive = lazy(() => import('./onedrive'));
 const AIChat = lazy(() => import('./ai-chat'));
 
 // Logística
+const LogisticaDashboard = lazy(() => import('./logistica/Dashboard'));
 const Veiculos = lazy(() => import('./logistica/veiculos'));
 const Motoristas = lazy(() => import('./logistica/motoristas'));
 const Transportadoras = lazy(() => import('./logistica/transportadoras'));
 const TiposManutencao = lazy(() => import('./logistica/tipos-manutencao'));
 const FornecedoresServicos = lazy(() => import('./logistica/fornecedores-servicos'));
 const Rotas = lazy(() => import('./logistica/rotas'));
+const ChecklistsSaida = lazy(() => import('./logistica/checklists-saida'));
+const ChecklistsRetorno = lazy(() => import('./logistica/checklists-retorno'));
+const Manutencoes = lazy(() => import('./logistica/manutencoes'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -72,12 +76,16 @@ const Suprimentos = () => {
 
           {/* Logística */}
           <Route path="logistica">
+            <Route index element={<LogisticaDashboard />} />
             <Route path="veiculos" element={<Veiculos />} />
             <Route path="motoristas" element={<Motoristas />} />
             <Route path="transportadoras" element={<Transportadoras />} />
             <Route path="tipos-manutencao" element={<TiposManutencao />} />
             <Route path="fornecedores-servicos" element={<FornecedoresServicos />} />
             <Route path="rotas" element={<Rotas />} />
+            <Route path="checklists-saida" element={<ChecklistsSaida />} />
+            <Route path="checklists-retorno" element={<ChecklistsRetorno />} />
+            <Route path="manutencoes" element={<Manutencoes />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/suprimentos" replace />} />
