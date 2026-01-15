@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC 1: QR Code Scanner - GML Logística</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #1e40af;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .scanner-container {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    #video {
+      width: 100%;
+      max-width: 640px;
+      height: 480px;
+      background: #000;
+      border-radius: 8px;
+      display: none;
+    }
+
+    #canvas {
+      display: none;
+    }
+
+    .scan-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 250px;
+      height: 250px;
+      border: 3px solid #22c55e;
+      border-radius: 12px;
+      pointer-events: none;
+      display: none;
+    }
+
+    .scan-overlay::before,
+    .scan-overlay::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #22c55e;
+    }
+
+    .scan-overlay::before {
+      top: -3px;
+      left: -3px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .scan-overlay::after {
+      bottom: -3px;
+      right: -3px;
+      border-left: none;
+      border-top: none;
+    }
+
+    button {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #1e3a8a;
+    }
+
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    button.danger:hover {
+      background: #b91c1c;
+    }
+
+    button.success {
+      background: #22c55e;
+    }
+
+    button.success:hover {
+      background: #16a34a;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .result.success {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .result.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .result.visible {
+      display: block;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .qr-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .qr-card canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .qr-card h3 {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stat-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #1e40af;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    tr:hover {
+      background: #f9fafb;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge.success {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .badge.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .info-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #92400e;
+    }
+
+    .info-box p {
+      color: #78350f;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #374151;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 POC 1: QR Code Scanner</h1>
+    <p class="subtitle">Teste de viabilidade de leitura de QR Code via câmera para GML Logística</p>
+
+    <!-- Seção 1: Informações do Teste -->
+    <div class="section">
+      <h2>📋 Informações do Dispositivo</h2>
+      <div class="info-box">
+        <strong>Instruções:</strong>
+        <p>Este POC testa se a leitura de QR Code funciona em diferentes dispositivos e condições. Teste em diversos ambientes: luz solar direta, sombra, luz artificial e com QR Codes sujos/danificados.</p>
+      </div>
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="deviceName">-</div>
+          <div class="stat-label">Dispositivo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="browserName">-</div>
+          <div class="stat-label">Navegador</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="cameraResolution">-</div>
+          <div class="stat-label">Resolução Câmera</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção 2: Scanner de QR Code -->
+    <div class="section">
+      <h2>📷 Scanner de QR Code</h2>
+      <div class="info-box">
+        <strong>Como testar:</strong>
+        <p>1. Clique em "Iniciar Scanner"<br>2. Permita acesso à câmera<br>3. Aponte para um dos QR Codes gerados abaixo<br>4. Observe o tempo de leitura e taxa de sucesso</p>
+      </div>
+      <div>
+        <button id="startBtn" onclick="startScanner()">Iniciar Scanner</button>
+        <button id="stopBtn" onclick="stopScanner()" style="display:none;" class="danger">Parar Scanner</button>
+        <button onclick="registrarTeste()" class="success">Registrar Resultado</button>
+      </div>
+      <div class="scanner-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="scan-overlay" id="overlay"></div>
+      </div>
+      <canvas id="canvas" hidden></canvas>
+      <div class="result" id="result"></div>
+      <div class="stats" style="margin-top: 20px;">
+        <div class="stat-card">
+          <div class="stat-value" id="successCount">0</div>
+          <div class="stat-label">Leituras Bem-Sucedidas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="avgTime">-</div>
+          <div class="stat-label">Tempo Médio (ms)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="successRate">-</div>
+          <div class="stat-label">Taxa de Sucesso</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção 3: Geração de QR Codes de Teste -->
+    <div class="section">
+      <h2>🔲 QR Codes de Teste</h2>
+      <div class="info-box">
+        <strong>QR Codes de Veículos GML:</strong>
+        <p>Use estes QR Codes para testar a leitura. Imprima em diferentes tamanhos e teste em várias condições de iluminação.</p>
+      </div>
+      <div class="qr-grid" id="qrGrid"></div>
+    </div>
+
+    <!-- Seção 4: Registro de Testes -->
+    <div class="section">
+      <h2>📊 Resultados dos Testes</h2>
+      <div>
+        <label>Condição de Teste:</label>
+        <input type="text" id="condicao" placeholder="Ex: Luz solar direta, QR Code limpo">
+        <label>Observações:</label>
+        <input type="text" id="observacoes" placeholder="Ex: Demorou 3s, precisou ajustar distância">
+      </div>
+      <table id="testTable">
+        <thead>
+          <tr>
+            <th>Horário</th>
+            <th>Dispositivo</th>
+            <th>Condição</th>
+            <th>Tempo (ms)</th>
+            <th>Status</th>
+            <th>Observações</th>
+          </tr>
+        </thead>
+        <tbody id="testTableBody">
+          <tr>
+            <td colspan="6" style="text-align: center; color: #9ca3af;">Nenhum teste registrado ainda</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let video;
+    let canvas;
+    let context;
+    let scanning = false;
+    let startTime = null;
+    let scanTimes = [];
+    let successCount = 0;
+    let totalAttempts = 0;
+    let lastScannedData = null;
+    let testResults = [];
+
+    // Detectar informações do dispositivo
+    window.onload = function() {
+      detectDevice();
+      generateTestQRCodes();
+      loadTestResults();
+    };
+
+    function detectDevice() {
+      const userAgent = navigator.userAgent;
+      let deviceName = 'Desktop';
+      let browserName = 'Unknown';
+
+      // Detectar dispositivo
+      if (/iPhone/.test(userAgent)) deviceName = 'iPhone';
+      else if (/iPad/.test(userAgent)) deviceName = 'iPad';
+      else if (/Android/.test(userAgent)) deviceName = 'Android';
+      else if (/Windows/.test(userAgent)) deviceName = 'Windows PC';
+      else if (/Mac/.test(userAgent)) deviceName = 'Mac';
+
+      // Detectar navegador
+      if (/Chrome/.test(userAgent) && !/Edge/.test(userAgent)) browserName = 'Chrome';
+      else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) browserName = 'Safari';
+      else if (/Firefox/.test(userAgent)) browserName = 'Firefox';
+      else if (/Edge/.test(userAgent)) browserName = 'Edge';
+
+      document.getElementById('deviceName').textContent = deviceName;
+      document.getElementById('browserName').textContent = browserName;
+    }
+
+    function generateTestQRCodes() {
+      const vehicles = [
+        { placa: 'ABC-1234', tipo: 'Carro', id: 1 },
+        { placa: 'XYZ-5678', tipo: 'Caminhão', id: 2 },
+        { placa: 'DEF-9012', tipo: 'Empilhadeira', id: 3 },
+        { placa: 'GHI-3456', tipo: 'Carro', id: 4 }
+      ];
+
+      const grid = document.getElementById('qrGrid');
+      grid.innerHTML = '';
+
+      vehicles.forEach(vehicle => {
+        const data = JSON.stringify({
+          type: 'vehicle',
+          id: vehicle.id,
+          placa: vehicle.placa,
+          timestamp: Date.now()
+        });
+
+        const card = document.createElement('div');
+        card.className = 'qr-card';
+
+        const qrCanvas = document.createElement('canvas');
+        QRCode.toCanvas(qrCanvas, data, { width: 200 }, function (error) {
+          if (error) console.error(error);
+        });
+
+        const title = document.createElement('h3');
+        title.textContent = `${vehicle.tipo}: ${vehicle.placa}`;
+
+        card.appendChild(qrCanvas);
+        card.appendChild(title);
+        grid.appendChild(card);
+      });
+    }
+
+    async function startScanner() {
+      video = document.getElementById('video');
+      canvas = document.getElementById('canvas');
+      context = canvas.getContext('2d');
+
+      const overlay = document.getElementById('overlay');
+      const result = document.getElementById('result');
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+
+        video.srcObject = stream;
+        video.style.display = 'block';
+        overlay.style.display = 'block';
+        video.setAttribute('playsinline', true);
+        video.play();
+
+        // Atualizar resolução da câmera
+        const track = stream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        document.getElementById('cameraResolution').textContent =
+          `${settings.width}x${settings.height}`;
+
+        scanning = true;
+        startTime = Date.now();
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'inline-block';
+
+        result.className = 'result';
+        result.innerHTML = '<strong>🔍 Scanner ativo...</strong><p>Aponte a câmera para um QR Code</p>';
+        result.classList.add('visible');
+
+        requestAnimationFrame(tick);
+      } catch (err) {
+        console.error('Erro ao acessar câmera:', err);
+        result.className = 'result error visible';
+        result.innerHTML = `<strong>❌ Erro ao acessar câmera</strong><p>${err.message}</p>`;
+      }
+    }
+
+    function tick() {
+      if (!scanning) return;
+
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'dontInvert'
+        });
+
+        if (code) {
+          const scanTime = Date.now() - startTime;
+          handleQRCodeDetected(code.data, scanTime);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    function handleQRCodeDetected(data, scanTime) {
+      // Evitar múltiplas leituras do mesmo código
+      if (data === lastScannedData && scanTime < 2000) {
+        return;
+      }
+
+      lastScannedData = data;
+      successCount++;
+      totalAttempts++;
+      scanTimes.push(scanTime);
+
+      // Atualizar estatísticas
+      updateStats();
+
+      // Exibir resultado
+      const result = document.getElementById('result');
+      result.className = 'result success visible';
+
+      try {
+        const parsed = JSON.parse(data);
+        result.innerHTML = `
+          <strong>✅ QR Code Lido com Sucesso!</strong>
+          <p><strong>Veículo:</strong> ${parsed.placa || 'N/A'}</p>
+          <p><strong>Tipo:</strong> ${parsed.type || 'N/A'}</p>
+          <p><strong>ID:</strong> ${parsed.id || 'N/A'}</p>
+          <p><strong>Tempo de leitura:</strong> ${scanTime}ms</p>
+        `;
+      } catch (e) {
+        result.innerHTML = `
+          <strong>✅ QR Code Lido!</strong>
+          <p><strong>Dados:</strong> ${data}</p>
+          <p><strong>Tempo de leitura:</strong> ${scanTime}ms</p>
+        `;
+      }
+
+      // Resetar timer para próxima leitura
+      setTimeout(() => {
+        startTime = Date.now();
+        lastScannedData = null;
+      }, 2000);
+    }
+
+    function updateStats() {
+      document.getElementById('successCount').textContent = successCount;
+
+      if (scanTimes.length > 0) {
+        const avgTime = scanTimes.reduce((a, b) => a + b, 0) / scanTimes.length;
+        document.getElementById('avgTime').textContent = Math.round(avgTime) + 'ms';
+      }
+
+      if (totalAttempts > 0) {
+        const rate = (successCount / totalAttempts * 100).toFixed(1);
+        document.getElementById('successRate').textContent = rate + '%';
+      }
+    }
+
+    function stopScanner() {
+      scanning = false;
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+      video.srcObject = null;
+      video.style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('startBtn').style.display = 'inline-block';
+      document.getElementById('stopBtn').style.display = 'none';
+
+      const result = document.getElementById('result');
+      result.className = 'result visible';
+      result.innerHTML = '<strong>⏸️ Scanner parado</strong><p>Clique em "Iniciar Scanner" para recomeçar</p>';
+    }
+
+    function registrarTeste() {
+      const condicao = document.getElementById('condicao').value || 'Não especificada';
+      const observacoes = document.getElementById('observacoes').value || '-';
+      const deviceName = document.getElementById('deviceName').textContent;
+
+      const avgTime = scanTimes.length > 0
+        ? Math.round(scanTimes.reduce((a, b) => a + b, 0) / scanTimes.length)
+        : 0;
+
+      const teste = {
+        timestamp: new Date().toLocaleString('pt-BR'),
+        device: deviceName,
+        condicao: condicao,
+        tempo: avgTime,
+        sucesso: successCount > 0,
+        observacoes: observacoes
+      };
+
+      testResults.push(teste);
+      saveTestResults();
+      renderTestTable();
+
+      // Limpar campos
+      document.getElementById('condicao').value = '';
+      document.getElementById('observacoes').value = '';
+
+      alert('✅ Teste registrado com sucesso!');
+    }
+
+    function renderTestTable() {
+      const tbody = document.getElementById('testTableBody');
+
+      if (testResults.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #9ca3af;">Nenhum teste registrado ainda</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = testResults.map(test => `
+        <tr>
+          <td>${test.timestamp}</td>
+          <td>${test.device}</td>
+          <td>${test.condicao}</td>
+          <td>${test.tempo}ms</td>
+          <td><span class="badge ${test.sucesso ? 'success' : 'error'}">${test.sucesso ? 'Sucesso' : 'Falha'}</span></td>
+          <td>${test.observacoes}</td>
+        </tr>
+      `).join('');
+    }
+
+    function saveTestResults() {
+      localStorage.setItem('qrcode_poc_results', JSON.stringify(testResults));
+    }
+
+    function loadTestResults() {
+      const saved = localStorage.getItem('qrcode_poc_results');
+      if (saved) {
+        testResults = JSON.parse(saved);
+        renderTestTable();
+
+        // Recalcular estatísticas dos testes salvos
+        testResults.forEach(test => {
+          if (test.sucesso) successCount++;
+          if (test.tempo > 0) scanTimes.push(test.tempo);
+          totalAttempts++;
+        });
+        updateStats();
+      }
+    }
+  </script>
+</body>
+</html>

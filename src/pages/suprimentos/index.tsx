@@ -20,6 +20,11 @@ const Contas = lazy(() => import('./contas'));
 const OneDrive = lazy(() => import('./onedrive'));
 const AIChat = lazy(() => import('./ai-chat'));
 
+// Logística
+const Veiculos = lazy(() => import('./logistica/veiculos'));
+const Motoristas = lazy(() => import('./logistica/motoristas'));
+const Transportadoras = lazy(() => import('./logistica/transportadoras'));
+
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="text-center space-y-4">
@@ -61,6 +66,13 @@ const Suprimentos = () => {
           <Route path="contas" element={<Contas />} />
           <Route path="onedrive" element={<OneDrive />} />
           <Route path="ai-chat" element={<AIChat />} />
+
+          {/* Logística */}
+          <Route path="logistica">
+            <Route path="veiculos" element={<Veiculos />} />
+            <Route path="motoristas" element={<Motoristas />} />
+            <Route path="transportadoras" element={<Transportadoras />} />
+          </Route>
 
           <Route path="*" element={<Navigate to="/suprimentos" replace />} />
           </Routes>
