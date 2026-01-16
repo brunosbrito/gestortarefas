@@ -43,6 +43,8 @@ import {
   Cog,
   Cloud,
   Wallet,
+  ArrowRightLeft,
+  PackageSearch,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -232,6 +234,27 @@ export const navItems: MenuItem[] = [
             icon: FileText,
             label: 'Notas Fiscais',
             path: '/suprimentos/notas-fiscais',
+          },
+        ],
+      },
+      {
+        icon: Warehouse,
+        label: 'Almoxarifado',
+        subItems: [
+          {
+            icon: Package,
+            label: 'Items',
+            path: '/suprimentos/almoxarifado/items',
+          },
+          {
+            icon: ArrowRightLeft,
+            label: 'Movimentações',
+            path: '/suprimentos/almoxarifado/movimentacoes',
+          },
+          {
+            icon: PackageSearch,
+            label: 'Inventários',
+            path: '/suprimentos/almoxarifado/inventarios',
           },
         ],
       },

@@ -39,6 +39,8 @@ const Manutencoes = lazy(() => import('./logistica/manutencoes'));
 
 // Almoxarifado
 const Items = lazy(() => import('./almoxarifado/items'));
+const Movimentacoes = lazy(() => import('./almoxarifado/movimentacoes'));
+const Inventarios = lazy(() => import('./almoxarifado/inventarios'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -106,6 +108,8 @@ const Suprimentos = () => {
           {/* Almoxarifado */}
           <Route path="almoxarifado">
             <Route path="items" element={<Items />} />
+            <Route path="movimentacoes" element={<Movimentacoes />} />
+            <Route path="inventarios" element={<Inventarios />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/suprimentos" replace />} />
