@@ -153,19 +153,14 @@ export const navItems: MenuItem[] = [
         path: '/suprimentos',
       },
       {
-        icon: FileText,
-        label: 'Contratos',
-        path: '/suprimentos/contratos',
-      },
-      {
-        icon: FileText,
-        label: 'Notas Fiscais',
-        path: '/suprimentos/notas-fiscais',
-      },
-      {
         icon: DollarSign,
         label: 'Custos',
         subItems: [
+          {
+            icon: FileText,
+            label: 'Contratos',
+            path: '/suprimentos/contratos',
+          },
           {
             icon: TrendingUp,
             label: 'Orçado vs Realizado',
@@ -226,6 +221,11 @@ export const navItems: MenuItem[] = [
             icon: ShoppingBag,
             label: 'Ordens de Compra',
             path: '/suprimentos/compras/ordens-compra',
+          },
+          {
+            icon: FileText,
+            label: 'Notas Fiscais',
+            path: '/suprimentos/notas-fiscais',
           },
         ],
       },
