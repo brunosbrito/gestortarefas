@@ -40,6 +40,8 @@ import {
   FileSignature,
   CheckSquare,
   Cog,
+  Cloud,
+  Wallet,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -161,14 +163,50 @@ export const navItems: MenuItem[] = [
         path: '/suprimentos/notas-fiscais',
       },
       {
-        icon: TrendingUp,
-        label: 'Orçado vs Realizado',
-        path: '/suprimentos/orcado-realizado',
-      },
-      {
         icon: DollarSign,
-        label: 'Centros de Custo',
-        path: '/suprimentos/centros-custo',
+        label: 'Custos',
+        subItems: [
+          {
+            icon: TrendingUp,
+            label: 'Orçado vs Realizado',
+            path: '/suprimentos/orcado-realizado',
+          },
+          {
+            icon: DollarSign,
+            label: 'Centros de Custo',
+            path: '/suprimentos/centros-custo',
+          },
+          {
+            icon: Wallet,
+            label: 'Contas',
+            path: '/suprimentos/contas',
+          },
+          {
+            icon: Target,
+            label: 'Metas',
+            path: '/suprimentos/metas',
+          },
+          {
+            icon: FileText,
+            label: 'Relatórios',
+            path: '/suprimentos/relatorios',
+          },
+          {
+            icon: Cloud,
+            label: 'OneDrive',
+            path: '/suprimentos/onedrive',
+          },
+          {
+            icon: BarChart3,
+            label: 'Analytics',
+            path: '/suprimentos/analytics',
+          },
+          {
+            icon: MessageSquare,
+            label: 'AI Assistant',
+            path: '/suprimentos/ai-chat',
+          },
+        ],
       },
       {
         icon: ShoppingCart,
@@ -246,16 +284,6 @@ export const navItems: MenuItem[] = [
             path: '/suprimentos/logistica/manutencoes',
           },
         ],
-      },
-      {
-        icon: BarChart3,
-        label: 'Analytics',
-        path: '/suprimentos/analytics',
-      },
-      {
-        icon: MessageSquare,
-        label: 'AI Assistant',
-        path: '/suprimentos/ai-chat',
       },
     ],
   },
