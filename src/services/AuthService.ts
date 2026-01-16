@@ -1,12 +1,9 @@
-import API_URL from '@/config';
+import api from '@/lib/axios';
 import { User } from '@/interfaces/UserInterface';
-import axios from 'axios';
-
-const token = localStorage.getItem('authToken');
 
 export const login = async (email: string, password: string) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, {
+    const response = await api.post('/auth/login', {
       email,
       password,
     });
@@ -19,21 +16,12 @@ export const login = async (email: string, password: string) => {
 };
 
 export const createUser = async (data: Partial<User>) => {
-  await axios.post(
-    `${API_URL}/auth/register`,
-    {
-      email: data.email,
-      password: data.password,
-      username: data.username,
-      role: data.role,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  await api.post('/auth/register', {
+    email: data.email,
+    password: data.password,
+    username: data.username,
+    role: data.role,
+  });
 };
 
 export const getStoredToken = () => {

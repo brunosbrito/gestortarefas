@@ -12,7 +12,6 @@ const NotasFiscais = lazy(() => import('./notas-fiscais'));
 const ImportarNF = lazy(() => import('./notas-fiscais/importar'));
 const OrcadoRealizado = lazy(() => import('./orcado-realizado'));
 const CentrosCusto = lazy(() => import('./centros-custo'));
-const Compras = lazy(() => import('./compras'));
 const Relatorios = lazy(() => import('./relatorios'));
 const Analytics = lazy(() => import('./analytics'));
 const Metas = lazy(() => import('./metas'));
@@ -71,7 +70,6 @@ const Suprimentos = () => {
           {/* Outras rotas */}
           <Route path="orcado-realizado" element={<OrcadoRealizado />} />
           <Route path="centros-custo" element={<CentrosCusto />} />
-          <Route path="compras" element={<Compras />} />
           <Route path="relatorios" element={<Relatorios />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="metas" element={<Metas />} />
