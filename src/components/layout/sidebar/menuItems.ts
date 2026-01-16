@@ -31,6 +31,15 @@ import {
   ClipboardPen,
   Tags,
   ShoppingBag,
+  Truck,
+  UserCircle,
+  Warehouse,
+  Wrench,
+  Store,
+  MapPin,
+  FileSignature,
+  CheckSquare,
+  Cog,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -162,19 +171,81 @@ export const navItems: MenuItem[] = [
         path: '/suprimentos/centros-custo',
       },
       {
-        icon: ClipboardPen,
-        label: 'Requisições de Compra',
-        path: '/suprimentos/compras/requisicoes',
+        icon: ShoppingCart,
+        label: 'Compras',
+        subItems: [
+          {
+            icon: ClipboardPen,
+            label: 'Requisições',
+            path: '/suprimentos/compras/requisicoes',
+          },
+          {
+            icon: Tags,
+            label: 'Cotações',
+            path: '/suprimentos/compras/cotacoes',
+          },
+          {
+            icon: ShoppingBag,
+            label: 'Ordens de Compra',
+            path: '/suprimentos/compras/ordens-compra',
+          },
+        ],
       },
       {
-        icon: Tags,
-        label: 'Cotações',
-        path: '/suprimentos/compras/cotacoes',
-      },
-      {
-        icon: ShoppingBag,
-        label: 'Ordens de Compra',
-        path: '/suprimentos/compras/ordens-compra',
+        icon: Truck,
+        label: 'Logística',
+        subItems: [
+          {
+            icon: LayoutDashboard,
+            label: 'Dashboard',
+            path: '/suprimentos/logistica',
+          },
+          {
+            icon: Truck,
+            label: 'Veículos',
+            path: '/suprimentos/logistica/veiculos',
+          },
+          {
+            icon: UserCircle,
+            label: 'Motoristas',
+            path: '/suprimentos/logistica/motoristas',
+          },
+          {
+            icon: Warehouse,
+            label: 'Transportadoras',
+            path: '/suprimentos/logistica/transportadoras',
+          },
+          {
+            icon: Wrench,
+            label: 'Tipos de Manutenção',
+            path: '/suprimentos/logistica/tipos-manutencao',
+          },
+          {
+            icon: Store,
+            label: 'Fornecedores de Serviços',
+            path: '/suprimentos/logistica/fornecedores-servicos',
+          },
+          {
+            icon: MapPin,
+            label: 'Rotas',
+            path: '/suprimentos/logistica/rotas',
+          },
+          {
+            icon: FileSignature,
+            label: 'Checklists Saída',
+            path: '/suprimentos/logistica/checklists-saida',
+          },
+          {
+            icon: CheckSquare,
+            label: 'Checklists Retorno',
+            path: '/suprimentos/logistica/checklists-retorno',
+          },
+          {
+            icon: Cog,
+            label: 'Manutenções',
+            path: '/suprimentos/logistica/manutencoes',
+          },
+        ],
       },
       {
         icon: BarChart3,
