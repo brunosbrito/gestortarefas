@@ -10,6 +10,7 @@ import {
   cotacaoStatusLabels,
   cotacaoStatusVariants,
 } from '@/interfaces/suprimentos/compras/CotacaoInterface';
+import { CotacaoFormDialog } from './components/CotacaoFormDialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -73,6 +74,13 @@ export default function CotacoesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cotacaoToDelete, setCotacaoToDelete] = useState<Cotacao | null>(null);
 
+  // Estado para formulário
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [cotacaoToEdit, setCotacaoToEdit] = useState<Cotacao | null>(null);
+
+  // User ID (em produção, viria do auth context)
+  const userId = 1;
+
   const filteredCotacoes = useMemo(() => {
     return cotacoes.filter((c) => {
       const matchesSearch =
@@ -106,6 +114,16 @@ export default function CotacoesPage() {
 
   const handleFinalizar = (cotacao: Cotacao) => {
     finalizarMutation.mutate(cotacao.id);
+  };
+
+  const handleCreateClick = () => {
+    setCotacaoToEdit(null);
+    setFormDialogOpen(true);
+  };
+
+  const handleEditClick = (cotacao: Cotacao) => {
+    setCotacaoToEdit(cotacao);
+    setFormDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -162,7 +180,7 @@ export default function CotacoesPage() {
           <h1 className="text-3xl font-bold">Cotações</h1>
           <p className="text-muted-foreground">Gerencie cotações e análise de propostas</p>
         </div>
-        <Button>
+        <Button onClick={handleCreateClick}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Cotação
         </Button>
@@ -316,7 +334,7 @@ export default function CotacoesPage() {
                             </>
                           )}
 
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditClick(cotacao)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
@@ -367,6 +385,14 @@ export default function CotacoesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog de Formulário de Cotação */}
+      <CotacaoFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        cotacao={cotacaoToEdit}
+        userId={userId}
+      />
     </div>
   );
 }

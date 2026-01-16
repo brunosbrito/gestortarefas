@@ -10,6 +10,7 @@ import {
   ordemCompraStatusLabels,
   ordemCompraStatusVariants,
 } from '@/interfaces/suprimentos/compras/OrdemCompraInterface';
+import { OrdemCompraFormDialog } from './components/OrdemCompraFormDialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -73,6 +74,13 @@ export default function OrdensCompraPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ordemToDelete, setOrdemToDelete] = useState<OrdemCompra | null>(null);
 
+  // Estado para formulário
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [ordemToEdit, setOrdemToEdit] = useState<OrdemCompra | null>(null);
+
+  // User ID (em produção, viria do auth context)
+  const userId = 1;
+
   const filteredOrdens = useMemo(() => {
     return ordens.filter((o) => {
       const matchesSearch =
@@ -104,6 +112,16 @@ export default function OrdensCompraPage() {
 
   const handleConfirmar = (ordem: OrdemCompra) => {
     confirmarMutation.mutate(ordem.id);
+  };
+
+  const handleCreateClick = () => {
+    setOrdemToEdit(null);
+    setFormDialogOpen(true);
+  };
+
+  const handleEditClick = (ordem: OrdemCompra) => {
+    setOrdemToEdit(ordem);
+    setFormDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -158,7 +176,7 @@ export default function OrdensCompraPage() {
           <h1 className="text-3xl font-bold">Ordens de Compra</h1>
           <p className="text-muted-foreground">Gerencie ordens de compra e recebimentos</p>
         </div>
-        <Button>
+        <Button onClick={handleCreateClick}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Ordem de Compra
         </Button>
@@ -315,7 +333,7 @@ export default function OrdensCompraPage() {
                           Baixar PDF
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditClick(ordem)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
@@ -365,6 +383,14 @@ export default function OrdensCompraPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog de Formulário de Ordem de Compra */}
+      <OrdemCompraFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        ordem={ordemToEdit}
+        userId={userId}
+      />
     </div>
   );
 }
