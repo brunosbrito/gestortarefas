@@ -37,6 +37,9 @@ const ChecklistsSaida = lazy(() => import('./logistica/checklists-saida'));
 const ChecklistsRetorno = lazy(() => import('./logistica/checklists-retorno'));
 const Manutencoes = lazy(() => import('./logistica/manutencoes'));
 
+// Almoxarifado
+const Items = lazy(() => import('./almoxarifado/items'));
+
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="text-center space-y-4">
@@ -98,6 +101,11 @@ const Suprimentos = () => {
             <Route path="checklists-saida" element={<ChecklistsSaida />} />
             <Route path="checklists-retorno" element={<ChecklistsRetorno />} />
             <Route path="manutencoes" element={<Manutencoes />} />
+          </Route>
+
+          {/* Almoxarifado */}
+          <Route path="almoxarifado">
+            <Route path="items" element={<Items />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/suprimentos" replace />} />
