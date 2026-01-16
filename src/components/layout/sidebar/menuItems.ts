@@ -28,6 +28,9 @@ import {
   TrendingUp,
   DollarSign,
   MessageSquare,
+  ClipboardPen,
+  Tags,
+  ShoppingBag,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -159,9 +162,19 @@ export const navItems: MenuItem[] = [
         path: '/suprimentos/centros-custo',
       },
       {
-        icon: ShoppingCart,
-        label: 'Compras',
-        path: '/suprimentos/compras',
+        icon: ClipboardPen,
+        label: 'Requisições de Compra',
+        path: '/suprimentos/compras/requisicoes',
+      },
+      {
+        icon: Tags,
+        label: 'Cotações',
+        path: '/suprimentos/compras/cotacoes',
+      },
+      {
+        icon: ShoppingBag,
+        label: 'Ordens de Compra',
+        path: '/suprimentos/compras/ordens-compra',
       },
       {
         icon: BarChart3,
