@@ -390,7 +390,7 @@ export default function CotacoesPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredCotacoes.length} de {cotacoes.length} cotações
+        Mostrando {sortedData.length} de {cotacoes.length} cotações
       </div>
 
       {/* Dialog de Confirmação de Exclusão */}

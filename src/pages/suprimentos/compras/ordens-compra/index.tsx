@@ -388,7 +388,7 @@ export default function OrdensCompraPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredOrdens.length} de {ordens.length} ordens de compra
+        Mostrando {sortedData.length} de {ordens.length} ordens de compra
       </div>
 
       {/* Dialog de Confirmação de Exclusão */}

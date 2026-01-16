@@ -244,7 +244,7 @@ export default function VeiculosPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredVehicles.length} de {vehicles.length} veículos
+        Mostrando {sortedData.length} de {vehicles.length} veículos
       </div>
 
       {/* Dialog de Criação/Edição */}
