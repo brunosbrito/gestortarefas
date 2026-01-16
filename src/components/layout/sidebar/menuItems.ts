@@ -34,6 +34,7 @@ import {
   Truck,
   UserCircle,
   Warehouse,
+  Building,
   Wrench,
   Store,
   MapPin,
@@ -207,6 +208,11 @@ export const navItems: MenuItem[] = [
         icon: ShoppingCart,
         label: 'Compras',
         subItems: [
+          {
+            icon: Building,
+            label: 'Fornecedores',
+            path: '/suprimentos/compras/fornecedores',
+          },
           {
             icon: ClipboardPen,
             label: 'Requisições',
