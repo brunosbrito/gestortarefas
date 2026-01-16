@@ -33,6 +33,10 @@ const Login = () => {
         return;
       }
 
+      // Limpar tokens antigos de ambos os storages antes de salvar o novo
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
+
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('authToken', response.data.access_token);

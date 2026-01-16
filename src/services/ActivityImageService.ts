@@ -1,13 +1,12 @@
-import API_URL from '@/config';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 export const uploadActivityImage = async (
   activityId: number,
   imageData: any
 ) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/activity-images/upload/${activityId}`,
+    const response = await api.post(
+      `/activity-images/upload/${activityId}`,
       imageData
     );
 

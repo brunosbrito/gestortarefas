@@ -1,7 +1,8 @@
 // services/rncImageService.ts
-import API_URL from '@/config';
+import api from '@/lib/axios';
 
-const URL = `${API_URL}/rnc-images`;
+const URL = '/rnc-images';
+
 export async function uploadRncImage({
   file,
   nonConformityId,
@@ -14,38 +15,18 @@ export async function uploadRncImage({
   const formData = new FormData();
   formData.append('file', file);
   formData.append('nonConformityId', nonConformityId);
-  formData.append('description', description);
+  formData.append('description', description || '');
 
-  const response = await fetch(`${URL}`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error('Erro ao enviar imagem');
-  }
-
-  return response.json();
+  const response = await api.post(URL, formData);
+  return response.data;
 }
 
 export async function listImagesByRnc(nonConformityId: string) {
-  const response = await fetch(`${URL}/${nonConformityId}`);
-
-  if (!response.ok) {
-    throw new Error('Erro ao buscar imagens');
-  }
-
-  return response.json();
+  const response = await api.get(`${URL}/${nonConformityId}`);
+  return response.data;
 }
 
 export async function deleteRncImage(id: string) {
-  const response = await fetch(`${URL}/${id}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) {
-    throw new Error('Erro ao deletar imagem');
-  }
-
-  return response.json();
+  const response = await api.delete(`${URL}/${id}`);
+  return response.data;
 }

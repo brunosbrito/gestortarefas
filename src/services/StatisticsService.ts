@@ -1,6 +1,4 @@
-
-import API_URL from '@/config';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 const parseTimeToHours = (timeString: string | null | undefined): number => {
   if (!timeString || typeof timeString !== 'string') {
@@ -20,7 +18,7 @@ const parseTimeToHours = (timeString: string | null | undefined): number => {
 
 export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: number | null) => {
   try {
-    const response = await axios.get(`${API_URL}/activities`);
+    const response = await api.get('/activities');
     let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Aplicar filtros antes da agregação
@@ -99,7 +97,7 @@ export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: num
 
 export const dataProcess = async (obraId?: number | null, serviceOrderId?: number | null) => {
   try {
-    const response = await axios.get(`${API_URL}/activities`);
+    const response = await api.get('/activities');
     let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Aplicar filtros antes da agregação
@@ -178,7 +176,7 @@ export const dataProcess = async (obraId?: number | null, serviceOrderId?: numbe
 
 export const dataCollaborators = async (obraId?: number | null, serviceOrderId?: number | null) => {
   try {
-    const response = await axios.get(`${API_URL}/activities`);
+    const response = await api.get('/activities');
     let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Aplicar filtros antes da agregação
