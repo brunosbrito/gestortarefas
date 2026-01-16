@@ -20,7 +20,8 @@
       "Bash(dir /s /b)",
       "Bash(findstr:*)",
       "Bash(git log:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(done)"
     ]
   }
 }

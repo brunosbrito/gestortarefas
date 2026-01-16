@@ -48,8 +48,11 @@ import {
   CheckCircle,
   DollarSign,
   Calendar,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSortableData } from '@/lib/table-utils';
 import {
   Select,
   SelectContent,
@@ -87,6 +90,31 @@ export default function ManutencoesPage() {
       return matchesSearch && matchesStatus;
     });
   }, [manutencoes, searchTerm, statusFilter]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<Manutencao>(filteredManutencoes);
+
+  const renderSortableHeader = (label: string, key: keyof Manutencao) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const handleCreateManutencao = () => {
     setDialogMode('create');
@@ -237,28 +265,32 @@ export default function ManutencoesPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px]">#</TableHead>
               <TableHead>Veículo</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Fornecedor</TableHead>
-              <TableHead>KM</TableHead>
+              {renderSortableHeader('KM', 'km_atual')}
               <TableHead>Data</TableHead>
-              <TableHead>Custo Total</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Custo Total', 'custo_total')}
+              {renderSortableHeader('Status', 'status')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredManutencoes.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   {searchTerm || statusFilter !== 'all'
                     ? 'Nenhuma manutenção encontrada'
                     : 'Nenhuma manutenção cadastrada'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredManutencoes.map((manutencao) => (
+              sortedData.map((manutencao, index) => (
                 <TableRow key={manutencao.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Car className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -355,7 +387,7 @@ export default function ManutencoesPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredManutencoes.length} de {manutencoes.length} manutenções
+        Mostrando {sortedData.length} de {manutencoes.length} manutenções
       </div>
 
       {/* Dialog de Criação/Edição */}

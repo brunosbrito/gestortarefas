@@ -31,8 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2, Clock, DollarSign } from 'lucide-react';
+import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2, Clock, DollarSign, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSortableData } from '@/lib/table-utils';
 import {
   Select,
   SelectContent,
@@ -61,6 +62,31 @@ export default function TiposManutencaoPage() {
       return matchesSearch && matchesCategoria;
     });
   }, [maintenanceTypes, searchTerm, categoriaFilter]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<MaintenanceType>(filteredMaintenanceTypes);
+
+  const renderSortableHeader = (label: string, key: keyof MaintenanceType) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const getCategoryBadge = (categoria: MaintenanceType['categoria']) => {
     const config = {
@@ -163,28 +189,32 @@ export default function TiposManutencaoPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Frequência</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Nome', 'nome')}
+              {renderSortableHeader('Categoria', 'categoria')}
+              {renderSortableHeader('Frequência', 'frequencia')}
               <TableHead>Periodicidade</TableHead>
               <TableHead>Custo Estimado</TableHead>
               <TableHead>Tempo Estimado</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Status', 'ativo')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredMaintenanceTypes.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   {searchTerm || categoriaFilter !== 'all'
                     ? 'Nenhum tipo de manutenção encontrado'
                     : 'Nenhum tipo de manutenção cadastrado'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredMaintenanceTypes.map((maintenanceType) => (
+              sortedData.map((maintenanceType, index) => (
                 <TableRow key={maintenanceType.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-semibold">{maintenanceType.nome}</p>
@@ -274,7 +304,7 @@ export default function TiposManutencaoPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredMaintenanceTypes.length} de {maintenanceTypes.length} tipos de manutenção
+        Mostrando {sortedData.length} de {maintenanceTypes.length} tipos de manutenção
       </div>
 
       {/* Dialog de Criação/Edição */}

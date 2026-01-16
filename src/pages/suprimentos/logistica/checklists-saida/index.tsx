@@ -31,8 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2, CheckCircle, Clock, Car, User } from 'lucide-react';
+import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2, CheckCircle, Clock, Car, User, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSortableData } from '@/lib/table-utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -57,6 +58,31 @@ export default function ChecklistsSaidaPage() {
       return matchesSearch;
     });
   }, [checklists, searchTerm]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<ChecklistSaida>(filteredChecklists);
+
+  const renderSortableHeader = (label: string, key: keyof ChecklistSaida) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const handleCreateChecklist = () => {
     setDialogMode('create');
@@ -142,26 +168,30 @@ export default function ChecklistsSaidaPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[60px]">#</TableHead>
               <TableHead>Veículo</TableHead>
               <TableHead>Motorista</TableHead>
-              <TableHead>KM Inicial</TableHead>
-              <TableHead>Combustível</TableHead>
+              {renderSortableHeader('KM Inicial', 'km_inicial')}
+              {renderSortableHeader('Combustível', 'combustivel_nivel')}
               <TableHead>Destino</TableHead>
-              <TableHead>Data/Hora Saída</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Data/Hora Saída', 'data_hora_saida')}
+              {renderSortableHeader('Status', 'viagem_finalizada')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredChecklists.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   {searchTerm ? 'Nenhum check-list encontrado' : 'Nenhum check-list cadastrado'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredChecklists.map((checklist) => (
+              sortedData.map((checklist, index) => (
                 <TableRow key={checklist.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Car className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -248,7 +278,7 @@ export default function ChecklistsSaidaPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredChecklists.length} de {checklists.length} check-lists
+        Mostrando {sortedData.length} de {checklists.length} check-lists
       </div>
 
       {/* Dialog de Criação/Edição */}

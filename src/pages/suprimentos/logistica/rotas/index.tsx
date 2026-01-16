@@ -31,8 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2, MapPin, Clock, DollarSign } from 'lucide-react';
+import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2, MapPin, Clock, DollarSign, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSortableData } from '@/lib/table-utils';
 
 export default function RotasPage() {
   const { data: routes = [], isLoading, isError } = useRoutes();
@@ -54,6 +55,31 @@ export default function RotasPage() {
       return matchesSearch;
     });
   }, [routes, searchTerm]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<Route>(filteredRoutes);
+
+  const renderSortableHeader = (label: string, key: keyof Route) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const handleCreateRoute = () => {
     setDialogMode('create');
@@ -131,26 +157,30 @@ export default function RotasPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Nome', 'nome')}
               <TableHead>Origem → Destino</TableHead>
-              <TableHead>Distância</TableHead>
-              <TableHead>Tempo Médio</TableHead>
-              <TableHead>Custo Estimado</TableHead>
-              <TableHead>Tipo Via</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Distância', 'km_previsto')}
+              {renderSortableHeader('Tempo Médio', 'tempo_medio')}
+              {renderSortableHeader('Custo Estimado', 'custo_estimado')}
+              {renderSortableHeader('Tipo Via', 'tipo_via')}
+              {renderSortableHeader('Status', 'ativo')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRoutes.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   {searchTerm ? 'Nenhuma rota encontrada' : 'Nenhuma rota cadastrada'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredRoutes.map((route) => (
+              sortedData.map((route, index) => (
                 <TableRow key={route.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-semibold">{route.nome}</p>
@@ -237,7 +267,7 @@ export default function RotasPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredRoutes.length} de {routes.length} rotas
+        Mostrando {sortedData.length} de {routes.length} rotas
       </div>
 
       {/* Dialog de Criação/Edição */}

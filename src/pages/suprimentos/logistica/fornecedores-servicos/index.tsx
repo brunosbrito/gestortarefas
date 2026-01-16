@@ -31,8 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, Star, MoreVertical, Pencil, Trash2, CheckCircle2 } from 'lucide-react';
+import { Loader2, Plus, Search, Star, MoreVertical, Pencil, Trash2, CheckCircle2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSortableData } from '@/lib/table-utils';
 import {
   Select,
   SelectContent,
@@ -63,6 +64,31 @@ export default function FornecedoresServicosPage() {
       return matchesSearch && matchesTipo;
     });
   }, [serviceProviders, searchTerm, tipoFilter]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<ServiceProvider>(filteredServiceProviders);
+
+  const renderSortableHeader = (label: string, key: keyof ServiceProvider) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const renderStars = (rating: number | undefined) => {
     if (!rating) return <span className="text-muted-foreground text-sm">Sem avaliação</span>;
@@ -176,27 +202,31 @@ export default function FornecedoresServicosPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Razão Social</TableHead>
-              <TableHead>Tipo</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Razão Social', 'razao_social')}
+              {renderSortableHeader('Tipo', 'tipo')}
               <TableHead>CNPJ/CPF</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>Avaliação</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Telefone', 'telefone')}
+              {renderSortableHeader('Avaliação', 'rating')}
+              {renderSortableHeader('Status', 'ativo')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredServiceProviders.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   {searchTerm || tipoFilter !== 'all'
                     ? 'Nenhum fornecedor encontrado'
                     : 'Nenhum fornecedor cadastrado'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredServiceProviders.map((serviceProvider) => (
+              sortedData.map((serviceProvider, index) => (
                 <TableRow key={serviceProvider.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-semibold">{serviceProvider.razao_social}</p>
@@ -262,7 +292,7 @@ export default function FornecedoresServicosPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredServiceProviders.length} de {serviceProviders.length} fornecedores
+        Mostrando {sortedData.length} de {serviceProviders.length} fornecedores
       </div>
 
       {/* Dialog de Criação/Edição */}
