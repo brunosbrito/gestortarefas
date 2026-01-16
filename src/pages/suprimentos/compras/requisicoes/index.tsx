@@ -14,6 +14,7 @@ import {
   requisicaoPrioridadeVariants,
 } from '@/interfaces/suprimentos/compras/RequisicaoInterface';
 import RequisicaoFormDialog from './components/RequisicaoFormDialog';
+import { useSortableData } from '@/lib/table-utils';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -61,6 +62,8 @@ import {
   XCircle,
   ShoppingCart,
   FileText,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -111,6 +114,31 @@ export default function RequisicoesPage() {
       return matchesSearch && matchesStatus;
     });
   }, [requisicoes, searchTerm, statusFilter]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<Requisicao>(filteredRequisicoes);
+
+  const renderSortableHeader = (label: string, key: keyof Requisicao) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const handleDeleteClick = (requisicao: Requisicao) => {
     setRequisicaoToDelete(requisicao);
@@ -282,29 +310,33 @@ export default function RequisicoesPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>Solicitante</TableHead>
-              <TableHead>Obra/Centro Custo</TableHead>
-              <TableHead>Data Requisição</TableHead>
-              <TableHead>Data Necessidade</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Número', 'numero')}
+              {renderSortableHeader('Solicitante', 'solicitante_nome')}
+              {renderSortableHeader('Obra/Centro Custo', 'obra_nome')}
+              {renderSortableHeader('Data Requisição', 'data_requisicao')}
+              {renderSortableHeader('Data Necessidade', 'data_necessidade')}
               <TableHead>Items</TableHead>
-              <TableHead>Prioridade</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Prioridade', 'prioridade')}
+              {renderSortableHeader('Status', 'status')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRequisicoes.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground">
+                <TableCell colSpan={10} className="text-center text-muted-foreground">
                   {searchTerm || statusFilter !== 'all'
                     ? 'Nenhuma requisição encontrada'
                     : 'Nenhuma requisição cadastrada'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredRequisicoes.map((requisicao) => (
+              sortedData.map((requisicao, index) => (
                 <TableRow key={requisicao.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -405,7 +437,7 @@ export default function RequisicoesPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredRequisicoes.length} de {requisicoes.length} requisições
+        Mostrando {sortedData.length} de {requisicoes.length} requisições
       </div>
 
       {/* Dialog de Confirmação de Exclusão */}

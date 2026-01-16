@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Loader2, Plus, Search, Star } from 'lucide-react';
+import { Loader2, Plus, Search, Star, ArrowUp, ArrowDown } from 'lucide-react';
 import { useFornecedores, useDeleteFornecedor } from '@/hooks/suprimentos/useFornecedores';
-import { FornecedorFilters, FornecedorTipo, FornecedorStatus } from '@/interfaces/suprimentos/FornecedorInterface';
+import { FornecedorFilters, FornecedorTipo, FornecedorStatus, Fornecedor } from '@/interfaces/suprimentos/FornecedorInterface';
+import { useSortableData } from '@/lib/table-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,7 @@ const FornecedoresPage = () => {
   const deleteMutation = useDeleteFornecedor();
 
   const fornecedores = data?.fornecedores || [];
+  const { sortedData, sortConfig, requestSort } = useSortableData<Fornecedor>(fornecedores);
 
   const handleDelete = async (id: number, razaoSocial: string) => {
     if (!confirm(`Deseja realmente excluir o fornecedor "${razaoSocial}"?`)) return;
@@ -90,6 +92,29 @@ const FornecedoresPage = () => {
         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
         <span className="text-sm font-medium">{rating.toFixed(1)}</span>
       </div>
+    );
+  };
+
+  const renderSortableHeader = (label: string, key: keyof Fornecedor) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
     );
   };
 
@@ -178,18 +203,22 @@ const FornecedoresPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Razão Social / Nome Fantasia</TableHead>
-                  <TableHead>CNPJ</TableHead>
-                  <TableHead>Tipo</TableHead>
+                  <TableHead className="w-[60px]">#</TableHead>
+                  {renderSortableHeader('Razão Social', 'razao_social')}
+                  {renderSortableHeader('CNPJ', 'cnpj')}
+                  {renderSortableHeader('Tipo', 'tipo')}
                   <TableHead>Contato</TableHead>
-                  <TableHead>Avaliação</TableHead>
-                  <TableHead>Status</TableHead>
+                  {renderSortableHeader('Avaliação', 'rating')}
+                  {renderSortableHeader('Status', 'status')}
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {fornecedores.map((fornecedor) => (
+                {sortedData.map((fornecedor, index) => (
                   <TableRow key={fornecedor.id}>
+                    <TableCell className="text-muted-foreground text-center font-medium">
+                      {index + 1}
+                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">{fornecedor.razao_social}</div>

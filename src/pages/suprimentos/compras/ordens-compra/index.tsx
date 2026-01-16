@@ -11,6 +11,7 @@ import {
   ordemCompraStatusVariants,
 } from '@/interfaces/suprimentos/compras/OrdemCompraInterface';
 import { OrdemCompraFormDialog } from './components/OrdemCompraFormDialog';
+import { useSortableData } from '@/lib/table-utils';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -50,6 +51,8 @@ import {
   FileText,
   Download,
   Package,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -93,6 +96,31 @@ export default function OrdensCompraPage() {
       return matchesSearch && matchesStatus;
     });
   }, [ordens, searchTerm, statusFilter]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<OrdemCompra>(filteredOrdens);
+
+  const renderSortableHeader = (label: string, key: keyof OrdemCompra) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const handleDeleteClick = (ordem: OrdemCompra) => {
     setOrdemToDelete(ordem);
@@ -243,28 +271,32 @@ export default function OrdensCompraPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>Fornecedor</TableHead>
-              <TableHead>Data Emissão</TableHead>
-              <TableHead>Previsão Entrega</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Número', 'numero')}
+              {renderSortableHeader('Fornecedor', 'fornecedor_nome')}
+              {renderSortableHeader('Data Emissão', 'data_emissao')}
+              {renderSortableHeader('Previsão Entrega', 'data_previsao_entrega')}
               <TableHead>Items</TableHead>
-              <TableHead>Valor Total</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Valor Total', 'valor_total')}
+              {renderSortableHeader('Status', 'status')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOrdens.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   {searchTerm || statusFilter !== 'all'
                     ? 'Nenhuma ordem encontrada'
                     : 'Nenhuma ordem de compra cadastrada'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredOrdens.map((ordem) => (
+              sortedData.map((ordem, index) => (
                 <TableRow key={ordem.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <FileText className="h-4 w-4 mr-2 text-muted-foreground" />

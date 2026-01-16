@@ -11,6 +11,7 @@ import {
   cotacaoStatusVariants,
 } from '@/interfaces/suprimentos/compras/CotacaoInterface';
 import { CotacaoFormDialog } from './components/CotacaoFormDialog';
+import { useSortableData } from '@/lib/table-utils';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -50,6 +51,8 @@ import {
   FileText,
   Users,
   ShoppingCart,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -95,6 +98,31 @@ export default function CotacoesPage() {
       return matchesSearch && matchesStatus;
     });
   }, [cotacoes, searchTerm, statusFilter]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<Cotacao>(filteredCotacoes);
+
+  const renderSortableHeader = (label: string, key: keyof Cotacao) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const handleDeleteClick = (cotacao: Cotacao) => {
     setCotacaoToDelete(cotacao);
@@ -244,30 +272,34 @@ export default function CotacoesPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>Requisição</TableHead>
-              <TableHead>Data Abertura</TableHead>
-              <TableHead>Data Limite</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Número', 'numero')}
+              {renderSortableHeader('Requisição', 'requisicao_numero')}
+              {renderSortableHeader('Data Abertura', 'data_abertura')}
+              {renderSortableHeader('Data Limite', 'data_limite_resposta')}
               <TableHead>Fornecedores</TableHead>
               <TableHead>Items</TableHead>
-              <TableHead>Status</TableHead>
+              {renderSortableHeader('Status', 'status')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCotacoes.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   {searchTerm || statusFilter !== 'all'
                     ? 'Nenhuma cotação encontrada'
                     : 'Nenhuma cotação cadastrada'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredCotacoes.map((cotacao) => {
+              sortedData.map((cotacao, index) => {
                 const fornecedoresInfo = getFornecedoresInfo(cotacao);
                 return (
                   <TableRow key={cotacao.id}>
+                    <TableCell className="text-muted-foreground text-center font-medium">
+                      {index + 1}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
