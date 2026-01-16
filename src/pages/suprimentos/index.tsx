@@ -23,6 +23,7 @@ const AIChat = lazy(() => import('./ai-chat'));
 // Compras
 const Requisicoes = lazy(() => import('./compras/requisicoes'));
 const Cotacoes = lazy(() => import('./compras/cotacoes'));
+const OrdensCompra = lazy(() => import('./compras/ordens-compra'));
 
 // Logística
 const LogisticaDashboard = lazy(() => import('./logistica/Dashboard'));
@@ -82,6 +83,7 @@ const Suprimentos = () => {
           <Route path="compras">
             <Route path="requisicoes" element={<Requisicoes />} />
             <Route path="cotacoes" element={<Cotacoes />} />
+            <Route path="ordens-compra" element={<OrdensCompra />} />
           </Route>
 
           {/* Logística */}
