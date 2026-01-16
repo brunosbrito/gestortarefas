@@ -20,6 +20,9 @@ const Contas = lazy(() => import('./contas'));
 const OneDrive = lazy(() => import('./onedrive'));
 const AIChat = lazy(() => import('./ai-chat'));
 
+// Compras
+const Requisicoes = lazy(() => import('./compras/requisicoes'));
+
 // Logística
 const LogisticaDashboard = lazy(() => import('./logistica/Dashboard'));
 const Veiculos = lazy(() => import('./logistica/veiculos'));
@@ -73,6 +76,11 @@ const Suprimentos = () => {
           <Route path="contas" element={<Contas />} />
           <Route path="onedrive" element={<OneDrive />} />
           <Route path="ai-chat" element={<AIChat />} />
+
+          {/* Compras */}
+          <Route path="compras">
+            <Route path="requisicoes" element={<Requisicoes />} />
+          </Route>
 
           {/* Logística */}
           <Route path="logistica">
