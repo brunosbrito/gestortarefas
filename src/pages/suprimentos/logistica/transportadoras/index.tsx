@@ -30,8 +30,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, Star, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Search, Star, MoreVertical, Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSortableData } from '@/lib/table-utils';
 
 export default function TransportadorasPage() {
   const { data: transportadoras = [], isLoading, isError } = useTransportadoras();
@@ -51,6 +52,31 @@ export default function TransportadorasPage() {
         t.cnpj.includes(searchTerm)
     );
   }, [transportadoras, searchTerm]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<Transportadora>(filteredTransportadoras);
+
+  const renderSortableHeader = (label: string, key: keyof Transportadora) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const renderStars = (rating: number | undefined) => {
     if (!rating) return <span className="text-muted-foreground text-sm">Sem avaliação</span>;
@@ -146,24 +172,28 @@ export default function TransportadorasPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Razão Social</TableHead>
-              <TableHead>CNPJ</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>E-mail</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Razão Social', 'razao_social')}
+              {renderSortableHeader('CNPJ', 'cnpj')}
+              {renderSortableHeader('Telefone', 'telefone')}
+              {renderSortableHeader('E-mail', 'email')}
               <TableHead>Avaliação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransportadoras.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   {searchTerm ? 'Nenhuma transportadora encontrada' : 'Nenhuma transportadora cadastrada'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTransportadoras.map((transportadora) => (
+              sortedData.map((transportadora, index) => (
                 <TableRow key={transportadora.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell className="font-semibold">
                     {transportadora.razao_social}
                   </TableCell>
@@ -203,7 +233,7 @@ export default function TransportadorasPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredTransportadoras.length} de {transportadoras.length}{' '}
+        Mostrando {sortedData.length} de {transportadoras.length}{' '}
         transportadoras
       </div>
 

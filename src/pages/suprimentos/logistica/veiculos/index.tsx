@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { useVehicles, useDeleteVehicle } from '@/hooks/suprimentos/logistica/useVehicles';
 import { Vehicle } from '@/interfaces/suprimentos/logistica/VehicleInterface';
 import VehicleFormDialog from './components/VehicleFormDialog';
+import { useSortableData } from '@/lib/table-utils';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -31,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, Truck, Car, ForkLift, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Search, Truck, Car, ForkLift, MoreVertical, Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 export default function VeiculosPage() {
@@ -53,6 +54,31 @@ export default function VeiculosPage() {
         v.marca.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [vehicles, searchTerm]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<Vehicle>(filteredVehicles);
+
+  const renderSortableHeader = (label: string, key: keyof Vehicle) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const getStatusBadge = (status: Vehicle['status']) => {
     const statusConfig = {
@@ -148,25 +174,29 @@ export default function VeiculosPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Placa</TableHead>
-              <TableHead>Modelo</TableHead>
-              <TableHead>KM Atual</TableHead>
-              <TableHead>Próxima Manutenção</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Tipo', 'tipo')}
+              {renderSortableHeader('Placa', 'placa')}
+              {renderSortableHeader('Modelo', 'modelo')}
+              {renderSortableHeader('KM Atual', 'km_atual')}
+              {renderSortableHeader('Próxima Manutenção', 'km_proxima_manutencao')}
+              {renderSortableHeader('Status', 'status')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVehicles.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   {searchTerm ? 'Nenhum veículo encontrado' : 'Nenhum veículo cadastrado'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredVehicles.map((vehicle) => (
+              sortedData.map((vehicle, index) => (
                 <TableRow key={vehicle.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {getTipoIcon(vehicle.tipo)}

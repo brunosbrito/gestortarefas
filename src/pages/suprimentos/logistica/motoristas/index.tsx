@@ -31,8 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Search, MoreVertical, Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useSortableData } from '@/lib/table-utils';
 
 export default function MotoristasPage() {
   const { data: drivers = [], isLoading, isError } = useDrivers();
@@ -53,6 +54,31 @@ export default function MotoristasPage() {
         d.cnh_numero.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [drivers, searchTerm]);
+
+  const { sortedData, sortConfig, requestSort } = useSortableData<Driver>(filteredDrivers);
+
+  const renderSortableHeader = (label: string, key: keyof Driver) => {
+    const isActive = sortConfig?.key === key;
+    const direction = sortConfig?.direction;
+
+    return (
+      <TableHead
+        onClick={() => requestSort(key)}
+        className="cursor-pointer hover:bg-accent/50 select-none transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span>{label}</span>
+          {isActive && (
+            direction === 'asc' ? (
+              <ArrowUp className="w-4 h-4" />
+            ) : (
+              <ArrowDown className="w-4 h-4" />
+            )
+          )}
+        </div>
+      </TableHead>
+    );
+  };
 
   const getStatusBadge = (status: Driver['status']) => {
     const statusConfig = {
@@ -139,26 +165,30 @@ export default function MotoristasPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>CPF</TableHead>
-              <TableHead>CNH</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Validade CNH</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="w-[60px]">#</TableHead>
+              {renderSortableHeader('Nome', 'nome')}
+              {renderSortableHeader('CPF', 'cpf')}
+              {renderSortableHeader('CNH', 'cnh_numero')}
+              {renderSortableHeader('Categoria', 'cnh_categoria')}
+              {renderSortableHeader('Validade CNH', 'cnh_validade')}
+              {renderSortableHeader('Telefone', 'telefone')}
+              {renderSortableHeader('Status', 'status')}
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredDrivers.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   {searchTerm ? 'Nenhum motorista encontrado' : 'Nenhum motorista cadastrado'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredDrivers.map((driver) => (
+              sortedData.map((driver, index) => (
                 <TableRow key={driver.id}>
+                  <TableCell className="text-muted-foreground text-center font-medium">
+                    {index + 1}
+                  </TableCell>
                   <TableCell className="font-semibold">{driver.nome}</TableCell>
                   <TableCell className="font-mono">{driver.cpf}</TableCell>
                   <TableCell className="font-mono">{driver.cnh_numero}</TableCell>
@@ -202,7 +232,7 @@ export default function MotoristasPage() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Mostrando {filteredDrivers.length} de {drivers.length} motoristas
+        Mostrando {sortedData.length} de {drivers.length} motoristas
       </div>
 
       {/* Dialog de Criação/Edição */}
