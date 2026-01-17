@@ -108,34 +108,62 @@ export const NovoPlanoDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (!formData.nome.trim()) {
+    // Validação do nome do plano
+    if (!formData.nome?.trim()) {
       toast({
-        title: 'Erro',
+        title: 'Campo obrigatório',
         description: 'O nome do plano é obrigatório.',
         variant: 'destructive',
       });
       return;
     }
 
+    // Validação de quantidade mínima de campos
     if (campos.length === 0) {
       toast({
-        title: 'Erro',
-        description: 'Adicione pelo menos um campo ao plano.',
+        title: 'Campos de inspeção obrigatórios',
+        description: 'Adicione pelo menos um campo de inspeção ao plano.',
         variant: 'destructive',
       });
       return;
     }
 
-    // Validar campos
-    for (const campo of campos) {
+    // Validar cada campo
+    for (let i = 0; i < campos.length; i++) {
+      const campo = campos[i];
+
+      // Validar nome do campo
       if (!campo.nome?.trim()) {
         toast({
-          title: 'Erro',
-          description: 'Todos os campos devem ter um nome.',
+          title: 'Campo incompleto',
+          description: `O campo #${i + 1} deve ter um nome.`,
           variant: 'destructive',
         });
         return;
       }
+
+      // Validar opções para campos do tipo select, checkbox ou radio
+      if (['select', 'checkbox', 'radio'].includes(campo.tipo || '') &&
+          (!campo.opcoes || campo.opcoes.length === 0)) {
+        toast({
+          title: 'Campo incompleto',
+          description: `O campo "${campo.nome}" do tipo ${campo.tipo} deve ter opções definidas.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Validar nomes únicos
+    const nomesCampos = campos.map(c => c.nome?.trim().toLowerCase());
+    const nomesUnicos = new Set(nomesCampos);
+    if (nomesCampos.length !== nomesUnicos.size) {
+      toast({
+        title: 'Nomes duplicados',
+        description: 'Todos os campos devem ter nomes únicos.',
+        variant: 'destructive',
+      });
+      return;
     }
 
     setLoading(true);

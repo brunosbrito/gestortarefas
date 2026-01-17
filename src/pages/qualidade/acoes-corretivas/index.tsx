@@ -175,7 +175,7 @@ const AcoesCorretivas = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+          <Card className="border-l-4 border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
               <CardTitle className="text-3xl">{analises.length}</CardTitle>
@@ -188,40 +188,40 @@ const AcoesCorretivas = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Pendentes</CardDescription>
-              <CardTitle className="text-3xl text-yellow-700">
+              <CardTitle className="text-3xl text-yellow-700 dark:text-yellow-400">
                 {analises.filter(a => a.acoes?.some(ac => ac.status === 'pendente' || ac.status === 'em_andamento')).length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm text-yellow-700">Em andamento</span>
+                <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                <span className="text-sm text-yellow-700 dark:text-yellow-400">Em andamento</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30 dark:bg-green-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Concluídas</CardDescription>
-              <CardTitle className="text-3xl text-green-700">
+              <CardTitle className="text-3xl text-green-700 dark:text-green-400">
                 {analises.filter(a => a.acoes?.every(ac => ac.status === 'concluida' || ac.status === 'verificada')).length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700">Finalizadas</span>
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-500" />
+                <span className="text-sm text-green-700 dark:text-green-400">Finalizadas</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-red-500 bg-red-50/30">
+          <Card className="border-l-4 border-l-red-500 bg-red-50/30 dark:bg-red-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Atrasadas</CardDescription>
-              <CardTitle className="text-3xl text-red-700">
+              <CardTitle className="text-3xl text-red-700 dark:text-red-400">
                 {analises.filter(a => a.acoes?.some(ac => {
                   const prazo = new Date(ac.quando);
                   return prazo < new Date() && ac.status !== 'concluida' && ac.status !== 'verificada';
@@ -230,8 +230,8 @@ const AcoesCorretivas = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-red-700">Urgente</span>
+                <XCircle className="w-4 h-4 text-red-600 dark:text-red-500" />
+                <span className="text-sm text-red-700 dark:text-red-400">Urgente</span>
               </div>
             </CardContent>
           </Card>
@@ -308,10 +308,10 @@ const AcoesCorretivas = () => {
 
               // Determinar cor da borda baseado no progresso
               const getBorderColor = () => {
-                if (progressoPercentual === 100) return 'border-l-green-500 bg-green-50/30';
-                if (pendentes > 0) return 'border-l-yellow-500 bg-yellow-50/30';
-                if (emAndamento > 0) return 'border-l-blue-500 bg-blue-50/30';
-                return 'border-l-gray-300 bg-gray-50/30';
+                if (progressoPercentual === 100) return 'border-l-green-500 bg-green-50/30 dark:bg-green-950/30';
+                if (pendentes > 0) return 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30';
+                if (emAndamento > 0) return 'border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/30';
+                return 'border-l-gray-300 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30';
               };
 
               return (

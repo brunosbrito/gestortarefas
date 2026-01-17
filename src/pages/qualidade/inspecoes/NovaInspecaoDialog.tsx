@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { ServiceOrder } from '@/interfaces/ServiceOrderInterface';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
+import { Inspecao } from '@/interfaces/QualidadeInterfaces';
 import ObrasService from '@/services/ObrasService';
 import * as ServiceOrderService from '@/services/ServiceOrderService';
 import ColaboradorService from '@/services/ColaboradorService';
@@ -32,12 +33,14 @@ interface NovaInspecaoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  inspecaoParaEditar?: Inspecao | null;
 }
 
 export const NovaInspecaoDialog = ({
   open,
   onOpenChange,
   onSuccess,
+  inspecaoParaEditar,
 }: NovaInspecaoDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -65,8 +68,27 @@ export const NovaInspecaoDialog = ({
   useEffect(() => {
     if (open) {
       loadData();
+      if (inspecaoParaEditar) {
+        setFormData({
+          tipo: inspecaoParaEditar.tipo || 'em_processo',
+          descricao: inspecaoParaEditar.descricao || '',
+          projectId: inspecaoParaEditar.projectId || '',
+          serviceOrderId: inspecaoParaEditar.serviceOrderId || '',
+          inspetorId: inspecaoParaEditar.inspetorId || '',
+          dataInspecao: inspecaoParaEditar.dataInspecao || new Date().toISOString().split('T')[0],
+          material: inspecaoParaEditar.material || '',
+          lote: inspecaoParaEditar.lote || '',
+          fornecedor: inspecaoParaEditar.fornecedor || '',
+          quantidade: inspecaoParaEditar.quantidade?.toString() || '',
+          unidade: inspecaoParaEditar.unidade || '',
+          resultado: inspecaoParaEditar.resultado || 'aprovado',
+          ressalvas: inspecaoParaEditar.ressalvas || '',
+        });
+      } else {
+        resetForm();
+      }
     }
-  }, [open]);
+  }, [open, inspecaoParaEditar]);
 
   useEffect(() => {
     if (formData.projectId) {
@@ -97,10 +119,72 @@ export const NovaInspecaoDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (!formData.descricao || !formData.projectId || !formData.inspetorId) {
+    // Validação de campos obrigatórios
+    if (!formData.descricao?.trim()) {
       toast({
-        title: 'Campos obrigatórios',
-        description: 'Preencha todos os campos obrigatórios.',
+        title: 'Campo obrigatório',
+        description: 'O campo "Descrição" é obrigatório.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.projectId) {
+      toast({
+        title: 'Campo obrigatório',
+        description: 'Selecione um projeto.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.inspetorId) {
+      toast({
+        title: 'Campo obrigatório',
+        description: 'Selecione um inspetor.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validação da data de inspeção
+    const dataInspecao = new Date(formData.dataInspecao);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    if (dataInspecao > hoje) {
+      toast({
+        title: 'Data inválida',
+        description: 'A data da inspeção não pode ser futura.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validação de quantidade (se preenchida)
+    if (formData.quantidade && isNaN(parseFloat(formData.quantidade))) {
+      toast({
+        title: 'Quantidade inválida',
+        description: 'A quantidade deve ser um número válido.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (formData.quantidade && parseFloat(formData.quantidade) < 0) {
+      toast({
+        title: 'Quantidade inválida',
+        description: 'A quantidade não pode ser negativa.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validação de ressalvas obrigatórias
+    if ((formData.resultado === 'reprovado' || formData.resultado === 'aprovado_com_ressalvas') && !formData.ressalvas?.trim()) {
+      toast({
+        title: 'Campo obrigatório',
+        description: `Para inspeções com resultado "${formData.resultado === 'reprovado' ? 'Reprovado' : 'Aprovado com Ressalvas'}", as ressalvas são obrigatórias.`,
         variant: 'destructive',
       });
       return;
@@ -123,25 +207,32 @@ export const NovaInspecaoDialog = ({
         unidade: formData.unidade || undefined,
         resultado: formData.resultado as any,
         ressalvas: formData.ressalvas || undefined,
-        campos: [],
-        imagens: [],
+        campos: inspecaoParaEditar?.campos || [],
+        imagens: inspecaoParaEditar?.imagens || [],
       };
 
-      await InspecaoService.create(inspecao);
-
-      toast({
-        title: 'Inspeção criada',
-        description: 'A inspeção foi registrada com sucesso.',
-      });
+      if (inspecaoParaEditar) {
+        await InspecaoService.update(inspecaoParaEditar.id, inspecao);
+        toast({
+          title: 'Inspeção atualizada',
+          description: 'A inspeção foi atualizada com sucesso.',
+        });
+      } else {
+        await InspecaoService.create(inspecao);
+        toast({
+          title: 'Inspeção criada',
+          description: 'A inspeção foi registrada com sucesso.',
+        });
+      }
 
       onSuccess();
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      console.error('Erro ao criar inspeção:', error);
+      console.error('Erro ao salvar inspeção:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível criar a inspeção.',
+        description: `Não foi possível ${inspecaoParaEditar ? 'atualizar' : 'criar'} a inspeção.`,
         variant: 'destructive',
       });
     } finally {
@@ -172,7 +263,7 @@ export const NovaInspecaoDialog = ({
       <DialogContent className={maximized ? "max-w-[95vw] max-h-[95vh] overflow-y-auto" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Nova Inspeção</DialogTitle>
+            <DialogTitle>{inspecaoParaEditar ? 'Editar Inspeção' : 'Nova Inspeção'}</DialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -187,7 +278,9 @@ export const NovaInspecaoDialog = ({
             </Button>
           </div>
           <DialogDescription>
-            Registre uma nova inspeção de qualidade para materiais ou processos
+            {inspecaoParaEditar
+              ? 'Atualize os dados da inspeção de qualidade'
+              : 'Registre uma nova inspeção de qualidade para materiais ou processos'}
           </DialogDescription>
         </DialogHeader>
 
@@ -389,7 +482,7 @@ export const NovaInspecaoDialog = ({
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Salvando...' : 'Criar Inspeção'}
+            {loading ? 'Salvando...' : (inspecaoParaEditar ? 'Atualizar Inspeção' : 'Criar Inspeção')}
           </Button>
         </DialogFooter>
       </DialogContent>

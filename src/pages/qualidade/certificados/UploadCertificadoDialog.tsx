@@ -126,27 +126,28 @@ export const UploadCertificadoDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (!formData.tipoCertificado.trim()) {
+    // Validação de campos obrigatórios
+    if (!formData.tipoCertificado?.trim()) {
       toast({
-        title: 'Erro',
+        title: 'Campo obrigatório',
         description: 'O tipo de certificado é obrigatório.',
         variant: 'destructive',
       });
       return;
     }
 
-    if (!formData.numeroCertificado.trim()) {
+    if (!formData.numeroCertificado?.trim()) {
       toast({
-        title: 'Erro',
+        title: 'Campo obrigatório',
         description: 'O número do certificado é obrigatório.',
         variant: 'destructive',
       });
       return;
     }
 
-    if (!formData.fornecedor.trim()) {
+    if (!formData.fornecedor?.trim()) {
       toast({
-        title: 'Erro',
+        title: 'Campo obrigatório',
         description: 'O fornecedor é obrigatório.',
         variant: 'destructive',
       });
@@ -155,16 +156,53 @@ export const UploadCertificadoDialog = ({
 
     if (!formData.projectId) {
       toast({
-        title: 'Erro',
+        title: 'Campo obrigatório',
         description: 'Selecione uma obra.',
         variant: 'destructive',
       });
       return;
     }
 
+    // Validação de data de emissão
+    if (!formData.dataEmissao) {
+      toast({
+        title: 'Campo obrigatório',
+        description: 'A data de emissão é obrigatória.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const dataEmissao = new Date(formData.dataEmissao);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    if (dataEmissao > hoje) {
+      toast({
+        title: 'Data inválida',
+        description: 'A data de emissão não pode ser futura.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validação de data de validade (se fornecida)
+    if (formData.dataValidade) {
+      const dataValidade = new Date(formData.dataValidade);
+      if (dataValidade <= dataEmissao) {
+        toast({
+          title: 'Data inválida',
+          description: 'A data de validade deve ser posterior à data de emissão.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Validação de arquivo
     if (!arquivo) {
       toast({
-        title: 'Erro',
+        title: 'Arquivo obrigatório',
         description: 'Selecione um arquivo para upload.',
         variant: 'destructive',
       });

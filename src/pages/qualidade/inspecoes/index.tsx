@@ -10,6 +10,9 @@ import {
   Eye,
   Calendar,
   User,
+  Edit,
+  Trash2,
+  FileDown,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
@@ -34,9 +37,20 @@ import ObrasService from '@/services/ObrasService';
 import { useToast } from '@/hooks/use-toast';
 import { Inspecao } from '@/interfaces/QualidadeInterfaces';
 import InspecaoService from '@/services/InspecaoService';
+import { InspecaoPdfService } from '@/services/InspecaoPdfService';
 import { Badge } from '@/components/ui/badge';
 import { NovaInspecaoDialog } from './NovaInspecaoDialog';
 import { DetalhesInspecaoDialog } from './DetalhesInspecaoDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const Inspecoes = () => {
   const { toast } = useToast();
@@ -49,6 +63,10 @@ const Inspecoes = () => {
   const [showNovaInspecaoDialog, setShowNovaInspecaoDialog] = useState(false);
   const [showDetalhesDialog, setShowDetalhesDialog] = useState(false);
   const [inspecaoSelecionada, setInspecaoSelecionada] = useState<Inspecao | null>(null);
+  const [inspecaoParaEditar, setInspecaoParaEditar] = useState<Inspecao | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [inspecaoParaExcluir, setInspecaoParaExcluir] = useState<Inspecao | null>(null);
+  const [deletando, setDeletando] = useState(false);
 
   const getAllInspecoes = async () => {
     try {
@@ -135,6 +153,68 @@ const Inspecoes = () => {
     return tipos[tipo] || tipo;
   };
 
+  const handleEditarClick = (inspecao: Inspecao, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setInspecaoParaEditar(inspecao);
+    setShowNovaInspecaoDialog(true);
+  };
+
+  const handleImprimirClick = async (inspecao: Inspecao, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await InspecaoPdfService.downloadPDF(inspecao);
+      toast({
+        title: 'PDF gerado com sucesso',
+        description: 'O relatório foi baixado para seu computador.',
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: 'Erro ao gerar PDF',
+        description: 'Não foi possível gerar o relatório. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCardClick = (inspecao: Inspecao) => {
+    setInspecaoSelecionada(inspecao);
+    setShowDetalhesDialog(true);
+  };
+
+  const handleExcluirClick = (inspecao: Inspecao, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setInspecaoParaExcluir(inspecao);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!inspecaoParaExcluir) return;
+
+    try {
+      setDeletando(true);
+      await InspecaoService.delete(inspecaoParaExcluir.id);
+
+      toast({
+        title: 'Inspeção excluída',
+        description: 'A inspeção foi removida com sucesso.',
+      });
+
+      getAllInspecoes();
+      setShowDeleteDialog(false);
+      setInspecaoParaExcluir(null);
+    } catch (error) {
+      console.error('Erro ao excluir inspeção:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir a inspeção.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletando(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-6 space-y-6">
@@ -149,7 +229,10 @@ const Inspecoes = () => {
               Registros de inspeções de qualidade
             </p>
           </div>
-          <Button onClick={() => setShowNovaInspecaoDialog(true)} className="gap-2">
+          <Button onClick={() => {
+            setInspecaoParaEditar(null);
+            setShowNovaInspecaoDialog(true);
+          }} className="gap-2">
             <Plus className="w-4 h-4" />
             Nova Inspeção
           </Button>
@@ -169,7 +252,7 @@ const Inspecoes = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+          <Card className="border-l-4 border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
               <CardTitle className="text-3xl">{inspecoes.length}</CardTitle>
@@ -182,47 +265,47 @@ const Inspecoes = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30 dark:bg-green-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Aprovadas</CardDescription>
-              <CardTitle className="text-3xl text-green-700">
+              <CardTitle className="text-3xl text-green-700 dark:text-green-400">
                 {inspecoes.filter(i => i.resultado === 'aprovado').length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700">Conformes</span>
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-500" />
+                <span className="text-sm text-green-700 dark:text-green-400">Conformes</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Com Ressalvas</CardDescription>
-              <CardTitle className="text-3xl text-yellow-700">
+              <CardTitle className="text-3xl text-yellow-700 dark:text-yellow-400">
                 {inspecoes.filter(i => i.resultado === 'aprovado_com_ressalvas').length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm text-yellow-700">Atenção</span>
+                <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                <span className="text-sm text-yellow-700 dark:text-yellow-400">Atenção</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-red-500 bg-red-50/30">
+          <Card className="border-l-4 border-l-red-500 bg-red-50/30 dark:bg-red-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Reprovadas</CardDescription>
-              <CardTitle className="text-3xl text-red-700">
+              <CardTitle className="text-3xl text-red-700 dark:text-red-400">
                 {inspecoes.filter(i => i.resultado === 'reprovado').length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-red-700">Não conforme</span>
+                <XCircle className="w-4 h-4 text-red-600 dark:text-red-500" />
+                <span className="text-sm text-red-700 dark:text-red-400">Não conforme</span>
               </div>
             </CardContent>
           </Card>
@@ -314,16 +397,17 @@ const Inspecoes = () => {
             {inspecoesFiltradas.map((inspecao) => {
               // Determinar cor da borda baseado no resultado
               const getBorderColor = () => {
-                if (inspecao.resultado === 'aprovado') return 'border-l-green-500 bg-green-50/30';
-                if (inspecao.resultado === 'aprovado_com_ressalvas') return 'border-l-yellow-500 bg-yellow-50/30';
-                if (inspecao.resultado === 'reprovado') return 'border-l-red-500 bg-red-50/30';
-                return 'border-l-gray-300 bg-gray-50/30';
+                if (inspecao.resultado === 'aprovado') return 'border-l-green-500 bg-green-50/30 dark:bg-green-950/30';
+                if (inspecao.resultado === 'aprovado_com_ressalvas') return 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30';
+                if (inspecao.resultado === 'reprovado') return 'border-l-red-500 bg-red-50/30 dark:bg-red-950/30';
+                return 'border-l-gray-300 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30';
               };
 
               return (
                 <Card
                   key={inspecao.id}
                   className={`hover:shadow-lg transition-all cursor-pointer border-l-4 ${getBorderColor()}`}
+                  onClick={() => handleCardClick(inspecao)}
                 >
 
                 <CardHeader>
@@ -389,22 +473,51 @@ const Inspecoes = () => {
                   )}
                 </CardContent>
 
-                <CardFooter className="flex justify-between items-center border-t pt-4">
-                  <span className="text-xs text-muted-foreground">
+                <CardFooter className="flex flex-col gap-3 border-t pt-4">
+                  <span className="text-xs text-muted-foreground w-full">
                     {inspecao.campos?.length || 0} campos inspecionados
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => {
-                      setInspecaoSelecionada(inspecao);
-                      setShowDetalhesDialog(true);
-                    }}
-                  >
-                    <Eye className="w-4 h-4" />
-                    Ver Detalhes
-                  </Button>
+                  <div className="flex gap-2 flex-wrap w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => {
+                        setInspecaoSelecionada(inspecao);
+                        setShowDetalhesDialog(true);
+                      }}
+                    >
+                      <Eye className="w-4 h-4" />
+                      Visualizar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={(e) => handleEditarClick(inspecao, e)}
+                    >
+                      <Edit className="w-4 h-4" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={(e) => handleImprimirClick(inspecao, e)}
+                    >
+                      <FileDown className="w-4 h-4" />
+                      PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-destructive hover:text-destructive"
+                      onClick={(e) => handleExcluirClick(inspecao, e)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Excluir
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
               );
@@ -415,8 +528,15 @@ const Inspecoes = () => {
         {/* Dialog de Nova Inspeção */}
         <NovaInspecaoDialog
           open={showNovaInspecaoDialog}
-          onOpenChange={setShowNovaInspecaoDialog}
-          onSuccess={getAllInspecoes}
+          onOpenChange={(open) => {
+            setShowNovaInspecaoDialog(open);
+            if (!open) setInspecaoParaEditar(null);
+          }}
+          onSuccess={() => {
+            getAllInspecoes();
+            setInspecaoParaEditar(null);
+          }}
+          inspecaoParaEditar={inspecaoParaEditar}
         />
 
         {/* Dialog de Detalhes */}
@@ -425,6 +545,29 @@ const Inspecoes = () => {
           onOpenChange={setShowDetalhesDialog}
           inspecao={inspecaoSelecionada}
         />
+
+        {/* Dialog de Confirmação de Exclusão */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir a inspeção #{String(inspecaoParaExcluir?.codigo).padStart(4, '0')}?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deletando}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                disabled={deletando}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deletando ? 'Excluindo...' : 'Excluir'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

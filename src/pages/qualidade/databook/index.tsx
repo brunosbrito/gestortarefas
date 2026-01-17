@@ -145,12 +145,12 @@ const DataBook = () => {
 
   const getBorderColor = (status: string) => {
     const colors = {
-      rascunho: 'border-l-gray-400 bg-gray-50/30',
-      em_revisao: 'border-l-yellow-500 bg-yellow-50/30',
-      aprovado: 'border-l-green-500 bg-green-50/30',
-      enviado: 'border-l-blue-500 bg-blue-50/30',
+      rascunho: 'border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30',
+      em_revisao: 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30',
+      aprovado: 'border-l-green-500 bg-green-50/30 dark:bg-green-950/30',
+      enviado: 'border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/30',
     };
-    return colors[status as keyof typeof colors] || 'border-l-gray-300 bg-gray-50/30';
+    return colors[status as keyof typeof colors] || 'border-l-gray-300 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30';
   };
 
   // Calcular estatísticas
@@ -199,7 +199,7 @@ const DataBook = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+            <Card className="border-l-4 border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30">
               <CardHeader className="pb-2">
                 <CardDescription>Total</CardDescription>
                 <CardTitle className="text-3xl">{stats.total}</CardTitle>
@@ -212,41 +212,41 @@ const DataBook = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+            <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30">
               <CardHeader className="pb-2">
                 <CardDescription>Rascunhos</CardDescription>
-                <CardTitle className="text-3xl text-yellow-700">{stats.rascunhos}</CardTitle>
+                <CardTitle className="text-3xl text-yellow-700 dark:text-yellow-400">{stats.rascunhos}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm text-yellow-700">Em elaboração</span>
+                  <FileText className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                  <span className="text-sm text-yellow-700 dark:text-yellow-400">Em elaboração</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+            <Card className="border-l-4 border-l-green-500 bg-green-50/30 dark:bg-green-950/30">
               <CardHeader className="pb-2">
                 <CardDescription>Aprovados</CardDescription>
-                <CardTitle className="text-3xl text-green-700">{stats.aprovados}</CardTitle>
+                <CardTitle className="text-3xl text-green-700 dark:text-green-400">{stats.aprovados}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-700">Finalizados</span>
+                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-500" />
+                  <span className="text-sm text-green-700 dark:text-green-400">Finalizados</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-blue-500 bg-blue-50/30">
+            <Card className="border-l-4 border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/30">
               <CardHeader className="pb-2">
                 <CardDescription>Enviados</CardDescription>
-                <CardTitle className="text-3xl text-blue-700">{stats.enviados}</CardTitle>
+                <CardTitle className="text-3xl text-blue-700 dark:text-blue-400">{stats.enviados}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Send className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-blue-700">Aos clientes</span>
+                  <Send className="w-4 h-4 text-blue-600 dark:text-blue-500" />
+                  <span className="text-sm text-blue-700 dark:text-blue-400">Aos clientes</span>
                 </div>
               </CardContent>
             </Card>

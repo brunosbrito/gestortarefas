@@ -248,7 +248,7 @@ const Certificados = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+          <Card className="border-l-4 border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
               <CardTitle className="text-3xl">{certificados.length}</CardTitle>
@@ -261,47 +261,47 @@ const Certificados = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Pendentes</CardDescription>
-              <CardTitle className="text-3xl text-yellow-700">
+              <CardTitle className="text-3xl text-yellow-700 dark:text-yellow-400">
                 {certificados.filter(c => c.status === 'pendente').length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm text-yellow-700">Aguardando</span>
+                <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                <span className="text-sm text-yellow-700 dark:text-yellow-400">Aguardando</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30 dark:bg-green-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Aprovados</CardDescription>
-              <CardTitle className="text-3xl text-green-700">
+              <CardTitle className="text-3xl text-green-700 dark:text-green-400">
                 {certificados.filter(c => c.status === 'aprovado').length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700">Validados</span>
+                <Check className="w-4 h-4 text-green-600 dark:text-green-500" />
+                <span className="text-sm text-green-700 dark:text-green-400">Validados</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-purple-500 bg-purple-50/30">
+          <Card className="border-l-4 border-l-purple-500 bg-purple-50/30 dark:bg-purple-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Enviados</CardDescription>
-              <CardTitle className="text-3xl text-purple-700">
+              <CardTitle className="text-3xl text-purple-700 dark:text-purple-400">
                 {certificados.filter(c => c.status === 'enviado').length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-purple-600" />
-                <span className="text-sm text-purple-700">Entregues</span>
+                <Mail className="w-4 h-4 text-purple-600 dark:text-purple-500" />
+                <span className="text-sm text-purple-700 dark:text-purple-400">Entregues</span>
               </div>
             </CardContent>
           </Card>
@@ -378,13 +378,13 @@ const Certificados = () => {
             {certificados.map((certificado) => {
               // Determinar cor da borda baseado no status
               const getBorderColor = () => {
-                if (certificado.status === 'aprovado') return 'border-l-green-500 bg-green-50/30';
-                if (certificado.status === 'enviado') return 'border-l-purple-500 bg-purple-50/30';
-                if (certificado.status === 'recebido') return 'border-l-blue-500 bg-blue-50/30';
-                if (certificado.status === 'pendente') return 'border-l-gray-400 bg-gray-50/30';
-                if (certificado.status === 'em_analise') return 'border-l-yellow-500 bg-yellow-50/30';
-                if (certificado.status === 'reprovado') return 'border-l-red-500 bg-red-50/30';
-                return 'border-l-gray-300 bg-gray-50/30';
+                if (certificado.status === 'aprovado') return 'border-l-green-500 bg-green-50/30 dark:bg-green-950/30';
+                if (certificado.status === 'enviado') return 'border-l-purple-500 bg-purple-50/30 dark:bg-purple-950/30';
+                if (certificado.status === 'recebido') return 'border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/30';
+                if (certificado.status === 'pendente') return 'border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30';
+                if (certificado.status === 'em_analise') return 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30';
+                if (certificado.status === 'reprovado') return 'border-l-red-500 bg-red-50/30 dark:bg-red-950/30';
+                return 'border-l-gray-300 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30';
               };
 
               return (

@@ -4,11 +4,60 @@ import axios from 'axios';
 
 class DashboardQualidadeService {
   private baseURL = `${API_URL}/api/qualidade/dashboard`;
+  // TODO: Alterar para false quando backend estiver pronto
+  private useMock = true;
 
   async getMetrics(
     periodo?: { inicio: string; fim: string },
     obraId?: string
   ): Promise<DashboardQualidade> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const mockMetrics: DashboardQualidade = {
+        rncs: {
+          total: 45,
+          abertas: 12,
+          emAnalise: 8,
+          resolvidas: 25,
+          criticas: 3,
+          taxaResolucao: 55.6,
+        },
+        inspecoes: {
+          total: 128,
+          aprovadas: 95,
+          ressalvas: 21,
+          reprovadas: 12,
+          taxaAprovacao: 74.2,
+        },
+        certificados: {
+          total: 67,
+          pendentes: 8,
+          recebidos: 15,
+          aprovados: 42,
+          reprovados: 2,
+          proximosVencimento: 5,
+        },
+        equipamentos: {
+          total: 34,
+          emDia: 28,
+          proximoVencimento: 4,
+          vencidos: 2,
+          calibracoesPendentes: 6,
+        },
+        databooks: {
+          total: 12,
+          rascunhos: 3,
+          emRevisao: 4,
+          aprovados: 4,
+          enviados: 1,
+        },
+      };
+
+      console.log('✅ Mock: Retornando métricas do dashboard', mockMetrics);
+      return mockMetrics;
+    }
+
     try {
       const params = new URLSearchParams();
 
@@ -35,6 +84,20 @@ class DashboardQualidadeService {
     abertas: number[];
     resolvidas: number[];
   }> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+      const mockTrend = {
+        labels: labels.slice(0, meses),
+        abertas: [8, 12, 7, 10, 15, 9].slice(0, meses),
+        resolvidas: [5, 8, 10, 6, 11, 13].slice(0, meses),
+      };
+
+      console.log('✅ Mock: Retornando tendência de RNCs', mockTrend);
+      return mockTrend;
+    }
+
     try {
       const response = await axios.get(`${this.baseURL}/rncs-trend?meses=${meses}`);
       return response.data;
@@ -50,6 +113,21 @@ class DashboardQualidadeService {
     ressalvas: number[];
     reprovadas: number[];
   }> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+      const mockTrend = {
+        labels: labels.slice(0, meses),
+        aprovadas: [18, 22, 19, 25, 21, 24].slice(0, meses),
+        ressalvas: [4, 3, 5, 2, 6, 4].slice(0, meses),
+        reprovadas: [2, 1, 3, 1, 2, 1].slice(0, meses),
+      };
+
+      console.log('✅ Mock: Retornando tendência de inspeções', mockTrend);
+      return mockTrend;
+    }
+
     try {
       const response = await axios.get(`${this.baseURL}/inspecoes-trend?meses=${meses}`);
       return response.data;
@@ -67,6 +145,22 @@ class DashboardQualidadeService {
     rncs: number;
     inspecoes: number;
   }[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const mockTendencia = [
+        { mes: '2024-01', rncs: 8, inspecoes: 24 },
+        { mes: '2024-02', rncs: 12, inspecoes: 26 },
+        { mes: '2024-03', rncs: 7, inspecoes: 27 },
+        { mes: '2024-04', rncs: 10, inspecoes: 28 },
+        { mes: '2024-05', rncs: 15, inspecoes: 29 },
+        { mes: '2024-06', rncs: 9, inspecoes: 29 },
+      ];
+
+      console.log('✅ Mock: Retornando tendência', mockTendencia);
+      return mockTendencia;
+    }
+
     try {
       const params = new URLSearchParams();
 
@@ -98,6 +192,21 @@ class DashboardQualidadeService {
     quantidade: number;
     percentual?: number;
   }[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const mockCausas = [
+        { causa: 'Falha de Solda', quantidade: 18, percentual: 32.7 },
+        { causa: 'Dimensões Incorretas', quantidade: 12, percentual: 21.8 },
+        { causa: 'Material Fora da Especificação', quantidade: 10, percentual: 18.2 },
+        { causa: 'Acabamento Inadequado', quantidade: 8, percentual: 14.5 },
+        { causa: 'Falta de Documentação', quantidade: 7, percentual: 12.7 },
+      ].slice(0, limit);
+
+      console.log('✅ Mock: Retornando top causas de NC', mockCausas);
+      return mockCausas;
+    }
+
     try {
       const params = new URLSearchParams();
       params.append('limit', limit.toString());
@@ -133,6 +242,46 @@ class DashboardQualidadeService {
     taxaConformidade?: number;
     score?: number;
   }[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      const mockPerformance = [
+        {
+          obraId: '1',
+          obraNome: 'Obra Industrial ABC',
+          totalNCs: 8,
+          totalInspecoes: 45,
+          certificadosPendentes: 3,
+          inspecoesReprovadas: 2,
+          taxaConformidade: 95.6,
+          score: 85,
+        },
+        {
+          obraId: '2',
+          obraNome: 'Galpão XYZ Ltda',
+          totalNCs: 12,
+          totalInspecoes: 38,
+          certificadosPendentes: 5,
+          inspecoesReprovadas: 4,
+          taxaConformidade: 89.5,
+          score: 72,
+        },
+        {
+          obraId: '3',
+          obraNome: 'Estrutura Metálica DEF',
+          totalNCs: 5,
+          totalInspecoes: 52,
+          certificadosPendentes: 1,
+          inspecoesReprovadas: 1,
+          taxaConformidade: 98.1,
+          score: 92,
+        },
+      ];
+
+      console.log('✅ Mock: Retornando performance por obra', mockPerformance);
+      return mockPerformance;
+    }
+
     try {
       const params = new URLSearchParams();
 
@@ -156,6 +305,16 @@ class DashboardQualidadeService {
     periodo?: { inicio: string; fim: string },
     obraId?: string
   ): Promise<Blob> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const mimeType = formato === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const mockBlob = new Blob([`Mock ${formato.toUpperCase()} content`], { type: mimeType });
+
+      console.log('✅ Mock: Exportando relatório', { formato, periodo, obraId });
+      return mockBlob;
+    }
+
     try {
       const params = new URLSearchParams();
       params.append('formato', formato);

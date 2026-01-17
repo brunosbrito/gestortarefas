@@ -29,11 +29,15 @@ import {
   User,
   MapPin,
   FileText,
+  FileDown,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { AnaliseAcaoCorretiva } from '@/interfaces/QualidadeInterfaces';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AnaliseAcaoCorretivaService from '@/services/AnaliseAcaoCorretivaService';
+import { AnaliseAcaoCorretivaPdfService } from '@/services/AnaliseAcaoCorretivaPdfService';
 import { useToast } from '@/hooks/use-toast';
 
 interface DetalhesAnaliseDialogProps {
@@ -51,8 +55,30 @@ export const DetalhesAnaliseDialog = ({
 }: DetalhesAnaliseDialogProps) => {
   const { toast } = useToast();
   const [updatingAcao, setUpdatingAcao] = useState<string | null>(null);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+  const [maximized, setMaximized] = useState(false);
 
   if (!analise) return null;
+
+  const handleGerarPdf = async () => {
+    try {
+      setGerandoPdf(true);
+      await AnaliseAcaoCorretivaPdfService.downloadPDF(analise);
+      toast({
+        title: 'PDF gerado com sucesso',
+        description: 'O relatório foi baixado para seu computador.',
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: 'Erro ao gerar PDF',
+        description: 'Não foi possível gerar o relatório. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setGerandoPdf(false);
+    }
+  };
 
   const handleStatusChange = async (acaoId: string, novoStatus: string) => {
     try {
@@ -111,15 +137,43 @@ export const DetalhesAnaliseDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={maximized ? "max-w-[95vw] max-h-[95vh] overflow-y-auto" : "max-w-6xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            Detalhes da Análise
-          </DialogTitle>
-          <DialogDescription>
-            RNC #{analise.rnc?.code} - {analise.rnc?.description}
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-primary" />
+                Detalhes da Análise
+              </DialogTitle>
+              <DialogDescription>
+                RNC #{analise.rnc?.code} - {analise.rnc?.description}
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setMaximized(!maximized)}
+              >
+                {maximized ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGerarPdf}
+                disabled={gerandoPdf}
+                className="gap-2"
+              >
+                <FileDown className="w-4 h-4" />
+                {gerandoPdf ? 'Gerando PDF...' : 'Gerar PDF'}
+              </Button>
+            </div>
+          </div>
         </DialogHeader>
 
         {/* Resumo Geral */}

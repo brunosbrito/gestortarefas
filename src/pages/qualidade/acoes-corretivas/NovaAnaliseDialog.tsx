@@ -176,12 +176,75 @@ export const NovaAnaliseDialog = ({
           });
           return false;
         }
+
         // Validar campos obrigatórios de cada ação
-        for (const acao of acoes) {
-          if (!acao.oQue || !acao.porque || !acao.quemId || !acao.quando || !acao.como) {
+        for (let i = 0; i < acoes.length; i++) {
+          const acao = acoes[i];
+          const acaoNum = i + 1;
+
+          if (!acao.oQue?.trim()) {
             toast({
-              title: 'Atenção',
-              description: 'Preencha todos os campos obrigatórios das ações (O quê, Por quê, Quem, Quando, Como)',
+              title: 'Campo obrigatório',
+              description: `Ação #${acaoNum}: Preencha "O quê" (What)`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+
+          if (!acao.porque?.trim()) {
+            toast({
+              title: 'Campo obrigatório',
+              description: `Ação #${acaoNum}: Preencha "Por quê" (Why)`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+
+          if (!acao.quemId) {
+            toast({
+              title: 'Campo obrigatório',
+              description: `Ação #${acaoNum}: Selecione "Quem" será o responsável (Who)`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+
+          if (!acao.quando) {
+            toast({
+              title: 'Campo obrigatório',
+              description: `Ação #${acaoNum}: Defina "Quando" (When) será realizada`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+
+          // Validar data não pode ser no passado
+          const dataAcao = new Date(acao.quando);
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          if (dataAcao < hoje) {
+            toast({
+              title: 'Data inválida',
+              description: `Ação #${acaoNum}: A data não pode ser no passado`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+
+          if (!acao.como?.trim()) {
+            toast({
+              title: 'Campo obrigatório',
+              description: `Ação #${acaoNum}: Descreva "Como" (How) será realizada`,
+              variant: 'destructive',
+            });
+            return false;
+          }
+
+          // Validar quantoCusta se fornecido
+          if (acao.quantoCusta !== undefined && acao.quantoCusta < 0) {
+            toast({
+              title: 'Valor inválido',
+              description: `Ação #${acaoNum}: O custo não pode ser negativo`,
               variant: 'destructive',
             });
             return false;

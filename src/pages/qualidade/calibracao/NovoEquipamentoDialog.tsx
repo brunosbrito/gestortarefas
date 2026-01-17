@@ -135,19 +135,40 @@ export const NovoEquipamentoDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (!formData.nome.trim()) {
+    // Validação do nome do equipamento
+    if (!formData.nome?.trim()) {
       toast({
-        title: 'Erro',
+        title: 'Campo obrigatório',
         description: 'O nome do equipamento é obrigatório.',
         variant: 'destructive',
       });
       return;
     }
 
-    if (!formData.frequenciaCalibracao || parseInt(formData.frequenciaCalibracao) < 1) {
+    // Validação da frequência de calibração
+    if (!formData.frequenciaCalibracao) {
       toast({
-        title: 'Erro',
-        description: 'A frequência de calibração deve ser maior que 0.',
+        title: 'Campo obrigatório',
+        description: 'A frequência de calibração é obrigatória.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const frequencia = parseInt(formData.frequenciaCalibracao);
+    if (isNaN(frequencia) || frequencia < 1) {
+      toast({
+        title: 'Valor inválido',
+        description: 'A frequência de calibração deve ser um número maior que 0.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (frequencia > 120) {
+      toast({
+        title: 'Valor inválido',
+        description: 'A frequência de calibração não pode ser maior que 120 meses (10 anos).',
         variant: 'destructive',
       });
       return;
@@ -155,19 +176,43 @@ export const NovoEquipamentoDialog = ({
 
     // Validações se incluir certificado
     if (incluirCertificado) {
-      if (!formData.numeroCertificado.trim()) {
+      if (!formData.numeroCertificado?.trim()) {
         toast({
-          title: 'Erro',
+          title: 'Campo obrigatório',
           description: 'O número do certificado é obrigatório.',
           variant: 'destructive',
         });
         return;
       }
 
+      // Validação da data de calibração
+      if (!formData.dataCalibracao) {
+        toast({
+          title: 'Campo obrigatório',
+          description: 'A data da calibração é obrigatória.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const dataCalibracao = new Date(formData.dataCalibracao);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      if (dataCalibracao > hoje) {
+        toast({
+          title: 'Data inválida',
+          description: 'A data da calibração não pode ser futura.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Validação do arquivo
       if (!arquivo) {
         toast({
-          title: 'Erro',
-          description: 'Selecione o arquivo do certificado.',
+          title: 'Arquivo obrigatório',
+          description: 'Selecione o arquivo do certificado de calibração.',
           variant: 'destructive',
         });
         return;

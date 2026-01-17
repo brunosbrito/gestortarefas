@@ -74,28 +74,28 @@ const Calibracao = () => {
     switch (status) {
       case 'em_dia':
         return (
-          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 gap-1">
+          <Badge className="bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-950/30 gap-1">
             <CheckCircle className="w-3 h-3" />
             Em Dia
           </Badge>
         );
       case 'proximo_vencimento':
         return (
-          <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 gap-1">
+          <Badge className="bg-yellow-100 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-950/30 gap-1">
             <Clock className="w-3 h-3" />
             Próximo Vencimento
           </Badge>
         );
       case 'vencido':
         return (
-          <Badge className="bg-red-100 text-red-700 hover:bg-red-100 gap-1">
+          <Badge className="bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/30 gap-1">
             <AlertCircle className="w-3 h-3" />
             Vencido
           </Badge>
         );
       case 'reprovado':
         return (
-          <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 gap-1">
+          <Badge className="bg-gray-100 dark:bg-gray-950/30 text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-950/30 gap-1">
             <XCircle className="w-3 h-3" />
             Reprovado
           </Badge>
@@ -174,7 +174,7 @@ const Calibracao = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+          <Card className="border-l-4 border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
               <CardTitle className="text-3xl">{stats.total}</CardTitle>
@@ -187,41 +187,41 @@ const Calibracao = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30 dark:bg-green-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Em Dia</CardDescription>
-              <CardTitle className="text-3xl text-green-700">{stats.emDia}</CardTitle>
+              <CardTitle className="text-3xl text-green-700 dark:text-green-400">{stats.emDia}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700">Calibrados</span>
+                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-500" />
+                <span className="text-sm text-green-700 dark:text-green-400">Calibrados</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Próximo Vencimento</CardDescription>
-              <CardTitle className="text-3xl text-yellow-700">{stats.proximo}</CardTitle>
+              <CardTitle className="text-3xl text-yellow-700 dark:text-yellow-400">{stats.proximo}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm text-yellow-700">Atenção</span>
+                <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                <span className="text-sm text-yellow-700 dark:text-yellow-400">Atenção</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-red-500 bg-red-50/30">
+          <Card className="border-l-4 border-l-red-500 bg-red-50/30 dark:bg-red-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Vencidos</CardDescription>
-              <CardTitle className="text-3xl text-red-700">{stats.vencido}</CardTitle>
+              <CardTitle className="text-3xl text-red-700 dark:text-red-400">{stats.vencido}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-red-700">Urgente</span>
+                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-500" />
+                <span className="text-sm text-red-700 dark:text-red-400">Urgente</span>
               </div>
             </CardContent>
           </Card>
@@ -302,11 +302,11 @@ const Calibracao = () => {
 
               // Determinar cor da borda baseado no status
               const getBorderColor = () => {
-                if (equipamento.status === 'em_dia') return 'border-l-green-500 bg-green-50/30';
-                if (equipamento.status === 'proximo_vencimento') return 'border-l-yellow-500 bg-yellow-50/30';
-                if (equipamento.status === 'vencido') return 'border-l-red-500 bg-red-50/30';
-                if (equipamento.status === 'reprovado') return 'border-l-gray-500 bg-gray-50/30';
-                return 'border-l-gray-300 bg-gray-50/30';
+                if (equipamento.status === 'em_dia') return 'border-l-green-500 bg-green-50/30 dark:bg-green-950/30';
+                if (equipamento.status === 'proximo_vencimento') return 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30';
+                if (equipamento.status === 'vencido') return 'border-l-red-500 bg-red-50/30 dark:bg-red-950/30';
+                if (equipamento.status === 'reprovado') return 'border-l-gray-500 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30';
+                return 'border-l-gray-300 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30';
               };
 
               return (

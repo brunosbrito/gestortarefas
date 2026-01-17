@@ -163,7 +163,7 @@ const NaoConformidades = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-l-gray-400 bg-gray-50/30">
+          <Card className="border-l-4 border-l-gray-400 dark:border-l-gray-600 bg-gray-50/30 dark:bg-gray-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
               <CardTitle className="text-3xl">{dadosRnc.length}</CardTitle>
@@ -176,55 +176,55 @@ const NaoConformidades = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30">
+          <Card className="border-l-4 border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Em Andamento</CardDescription>
-              <CardTitle className="text-3xl text-yellow-700">
+              <CardTitle className="text-3xl text-yellow-700 dark:text-yellow-400">
                 {dadosRnc.filter(r => !r.dateConclusion).length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm text-yellow-700">Abertas</span>
+                <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                <span className="text-sm text-yellow-700 dark:text-yellow-400">Abertas</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+          <Card className="border-l-4 border-l-green-500 bg-green-50/30 dark:bg-green-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Finalizadas</CardDescription>
-              <CardTitle className="text-3xl text-green-700">
+              <CardTitle className="text-3xl text-green-700 dark:text-green-400">
                 {dadosRnc.filter(r => r.dateConclusion).length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700">Concluídas</span>
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-500" />
+                <span className="text-sm text-green-700 dark:text-green-400">Concluídas</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-red-500 bg-red-50/30">
+          <Card className="border-l-4 border-l-red-500 bg-red-50/30 dark:bg-red-950/30">
             <CardHeader className="pb-2">
               <CardDescription>Com Ação Corretiva</CardDescription>
-              <CardTitle className="text-3xl text-red-700">
+              <CardTitle className="text-3xl text-red-700 dark:text-red-400">
                 {dadosRnc.filter(r => r.correctiveAction).length}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-red-700">Ações definidas</span>
+                <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-500" />
+                <span className="text-sm text-red-700 dark:text-red-400">Ações definidas</span>
               </div>
             </CardContent>
           </Card>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 bg-construction-100 rounded-lg">
-          <Filter className="h-5 w-5 text-construction-600" />
+        <div className="flex items-center gap-4 p-4 bg-construction-100 dark:bg-muted rounded-lg">
+          <Filter className="h-5 w-5 text-construction-600 dark:text-muted-foreground" />
           <RadioGroup
             defaultValue="todas"
             onValueChange={(value) =>
@@ -267,14 +267,14 @@ const NaoConformidades = () => {
           {rncsFiltradas.map((rnc) => {
             // Determinar cor da borda baseado no status
             const getBorderColor = () => {
-              if (rnc.dateConclusion) return 'border-l-green-500 bg-green-50/30';
-              return 'border-l-yellow-500 bg-yellow-50/30';
+              if (rnc.dateConclusion) return 'border-l-green-500 bg-green-50/30 dark:bg-green-950/30';
+              return 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/30';
             };
 
             return (
             <Card key={rnc.id} className={`hover:shadow-lg transition-all border-l-4 ${getBorderColor()}`}>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-construction-800 flex justify-between items-center">
+                <CardTitle className="text-lg font-semibold text-construction-800 dark:text-foreground flex justify-between items-center">
                   <span>RNC #{String(rnc.code).padStart(3, '0')}</span>
                   <Button
                     variant="ghost"
@@ -294,11 +294,11 @@ const NaoConformidades = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm text-construction-600">
+                  <p className="text-sm text-construction-600 dark:text-muted-foreground">
                     <strong>Identificado por:</strong>{' '}
                     {rnc.responsibleIdentification.name}
                   </p>
-                  <p className="text-sm text-construction-600">
+                  <p className="text-sm text-construction-600 dark:text-muted-foreground">
                     <strong>Descrição:</strong> {rnc.description}
                   </p>
                 </div>
