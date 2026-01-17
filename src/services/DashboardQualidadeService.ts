@@ -15,42 +15,44 @@ class DashboardQualidadeService {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const mockMetrics: DashboardQualidade = {
+        periodo: periodo || {
+          inicio: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          fim: new Date().toISOString().split('T')[0],
+        },
+        obraId,
         rncs: {
           total: 45,
           abertas: 12,
-          emAnalise: 8,
           resolvidas: 25,
-          criticas: 3,
           taxaResolucao: 55.6,
+          tempoMedioResolucao: 7.5,
         },
         inspecoes: {
           total: 128,
           aprovadas: 95,
-          ressalvas: 21,
+          aprovadasComRessalvas: 21,
           reprovadas: 12,
-          taxaAprovacao: 74.2,
+          taxaConformidade: 74.2,
         },
         certificados: {
           total: 67,
           pendentes: 8,
           recebidos: 15,
-          aprovados: 42,
-          reprovados: 2,
-          proximosVencimento: 5,
+          enviados: 5,
+          proximosPrazo: 3,
         },
-        equipamentos: {
-          total: 34,
+        calibracao: {
+          equipamentosTotal: 34,
           emDia: 28,
           proximoVencimento: 4,
           vencidos: 2,
-          calibracoesPendentes: 6,
         },
-        databooks: {
-          total: 12,
-          rascunhos: 3,
-          emRevisao: 4,
-          aprovados: 4,
-          enviados: 1,
+        acoesCorretivas: {
+          total: 25,
+          abertas: 8,
+          concluidas: 15,
+          atrasadas: 2,
+          taxaEficacia: 88.5,
         },
       };
 
