@@ -5,7 +5,7 @@ import { checklistSaidaSchema, ChecklistSaidaFormData } from '@/lib/suprimentos/
 import { ChecklistSaida, checklistTemplates, combustivelNivelLabels } from '@/interfaces/suprimentos/logistica/ChecklistSaidaInterface';
 import { useCreateChecklistSaida, useUpdateChecklistSaida } from '@/hooks/suprimentos/logistica/useChecklistsSaida';
 import { useVehicles } from '@/hooks/suprimentos/logistica/useVehicles';
-import { useMotoristas } from '@/hooks/suprimentos/logistica/useMotoristas';
+import { useDrivers } from '@/hooks/suprimentos/logistica/useDrivers';
 import { useActiveRoutes } from '@/hooks/suprimentos/logistica/useRoutes';
 import {
   Dialog,
@@ -55,7 +55,7 @@ export default function ChecklistSaidaFormDialog({
   const updateMutation = useUpdateChecklistSaida();
 
   const { data: vehicles = [] } = useVehicles();
-  const { data: motoristas = [] } = useMotoristas();
+  const { data: motoristas = [] } = useDrivers();
   const { data: routes = [] } = useActiveRoutes();
 
   const [selectedVehicleType, setSelectedVehicleType] = useState<'carro' | 'empilhadeira' | 'caminhao' | null>(null);
@@ -313,7 +313,6 @@ export default function ChecklistSaidaFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
                         {routes.map((route) => (
                           <SelectItem key={route.id} value={String(route.id)}>
                             {route.nome}

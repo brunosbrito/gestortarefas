@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Loader2, Plus, Search, Truck, Car, ForkLift, MoreVertical, Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Loader2, Plus, Search, Truck, Car, Forklift, MoreVertical, Pencil, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 export default function VeiculosPage() {
@@ -95,7 +95,7 @@ export default function VeiculosPage() {
     const icons = {
       carro: <Car className="h-5 w-5" />,
       caminhao: <Truck className="h-5 w-5" />,
-      empilhadeira: <ForkLift className="h-5 w-5" />,
+      empilhadeira: <Forklift className="h-5 w-5" />,
     };
     return icons[tipo];
   };

@@ -15,7 +15,6 @@ import {
   Bot,
   Boxes,
   ShieldCheck,
-<<<<<<< HEAD
   Target,
   ClipboardCheck,
   FileCheck,
@@ -47,10 +46,6 @@ import {
   ArrowRightLeft,
   PackageSearch,
   GanttChartSquare,
-=======
-  GanttChartSquare,
-  FileText,
->>>>>>> Modulo_Comercial
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -118,7 +113,6 @@ export const navItems: MenuItem[] = [
         label: 'RNC',
         path: '/nao-conformidades',
       },
-<<<<<<< HEAD
       {
         icon: Target,
         label: 'Análise e Ações Corretivas',
@@ -163,6 +157,11 @@ export const navItems: MenuItem[] = [
         path: '/suprimentos',
       },
       {
+        icon: Bot,
+        label: 'AI Assistant',
+        path: '/suprimentos/ai-chat',
+      },
+      {
         icon: DollarSign,
         label: 'Custos',
         subItems: [
@@ -205,11 +204,6 @@ export const navItems: MenuItem[] = [
             icon: BarChart3,
             label: 'Analytics',
             path: '/suprimentos/analytics',
-          },
-          {
-            icon: MessageSquare,
-            label: 'AI Assistant',
-            path: '/suprimentos/ai-chat',
           },
         ],
       },

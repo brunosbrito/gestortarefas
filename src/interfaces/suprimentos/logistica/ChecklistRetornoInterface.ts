@@ -1,5 +1,5 @@
 // Interface para Check-list de Retorno (pós-viagem)
-import { ChecklistSaidaItem, CombustivelNivel, combustivelNivelLabels, checklistItemCategoriaLabels } from './ChecklistSaidaInterface';
+import { ChecklistSaidaItem, CombustivelNivel, combustivelNivelLabels, checklistCategoriaLabels } from './ChecklistSaidaInterface';
 
 export interface ChecklistRetorno {
   id: number;
@@ -55,4 +55,4 @@ export type ChecklistRetornoCreate = Omit<
 export type ChecklistRetornoUpdate = Partial<ChecklistRetornoCreate>;
 
 // Re-exportar labels necessários
-export { combustivelNivelLabels, checklistItemCategoriaLabels };
+export { combustivelNivelLabels, checklistCategoriaLabels };
