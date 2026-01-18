@@ -103,21 +103,21 @@ const Dashboard = () => {
         {/* Cards de Métricas - Design Moderno */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1 - Total Orçamentos */}
-          <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-500 opacity-0 group-hover:opacity-5 transition-opacity"></div>
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FileText className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <TrendingUp className="h-5 w-5 text-green-500" />
+                <TrendingUp className="h-5 w-5 text-green-500 dark:text-green-400" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Orçamentos Criados</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-blue-600">{stats.totalOrcamentos}</p>
+                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.totalOrcamentos}</p>
                   <Badge variant="outline" className="text-xs">Total</Badge>
                 </div>
               </div>
@@ -125,22 +125,22 @@ const Dashboard = () => {
           </Card>
 
           {/* Card 2 - Propostas Aprovadas */}
-          <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-green-500 opacity-0 group-hover:opacity-5 transition-opacity"></div>
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
-                <TrendingUp className="h-5 w-5 text-green-500" />
+                <TrendingUp className="h-5 w-5 text-green-500 dark:text-green-400" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Propostas Aprovadas</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-green-600">{stats.propostasAprovadas}</p>
-                  <Badge variant="outline" className="text-xs text-green-600">Sucesso</Badge>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.propostasAprovadas}</p>
+                  <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400">Sucesso</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {formatCurrency(stats.valorPropostasAprovadas)}
@@ -150,43 +150,43 @@ const Dashboard = () => {
           </Card>
 
           {/* Card 3 - Em Análise */}
-          <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 to-yellow-500 opacity-0 group-hover:opacity-5 transition-opacity"></div>
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Clock className="h-6 w-6 text-yellow-600" />
+                <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                <AlertCircle className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Em Análise</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-yellow-600">{stats.propostasEmAnalise}</p>
-                  <Badge variant="outline" className="text-xs text-yellow-600">Aguardando</Badge>
+                  <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.propostasEmAnalise}</p>
+                  <Badge variant="outline" className="text-xs text-yellow-600 dark:text-yellow-400">Aguardando</Badge>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Card 4 - Valor Total */}
-          <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-500 opacity-0 group-hover:opacity-5 transition-opacity"></div>
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <DollarSign className="h-6 w-6 text-purple-600" />
+                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                <BarChart3 className="h-5 w-5 text-purple-500" />
+                <BarChart3 className="h-5 w-5 text-purple-500 dark:text-purple-400" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Valor Total</p>
                 <div className="flex flex-col gap-1">
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {formatCurrency(stats.valorTotalPropostas)}
                   </p>
                   <p className="text-xs text-muted-foreground">Todas as propostas</p>
