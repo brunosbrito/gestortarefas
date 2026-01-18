@@ -329,7 +329,33 @@ export const navItems: MenuItem[] = [
   {
     icon: FileText,
     label: 'Comercial',
-    path: '/comercial',
+    subItems: [
+      {
+        icon: BarChart3,
+        label: 'Dashboard',
+        path: '/comercial',
+      },
+      {
+        icon: Bot,
+        label: 'AI Assistant',
+        path: '/comercial/ai-chat',
+      },
+      {
+        icon: FileText,
+        label: 'Orçamentos (QQP)',
+        path: '/comercial/orcamentos',
+      },
+      {
+        icon: MessageSquare,
+        label: 'Propostas Comerciais',
+        path: '/comercial/propostas',
+      },
+      {
+        icon: UserCircle,
+        label: 'Clientes',
+        path: '/comercial/clientes',
+      },
+    ],
   },
 
   // CONFIGURAÇÕES (renomeado de "Gerenciamento")

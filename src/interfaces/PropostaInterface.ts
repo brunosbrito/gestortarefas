@@ -1,5 +1,6 @@
 import { Orcamento } from './OrcamentoInterface';
 import { Obra } from './ObrasInterface';
+import { Cliente } from './ClienteInterface';
 
 // ============================================
 // PROPOSTA COMERCIAL (Gestão Click / GMX)
@@ -12,8 +13,13 @@ export interface Proposta {
   numero: string;                    // Auto-gerado: AAAA + sequencial
   titulo: string;                    // Descrição do projeto/serviço
 
-  // Dados do Cliente (Completo - modelo GMX)
-  cliente: {
+  // VINCULAÇÃO COM CLIENTE (Nova estrutura)
+  clienteId: string;                 // ID do cliente (tabela separada)
+  cliente?: Cliente;                 // Objeto completo (para exibição)
+
+  // Dados do Cliente (DEPRECATED - manter para compatibilidade com código antigo)
+  // TODO: Remover após migração completa para clienteId
+  clienteData?: {
     razaoSocial: string;             // REQUERIDO
     nomeFantasia?: string;
     cnpj: string;                    // REQUERIDO
@@ -117,7 +123,7 @@ export interface CondicaoGeral {
 // DTOs para criação/atualização
 export interface CreateProposta {
   titulo: string;
-  cliente: Proposta['cliente'];
+  clienteId: string;                 // Nova estrutura (obrigatório)
   vendedor: Proposta['vendedor'];
   dataValidade: string;
   previsaoEntrega: string;
