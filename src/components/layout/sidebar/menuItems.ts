@@ -22,6 +22,29 @@ import {
   Gauge,
   BarChart3,
   BookOpen,
+  Package,
+  ShoppingCart,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  MessageSquare,
+  ClipboardPen,
+  Tags,
+  ShoppingBag,
+  Truck,
+  UserCircle,
+  Warehouse,
+  Building,
+  Wrench,
+  Store,
+  MapPin,
+  FileSignature,
+  CheckSquare,
+  Cog,
+  Cloud,
+  Wallet,
+  ArrowRightLeft,
+  PackageSearch,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -118,6 +141,178 @@ export const navItems: MenuItem[] = [
         icon: BookOpen,
         label: 'Databook',
         path: '/qualidade/databook',
+      },
+    ],
+  },
+
+  // MÓDULO SUPRIMENTOS
+  {
+    icon: Package,
+    label: 'Suprimentos',
+    subItems: [
+      {
+        icon: BarChart3,
+        label: 'Dashboard',
+        path: '/suprimentos',
+      },
+      {
+        icon: DollarSign,
+        label: 'Custos',
+        subItems: [
+          {
+            icon: FileText,
+            label: 'Contratos',
+            path: '/suprimentos/contratos',
+          },
+          {
+            icon: TrendingUp,
+            label: 'Orçado vs Realizado',
+            path: '/suprimentos/orcado-realizado',
+          },
+          {
+            icon: DollarSign,
+            label: 'Centros de Custo',
+            path: '/suprimentos/centros-custo',
+          },
+          {
+            icon: Wallet,
+            label: 'Contas',
+            path: '/suprimentos/contas',
+          },
+          {
+            icon: Target,
+            label: 'Metas',
+            path: '/suprimentos/metas',
+          },
+          {
+            icon: FileText,
+            label: 'Relatórios',
+            path: '/suprimentos/relatorios',
+          },
+          {
+            icon: Cloud,
+            label: 'OneDrive',
+            path: '/suprimentos/onedrive',
+          },
+          {
+            icon: BarChart3,
+            label: 'Analytics',
+            path: '/suprimentos/analytics',
+          },
+          {
+            icon: MessageSquare,
+            label: 'AI Assistant',
+            path: '/suprimentos/ai-chat',
+          },
+        ],
+      },
+      {
+        icon: ShoppingCart,
+        label: 'Compras',
+        subItems: [
+          {
+            icon: Building,
+            label: 'Fornecedores',
+            path: '/suprimentos/compras/fornecedores',
+          },
+          {
+            icon: ClipboardPen,
+            label: 'Requisições',
+            path: '/suprimentos/compras/requisicoes',
+          },
+          {
+            icon: Tags,
+            label: 'Cotações',
+            path: '/suprimentos/compras/cotacoes',
+          },
+          {
+            icon: ShoppingBag,
+            label: 'Ordens de Compra',
+            path: '/suprimentos/compras/ordens-compra',
+          },
+          {
+            icon: FileText,
+            label: 'Notas Fiscais',
+            path: '/suprimentos/notas-fiscais',
+          },
+        ],
+      },
+      {
+        icon: Warehouse,
+        label: 'Almoxarifado',
+        subItems: [
+          {
+            icon: Package,
+            label: 'Items',
+            path: '/suprimentos/almoxarifado/items',
+          },
+          {
+            icon: ArrowRightLeft,
+            label: 'Movimentações',
+            path: '/suprimentos/almoxarifado/movimentacoes',
+          },
+          {
+            icon: PackageSearch,
+            label: 'Inventários',
+            path: '/suprimentos/almoxarifado/inventarios',
+          },
+        ],
+      },
+      {
+        icon: Truck,
+        label: 'Logística',
+        subItems: [
+          {
+            icon: LayoutDashboard,
+            label: 'Dashboard',
+            path: '/suprimentos/logistica',
+          },
+          {
+            icon: Truck,
+            label: 'Veículos',
+            path: '/suprimentos/logistica/veiculos',
+          },
+          {
+            icon: UserCircle,
+            label: 'Motoristas',
+            path: '/suprimentos/logistica/motoristas',
+          },
+          {
+            icon: Warehouse,
+            label: 'Transportadoras',
+            path: '/suprimentos/logistica/transportadoras',
+          },
+          {
+            icon: Wrench,
+            label: 'Tipos de Manutenção',
+            path: '/suprimentos/logistica/tipos-manutencao',
+          },
+          {
+            icon: Store,
+            label: 'Fornecedores de Serviços',
+            path: '/suprimentos/logistica/fornecedores-servicos',
+          },
+          {
+            icon: MapPin,
+            label: 'Rotas',
+            path: '/suprimentos/logistica/rotas',
+          },
+          {
+            icon: FileSignature,
+            label: 'Checklists Saída',
+            path: '/suprimentos/logistica/checklists-saida',
+          },
+          {
+            icon: CheckSquare,
+            label: 'Checklists Retorno',
+            path: '/suprimentos/logistica/checklists-retorno',
+          },
+          {
+            icon: Cog,
+            label: 'Manutenções',
+            path: '/suprimentos/logistica/manutencoes',
+          },
+        ],
       },
     ],
   },

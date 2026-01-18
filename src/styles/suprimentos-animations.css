@@ -1,0 +1,347 @@
+/* Suprimentos Module Animations */
+
+/* Page Transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Page Container Animation */
+.suprimentos-page {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Card Animations */
+.suprimentos-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.suprimentos-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* KPI Card Animations */
+.suprimentos-kpi-card {
+  animation: slideInFromBottom 0.4s ease-out backwards;
+  transition: all 0.2s ease;
+}
+
+.suprimentos-kpi-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.suprimentos-kpi-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.suprimentos-kpi-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.suprimentos-kpi-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.suprimentos-kpi-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.15);
+}
+
+/* Table Row Animations */
+.suprimentos-table-row {
+  transition: all 0.15s ease;
+}
+
+.suprimentos-table-row:hover {
+  background-color: hsl(var(--muted) / 0.3);
+  transform: scale(1.005);
+}
+
+/* Button Animations */
+.suprimentos-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.suprimentos-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.suprimentos-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.suprimentos-button:active {
+  transform: scale(0.98);
+}
+
+/* Modal/Dialog Animations */
+@keyframes modalOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContent {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.suprimentos-dialog-overlay {
+  animation: modalOverlay 0.2s ease-out;
+}
+
+.suprimentos-dialog-content {
+  animation: modalContent 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Badge Animations */
+.suprimentos-badge {
+  transition: all 0.2s ease;
+}
+
+.suprimentos-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress Bar Animation */
+@keyframes progressFill {
+  from {
+    width: 0;
+  }
+}
+
+.suprimentos-progress-bar {
+  animation: progressFill 1s ease-out;
+}
+
+/* Loading Skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.suprimentos-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted) / 0.5) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* List Item Stagger Animation */
+.suprimentos-list-item {
+  animation: slideInFromRight 0.3s ease-out backwards;
+}
+
+.suprimentos-list-item:nth-child(1) { animation-delay: 0.05s; }
+.suprimentos-list-item:nth-child(2) { animation-delay: 0.1s; }
+.suprimentos-list-item:nth-child(3) { animation-delay: 0.15s; }
+.suprimentos-list-item:nth-child(4) { animation-delay: 0.2s; }
+.suprimentos-list-item:nth-child(5) { animation-delay: 0.25s; }
+.suprimentos-list-item:nth-child(6) { animation-delay: 0.3s; }
+.suprimentos-list-item:nth-child(7) { animation-delay: 0.35s; }
+.suprimentos-list-item:nth-child(8) { animation-delay: 0.4s; }
+
+/* Tab Transition */
+.suprimentos-tab-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Filter Active Indicator */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.suprimentos-filter-active {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Icon Rotation on Hover */
+.suprimentos-icon-rotate {
+  transition: transform 0.3s ease;
+}
+
+.suprimentos-icon-rotate:hover {
+  transform: rotate(360deg);
+}
+
+/* Smooth Scroll */
+.suprimentos-scroll-container {
+  scroll-behavior: smooth;
+}
+
+/* Chart Animation */
+@keyframes chartFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.suprimentos-chart {
+  animation: chartFadeIn 0.5s ease-out;
+}
+
+/* Success/Error State Animations */
+@keyframes successPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.suprimentos-success-state {
+  animation: successPulse 1s ease-out;
+}
+
+.suprimentos-error-state {
+  animation: errorShake 0.3s ease-out;
+}
+
+/* Dropdown Animation */
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suprimentos-dropdown {
+  animation: dropdownSlide 0.2s ease-out;
+}
+
+/* Tooltip Animation */
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.suprimentos-tooltip {
+  animation: tooltipFade 0.15s ease-out;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .suprimentos-page,
+  .suprimentos-card,
+  .suprimentos-kpi-card,
+  .suprimentos-table-row,
+  .suprimentos-button,
+  .suprimentos-dialog-overlay,
+  .suprimentos-dialog-content,
+  .suprimentos-badge,
+  .suprimentos-progress-bar,
+  .suprimentos-skeleton,
+  .suprimentos-list-item,
+  .suprimentos-tab-content,
+  .suprimentos-chart,
+  .suprimentos-dropdown,
+  .suprimentos-tooltip {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .suprimentos-scroll-container {
+    scroll-behavior: auto;
+  }
+}

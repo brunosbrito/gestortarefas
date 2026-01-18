@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC 3: Captura de Foto via Câmera - GML Logística</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .status-bar {
+      background: #10b981;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .status-bar.no-permission {
+      background: #ef4444;
+    }
+
+    .status-bar.requesting {
+      background: #f59e0b;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: white;
+      margin-right: 0.5rem;
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+    }
+
+    .main-content {
+      padding: 2rem;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .camera-container {
+      position: relative;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    #videoElement {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      height: 60%;
+      border: 3px dashed rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .camera-overlay::before {
+      content: 'Posicione o documento ou dano dentro do quadro';
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    #canvasElement {
+      display: none;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .photo-item {
+      position: relative;
+      background: #f8fafc;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #e2e8f0;
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-info {
+      padding: 0.75rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .photo-info .size {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .photo-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: white;
+    }
+
+    .photo-actions button {
+      padding: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      flex: 1;
+      font-size: 0.875rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .permission-guide {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    .permission-guide h3 {
+      color: #92400e;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .permission-guide ol {
+      margin-left: 1.5rem;
+      color: #78350f;
+      font-size: 0.875rem;
+    }
+
+    .permission-guide ol li {
+      margin-bottom: 0.25rem;
+    }
+
+    .test-scenarios {
+      background: #f8fafc;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 2px solid #e2e8f0;
+    }
+
+    .test-scenarios h3 {
+      color: #1e293b;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .test-scenarios ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .test-scenarios li {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: white;
+      border-radius: 4px;
+      border-left: 3px solid #3b82f6;
+      font-size: 0.875rem;
+    }
+
+    .test-scenarios li.done {
+      border-left-color: #10b981;
+      opacity: 0.7;
+    }
+
+    .test-scenarios li input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+
+    .event-log {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    .log-entry {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-left: 3px solid #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 4px;
+    }
+
+    .log-entry.success {
+      border-left-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .log-entry.warning {
+      border-left-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .log-entry.error {
+      border-left-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .main-content {
+        padding: 1rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        min-width: auto;
+      }
+
+      .photos-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📸 POC 3: Captura de Foto via Câmera</h1>
+      <p>Validação de permissões, qualidade de imagem e compressão</p>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+      <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText"><strong>Aguardando</strong> - Clique em "Iniciar Câmera" para começar</span>
+      </div>
+      <div>
+        <span id="photoCount">0 fotos capturadas</span>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <!-- Estatísticas -->
+      <div class="section">
+        <div class="section-title">📊 Estatísticas</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="statsTotal">0</div>
+            <div class="stat-label">Total de Fotos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statsLegible">0</div>
+            <div class="stat-label">Texto Legível</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statsAvgSize">0 KB</div>
+            <div class="stat-label">Tamanho Médio</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statsPermissionRate">0%</div>
+            <div class="stat-label">Taxa de Permissão</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Câmera -->
+      <div class="section">
+        <div class="section-title">📷 Câmera</div>
+
+        <div class="camera-container">
+          <video id="videoElement" autoplay playsinline></video>
+          <div class="camera-overlay"></div>
+          <canvas id="canvasElement"></canvas>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">
+            📷 Iniciar Câmera
+          </button>
+          <button class="btn btn-success" id="captureBtn" onclick="capturePhoto()" disabled>
+            📸 Capturar Foto
+          </button>
+          <button class="btn btn-secondary" id="switchCameraBtn" onclick="switchCamera()" disabled>
+            🔄 Trocar Câmera
+          </button>
+          <button class="btn btn-danger" id="stopCameraBtn" onclick="stopCamera()" disabled>
+            ⏹️ Parar Câmera
+          </button>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-secondary" onclick="uploadFromGallery()">
+            🖼️ Upload da Galeria
+          </button>
+          <button class="btn btn-secondary" onclick="runAllTests()">
+            🧪 Executar Testes Automáticos
+          </button>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+      </div>
+
+      <!-- Guia de Permissões -->
+      <div class="section">
+        <div class="permission-guide">
+          <h3>⚠️ Se a permissão for negada:</h3>
+          <ol>
+            <li><strong>Chrome/Edge:</strong> Clique no ícone 🔒 ao lado da URL → Configurações do site → Câmera → Permitir</li>
+            <li><strong>Safari iOS:</strong> Ajustes → Safari → Câmera → Permitir</li>
+            <li><strong>Chrome Android:</strong> Configurações → Sites → Permissões → Câmera → Permitir</li>
+            <li>Recarregue a página após alterar as permissões</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Cenários de Teste -->
+      <div class="section">
+        <div class="test-scenarios">
+          <h3>✅ Cenários de Teste (marque conforme testa)</h3>
+          <ul>
+            <li><input type="checkbox" id="test1"> Permissão concedida no primeiro pedido</li>
+            <li><input type="checkbox" id="test2"> Permissão negada → Tutorial exibido</li>
+            <li><input type="checkbox" id="test3"> Foto de dano no veículo (legível)</li>
+            <li><input type="checkbox" id="test4"> Foto de documento (CRLV, NF) - texto legível</li>
+            <li><input type="checkbox" id="test5"> Foto em baixa luz (ainda legível)</li>
+            <li><input type="checkbox" id="test6"> Compressão 80% mantém qualidade</li>
+            <li><input type="checkbox" id="test7"> Tamanho após compressão < 500KB</li>
+            <li><input type="checkbox" id="test8"> Upload da galeria funciona</li>
+            <li><input type="checkbox" id="test9"> Trocar câmera (frontal/traseira)</li>
+            <li><input type="checkbox" id="test10"> Recapturar foto funciona</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Fotos Capturadas -->
+      <div class="section">
+        <div class="section-title">🖼️ Fotos Capturadas (<span id="photoCountDisplay">0</span>)</div>
+        <div class="photos-grid" id="photosGrid">
+          <!-- Fotos aparecem aqui -->
+        </div>
+      </div>
+
+      <!-- Log de Eventos -->
+      <div class="section">
+        <div class="section-title">📋 Log de Eventos</div>
+        <div class="event-log" id="eventLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="camera.js"></script>
+</body>
+</html>

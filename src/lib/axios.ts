@@ -24,6 +24,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.warn('Token inválido ou expirado. Fazendo logout...');
+
       // Token expirado ou inválido - limpar tokens e redirecionar para login
       localStorage.removeItem('authToken');
       sessionStorage.removeItem('authToken');

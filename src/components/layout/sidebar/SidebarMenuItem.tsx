@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { MenuItem } from "./types";
 import { cn } from "@/lib/utils";
+import { SubMenuItemComponent } from "./SubMenuItemComponent";
 
 interface SidebarMenuItemProps {
   item: MenuItem;
@@ -76,24 +77,12 @@ export const SidebarMenuItem = ({
 
       {/* Sub-items with animation */}
       {isExpanded && hasSubItems && (
-        <div className="pl-6 space-y-1 py-1 overflow-hidden border-l-2 border-border/30 ml-[18px]">
-          {item.subItems.map((subItem) => (
-            <Link
-              key={subItem.path}
-              to={subItem.path}
-              aria-current={location.pathname === subItem.path ? "page" : undefined}
-              aria-label={subItem.label}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm",
-                "transition-all duration-200",
-                location.pathname === subItem.path
-                  ? "bg-primary/10 text-primary font-medium border-l-2 border-primary -ml-[2px]"
-                  : "text-foreground/60 hover:text-foreground hover:bg-accent/30"
-              )}
-            >
-              <subItem.icon className="w-4 h-4" />
-              <span className="truncate">{subItem.label}</span>
-            </Link>
+        <div className="space-y-1 py-1 overflow-hidden border-l-2 border-border/30 ml-[18px]">
+          {item.subItems.map((subItem, index) => (
+            <SubMenuItemComponent
+              key={subItem.path || `subitem-${index}`}
+              subItem={subItem}
+            />
           ))}
         </div>
       )}

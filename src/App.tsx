@@ -30,6 +30,7 @@ const PlanosInspecao = lazy(() => import('./pages/qualidade/planos-inspecao'));
 const Certificados = lazy(() => import('./pages/qualidade/certificados'));
 const Calibracao = lazy(() => import('./pages/qualidade/calibracao'));
 const Databook = lazy(() => import('./pages/qualidade/databook'));
+const Suprimentos = lazy(() => import('./pages/suprimentos'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -65,6 +66,7 @@ function App() {
           <Route path="/qualidade/calibracao" element={<Calibracao />} />
           <Route path="/qualidade/indicadores" element={<DashboardQualidade />} />
           <Route path="/qualidade/databook" element={<Databook />} />
+          <Route path="/suprimentos/*" element={<Suprimentos />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
             path="/obras/:projectId/os/:serviceOrderId/atividades"
