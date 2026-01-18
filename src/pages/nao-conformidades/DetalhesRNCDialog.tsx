@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { NonConformity } from '@/interfaces/RncInterface';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { FileText } from 'lucide-react';
+import { FileText, Target } from 'lucide-react';
 import CraftMyPdfService from '@/services/CraftMyPdfService';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/dashboard/LoadingSpinner';
 import { useState } from 'react';
+import { NovaAnaliseDialog } from '@/pages/qualidade/acoes-corretivas/NovaAnaliseDialog';
 
 interface DetalhesRNCDialogProps {
   rnc: NonConformity | null;
@@ -27,6 +28,7 @@ export function DetalhesRNCDialog({
 }: DetalhesRNCDialogProps) {
   const { toast } = useToast();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showAnaliseDialog, setShowAnaliseDialog] = useState(false);
 
   if (!rnc) return null;
 
@@ -67,23 +69,33 @@ export function DetalhesRNCDialog({
             <DialogTitle className="text-xl font-bold text-[#003366]">
               RNC #{String(rnc.code).padStart(3, '0')}
             </DialogTitle>
-            <Button
-              onClick={handleGeneratePDF}
-              disabled={isGeneratingPdf}
-              className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90 disabled:opacity-50"
-            >
-              {isGeneratingPdf ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                  Gerando PDF...
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4 mr-2" />
-                  Gerar PDF
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowAnaliseDialog(true)}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-white"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Criar Análise
+              </Button>
+              <Button
+                onClick={handleGeneratePDF}
+                disabled={isGeneratingPdf}
+                className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90 disabled:opacity-50"
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Gerando PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Gerar PDF
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
@@ -430,6 +442,20 @@ export function DetalhesRNCDialog({
             )}
           </div>
         )}
+
+        {/* Dialog de Nova Análise */}
+        <NovaAnaliseDialog
+          open={showAnaliseDialog}
+          onOpenChange={setShowAnaliseDialog}
+          rncId={rnc.id}
+          onSuccess={() => {
+            setShowAnaliseDialog(false);
+            toast({
+              title: 'Análise criada com sucesso',
+              description: 'A análise de causa raiz foi vinculada a esta RNC.',
+            });
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

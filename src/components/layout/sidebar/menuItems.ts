@@ -75,6 +75,11 @@ export const navItems: MenuItem[] = [
     label: 'Qualidade',
     subItems: [
       {
+        icon: BarChart3,
+        label: 'Dashboard',
+        path: '/qualidade/indicadores',
+      },
+      {
         icon: Bot,
         label: 'Assistente IA',
         path: '/qualidade/assistente-ia',
@@ -108,11 +113,6 @@ export const navItems: MenuItem[] = [
         icon: Gauge,
         label: 'Calibração',
         path: '/qualidade/calibracao',
-      },
-      {
-        icon: BarChart3,
-        label: 'Indicadores/Dashboard',
-        path: '/qualidade/indicadores',
       },
       {
         icon: BookOpen,

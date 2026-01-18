@@ -22,6 +22,16 @@ O **Gestor de Tarefas GML** é uma aplicação web moderna para gerenciamento co
 - 👥 **Colaboradores** - Gestão de equipe com setores e cargos
 - 🕒 **Registro de Ponto** - Controle de presença e efetivo
 - ⚠️ **Não-Conformidades (RNC)** - Gestão de qualidade com tracking de custos
+- 🎯 **Módulo Qualidade** - Sistema completo ISO 9001 (9 funcionalidades integradas)
+  - 🤖 Assistente IA Qualidade - Análises e insights com IA
+  - 📋 Análise e Ações Corretivas - 5 Porquês, Ishikawa, Plano de Ação 5W2H
+  - 🔍 Inspeções - Formulários customizáveis e rastreamento
+  - 📜 Certificados - Upload, validação e envio automatizado
+  - ⚙️ Calibração - Controle de equipamentos e alertas de vencimento
+  - 📊 Dashboard Qualidade - KPIs e métricas em tempo real
+  - 📚 Databook - Geração automática de dossiê técnico por obra
+  - 🔔 Notificações - Alertas proativos de calibração, certificados e ações
+  - ✉️ Email Avançado - Templates e histórico de envios
 - 👤 **Usuários** - Autenticação JWT com roles (Admin/Usuário)
 - 🤖 **Assistente IA** - Integração com OpenAI
 
@@ -76,6 +86,7 @@ gestortarefas/
 │   │   ├── layout/         # Layout (Header, Sidebar)
 │   │   ├── nao-conformidades/ # RNC
 │   │   ├── obras/          # Gestão de obras
+│   │   ├── qualidade/      # Componentes do Módulo Qualidade
 │   │   ├── tables/         # Tabelas reutilizáveis
 │   │   ├── tours/          # Tours guiados
 │   │   ├── ui/             # shadcn/ui components (47)
@@ -84,6 +95,16 @@ gestortarefas/
 │   ├── interfaces/         # TypeScript interfaces
 │   ├── lib/                # Bibliotecas utilitárias
 │   ├── pages/              # Páginas (rotas)
+│   │   ├── qualidade/      # Módulo Qualidade (9 funcionalidades)
+│   │   │   ├── assistente-ia/
+│   │   │   ├── acoes-corretivas/
+│   │   │   ├── inspecoes/
+│   │   │   ├── planos-inspecao/
+│   │   │   ├── certificados/
+│   │   │   ├── calibracao/
+│   │   │   ├── databook/
+│   │   │   └── index.tsx   # Dashboard Qualidade
+│   │   └── ...
 │   ├── services/           # API services
 │   ├── store/              # Zustand stores
 │   ├── utils/              # Funções auxiliares
@@ -162,9 +183,19 @@ Obra (Project)
 3. **Obras** - Projetos (Obra/Fábrica/Mineradora)
 4. **Gerenciamento** - Configurações do sistema
 5. **RNC** - Não-conformidades
-6. **Registro de Ponto** - Controle de presença
-7. **Usuários** - Autenticação e permissões
-8. **Assistente IA** - Suporte inteligente
+6. **Qualidade** - Sistema completo ISO 9001
+   - Assistente IA Qualidade
+   - Análise e Ações Corretivas (5 Porquês, Ishikawa, 5W2H)
+   - Inspeções e Planos de Inspeção
+   - Gestão de Certificados com envio automatizado
+   - Controle de Calibração de equipamentos
+   - Dashboard com KPIs em tempo real
+   - Geração automática de Databook
+   - Sistema de notificações e alertas
+   - Templates de email personalizáveis
+7. **Registro de Ponto** - Controle de presença
+8. **Usuários** - Autenticação e permissões
+9. **Assistente IA** - Suporte inteligente
 
 Para mais detalhes, consulte [ARQUITETURA.md](./docs/ARQUITETURA.md).
 
@@ -185,6 +216,15 @@ Para mais detalhes, consulte [ARQUITETURA.md](./docs/ARQUITETURA.md).
 - `/collaborators` - Colaboradores
 - `/users` - Usuários
 - `/non-conformities` - RNCs
+- `/api/qualidade/*` - Módulo Qualidade
+  - `/analises-acoes-corretivas` - Análise e Ações Corretivas
+  - `/inspecoes` - Inspeções
+  - `/planos-inspecao` - Planos de Inspeção
+  - `/certificados` - Certificados de Qualidade
+  - `/equipamentos` - Equipamentos de Calibração
+  - `/databooks` - Databooks
+  - `/notificacoes` - Notificações
+  - `/email-certificados` - Email de Certificados
 
 ---
 
@@ -379,9 +419,23 @@ Para dúvidas ou problemas:
 
 ## ⭐ Status do Projeto
 
-**Versão Atual:** 3.0.0
+**Versão Atual:** 4.0.0 - Módulo Qualidade Completo
 **Status:** ✅ **Produção Ready**
-**Última Atualização:** 31 de Dezembro de 2025
+**Última Atualização:** 02 de Janeiro de 2026
+
+### Novidades v4.0.0 (Janeiro 2026)
+- ✨ **Módulo Qualidade Completo** - Sistema de gestão de qualidade ISO 9001
+  - 9 funcionalidades integradas
+  - Análise de causa raiz (5 Porquês + Ishikawa)
+  - Gestão de inspeções e certificados
+  - Controle de calibração com alertas
+  - Geração automática de Databook
+  - Sistema de notificações proativas
+  - Templates de email personalizáveis
+- 🐛 **4 Bugs Críticos Corrigidos** - Upload de arquivos
+- ♿ **13 Melhorias de Acessibilidade** - WCAG AA compliance
+- 📧 **Sistema de Email Avançado** - Templates e rastreamento
+- 🔔 **Sistema de Notificações** - Alertas automáticos
 
 ### Métricas de Qualidade
 - ✅ TypeScript strict mode

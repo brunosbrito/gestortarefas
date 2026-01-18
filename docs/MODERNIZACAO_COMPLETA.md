@@ -353,5 +353,5 @@ O sistema está pronto para produção e proporciona uma experiência de usuári
 ---
 
 **Data de Conclusão:** 31 de Dezembro de 2025
-**Desenvolvido por:** Claude Sonnet 4.5
+**Desenvolvido por:** Claude Sonnet 4.5 - Daniel Rodrigues
 **Projeto:** GML Estruturas - Gestor de Tarefas
