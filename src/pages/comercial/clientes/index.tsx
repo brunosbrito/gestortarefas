@@ -214,7 +214,7 @@ const ClientesPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Users className="h-8 w-8 text-blue-600" />
+            <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             Clientes
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -255,13 +255,13 @@ const ClientesPage = () => {
                   <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="juridica">
                     <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       Pessoa Jurídica
                     </div>
                   </SelectItem>
                   <SelectItem value="fisica">
                     <div className="flex items-center gap-2">
-                      <UserIcon className="h-4 w-4 text-green-600" />
+                      <UserIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
                       Pessoa Física
                     </div>
                   </SelectItem>
@@ -299,7 +299,7 @@ const ClientesPage = () => {
           {/* Header da Tabela */}
           <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-blue-600" />
+              <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
                 <h3 className="font-semibold">Clientes Cadastrados</h3>
                 <p className="text-sm text-muted-foreground">
@@ -380,9 +380,9 @@ const ClientesPage = () => {
                     <TableRow key={cliente.id} className="hover:bg-muted/50">
                       <TableCell>
                         {cliente.tipoPessoa === 'juridica' ? (
-                          <Building2 className="h-5 w-5 text-blue-600" />
+                          <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         ) : (
-                          <UserIcon className="h-5 w-5 text-green-600" />
+                          <UserIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
                         )}
                       </TableCell>
                       <TableCell>
@@ -453,7 +453,7 @@ const ClientesPage = () => {
                             {cliente.ativo ? (
                               <XCircle className="h-4 w-4 text-orange-600" />
                             ) : (
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                             )}
                           </Button>
                           <Button

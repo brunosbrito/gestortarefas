@@ -207,7 +207,7 @@ const PropostasListPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-8 w-8 text-blue-600" />
+            <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             Propostas Comerciais
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -267,7 +267,7 @@ const PropostasListPage = () => {
           {/* Header da Tabela */}
           <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-blue-600" />
+              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
                 <h3 className="font-semibold">Propostas</h3>
                 <p className="text-sm text-muted-foreground">
@@ -373,7 +373,7 @@ const PropostasListPage = () => {
                         <TableCell className="text-center">
                           <StatusBadge status={prop.status} />
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-blue-600">
+                        <TableCell className="text-right font-semibold text-blue-600 dark:text-blue-400">
                           {formatCurrency(prop.valorTotal, prop.moeda)}
                         </TableCell>
                         <TableCell className="text-center">

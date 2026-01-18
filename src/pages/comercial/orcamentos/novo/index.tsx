@@ -347,7 +347,6 @@ const NovoOrcamento = () => {
             </div>
           </div>
         </form>
-      </div>
     </div>
   );
 };
