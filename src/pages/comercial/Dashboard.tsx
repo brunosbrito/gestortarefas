@@ -74,29 +74,15 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="p-6 space-y-8">
-        {/* Header Moderno */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/5 rounded-3xl"></div>
-          <div className="relative p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-foreground mb-2">
-                  Módulo Comercial
-                </h1>
-                <p className="text-lg text-muted-foreground">
-                  Gestão completa de orçamentos e propostas comerciais
-                </p>
-              </div>
-              <div className="hidden md:flex items-center gap-3">
-                <div className="text-right">
-                  <div className="text-sm text-muted-foreground">Última atualização</div>
-                  <div className="font-semibold text-foreground">{new Date().toLocaleDateString('pt-BR')}</div>
-                </div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
-                  <FileText className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </div>
+        {/* Header Simples */}
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Módulo Comercial
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Gestão completa de orçamentos e propostas comerciais
+            </p>
           </div>
         </div>
 
@@ -197,7 +183,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Card Orçamentos */}
           <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-primary/5"></div>
             <CardHeader className="relative border-b bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -222,7 +207,7 @@ const Dashboard = () => {
                   { icon: Calendar, text: 'Templates e importação CSV' },
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3 group/item">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:bg-primary/20 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center group-hover/item:bg-muted/80 transition-colors">
                       <item.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <span className="text-sm text-muted-foreground group-hover/item:text-foreground transition-colors">
@@ -252,7 +237,6 @@ const Dashboard = () => {
 
           {/* Card Propostas */}
           <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-primary/5"></div>
             <CardHeader className="relative border-b bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -277,7 +261,7 @@ const Dashboard = () => {
                   { icon: Users, text: 'Gestão de clientes integrada' },
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3 group/item">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:bg-primary/20 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center group-hover/item:bg-muted/80 transition-colors">
                       <item.icon className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
                     <span className="text-sm text-muted-foreground group-hover/item:text-foreground transition-colors">
@@ -318,7 +302,7 @@ const Dashboard = () => {
             <CardContent className="pt-6">
               {orcamentos.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                     <AlertCircle className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">Nenhum orçamento criado ainda</p>
@@ -371,7 +355,7 @@ const Dashboard = () => {
             <CardContent className="pt-6">
               {propostas.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                     <AlertCircle className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">Nenhuma proposta criada ainda</p>
