@@ -101,15 +101,15 @@ const OrcamentosListPage = () => {
 
   const getStatusViabilidade = (dre: Orcamento['dre']) => {
     if (dre.lucroLiquido < 0) {
-      return { label: 'Prejuízo', color: 'bg-red-100 text-red-700 border-red-300' };
+      return { label: 'Prejuízo', color: 'bg-red-100 text-red-700 border-red-300 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800' };
     }
     if (dre.margemLiquida < 5) {
-      return { label: 'Margem Baixa', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' };
+      return { label: 'Margem Baixa', color: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-800' };
     }
     if (dre.margemLiquida < 15) {
-      return { label: 'Aceitável', color: 'bg-blue-100 text-blue-700 border-blue-300' };
+      return { label: 'Aceitável', color: 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800' };
     }
-    return { label: 'Bom', color: 'bg-green-100 text-green-700 border-green-300' };
+    return { label: 'Bom', color: 'bg-green-100 text-green-700 border-green-300 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800' };
   };
 
   // Filtros
@@ -197,7 +197,7 @@ const OrcamentosListPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-8 w-8 text-blue-600" />
+            <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             Orçamentos (QQP)
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -234,13 +234,13 @@ const OrcamentosListPage = () => {
                   <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="servico">
                     <div className="flex items-center gap-2">
-                      <Wrench className="h-4 w-4 text-blue-600" />
+                      <Wrench className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       Serviço
                     </div>
                   </SelectItem>
                   <SelectItem value="produto">
                     <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-green-600" />
+                      <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
                       Produto
                     </div>
                   </SelectItem>
@@ -280,7 +280,7 @@ const OrcamentosListPage = () => {
           {/* Header da Tabela */}
           <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-blue-600" />
+              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
                 <h3 className="font-semibold">Orçamentos</h3>
                 <p className="text-sm text-muted-foreground">
@@ -294,10 +294,8 @@ const OrcamentosListPage = () => {
 
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => navigate('/comercial/orcamentos/novo')}
-                className="bg-blue-600 text-white hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Orçamento
@@ -386,8 +384,8 @@ const OrcamentosListPage = () => {
                         <TableCell>
                           <Badge className={`${
                             orc.tipo === 'servico'
-                              ? 'bg-blue-50 text-blue-700 border-blue-300'
-                              : 'bg-green-50 text-green-700 border-green-300'
+                              ? 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800'
+                              : 'bg-green-50 text-green-700 border-green-300 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800'
                           } flex items-center gap-1.5 w-fit`}>
                             {orc.tipo === 'servico' ? (
                               <Wrench className="h-3 w-3" />
@@ -398,14 +396,14 @@ const OrcamentosListPage = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>{orc.nome}</TableCell>
-                        <TableCell className="text-right font-semibold text-blue-600">
+                        <TableCell className="text-right font-semibold text-blue-600 dark:text-blue-400">
                           {formatCurrency(orc.totalVenda)}
                         </TableCell>
                         <TableCell className="text-center">
                           {formatPercentage(orc.bdiMedio)}
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={orc.dre.margemLiquida < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+                          <span className={orc.dre.margemLiquida < 0 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-green-600 dark:text-green-400 font-semibold'}>
                             {formatPercentage(orc.dre.margemLiquida)}
                           </span>
                         </TableCell>
