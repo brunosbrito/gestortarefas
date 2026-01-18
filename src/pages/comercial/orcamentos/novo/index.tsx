@@ -87,38 +87,36 @@ const NovoOrcamento = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/comercial/orcamentos')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
+    <div className="p-8 space-y-6">
+      {/* Header */}
+      <div className="space-y-4">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/comercial/orcamentos')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
 
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
-              <FileText className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Novo Orçamento</h1>
-              <p className="text-muted-foreground mt-1">
-                Crie um novo orçamento com composição de custos
-              </p>
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-elevation-2">
+            <FileText className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Novo Orçamento</h1>
+            <p className="text-muted-foreground mt-1">
+              Crie um novo orçamento com composição de custos
+            </p>
           </div>
         </div>
+      </div>
 
         {/* Formulário */}
         <form onSubmit={handleSubmit}>
           <div className="max-w-3xl mx-auto space-y-6">
             {/* Informações Básicas */}
-            <Card className="border-none shadow-lg">
-              <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+            <Card className="shadow-elevation-2">
+              <CardHeader className="border-b bg-muted/30">
                 <CardTitle>Informações Básicas</CardTitle>
                 <CardDescription>
                   Dados principais do orçamento
@@ -153,7 +151,7 @@ const NovoOrcamento = () => {
                         htmlFor="servico"
                         className="flex items-center gap-2 cursor-pointer font-normal"
                       >
-                        <Wrench className="h-4 w-4 text-blue-600" />
+                        <Wrench className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         <span>Serviço</span>
                         <span className="text-xs text-muted-foreground">(S-001|2026)</span>
                       </Label>
@@ -164,7 +162,7 @@ const NovoOrcamento = () => {
                         htmlFor="produto"
                         className="flex items-center gap-2 cursor-pointer font-normal"
                       >
-                        <Package className="h-4 w-4 text-green-600" />
+                        <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
                         <span>Produto</span>
                         <span className="text-xs text-muted-foreground">(P-001|2026)</span>
                       </Label>
@@ -241,8 +239,8 @@ const NovoOrcamento = () => {
             </Card>
 
             {/* Tributos */}
-            <Card className="border-none shadow-lg">
-              <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+            <Card className="shadow-elevation-2">
+              <CardHeader className="border-b bg-muted/30">
                 <CardTitle>Configuração de Tributos</CardTitle>
                 <CardDescription>
                   Configure as alíquotas de tributos aplicáveis
@@ -303,14 +301,14 @@ const NovoOrcamento = () => {
             </Card>
 
             {/* Info Card */}
-            <Card className="border-blue-200 bg-blue-50/50">
+            <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
               <CardContent className="pt-6">
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-4 w-4 text-blue-600" />
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium">Próximos passos</p>
+                    <p className="text-sm font-medium text-foreground">Próximos passos</p>
                     <p className="text-xs text-muted-foreground">
                       Após criar o orçamento, você poderá adicionar composições de custos,
                       itens detalhados, calcular BDI, visualizar DRE e exportar relatórios.
@@ -333,7 +331,6 @@ const NovoOrcamento = () => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
               >
                 {loading ? (
                   <>
