@@ -45,6 +45,7 @@ import {
   Wallet,
   ArrowRightLeft,
   PackageSearch,
+  GanttChartSquare,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -315,6 +316,13 @@ export const navItems: MenuItem[] = [
         ],
       },
     ],
+  },
+
+  // MÓDULO CRONOGRAMAS
+  {
+    icon: GanttChartSquare,
+    label: 'Cronogramas',
+    path: '/cronograma',
   },
 
   // CONFIGURAÇÕES (renomeado de "Gerenciamento")

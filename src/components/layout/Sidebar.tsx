@@ -37,6 +37,9 @@ export const Sidebar = ({ user }: SidebarProps) => {
     const shouldExpandSuprimentos =
       location.pathname.includes('/suprimentos');
 
+    const shouldExpandCronogramas =
+      location.pathname.includes('/cronograma');
+
     const shouldExpandConfiguracoes =
       location.pathname.includes('/gerenciamento');
 
@@ -48,6 +51,9 @@ export const Sidebar = ({ user }: SidebarProps) => {
     }
     if (shouldExpandSuprimentos && !expandedItems.includes('Suprimentos')) {
       setExpandedItems(prev => [...prev, 'Suprimentos']);
+    }
+    if (shouldExpandCronogramas && !expandedItems.includes('Cronogramas')) {
+      setExpandedItems(prev => [...prev, 'Cronogramas']);
     }
     if (shouldExpandConfiguracoes && !expandedItems.includes('Configurações')) {
       setExpandedItems(prev => [...prev, 'Configurações']);

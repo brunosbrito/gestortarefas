@@ -32,6 +32,11 @@ const Calibracao = lazy(() => import('./pages/qualidade/calibracao'));
 const Databook = lazy(() => import('./pages/qualidade/databook'));
 const Suprimentos = lazy(() => import('./pages/suprimentos'));
 
+// Módulo Cronogramas
+const DashboardCronogramas = lazy(() => import('./pages/cronograma'));
+const GanttView = lazy(() => import('./pages/cronograma/gantt'));
+const GanttTestVanilla = lazy(() => import('./pages/cronograma/gantt/GanttTestVanilla'));
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -67,6 +72,9 @@ function App() {
           <Route path="/qualidade/indicadores" element={<DashboardQualidade />} />
           <Route path="/qualidade/databook" element={<Databook />} />
           <Route path="/suprimentos/*" element={<Suprimentos />} />
+          <Route path="/cronograma" element={<DashboardCronogramas />} />
+          <Route path="/cronograma/:id/gantt" element={<GanttView />} />
+          <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
             path="/obras/:projectId/os/:serviceOrderId/atividades"
