@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HelpTooltipInline } from '@/components/help/HelpTooltip';
 
 const formSchema = z.object({
   correctiveAction: z.string().min(1, 'Ação corretiva é obrigatória'),
@@ -110,6 +111,10 @@ export function AcaoCorretivaForm({
             <FormItem>
               <FormLabel className="font-medium">
                 Ação Corretiva <span className="text-destructive">*</span>
+                <HelpTooltipInline
+                  title="O que é Ação Corretiva?"
+                  content="Ação para eliminar a causa raiz da não conformidade e evitar sua recorrência. Use a metodologia dos 5 Porquês para identificar a causa real."
+                />
               </FormLabel>
               <FormControl>
                 <Textarea

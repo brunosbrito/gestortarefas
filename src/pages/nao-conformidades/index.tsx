@@ -46,6 +46,9 @@ import { MaoObraForm } from './components/MaoObraForm';
 import { MateriaisForm } from './components/MateriaisForm';
 import { ImagensForm } from './components/ImagensForm';
 import { AcaoCorretivaForm } from './components/AcaoCorretivaForm';
+import { useTour } from '@/hooks/useTour';
+import { rncTourSteps } from '@/lib/tourSteps';
+import { TourButton } from '@/components/tour/TourButton';
 
 const NaoConformidades = () => {
   const { toast } = useToast();
@@ -65,6 +68,14 @@ const NaoConformidades = () => {
   const [showImagensDialog, setShowImagensDialog] = useState(false);
   const [editandoRnc, setEditandoRnc] = useState<NonConformity | null>(null);
   const [showAcaoCorretivaDialog, setShowAcaoCorretivaDialog] = useState(false);
+
+  // Hook do tour guiado
+  const { startTour } = useTour({
+    steps: rncTourSteps,
+    onComplete: () => {
+      console.log('✅ Tour de RNC concluído!');
+    }
+  });
 
   const getAllRnc = async () => {
     const rnc = await RncService.getAllRnc();
@@ -133,19 +144,23 @@ const NaoConformidades = () => {
           <h1 className="text-2xl font-bold text-construction-800">
             RNC - Registro de Não Conformidade
           </h1>
-          <Button
-            onClick={() => {
-              setEditandoRnc(null);
-              setShowNovaRNCDialog(true);
-            }}
-            className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova RNC
-          </Button>
+          <div className="flex items-center gap-2">
+            <TourButton onClick={startTour} variant="outline" size="default" />
+            <Button
+              data-tour="nova-rnc-button"
+              onClick={() => {
+                setEditandoRnc(null);
+                setShowNovaRNCDialog(true);
+              }}
+              className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nova RNC
+            </Button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 bg-construction-100 rounded-lg">
+        <div data-tour="rnc-filters" className="flex items-center gap-4 p-4 bg-construction-100 rounded-lg">
           <Filter className="h-5 w-5 text-construction-600" />
           <RadioGroup
             defaultValue="todas"
@@ -186,8 +201,12 @@ const NaoConformidades = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rncsFiltradas.map((rnc) => (
-            <Card key={rnc.id} className="hover:shadow-lg transition-shadow">
+          {rncsFiltradas.map((rnc, index) => (
+            <Card
+              key={rnc.id}
+              className="hover:shadow-lg transition-shadow"
+              data-tour={index === 0 ? "rnc-card" : undefined}
+            >
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-construction-800 flex justify-between items-center">
                   <span>RNC #{String(rnc.code).padStart(3, '0')}</span>
@@ -218,7 +237,10 @@ const NaoConformidades = () => {
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="flex gap-2 flex-wrap">
+              <CardFooter
+                className="flex gap-2 flex-wrap"
+                data-tour={index === 0 ? "rnc-actions" : undefined}
+              >
                 <Button
                   variant="outline"
                   size="sm"
