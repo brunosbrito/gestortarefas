@@ -100,96 +100,93 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Cards de Métricas - Design Moderno */}
+        {/* Cards de Métricas - Padrão PCP */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1 - Total Orçamentos */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          <Card className="border-l-4 border-l-blue-500 border-y border-r bg-blue-50/50 dark:bg-blue-950/20 shadow-elevation-2 cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                {/* Icon + Title */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                    <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="font-semibold text-sm text-blue-700 dark:text-blue-300">
+                    Orçamentos
+                  </h3>
                 </div>
-                <TrendingUp className="h-5 w-5 text-green-500 dark:text-green-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Orçamentos Criados</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.totalOrcamentos}</p>
-                  <Badge variant="outline" className="text-xs">Total</Badge>
-                </div>
+
+                {/* Value */}
+                <span className="text-2xl font-bold tabular-nums text-blue-700 dark:text-blue-300">
+                  {stats.totalOrcamentos}
+                </span>
               </div>
             </CardContent>
           </Card>
 
           {/* Card 2 - Propostas Aprovadas */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+          <Card className="border-l-4 border-l-green-500 border-y border-r bg-green-50/50 dark:bg-green-950/20 shadow-elevation-2 cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                {/* Icon + Title */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h3 className="font-semibold text-sm text-green-700 dark:text-green-300">
+                    Aprovadas
+                  </h3>
                 </div>
-                <TrendingUp className="h-5 w-5 text-green-500 dark:text-green-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Propostas Aprovadas</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.propostasAprovadas}</p>
-                  <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400">Sucesso</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatCurrency(stats.valorPropostasAprovadas)}
-                </p>
+
+                {/* Value */}
+                <span className="text-2xl font-bold tabular-nums text-green-700 dark:text-green-300">
+                  {stats.propostasAprovadas}
+                </span>
               </div>
             </CardContent>
           </Card>
 
           {/* Card 3 - Em Análise */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+          <Card className="border-l-4 border-l-yellow-500 border-y border-r bg-yellow-50/50 dark:bg-yellow-950/20 shadow-elevation-2 cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                {/* Icon + Title */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
+                    <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <h3 className="font-semibold text-sm text-yellow-700 dark:text-yellow-300">
+                    Em Análise
+                  </h3>
                 </div>
-                <AlertCircle className="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Em Análise</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.propostasEmAnalise}</p>
-                  <Badge variant="outline" className="text-xs text-yellow-600 dark:text-yellow-400">Aguardando</Badge>
-                </div>
+
+                {/* Value */}
+                <span className="text-2xl font-bold tabular-nums text-yellow-700 dark:text-yellow-300">
+                  {stats.propostasEmAnalise}
+                </span>
               </div>
             </CardContent>
           </Card>
 
           {/* Card 4 - Valor Total */}
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-all"></div>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+          <Card className="border-l-4 border-l-purple-500 border-y border-r bg-purple-50/50 dark:bg-purple-950/20 shadow-elevation-2 cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                {/* Icon + Title */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                    <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h3 className="font-semibold text-sm text-purple-700 dark:text-purple-300">
+                    Valor Total
+                  </h3>
                 </div>
-                <BarChart3 className="h-5 w-5 text-purple-500 dark:text-purple-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Valor Total</p>
-                <div className="flex flex-col gap-1">
-                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+
+                {/* Value */}
+                <div className="text-right">
+                  <span className="text-xl font-bold tabular-nums text-purple-700 dark:text-purple-300 block">
                     {formatCurrency(stats.valorTotalPropostas)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Todas as propostas</p>
+                  </span>
                 </div>
               </div>
             </CardContent>
