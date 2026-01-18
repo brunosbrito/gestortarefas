@@ -94,8 +94,7 @@ const EditarOrcamento = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -108,19 +107,19 @@ const EditarOrcamento = () => {
             </Button>
 
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
-                <FileText className="h-7 w-7 text-white" />
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-elevation-2">
+                <FileText className="h-7 w-7 text-primary-foreground" />
               </div>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold">{orcamento.nome}</h1>
-                  <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-full">
+                  <h1 className="text-2xl font-bold text-foreground">{orcamento.nome}</h1>
+                  <span className="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 rounded-full">
                     {orcamento.numero}
                   </span>
                   <span className={`px-3 py-1 text-sm font-medium rounded-full flex items-center gap-1.5 ${
                     orcamento.tipo === 'servico'
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'bg-green-50 text-green-700'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400'
+                      : 'bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400'
                   }`}>
                     {orcamento.tipo === 'servico' ? (
                       <Wrench className="h-3.5 w-3.5" />
@@ -152,7 +151,6 @@ const EditarOrcamento = () => {
             </Button>
             <Button
               disabled={saving}
-              className="bg-gradient-to-r from-blue-600 to-blue-500"
             >
               {saving ? (
                 <>
@@ -171,75 +169,75 @@ const EditarOrcamento = () => {
 
         {/* Cards de Resumo Financeiro */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card className="border-none shadow-md bg-gradient-to-br from-blue-50 to-white">
+          <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Custo Direto</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {formatCurrency(orcamento.custoDirectoTotal)}
                   </p>
                 </div>
-                <Calculator className="h-8 w-8 text-blue-400" />
+                <Calculator className="h-8 w-8 text-blue-400 dark:text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-white">
+          <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">BDI Total</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {formatCurrency(orcamento.bdiTotal)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formatPercentage(orcamento.bdiMedio)}
                   </p>
                 </div>
-                <Settings className="h-8 w-8 text-purple-400" />
+                <Settings className="h-8 w-8 text-purple-400 dark:text-purple-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-md bg-gradient-to-br from-amber-50 to-white">
+          <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Subtotal</p>
-                  <p className="text-2xl font-bold text-amber-600">
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     {formatCurrency(orcamento.subtotal)}
                   </p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-amber-400" />
+                <BarChart3 className="h-8 w-8 text-amber-400 dark:text-amber-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-md bg-gradient-to-br from-red-50 to-white">
+          <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Tributos</p>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(orcamento.tributosTotal)}
                   </p>
                 </div>
-                <FileText className="h-8 w-8 text-red-400" />
+                <FileText className="h-8 w-8 text-red-400 dark:text-red-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-md bg-gradient-to-br from-green-50 to-white">
+          <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Venda</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(orcamento.totalVenda)}
                   </p>
                 </div>
-                <Calculator className="h-8 w-8 text-green-400" />
+                <Calculator className="h-8 w-8 text-green-400 dark:text-green-500" />
               </div>
             </CardContent>
           </Card>
