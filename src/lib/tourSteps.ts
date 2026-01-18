@@ -1,14 +1,29 @@
 import { DriveStep } from 'driver.js';
 
 /**
- * Configuração dos steps do tour guiado do Dashboard
+ * Configuração dos steps do tour guiado do Dashboard PCP
  */
 export const dashboardTourSteps: DriveStep[] = [
+  {
+    popover: {
+      title: 'Bem-vindo ao Dashboard PCP! 📊',
+      description: 'Vamos fazer um tour rápido pelas principais funcionalidades do dashboard de controle de produção.',
+    }
+  },
+  {
+    element: '[data-tour="filters"]',
+    popover: {
+      title: 'Filtros Avançados',
+      description: 'Comece filtrando os dados por período, obra, tarefa macro, processo e colaborador. Os gráficos abaixo se atualizam automaticamente.',
+      side: 'bottom',
+      align: 'start'
+    }
+  },
   {
     element: '[data-tour="stats-summary"]',
     popover: {
       title: 'Estatísticas Principais',
-      description: 'Aqui você encontra um resumo rápido de Obras, Ordens de Serviço e Atividades do sistema.',
+      description: 'Visão rápida do total de Obras, Ordens de Serviço e Atividades no sistema.',
       side: 'bottom',
       align: 'start'
     }
@@ -17,7 +32,16 @@ export const dashboardTourSteps: DriveStep[] = [
     element: '[data-tour="activity-status"]',
     popover: {
       title: 'Status das Atividades',
-      description: 'Veja quantas atividades estão Planejadas, Em Execução, Concluídas ou Paralizadas. Clique em um card para filtrar.',
+      description: 'Distribuição das atividades por status: Planejadas, Em Execução, Concluídas ou Paralisadas. Clique em um card para filtrar.',
+      side: 'bottom',
+      align: 'start'
+    }
+  },
+  {
+    element: '[data-tour="dashboard-kpis"]',
+    popover: {
+      title: 'Indicadores-Chave (KPIs)',
+      description: 'Métricas importantes como taxa de conclusão, horas trabalhadas, produtividade e desvio de prazo.',
       side: 'bottom',
       align: 'start'
     }
@@ -26,7 +50,7 @@ export const dashboardTourSteps: DriveStep[] = [
     element: '[data-tour="macro-tasks-chart"]',
     popover: {
       title: 'Gráfico de Tarefas Macro',
-      description: 'Compara horas previstas vs trabalhadas por tarefa macro. Identifique áreas com maior desvio.',
+      description: 'Compara horas previstas vs trabalhadas por tarefa macro. Identifique áreas com maior desvio de planejamento.',
       side: 'top',
       align: 'start'
     }
@@ -35,27 +59,24 @@ export const dashboardTourSteps: DriveStep[] = [
     element: '[data-tour="process-chart"]',
     popover: {
       title: 'Gráfico de Processos',
-      description: 'Análise detalhada de horas trabalhadas por processo. Clique no botão expandir para ver em tela cheia.',
+      description: 'Análise detalhada de horas trabalhadas por processo. Clique no botão expandir para visualizar em tela cheia.',
       side: 'top',
       align: 'start'
     }
   },
   {
-    element: '[data-tour="filters"]',
+    element: '[data-tour="productivity-trends"]',
     popover: {
-      title: 'Filtros Avançados',
-      description: 'Use os filtros para visualizar apenas os dados que você precisa. Filtre por período, obra, tarefa macro, processo e colaborador.',
-      side: 'bottom',
+      title: 'Tendências de Produtividade',
+      description: 'Acompanhe a evolução da produtividade ao longo do tempo com métricas de desempenho e tendências.',
+      side: 'top',
       align: 'start'
     }
   },
   {
-    element: '[data-tour="activities-table"]',
     popover: {
-      title: 'Tabela de Atividades',
-      description: 'Lista detalhada de todas as atividades filtradas. Use a paginação para navegar e clique em uma linha para ver mais detalhes.',
-      side: 'top',
-      align: 'start'
+      title: 'Pronto! 🎉',
+      description: 'Você pode iniciar este tour novamente a qualquer momento clicando no botão "Iniciar Tour".',
     }
   }
 ];
@@ -177,6 +198,60 @@ export const welcomeTourSteps: DriveStep[] = [
     popover: {
       title: 'Pronto para começar! 🚀',
       description: 'Você pode iniciar este tour novamente a qualquer momento clicando no botão "Ajuda" no menu.',
+    }
+  }
+];
+
+/**
+ * Configuração dos steps do tour guiado de RNC (Não Conformidades)
+ */
+export const rncTourSteps: DriveStep[] = [
+  {
+    popover: {
+      title: 'Gestão de Não Conformidades (RNC) 🔍',
+      description: 'Registre, analise e resolva não conformidades encontradas nas obras usando a metodologia dos 5 Porquês.',
+    }
+  },
+  {
+    element: '[data-tour="nova-rnc-button"]',
+    popover: {
+      title: 'Criar Nova RNC',
+      description: 'Clique aqui para registrar uma nova não conformidade. Preencha a descrição, causa raiz e ações corretivas.',
+      side: 'bottom',
+      align: 'end'
+    }
+  },
+  {
+    element: '[data-tour="rnc-filters"]',
+    popover: {
+      title: 'Filtros de RNC',
+      description: 'Filtre RNCs por status (todas ou em andamento) e por projeto específico.',
+      side: 'bottom',
+      align: 'start'
+    }
+  },
+  {
+    element: '[data-tour="rnc-card"]',
+    popover: {
+      title: 'Card de RNC',
+      description: 'Cada card exibe informações resumidas da não conformidade: código, data, responsável e descrição.',
+      side: 'top',
+      align: 'start'
+    }
+  },
+  {
+    element: '[data-tour="rnc-actions"]',
+    popover: {
+      title: 'Ações da RNC',
+      description: 'Visualize detalhes, registre mão de obra e materiais gastos, anexe imagens e aplique a metodologia dos 5 Porquês.',
+      side: 'top',
+      align: 'start'
+    }
+  },
+  {
+    popover: {
+      title: 'Metodologia dos 5 Porquês 💡',
+      description: 'A ação corretiva usa os 5 Porquês para identificar a causa raiz. Pergunte "Por quê?" cinco vezes até encontrar a origem do problema!',
     }
   }
 ];

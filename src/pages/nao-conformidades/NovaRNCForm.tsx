@@ -29,6 +29,7 @@ import ColaboradorService from '@/services/ColaboradorService';
 import { NonConformity } from '@/interfaces/RncInterface';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HelpTooltipInline } from '@/components/help/HelpTooltip';
 
 const formSchema = z.object({
   project: z.string().min(1, 'Projeto é obrigatório'),
@@ -215,6 +216,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
               <FormItem>
                 <FormLabel className="font-medium">
                   Responsável pela RNC <span className="text-destructive">*</span>
+                  <HelpTooltipInline
+                    content="Colaborador que receberá a RNC para análise e deverá implementar a ação corretiva."
+                  />
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -258,6 +262,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
               <FormItem>
                 <FormLabel className="font-medium">
                   Identificado por <span className="text-destructive">*</span>
+                  <HelpTooltipInline
+                    content="Colaborador que identificou a não conformidade durante a execução do trabalho."
+                  />
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -302,6 +309,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
             <FormItem>
               <FormLabel className="font-medium">
                 Data da Ocorrência <span className="text-destructive">*</span>
+                <HelpTooltipInline
+                  content="Data em que a não conformidade foi identificada ou detectada."
+                />
               </FormLabel>
               <FormControl>
                 <Input
@@ -329,6 +339,9 @@ export function NovaRNCForm({ onNext, initialData }: NovaRNCFormProps) {
             <FormItem>
               <FormLabel className="font-medium">
                 Descrição <span className="text-destructive">*</span>
+                <HelpTooltipInline
+                  content="Descreva detalhadamente a não conformidade: o que aconteceu, onde foi encontrado e qual o impacto no trabalho."
+                />
               </FormLabel>
               <FormControl>
                 <Textarea
