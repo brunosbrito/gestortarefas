@@ -15,6 +15,7 @@ import {
   Bot,
   Boxes,
   ShieldCheck,
+<<<<<<< HEAD
   Target,
   ClipboardCheck,
   FileCheck,
@@ -46,6 +47,10 @@ import {
   ArrowRightLeft,
   PackageSearch,
   GanttChartSquare,
+=======
+  GanttChartSquare,
+  FileText,
+>>>>>>> Modulo_Comercial
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -113,6 +118,7 @@ export const navItems: MenuItem[] = [
         label: 'RNC',
         path: '/nao-conformidades',
       },
+<<<<<<< HEAD
       {
         icon: Target,
         label: 'Análise e Ações Corretivas',
@@ -323,6 +329,13 @@ export const navItems: MenuItem[] = [
     icon: GanttChartSquare,
     label: 'Cronogramas',
     path: '/cronograma',
+  },
+
+  // MÓDULO COMERCIAL
+  {
+    icon: FileText,
+    label: 'Comercial',
+    path: '/comercial',
   },
 
   // CONFIGURAÇÕES (renomeado de "Gerenciamento")
