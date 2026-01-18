@@ -64,7 +64,7 @@ const Dashboard = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-muted-foreground">Carregando módulo comercial...</p>
         </div>
       </div>
@@ -72,15 +72,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="p-8 space-y-8">
+    <div className="space-y-6">
+      <div className="p-6 space-y-8">
         {/* Header Moderno */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl opacity-10"></div>
-          <div className="relative p-8">
+          <div className="absolute inset-0 bg-primary/5 rounded-3xl"></div>
+          <div className="relative p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent mb-2">
+                <h1 className="text-4xl font-bold text-foreground mb-2">
                   Módulo Comercial
                 </h1>
                 <p className="text-lg text-muted-foreground">
@@ -90,7 +90,7 @@ const Dashboard = () => {
               <div className="hidden md:flex items-center gap-3">
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">Última atualização</div>
-                  <div className="font-semibold">{new Date().toLocaleDateString('pt-BR')}</div>
+                  <div className="font-semibold text-foreground">{new Date().toLocaleDateString('pt-BR')}</div>
                 </div>
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
                   <FileText className="h-8 w-8 text-white" />
@@ -199,9 +199,9 @@ const Dashboard = () => {
         {/* Módulos - Cards Principais */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Card Orçamentos */}
-          <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-blue-400/5"></div>
-            <CardHeader className="relative border-b bg-gradient-to-r from-blue-50 to-transparent">
+          <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5"></div>
+            <CardHeader className="relative border-b bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
@@ -225,8 +225,8 @@ const Dashboard = () => {
                   { icon: Calendar, text: 'Templates e importação CSV' },
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3 group/item">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover/item:bg-blue-100 transition-colors">
-                      <item.icon className="h-4 w-4 text-blue-600" />
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:bg-primary/20 transition-colors">
+                      <item.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <span className="text-sm text-muted-foreground group-hover/item:text-foreground transition-colors">
                       {item.text}
@@ -246,7 +246,6 @@ const Dashboard = () => {
                 <Button
                   onClick={() => navigate('/comercial/orcamentos/novo')}
                   variant="outline"
-                  className="border-blue-200 hover:bg-blue-50"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -255,9 +254,9 @@ const Dashboard = () => {
           </Card>
 
           {/* Card Propostas */}
-          <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-600/5 to-green-400/5"></div>
-            <CardHeader className="relative border-b bg-gradient-to-r from-green-50 to-transparent">
+          <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5"></div>
+            <CardHeader className="relative border-b bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-400 flex items-center justify-center shadow-lg">
@@ -281,8 +280,8 @@ const Dashboard = () => {
                   { icon: Users, text: 'Gestão de clientes integrada' },
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3 group/item">
-                    <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center group-hover/item:bg-green-100 transition-colors">
-                      <item.icon className="h-4 w-4 text-green-600" />
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:bg-primary/20 transition-colors">
+                      <item.icon className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
                     <span className="text-sm text-muted-foreground group-hover/item:text-foreground transition-colors">
                       {item.text}
@@ -301,7 +300,6 @@ const Dashboard = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-green-200 hover:bg-green-50"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -313,18 +311,18 @@ const Dashboard = () => {
         {/* Últimas Atividades - Design Moderno */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Últimos Orçamentos */}
-          <Card className="border-none shadow-lg">
-            <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+          <Card className="shadow-lg">
+            <CardHeader className="border-b bg-muted/30">
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Últimos Orçamentos
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               {orcamentos.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
-                    <AlertCircle className="h-8 w-8 text-blue-300" />
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">Nenhum orçamento criado ainda</p>
                   <Button
@@ -342,15 +340,15 @@ const Dashboard = () => {
                     <Link
                       key={orc.id}
                       to={`/comercial/orcamentos/${orc.id}`}
-                      className="block p-4 rounded-xl border hover:border-blue-200 hover:bg-blue-50/50 transition-all group"
+                      className="block p-4 rounded-xl border hover:border-primary hover:bg-muted/50 transition-all group"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <p className="font-semibold group-hover:text-blue-600 transition-colors">{orc.nome}</p>
+                          <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{orc.nome}</p>
                           <p className="text-sm text-muted-foreground">Nº {orc.numero}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-blue-600">
+                          <p className="font-bold text-blue-600 dark:text-blue-400">
                             {formatCurrency(orc.totalVenda)}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -366,18 +364,18 @@ const Dashboard = () => {
           </Card>
 
           {/* Últimas Propostas */}
-          <Card className="border-none shadow-lg">
-            <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+          <Card className="shadow-lg">
+            <CardHeader className="border-b bg-muted/30">
               <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-green-600" />
+                <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
                 Últimas Propostas
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               {propostas.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-                    <AlertCircle className="h-8 w-8 text-green-300" />
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">Nenhuma proposta criada ainda</p>
                   <Button
@@ -392,25 +390,25 @@ const Dashboard = () => {
                 <div className="space-y-3">
                   {propostas.slice(0, 5).map(prop => {
                     const statusColors = {
-                      aprovada: 'bg-green-100 text-green-700',
-                      em_analise: 'bg-yellow-100 text-yellow-700',
-                      rejeitada: 'bg-red-100 text-red-700',
-                      rascunho: 'bg-gray-100 text-gray-700',
-                      cancelada: 'bg-gray-200 text-gray-800',
+                      aprovada: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                      em_analise: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                      rejeitada: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                      rascunho: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+                      cancelada: 'bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
                     };
 
                     return (
                       <div
                         key={prop.id}
-                        className="p-4 rounded-xl border hover:border-green-200 hover:bg-green-50/50 transition-all group cursor-pointer"
+                        className="p-4 rounded-xl border hover:border-primary hover:bg-muted/50 transition-all group cursor-pointer"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <p className="font-semibold group-hover:text-green-600 transition-colors">{prop.titulo}</p>
+                            <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{prop.titulo}</p>
                             <p className="text-sm text-muted-foreground">{prop.cliente.razaoSocial}</p>
                           </div>
                           <div className="text-right space-y-1">
-                            <p className="font-bold text-green-600">
+                            <p className="font-bold text-green-600 dark:text-green-400">
                               {formatCurrency(prop.valorTotal)}
                             </p>
                             <Badge className={statusColors[prop.status]}>
