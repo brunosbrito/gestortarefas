@@ -243,7 +243,7 @@ const AIChat = () => {
             <CardHeader className="border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-blue-500" />
+                  <Bot className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   <CardTitle>Chat com IA</CardTitle>
                 </div>
                 <div className="flex items-center gap-2">
@@ -304,8 +304,8 @@ const AIChat = () => {
 
                   {message.role === 'user' && (
                     <div className="flex-shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-gray-500 flex items-center justify-center">
-                        <User className="h-5 w-5 text-white" />
+                      <div className="h-8 w-8 rounded-full bg-gray-600 dark:bg-gray-400 flex items-center justify-center">
+                        <User className="h-5 w-5 text-white dark:text-gray-900" />
                       </div>
                     </div>
                   )}

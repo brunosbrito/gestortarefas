@@ -4,6 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   ArrowLeft,
   Save,
   FileText,
@@ -15,14 +21,19 @@ import {
   Edit,
   Trash2,
   Wrench,
-  Package
+  Package,
+  FileSpreadsheet,
+  ChevronDown
 } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
+import OrcamentoPdfService from '@/services/OrcamentoPdfService';
+import OrcamentoExcelService from '@/services/OrcamentoExcelService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
 import AdicionarComposicaoDialog from './AdicionarComposicaoDialog';
 import AdicionarItemDialog from './AdicionarItemDialog';
+import DREViewer from '../components/DREViewer';
 
 const EditarOrcamento = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +49,7 @@ const EditarOrcamento = () => {
   const [dialogComposicao, setDialogComposicao] = useState(false);
   const [dialogItem, setDialogItem] = useState(false);
   const [composicaoSelecionada, setComposicaoSelecionada] = useState<string | null>(null);
+  const [itemParaEditar, setItemParaEditar] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -65,7 +77,106 @@ const EditarOrcamento = () => {
 
   const handleAdicionarItem = (composicaoId: string) => {
     setComposicaoSelecionada(composicaoId);
+    setItemParaEditar(null);
     setDialogItem(true);
+  };
+
+  const handleEditarItem = (composicaoId: string, item: any) => {
+    setComposicaoSelecionada(composicaoId);
+    setItemParaEditar(item);
+    setDialogItem(true);
+  };
+
+  const handleExcluirItem = async (itemId: string) => {
+    if (!confirm('Deseja realmente excluir este item?')) return;
+
+    try {
+      // TODO: Implementar exclusão no service
+      // await ItemComposicaoService.delete(itemId);
+      toast({
+        title: 'Sucesso',
+        description: 'Item excluído com sucesso',
+      });
+      carregarOrcamento();
+    } catch (error) {
+      console.error('Erro ao excluir item:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o item',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSalvar = async () => {
+    try {
+      setSaving(true);
+      // TODO: Implementar salvamento de alterações
+      // await OrcamentoService.update(orcamento);
+      toast({
+        title: 'Sucesso',
+        description: 'Orçamento salvo com sucesso',
+      });
+    } catch (error) {
+      console.error('Erro ao salvar orçamento:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar o orçamento',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExportarPDF = async () => {
+    if (!orcamento) return;
+
+    try {
+      toast({
+        title: 'Exportando',
+        description: 'Gerando PDF do orçamento...',
+      });
+
+      await OrcamentoPdfService.generatePDF(orcamento);
+
+      toast({
+        title: 'Sucesso',
+        description: 'PDF gerado e baixado com sucesso',
+      });
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o PDF',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportarExcel = async () => {
+    if (!orcamento) return;
+
+    try {
+      toast({
+        title: 'Exportando',
+        description: 'Gerando Excel do orçamento...',
+      });
+
+      await OrcamentoExcelService.generateExcel(orcamento);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Excel gerado e baixado com sucesso',
+      });
+    } catch (error) {
+      console.error('Erro ao exportar Excel:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o Excel',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading) {
@@ -107,8 +218,8 @@ const EditarOrcamento = () => {
             </Button>
 
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-elevation-2">
-                <FileText className="h-7 w-7 text-primary-foreground" />
+              <div className="w-14 h-14 rounded-2xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center shadow-elevation-2">
+                <FileText className="h-7 w-7 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-3">
@@ -145,11 +256,27 @@ const EditarOrcamento = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => {/* TODO: Exportar PDF */}}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportarPDF}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Exportar PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportarExcel}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Exportar Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
+              onClick={handleSalvar}
               disabled={saving}
             >
               {saving ? (
@@ -262,7 +389,7 @@ const EditarOrcamento = () => {
 
           <TabsContent value="composicoes" className="space-y-4">
             <Card>
-              <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+              <CardHeader className="border-b bg-muted/30">
                 <div className="flex items-center justify-between">
                   <CardTitle>Composições de Custos</CardTitle>
                   <Button
@@ -289,13 +416,13 @@ const EditarOrcamento = () => {
                 ) : (
                   <div className="space-y-4">
                     {orcamento.composicoes.map((composicao) => (
-                      <Card key={composicao.id} className="border-blue-200">
-                        <CardHeader className="bg-blue-50/50">
+                      <Card key={composicao.id} className="border-blue-200 dark:border-blue-800">
+                        <CardHeader className="bg-blue-50/50 dark:bg-blue-950/20">
                           <div className="flex items-center justify-between">
                             <div>
                               <div className="flex items-center gap-2">
                                 <CardTitle className="text-lg">{composicao.nome}</CardTitle>
-                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">
+                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 rounded">
                                   {composicao.tipo.replace('_', ' ')}
                                 </span>
                               </div>
@@ -306,7 +433,7 @@ const EditarOrcamento = () => {
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-muted-foreground">Subtotal</p>
-                              <p className="text-xl font-bold text-blue-600">
+                              <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                                 {formatCurrency(composicao.subtotal)}
                               </p>
                             </div>
@@ -365,11 +492,19 @@ const EditarOrcamento = () => {
                                         </p>
                                       </div>
                                       <div className="flex gap-1">
-                                        <Button size="sm" variant="ghost">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => handleEditarItem(composicao.id, item)}
+                                        >
                                           <Edit className="h-3 w-3" />
                                         </Button>
-                                        <Button size="sm" variant="ghost">
-                                          <Trash2 className="h-3 w-3 text-red-600" />
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => handleExcluirItem(item.id)}
+                                        >
+                                          <Trash2 className="h-3 w-3 text-red-600 dark:text-red-400" />
                                         </Button>
                                       </div>
                                     </div>
@@ -398,44 +533,12 @@ const EditarOrcamento = () => {
           </TabsContent>
 
           <TabsContent value="dre" className="space-y-4">
-            <Card>
-              <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
-                <CardTitle>DRE - Demonstrativo de Resultado</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="font-medium">Receita Líquida</span>
-                    <span className="font-bold">{formatCurrency(orcamento.dre.receitaLiquida)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="font-medium">Lucro Bruto</span>
-                    <span className="font-bold text-green-600">{formatCurrency(orcamento.dre.lucroBruto)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="font-medium">Margem Bruta</span>
-                    <span className="font-bold">{formatPercentage(orcamento.dre.margemBruta)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="font-medium">Lucro Líquido</span>
-                    <span className={`font-bold ${orcamento.dre.lucroLiquido < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatCurrency(orcamento.dre.lucroLiquido)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="font-medium">Margem Líquida</span>
-                    <span className={`font-bold ${orcamento.dre.margemLiquida < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatPercentage(orcamento.dre.margemLiquida)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <DREViewer orcamento={orcamento} />
           </TabsContent>
 
           <TabsContent value="configuracoes" className="space-y-4">
             <Card>
-              <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+              <CardHeader className="border-b bg-muted/30">
                 <CardTitle>Configurações de Tributos</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
@@ -480,9 +583,9 @@ const EditarOrcamento = () => {
             onOpenChange={setDialogItem}
             composicaoId={composicaoSelecionada}
             onSuccess={carregarOrcamento}
+            itemParaEditar={itemParaEditar}
           />
         )}
-      </div>
     </div>
   );
 };

@@ -99,8 +99,8 @@ const NovoOrcamento = () => {
         </Button>
 
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-elevation-2">
-            <FileText className="h-8 w-8 text-primary-foreground" />
+          <div className="w-16 h-16 rounded-2xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center shadow-elevation-2">
+            <FileText className="h-8 w-8 text-white" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Novo Orçamento</h1>

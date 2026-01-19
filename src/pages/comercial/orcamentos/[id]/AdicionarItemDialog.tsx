@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import ItemComposicaoService from '@/services/ItemComposicaoService';
 import { CreateItemComposicao, ItemComposicao } from '@/interfaces/OrcamentoInterface';
-import { Loader2, Package, Wrench, HardHat } from 'lucide-react';
+import { Loader2, Package, Wrench, HardHat, Truck, Users } from 'lucide-react';
 
 interface AdicionarItemDialogProps {
   open: boolean;
@@ -36,16 +36,63 @@ const TIPOS_ITEM = [
   { value: 'mao_obra', label: 'Mão de Obra', icon: HardHat },
   { value: 'ferramenta', label: 'Ferramenta', icon: Wrench },
   { value: 'consumivel', label: 'Consumível', icon: Package },
+  { value: 'mobilizacao_desmobilizacao', label: 'Mobilização e Desmobilização', icon: Truck },
+  { value: 'terceiros', label: 'Terceiros', icon: Users },
   { value: 'outros', label: 'Outros', icon: Package },
 ];
 
 const UNIDADES = [
-  'kg', 'h', 'un', 'm', 'm²', 'm³', 'ton', 'pc', 'cj', 'l'
+  'kg', 'HM (Hora Máquina)', 'un', 'm', 'm²', 'm³', 'ton', 'pc', 'cj', 'l', 'dia(s)'
+];
+
+const CARGOS_PREDEFINIDOS = [
+  'Soldador',
+  'Ajudante',
+  'Pintor',
+  'Montador',
+  'Caldeireiro',
+  'Encarregado',
+  'Mestre de Obras',
+  'Operador de Máquina',
+  'Eletricista',
+  'Encanador',
+  'Pedreiro',
+  'Armador',
+  'Servente',
+  'Técnico',
+  'Engenheiro',
+  'Outro (digitar manualmente)',
+];
+
+const MATERIAIS_PREDEFINIDOS = [
+  'ASTM A 36',
+  'ASTM A 572 GR-50',
+  'ASTM A 106 GR-B',
+  'ASTM A 53',
+  'ASTM A 500',
+  'ASTM A 325',
+  'ASTM A 490',
+  'SAE 1020',
+  'SAE 1045',
+  'Chapa de Aço',
+  'Perfil I',
+  'Perfil H',
+  'Perfil U',
+  'Tubo',
+  'Barra',
+  'Eletrodo',
+  'Tinta',
+  'Primer',
+  'Porca',
+  'Arruela',
+  'Parafuso',
+  'Outro (digitar manualmente)',
 ];
 
 const TIPOS_CALCULO = [
   { value: 'kg', label: 'KG (Peso)' },
   { value: 'hh', label: 'HH (Hora-Homem)' },
+  { value: 'hm', label: 'HM (Hora-Máquina)' },
   { value: 'un', label: 'Unidade' },
   { value: 'm', label: 'Metro Linear' },
   { value: 'm2', label: 'Metro Quadrado' },
@@ -60,6 +107,8 @@ const AdicionarItemDialog = ({
 }: AdicionarItemDialogProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cargoOutro, setCargoOutro] = useState(false);
+  const [materialOutro, setMaterialOutro] = useState(false);
 
   const [formData, setFormData] = useState({
     codigo: itemParaEditar?.codigo || '',
@@ -101,7 +150,13 @@ const AdicionarItemDialog = ({
         setFormData((prev) => ({
           ...prev,
           tipoCalculo: 'hh',
-          unidade: 'h',
+          unidade: 'HM (Hora Máquina)',
+        }));
+      } else if (value === 'mobilizacao_desmobilizacao') {
+        setFormData((prev) => ({
+          ...prev,
+          tipoCalculo: '',
+          unidade: 'un',
         }));
       }
     }
@@ -128,6 +183,16 @@ const AdicionarItemDialog = ({
 
     if (formData.tipoItem === 'mao_obra' && !formData.cargo.trim()) {
       newErrors.cargo = 'Cargo é obrigatório para mão de obra';
+    }
+
+    // Validar fator multiplicador para HM, HH e Mobilização
+    const usarMultiplicador =
+      formData.tipoCalculo === 'hm' ||
+      formData.tipoCalculo === 'hh' ||
+      formData.tipoItem === 'mobilizacao_desmobilizacao';
+
+    if (usarMultiplicador && (!formData.peso || parseFloat(formData.peso) <= 0)) {
+      newErrors.peso = 'Fator multiplicador é obrigatório e deve ser maior que zero';
     }
 
     setErrors(newErrors);
@@ -217,8 +282,8 @@ const AdicionarItemDialog = ({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-              <Package className="h-6 w-6 text-green-600" />
+            <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <DialogTitle className="text-xl">
               {itemParaEditar ? 'Editar' : 'Novo'} Item
@@ -287,12 +352,36 @@ const AdicionarItemDialog = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="material">Material (ASTM)</Label>
-                  <Input
-                    id="material"
-                    placeholder="Ex: ASTM A 36"
-                    value={formData.material}
-                    onChange={(e) => handleChange('material', e.target.value)}
-                  />
+                  <Select
+                    value={materialOutro ? 'Outro (digitar manualmente)' : formData.material}
+                    onValueChange={(value) => {
+                      if (value === 'Outro (digitar manualmente)') {
+                        setMaterialOutro(true);
+                        handleChange('material', '');
+                      } else {
+                        setMaterialOutro(false);
+                        handleChange('material', value);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="material">
+                      <SelectValue placeholder="Selecione um material..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MATERIAIS_PREDEFINIDOS.map((material) => (
+                        <SelectItem key={material} value={material}>
+                          {material}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {materialOutro && (
+                    <Input
+                      placeholder="Digite o material manualmente"
+                      value={formData.material}
+                      onChange={(e) => handleChange('material', e.target.value)}
+                    />
+                  )}
                   <p className="text-xs text-muted-foreground">
                     Ex: ASTM A 36, ASTM A 572, ASTM A 106
                   </p>
@@ -319,13 +408,37 @@ const AdicionarItemDialog = ({
                 <Label htmlFor="cargo">
                   Cargo <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="cargo"
-                  placeholder="Ex: Soldador, Ajudante, Pintor"
-                  value={formData.cargo}
-                  onChange={(e) => handleChange('cargo', e.target.value)}
-                  className={errors.cargo ? 'border-red-500' : ''}
-                />
+                <Select
+                  value={cargoOutro ? 'Outro (digitar manualmente)' : formData.cargo}
+                  onValueChange={(value) => {
+                    if (value === 'Outro (digitar manualmente)') {
+                      setCargoOutro(true);
+                      handleChange('cargo', '');
+                    } else {
+                      setCargoOutro(false);
+                      handleChange('cargo', value);
+                    }
+                  }}
+                >
+                  <SelectTrigger id="cargo" className={errors.cargo ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Selecione um cargo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CARGOS_PREDEFINIDOS.map((cargo) => (
+                      <SelectItem key={cargo} value={cargo}>
+                        {cargo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {cargoOutro && (
+                  <Input
+                    placeholder="Digite o cargo manualmente"
+                    value={formData.cargo}
+                    onChange={(e) => handleChange('cargo', e.target.value)}
+                    className={errors.cargo ? 'border-red-500' : ''}
+                  />
+                )}
                 {errors.cargo && <p className="text-sm text-red-500">{errors.cargo}</p>}
                 <p className="text-xs text-muted-foreground">
                   Encargos sociais (50.72%) serão aplicados automaticamente
@@ -375,7 +488,18 @@ const AdicionarItemDialog = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="peso">Peso (KG)</Label>
+                <Label htmlFor="peso">
+                  {formData.tipoCalculo === 'hm' ||
+                  formData.tipoCalculo === 'hh' ||
+                  formData.tipoItem === 'mobilizacao_desmobilizacao'
+                    ? 'Fator Multiplicador'
+                    : 'Peso (KG)'}
+                  {(formData.tipoCalculo === 'hm' ||
+                    formData.tipoCalculo === 'hh' ||
+                    formData.tipoItem === 'mobilizacao_desmobilizacao') && (
+                    <span className="text-red-500"> *</span>
+                  )}
+                </Label>
                 <Input
                   id="peso"
                   type="number"
@@ -384,9 +508,15 @@ const AdicionarItemDialog = ({
                   placeholder="0.00"
                   value={formData.peso}
                   onChange={(e) => handleChange('peso', e.target.value)}
+                  className={errors.peso ? 'border-red-500' : ''}
                 />
+                {errors.peso && <p className="text-sm text-red-500">{errors.peso}</p>}
                 <p className="text-xs text-muted-foreground">
-                  Opcional
+                  {formData.tipoCalculo === 'hm' ||
+                  formData.tipoCalculo === 'hh' ||
+                  formData.tipoItem === 'mobilizacao_desmobilizacao'
+                    ? 'Número de unidades para multiplicar (ex: 2 máquinas, 5 homens)'
+                    : 'Opcional'}
                 </p>
               </div>
 
@@ -432,11 +562,28 @@ const AdicionarItemDialog = ({
 
             {/* Info calculado */}
             {formData.quantidade && formData.valorUnitario && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-green-900">Subtotal do Item:</span>
-                  <span className="text-xl font-bold text-green-700">
-                    R$ {(parseFloat(formData.quantidade) * parseFloat(formData.valorUnitario)).toFixed(2)}
+                  <span className="font-medium text-green-900 dark:text-green-300">Subtotal do Item:</span>
+                  <span className="text-xl font-bold text-green-700 dark:text-green-400">
+                    R$ {(() => {
+                      const quantidade = parseFloat(formData.quantidade);
+                      const valorUnitario = parseFloat(formData.valorUnitario);
+                      const peso = formData.peso ? parseFloat(formData.peso) : 1;
+
+                      // Para Hora Máquina, Hora Homem ou Mobilização: Quantidade × Unidade × Valor Unitário
+                      const usarMultiplicador =
+                        formData.tipoCalculo === 'hm' ||
+                        formData.tipoCalculo === 'hh' ||
+                        formData.tipoItem === 'mobilizacao_desmobilizacao';
+
+                      if (usarMultiplicador && formData.peso) {
+                        return (quantidade * peso * valorUnitario).toFixed(2);
+                      }
+
+                      // Para os demais: Quantidade × Valor Unitário
+                      return (quantidade * valorUnitario).toFixed(2);
+                    })()}
                   </span>
                 </div>
               </div>
