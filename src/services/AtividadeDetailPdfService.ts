@@ -60,6 +60,9 @@ class AtividadeDetailPdfService {
       this.drawObservationSection(atividade);
     }
 
+    // Draw productivity report section (manual fill)
+    this.drawProductivityReportSection();
+
     // Draw images section (if applicable)
     if (atividade.images && atividade.images.length > 0) {
       await this.drawImagesSection(atividade);
@@ -468,6 +471,57 @@ class AtividadeDetailPdfService {
     });
 
     this.yPos += boxHeight + ACTIVITY_PDF_DEFAULTS.sectionSpacing;
+  }
+
+  private static drawProductivityReportSection() {
+    this.drawSectionTitle('RELATÓRIO PRODUTIVIDADE');
+
+    const contentWidth = this.pageWidth - 2 * this.margin;
+    const col1Width = 28; // Labels
+    const col2Width = (contentWidth - col1Width * 4) / 4; // Values
+
+    autoTable(this.doc, {
+      startY: this.yPos,
+      body: [
+        ['OPERAÇÃO:', '', '', '', 'OPERADOR:', '', '', ''],
+        ['HORA INÍCIO:', '', 'PARADA:', '', 'RETORNO:', '', 'QTD PRODUZIDA:', ''],
+        ['HORA TÉRMINO:', '', 'OBSERVAÇÕES:', '', '', '', '', ''],
+      ],
+      theme: 'grid',
+      margin: { left: this.margin, right: this.margin },
+      tableWidth: contentWidth,
+      styles: {
+        fontSize: ACTIVITY_PDF_DEFAULTS.fontSize.body - 1,
+        cellPadding: 2,
+        minCellHeight: 8,
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
+        1: { cellWidth: col2Width },
+        2: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
+        3: { cellWidth: col2Width },
+        4: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
+        5: { cellWidth: col2Width },
+        6: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
+        7: { cellWidth: col2Width },
+      },
+      didParseCell: (data) => {
+        // Merge cells for OPERAÇÃO value (columns 1-3)
+        if (data.row.index === 0 && data.column.index === 1) {
+          data.cell.colSpan = 3;
+        }
+        // Merge cells for OPERADOR value (columns 5-7)
+        if (data.row.index === 0 && data.column.index === 5) {
+          data.cell.colSpan = 3;
+        }
+        // Merge cells for OBSERVAÇÕES value (columns 3-7)
+        if (data.row.index === 2 && data.column.index === 3) {
+          data.cell.colSpan = 5;
+        }
+      },
+    });
+
+    this.yPos = (this.doc as any).lastAutoTable.finalY + ACTIVITY_PDF_DEFAULTS.sectionSpacing;
   }
 
   private static async drawImagesSection(atividade: AtividadeStatus) {
