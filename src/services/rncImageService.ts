@@ -17,7 +17,11 @@ export async function uploadRncImage({
   formData.append('nonConformityId', nonConformityId);
   formData.append('description', description || '');
 
-  const response = await api.post(URL, formData);
+  const response = await api.post(URL, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 }
 

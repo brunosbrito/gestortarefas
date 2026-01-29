@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 
 interface AtividadeUploadDialogProps {
   imageDescription: string;
@@ -17,6 +17,7 @@ interface AtividadeUploadDialogProps {
   onUpload: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
 export const AtividadeUploadDialog = ({
@@ -26,10 +27,11 @@ export const AtividadeUploadDialog = ({
   onUpload,
   open,
   onOpenChange,
+  isLoading = false,
 }: AtividadeUploadDialogProps) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={(value) => !isLoading && onOpenChange(value)}>
+      <DialogContent onPointerDownOutside={(e) => isLoading && e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Descrição da Imagem</DialogTitle>
         </DialogHeader>
@@ -43,18 +45,27 @@ export const AtividadeUploadDialog = ({
               value={imageDescription}
               onChange={(e) => onDescriptionChange(e.target.value)}
               placeholder="Digite a descrição da imagem"
+              disabled={isLoading}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             Cancelar
           </Button>
           <Button
             className="bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
             onClick={onUpload}
+            disabled={isLoading}
           >
-            Enviar
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              'Enviar'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

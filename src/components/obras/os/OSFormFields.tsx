@@ -80,7 +80,7 @@ export const OSFormFields = ({ form }: OSFormFieldsProps) => {
           name="weight"
           render={({ field }) => (
             <FormItem style={{ flex: 1 }}>
-              <FormLabel>Peso (t)</FormLabel>
+              <FormLabel>Peso (kg)</FormLabel>
               <FormControl>
                 <Input placeholder="Peso" {...field} />
               </FormControl>

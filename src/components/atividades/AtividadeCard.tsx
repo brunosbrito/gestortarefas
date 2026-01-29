@@ -34,6 +34,7 @@ export const AtividadeCard = ({
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const isMobile = useIsMobile();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,8 +46,10 @@ export const AtividadeCard = ({
   };
 
   const handleImageUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || isUploading) return;
     const userId = localStorage.getItem('userId');
+
+    setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append('image', selectedFile);
@@ -71,6 +74,8 @@ export const AtividadeCard = ({
         description:
           'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -189,13 +194,16 @@ export const AtividadeCard = ({
             imageDescription={imageDescription}
             onDescriptionChange={setImageDescription}
             onCancel={() => {
-              setIsUploadDialogOpen(false);
-              setSelectedFile(null);
-              setImageDescription('');
+              if (!isUploading) {
+                setIsUploadDialogOpen(false);
+                setSelectedFile(null);
+                setImageDescription('');
+              }
             }}
             onUpload={handleImageUpload}
             open={isUploadDialogOpen}
-            onOpenChange={setIsUploadDialogOpen}
+            onOpenChange={(open) => !isUploading && setIsUploadDialogOpen(open)}
+            isLoading={isUploading}
           />
 
           <MoverAtividadeDialog

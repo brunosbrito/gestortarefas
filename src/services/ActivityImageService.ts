@@ -2,12 +2,17 @@ import api from '@/lib/axios';
 
 export const uploadActivityImage = async (
   activityId: number,
-  imageData: any
+  imageData: FormData
 ) => {
   try {
     const response = await api.post(
       `/activity-images/upload/${activityId}`,
-      imageData
+      imageData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
 
     return response.data;
