@@ -478,6 +478,16 @@ export default function PipelineProjetos() {
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorDisponivel" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6EE7B7" stopOpacity={0.9}/>
+                  <stop offset="95%" stopColor="#6EE7B7" stopOpacity={0.7}/>
+                </linearGradient>
+                <linearGradient id="colorNecessaria" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#FDBA74" stopOpacity={0.9}/>
+                  <stop offset="95%" stopColor="#FDBA74" stopOpacity={0.7}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="mesFormatado"
@@ -512,19 +522,21 @@ export default function PipelineProjetos() {
                 dataKey="capacidadeDisponivel"
                 name="Capacidade Disponível"
                 stroke="#34D399"
-                strokeWidth={3}
-                fill="none"
-                dot={{ fill: '#34D399', stroke: '#fff', strokeWidth: 2, r: 5 }}
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorDisponivel)"
+                dot={{ fill: '#34D399', stroke: '#fff', strokeWidth: 2, r: 4 }}
               />
               <Area
                 type="monotone"
                 dataKey="capacidadeNecessaria"
                 name="Capacidade Necessária"
                 stroke="#FB923C"
-                strokeWidth={3}
+                strokeWidth={2}
                 strokeDasharray="5 5"
-                fill="none"
-                dot={{ fill: '#FB923C', stroke: '#fff', strokeWidth: 2, r: 6 }}
+                fillOpacity={1}
+                fill="url(#colorNecessaria)"
+                dot={{ fill: '#FB923C', stroke: '#fff', strokeWidth: 2, r: 5 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -1054,6 +1066,16 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
           ) : (
             <ResponsiveContainer width="100%" height={500}>
               <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorDisponivelExpanded" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6EE7B7" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#6EE7B7" stopOpacity={0.7}/>
+                  </linearGradient>
+                  <linearGradient id="colorNecessariaExpanded" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#FDBA74" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#FDBA74" stopOpacity={0.7}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="mesFormatado"
@@ -1088,19 +1110,21 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
                   dataKey="capacidadeDisponivel"
                   name="Capacidade Disponível"
                   stroke="#34D399"
-                  strokeWidth={4}
-                  fill="none"
-                  dot={{ fill: '#34D399', stroke: '#fff', strokeWidth: 2, r: 6 }}
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorDisponivelExpanded)"
+                  dot={{ fill: '#34D399', stroke: '#fff', strokeWidth: 2, r: 5 }}
                 />
                 <Area
                   type="monotone"
                   dataKey="capacidadeNecessaria"
                   name="Capacidade Necessária"
                   stroke="#FB923C"
-                  strokeWidth={4}
+                  strokeWidth={3}
                   strokeDasharray="8 4"
-                  fill="none"
-                  dot={{ fill: '#FB923C', stroke: '#fff', strokeWidth: 2, r: 7 }}
+                  fillOpacity={1}
+                  fill="url(#colorNecessariaExpanded)"
+                  dot={{ fill: '#FB923C', stroke: '#fff', strokeWidth: 2, r: 6 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
