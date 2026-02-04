@@ -484,6 +484,21 @@ export default function PipelineProjetos() {
               <Tooltip
                 labelFormatter={(value) => `Período: ${value}`}
                 formatter={(value: number) => [`${value.toLocaleString('pt-BR')}h`, '']}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  color: 'hsl(var(--popover-foreground))',
+                  padding: '8px 12px',
+                }}
+                labelStyle={{
+                  color: 'hsl(var(--popover-foreground))',
+                  fontWeight: 600,
+                  marginBottom: '4px',
+                }}
+                itemStyle={{
+                  color: 'hsl(var(--popover-foreground))',
+                }}
               />
               <Legend />
               <Area
