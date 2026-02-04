@@ -46,7 +46,7 @@ const QQPDashboard = ({ orcamento }: QQPDashboardProps) => {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Total de Venda</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(valores.totalVenda)}</p>
+              <p className="text-base font-bold text-blue-600 dark:text-blue-400 break-words">{formatCurrency(valores.totalVenda)}</p>
             </div>
           </CardContent>
         </Card>
@@ -57,13 +57,13 @@ const QQPDashboard = ({ orcamento }: QQPDashboardProps) => {
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Margem Líquida</p>
               <div className="flex items-center gap-2">
-                <p className={`text-2xl font-bold ${dre.margemLiquida < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <p className={`text-base font-bold ${dre.margemLiquida < 0 ? 'text-red-600' : 'text-green-600'}`}>
                   {formatPercentage(dre.margemLiquida)}
                 </p>
                 {dre.margemLiquida > 0 ? (
-                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <TrendingUp className="h-5 w-5 text-green-600 flex-shrink-0" />
                 ) : (
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
                 )}
               </div>
             </div>
@@ -75,7 +75,7 @@ const QQPDashboard = ({ orcamento }: QQPDashboardProps) => {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">BDI Médio</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatPercentage(orcamento.bdiMedio)}</p>
+              <p className="text-base font-bold text-purple-600 dark:text-purple-400 break-words">{formatPercentage(orcamento.bdiMedio)}</p>
             </div>
           </CardContent>
         </Card>
@@ -85,7 +85,7 @@ const QQPDashboard = ({ orcamento }: QQPDashboardProps) => {
           <CardContent className="pt-6">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Custo por m²</p>
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              <p className="text-base font-bold text-orange-600 dark:text-orange-400 break-words">
                 {orcamento.custoPorM2 ? formatCurrency(orcamento.custoPorM2) : 'N/A'}
               </p>
             </div>

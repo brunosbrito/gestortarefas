@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import ItemComposicaoService from '@/services/ItemComposicaoService';
 import { CreateItemComposicao, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import { Loader2, Package, Wrench, HardHat, Truck, Users } from 'lucide-react';
+import { TextFormatSuggestion } from '@/components/ui/TextFormatSuggestion';
 
 interface AdicionarItemDialogProps {
   open: boolean;
@@ -330,6 +331,11 @@ const AdicionarItemDialog = ({
                   value={formData.codigo}
                   onChange={(e) => handleChange('codigo', e.target.value)}
                 />
+                <TextFormatSuggestion
+                  currentValue={formData.codigo}
+                  fieldType="headline"
+                  onApply={(formatted) => handleChange('codigo', formatted)}
+                />
               </div>
 
               <div className="space-y-2 md:col-span-3">
@@ -342,6 +348,11 @@ const AdicionarItemDialog = ({
                   value={formData.descricao}
                   onChange={(e) => handleChange('descricao', e.target.value)}
                   className={errors.descricao ? 'border-red-500' : ''}
+                />
+                <TextFormatSuggestion
+                  currentValue={formData.descricao}
+                  fieldType="normal"
+                  onApply={(formatted) => handleChange('descricao', formatted)}
                 />
                 {errors.descricao && <p className="text-sm text-red-500">{errors.descricao}</p>}
               </div>
@@ -432,12 +443,19 @@ const AdicionarItemDialog = ({
                   </SelectContent>
                 </Select>
                 {cargoOutro && (
-                  <Input
-                    placeholder="Digite o cargo manualmente"
-                    value={formData.cargo}
-                    onChange={(e) => handleChange('cargo', e.target.value)}
-                    className={errors.cargo ? 'border-red-500' : ''}
-                  />
+                  <>
+                    <Input
+                      placeholder="Digite o cargo manualmente"
+                      value={formData.cargo}
+                      onChange={(e) => handleChange('cargo', e.target.value)}
+                      className={errors.cargo ? 'border-red-500' : ''}
+                    />
+                    <TextFormatSuggestion
+                      currentValue={formData.cargo}
+                      fieldType="normal"
+                      onApply={(formatted) => handleChange('cargo', formatted)}
+                    />
+                  </>
                 )}
                 {errors.cargo && <p className="text-sm text-red-500">{errors.cargo}</p>}
                 <p className="text-xs text-muted-foreground">

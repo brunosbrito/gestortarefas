@@ -65,26 +65,24 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 <TableHead className="font-bold">Classificação</TableHead>
                 <TableHead className="text-right font-bold">Valor (R$)</TableHead>
                 <TableHead className="text-right font-bold w-[100px]">AV%</TableHead>
-                <TableHead className="text-right font-bold w-[100px]">AH%</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* Valor Total dos Produtos/Serviços */}
+              {/* Receita Bruta de Vendas */}
               <TableRow className="bg-blue-50/50 dark:bg-blue-950/20 font-semibold">
-                <TableCell>Valor total dos produtos/serviços</TableCell>
+                <TableCell>Receita bruta de vendas</TableCell>
                 <TableCell className="text-right text-blue-600 dark:text-blue-400 font-bold">
-                  {formatCurrency(valores.subtotal)}
+                  {formatCurrency(valores.totalVenda)}
                 </TableCell>
                 <TableCell className="text-right text-blue-600 dark:text-blue-400">
-                  {calcularAV(valores.subtotal)}
+                  {calcularAV(valores.totalVenda)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
 
-              {/* Tributos a Recolher - Header */}
+              {/* Deduções da Receita (Tributos) - Header */}
               <TableRow className="bg-muted/30">
                 <TableCell className="font-semibold text-red-700 dark:text-red-400">
-                  (-) Tributos a recolher
+                  (-) Deduções da receita (Tributos)
                 </TableCell>
                 <TableCell className="text-right text-red-600 dark:text-red-400 font-bold">
                   {formatCurrency(valores.tributosTotal)}
@@ -92,7 +90,6 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 <TableCell className="text-right text-red-600 dark:text-red-400">
                   {calcularAV(valores.tributosTotal)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
 
               {/* Breakdown de Tributos - ISS */}
@@ -110,8 +107,7 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                   <TableCell className="text-right text-muted-foreground text-xs">
                     {calcularAV(valorISS)}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
-                </TableRow>
+                  </TableRow>
               )}
 
               {/* Breakdown de Tributos - Simples Nacional */}
@@ -128,7 +124,6 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 <TableCell className="text-right text-muted-foreground text-xs">
                   {calcularAV(valorSimples)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
 
               {/* Receita Líquida */}
@@ -140,7 +135,6 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 <TableCell className="text-right text-blue-700 dark:text-blue-300">
                   {calcularAV(dre.receitaLiquida)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
 
               {/* Custos Diretos de Produção - Header */}
@@ -154,7 +148,6 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 <TableCell className="text-right text-red-600 dark:text-red-400">
                   {calcularAV(valores.custoDirectoTotal)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
 
               {/* Breakdown por Composição - Custos Diretos */}
@@ -172,8 +165,7 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                   <TableCell className="text-right text-muted-foreground text-xs">
                     {formatPercentage(comp.percentualCusto)}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
-                </TableRow>
+                  </TableRow>
               ))}
 
               {/* Lucro Bruto */}
@@ -202,7 +194,6 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 <TableCell className={`text-right ${dre.lucroBruto < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-700 dark:text-green-300'}`}>
                   {calcularAV(dre.lucroBruto)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
 
               {/* Despesas Administrativas (BDI) - Header */}
@@ -216,7 +207,6 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 <TableCell className="text-right text-red-600 dark:text-red-400">
                   {calcularAV(valores.bdiTotal)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
 
               {/* Breakdown por Composição - BDI */}
@@ -234,8 +224,7 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                   <TableCell className="text-right text-muted-foreground text-xs">
                     {formatPercentage(comp.percentualBDI)}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
-                </TableRow>
+                  </TableRow>
               ))}
 
               {/* Lucro Líquido */}
@@ -278,17 +267,32 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
                 }`}>
                   {calcularAV(dre.lucroLiquido)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs">-</TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
 
-        {/* Legenda AH/AV */}
-        <div className="mt-4 p-3 bg-muted/30 rounded-lg text-xs text-muted-foreground">
-          <p className="font-semibold mb-1">Legenda:</p>
-          <p><strong>AV%</strong> (Análise Vertical): Percentual de cada item em relação ao Total de Venda</p>
-          <p><strong>AH%</strong> (Análise Horizontal): Comparação com período anterior (requer dados históricos)</p>
+        {/* Legenda e Observações */}
+        <div className="mt-4 space-y-3">
+          <div className="p-3 bg-muted/30 rounded-lg text-xs text-muted-foreground">
+            <p className="font-semibold mb-1">Legenda:</p>
+            <p className="mb-2">
+              <strong>AV%</strong> (Análise Vertical): Percentual de cada item em relação à Receita Bruta de Vendas
+            </p>
+            <p className="text-xs italic">
+              💡 <strong>AH%</strong> (Análise Horizontal) estará disponível quando implementarmos versionamento de orçamentos (Rev.00, Rev.01, etc.) para comparar evolução de custos entre revisões.
+            </p>
+          </div>
+
+          <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-xs">
+            <p className="font-semibold text-yellow-800 dark:text-yellow-300 mb-1">⚠️ Observação Importante:</p>
+            <p className="text-yellow-700 dark:text-yellow-400 mb-2">
+              O sistema atual utiliza <strong>formação de preço por markup</strong>: Preço = (Custo Direto + BDI) + Tributos.
+            </p>
+            <p className="text-yellow-700 dark:text-yellow-400">
+              Neste modelo, o <strong>Lucro Líquido = 0</strong> porque o BDI já absorve toda a margem planejada. Para ter lucro líquido positivo, seria necessário adicionar uma <strong>margem de lucro</strong> separada do BDI ou ajustar o percentual de BDI para incluir a margem desejada.
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>

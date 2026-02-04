@@ -17,10 +17,12 @@ export const useOrcamentoCalculos = (orcamento: Partial<Orcamento> | null) => {
       return {
         custoDirectoTotal: 0,
         bdiTotal: 0,
+        margemLucroTotal: 0,
         subtotal: 0,
         tributosTotal: 0,
         totalVenda: 0,
         bdiMedio: 0,
+        margemLucroMedia: 0,
         custoPorM2: undefined,
       };
     }
@@ -34,6 +36,8 @@ export const useOrcamentoCalculos = (orcamento: Partial<Orcamento> | null) => {
         receitaLiquida: 0,
         lucroBruto: 0,
         margemBruta: 0,
+        lucroOperacional: 0,
+        margemOperacional: 0,
         lucroLiquido: 0,
         margemLiquida: 0,
       };
@@ -68,11 +72,16 @@ export const useOrcamentoCalculos = (orcamento: Partial<Orcamento> | null) => {
       percentualCusto: valores.custoDirectoTotal > 0
         ? (comp.custoDirecto / valores.custoDirectoTotal) * 100
         : 0,
-      bdi: comp.bdi.valor,
+      bdi: comp.bdi.valorTotal,
       percentualBDI: valores.bdiTotal > 0
-        ? (comp.bdi.valor / valores.bdiTotal) * 100
+        ? (comp.bdi.valorTotal / valores.bdiTotal) * 100
         : 0,
-      bdiPercentual: comp.bdi.percentual,
+      bdiPercentual: comp.bdi.percentualTotal,
+      margemLucro: comp.margemLucro.valor,
+      percentualMargemLucro: valores.margemLucroTotal > 0
+        ? (comp.margemLucro.valor / valores.margemLucroTotal) * 100
+        : 0,
+      margemLucroPercentual: comp.margemLucro.percentual,
     }));
   }, [orcamento, valores]);
 

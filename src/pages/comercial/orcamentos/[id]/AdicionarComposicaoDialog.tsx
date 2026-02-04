@@ -20,7 +20,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import ComposicaoService from '@/services/ComposicaoService';
 import { CreateComposicao, ComposicaoCustos } from '@/interfaces/OrcamentoInterface';
-import { Loader2, Package } from 'lucide-react';
+import { Loader2, Package, Info } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface AdicionarComposicaoDialogProps {
   open: boolean;
@@ -41,16 +42,24 @@ const TIPOS_COMPOSICAO = [
   { value: 'materiais', label: 'Materiais' },
 ];
 
-const BDI_PADRAO: Record<string, number> = {
-  mobilizacao: 25,
-  desmobilizacao: 25,
-  mo_fabricacao: 15,
-  mo_montagem: 15,
-  jato_pintura: 20,
-  ferramentas: 10,
-  consumiveis: 20,
-  materiais: 25,
+// BDI Padrão por tipo (valores detalhados)
+const BDI_PADRAO: Record<string, {
+  despesasAdministrativas: number;
+  despesasComerciais: number;
+  despesasFinanceiras: number;
+  impostosIndiretos: number;
+}> = {
+  mobilizacao: { despesasAdministrativas: 12, despesasComerciais: 5, despesasFinanceiras: 3, impostosIndiretos: 5 },
+  desmobilizacao: { despesasAdministrativas: 12, despesasComerciais: 5, despesasFinanceiras: 3, impostosIndiretos: 5 },
+  mo_fabricacao: { despesasAdministrativas: 8, despesasComerciais: 3, despesasFinanceiras: 2, impostosIndiretos: 2 },
+  mo_montagem: { despesasAdministrativas: 8, despesasComerciais: 3, despesasFinanceiras: 2, impostosIndiretos: 2 },
+  jato_pintura: { despesasAdministrativas: 10, despesasComerciais: 4, despesasFinanceiras: 3, impostosIndiretos: 3 },
+  ferramentas: { despesasAdministrativas: 5, despesasComerciais: 2, despesasFinanceiras: 1, impostosIndiretos: 2 },
+  consumiveis: { despesasAdministrativas: 10, despesasComerciais: 4, despesasFinanceiras: 3, impostosIndiretos: 3 },
+  materiais: { despesasAdministrativas: 12, despesasComerciais: 5, despesasFinanceiras: 3, impostosIndiretos: 5 },
 };
+
+const MARGEM_LUCRO_PADRAO = 7; // 7% padrão
 
 const AdicionarComposicaoDialog = ({
   open,
@@ -65,7 +74,11 @@ const AdicionarComposicaoDialog = ({
   const [formData, setFormData] = useState({
     nome: composicaoParaEditar?.nome || '',
     tipo: composicaoParaEditar?.tipo || '',
-    bdiPercentual: composicaoParaEditar?.bdi.percentual.toString() || '',
+    despesasAdministrativas: composicaoParaEditar?.bdi.despesasAdministrativas.percentual.toString() || '',
+    despesasComerciais: composicaoParaEditar?.bdi.despesasComerciais.percentual.toString() || '',
+    despesasFinanceiras: composicaoParaEditar?.bdi.despesasFinanceiras.percentual.toString() || '',
+    impostosIndiretos: composicaoParaEditar?.bdi.impostosIndiretos.percentual.toString() || '',
+    margemLucro: composicaoParaEditar?.margemLucro.percentual.toString() || MARGEM_LUCRO_PADRAO.toString(),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -75,8 +88,14 @@ const AdicionarComposicaoDialog = ({
 
     // Auto-fill BDI padrão quando tipo mudar
     if (field === 'tipo' && value && !composicaoParaEditar) {
-      const bdiPadrao = BDI_PADRAO[value] || 25;
-      setFormData((prev) => ({ ...prev, bdiPercentual: bdiPadrao.toString() }));
+      const bdiPadrao = BDI_PADRAO[value] || BDI_PADRAO.materiais;
+      setFormData((prev) => ({
+        ...prev,
+        despesasAdministrativas: bdiPadrao.despesasAdministrativas.toString(),
+        despesasComerciais: bdiPadrao.despesasComerciais.toString(),
+        despesasFinanceiras: bdiPadrao.despesasFinanceiras.toString(),
+        impostosIndiretos: bdiPadrao.impostosIndiretos.toString(),
+      }));
     }
 
     // Limpar erro do campo
@@ -100,8 +119,24 @@ const AdicionarComposicaoDialog = ({
       newErrors.tipo = 'Selecione um tipo de composição';
     }
 
-    if (!formData.bdiPercentual || parseFloat(formData.bdiPercentual) < 0) {
-      newErrors.bdiPercentual = 'BDI deve ser um valor positivo';
+    if (!formData.despesasAdministrativas || parseFloat(formData.despesasAdministrativas) < 0) {
+      newErrors.despesasAdministrativas = 'Valor inválido';
+    }
+
+    if (!formData.despesasComerciais || parseFloat(formData.despesasComerciais) < 0) {
+      newErrors.despesasComerciais = 'Valor inválido';
+    }
+
+    if (!formData.despesasFinanceiras || parseFloat(formData.despesasFinanceiras) < 0) {
+      newErrors.despesasFinanceiras = 'Valor inválido';
+    }
+
+    if (!formData.impostosIndiretos || parseFloat(formData.impostosIndiretos) < 0) {
+      newErrors.impostosIndiretos = 'Valor inválido';
+    }
+
+    if (!formData.margemLucro || parseFloat(formData.margemLucro) < 0) {
+      newErrors.margemLucro = 'Margem de lucro deve ser um valor positivo';
     }
 
     setErrors(newErrors);
@@ -120,7 +155,15 @@ const AdicionarComposicaoDialog = ({
         orcamentoId,
         nome: formData.nome,
         tipo: formData.tipo as CreateComposicao['tipo'],
-        bdiPercentual: parseFloat(formData.bdiPercentual),
+        bdi: {
+          despesasAdministrativas: { percentual: parseFloat(formData.despesasAdministrativas) },
+          despesasComerciais: { percentual: parseFloat(formData.despesasComerciais) },
+          despesasFinanceiras: { percentual: parseFloat(formData.despesasFinanceiras) },
+          impostosIndiretos: { percentual: parseFloat(formData.impostosIndiretos) },
+        },
+        margemLucro: {
+          percentual: parseFloat(formData.margemLucro),
+        },
       };
 
       if (composicaoParaEditar) {
@@ -164,19 +207,31 @@ const AdicionarComposicaoDialog = ({
     setFormData({
       nome: '',
       tipo: '',
-      bdiPercentual: '',
+      despesasAdministrativas: '',
+      despesasComerciais: '',
+      despesasFinanceiras: '',
+      impostosIndiretos: '',
+      margemLucro: MARGEM_LUCRO_PADRAO.toString(),
     });
     setErrors({});
     onOpenChange(false);
   };
 
+  // Calcular BDI total
+  const bdiTotal = (
+    parseFloat(formData.despesasAdministrativas || '0') +
+    parseFloat(formData.despesasComerciais || '0') +
+    parseFloat(formData.despesasFinanceiras || '0') +
+    parseFloat(formData.impostosIndiretos || '0')
+  ).toFixed(2);
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-              <Package className="h-6 w-6 text-blue-600" />
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <DialogTitle className="text-xl">
               {composicaoParaEditar ? 'Editar' : 'Nova'} Composição
@@ -227,32 +282,137 @@ const AdicionarComposicaoDialog = ({
               {errors.tipo && <p className="text-sm text-red-500">{errors.tipo}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bdiPercentual">
-                BDI (%) <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="bdiPercentual"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="25.00"
-                value={formData.bdiPercentual}
-                onChange={(e) => handleChange('bdiPercentual', e.target.value)}
-                className={errors.bdiPercentual ? 'border-red-500' : ''}
-              />
-              {errors.bdiPercentual && (
-                <p className="text-sm text-red-500">{errors.bdiPercentual}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                BDI padrão: Materiais (25%), Ferramentas (10%), MO (15%)
-              </p>
-            </div>
+            {/* BDI Detalhado */}
+            <Card className="border-purple-200 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/20">
+              <CardContent className="pt-4 space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100">BDI Detalhado (%)</h4>
+                </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-900">
-                <strong>Dica:</strong> O BDI (Benefícios e Despesas Indiretas) é aplicado
-                sobre o custo direto da composição. Você pode ajustá-lo conforme a negociação.
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="despesasAdministrativas" className="text-xs">
+                      Despesas Administrativas
+                    </Label>
+                    <Input
+                      id="despesasAdministrativas"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="12.00"
+                      value={formData.despesasAdministrativas}
+                      onChange={(e) => handleChange('despesasAdministrativas', e.target.value)}
+                      className={errors.despesasAdministrativas ? 'border-red-500' : ''}
+                    />
+                    {errors.despesasAdministrativas && (
+                      <p className="text-xs text-red-500">{errors.despesasAdministrativas}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="despesasComerciais" className="text-xs">
+                      Despesas Comerciais
+                    </Label>
+                    <Input
+                      id="despesasComerciais"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="5.00"
+                      value={formData.despesasComerciais}
+                      onChange={(e) => handleChange('despesasComerciais', e.target.value)}
+                      className={errors.despesasComerciais ? 'border-red-500' : ''}
+                    />
+                    {errors.despesasComerciais && (
+                      <p className="text-xs text-red-500">{errors.despesasComerciais}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="despesasFinanceiras" className="text-xs">
+                      Despesas Financeiras
+                    </Label>
+                    <Input
+                      id="despesasFinanceiras"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="3.00"
+                      value={formData.despesasFinanceiras}
+                      onChange={(e) => handleChange('despesasFinanceiras', e.target.value)}
+                      className={errors.despesasFinanceiras ? 'border-red-500' : ''}
+                    />
+                    {errors.despesasFinanceiras && (
+                      <p className="text-xs text-red-500">{errors.despesasFinanceiras}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="impostosIndiretos" className="text-xs">
+                      Impostos Indiretos
+                    </Label>
+                    <Input
+                      id="impostosIndiretos"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="5.00"
+                      value={formData.impostosIndiretos}
+                      onChange={(e) => handleChange('impostosIndiretos', e.target.value)}
+                      className={errors.impostosIndiretos ? 'border-red-500' : ''}
+                    />
+                    {errors.impostosIndiretos && (
+                      <p className="text-xs text-red-500">{errors.impostosIndiretos}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-purple-200 dark:border-purple-800">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-purple-900 dark:text-purple-100">BDI Total:</span>
+                    <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{bdiTotal}%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Margem de Lucro */}
+            <Card className="border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20">
+              <CardContent className="pt-4 space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <h4 className="font-semibold text-green-900 dark:text-green-100">Margem de Lucro (%)</h4>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="margemLucro">
+                    Percentual <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="margemLucro"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="7.00"
+                    value={formData.margemLucro}
+                    onChange={(e) => handleChange('margemLucro', e.target.value)}
+                    className={errors.margemLucro ? 'border-red-500' : ''}
+                  />
+                  {errors.margemLucro && (
+                    <p className="text-sm text-red-500">{errors.margemLucro}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Lucro pretendido após deduzir custos diretos e BDI
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <p className="text-sm text-blue-900 dark:text-blue-100">
+                <strong>Importante:</strong> BDI (Benefícios e Despesas Indiretas) representa despesas operacionais.
+                Margem de Lucro é separada e representa o lucro líquido pretendido.
               </p>
             </div>
           </div>
@@ -264,7 +424,7 @@ const AdicionarComposicaoDialog = ({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
               {isSubmitting ? (
                 <>
