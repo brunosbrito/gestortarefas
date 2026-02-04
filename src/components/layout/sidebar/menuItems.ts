@@ -89,6 +89,16 @@ export const navItems: MenuItem[] = [
         path: '/pcp/pipeline',
       },
       {
+        icon: Package,
+        label: 'MRP',
+        path: '/pcp/mrp',
+      },
+      {
+        icon: Users,
+        label: 'Capacidade Produtiva',
+        path: '/pcp/capacidade',
+      },
+      {
         icon: Factory,
         label: 'Fábrica',
         path: '/fabricas',

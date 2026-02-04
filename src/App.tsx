@@ -43,8 +43,10 @@ const Comercial = lazy(() => import('./pages/comercial'));
 // Módulo Gestão de Processos
 const GestaoProcessos = lazy(() => import('./pages/gestao-processos'));
 
-// Módulo PCP - Pipeline de Projetos (FASE 4)
+// Módulo PCP
 const PipelineProjetos = lazy(() => import('./pages/pcp/pipeline'));
+const MRPDashboard = lazy(() => import('./pages/pcp/mrp'));
+const CapacidadeDashboard = lazy(() => import('./pages/pcp/capacidade'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -87,6 +89,8 @@ function App() {
           <Route path="/comercial/*" element={<Comercial />} />
           <Route path="/gestao-processos/*" element={<GestaoProcessos />} />
           <Route path="/pcp/pipeline" element={<PipelineProjetos />} />
+          <Route path="/pcp/mrp" element={<MRPDashboard />} />
+          <Route path="/pcp/capacidade" element={<CapacidadeDashboard />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
             path="/obras/:projectId/os/:serviceOrderId/atividades"
