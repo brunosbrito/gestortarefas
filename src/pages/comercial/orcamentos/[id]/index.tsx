@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
@@ -28,12 +30,24 @@ import {
 import OrcamentoService from '@/services/OrcamentoService';
 import OrcamentoPdfService from '@/services/OrcamentoPdfService';
 import OrcamentoExcelService from '@/services/OrcamentoExcelService';
-import { Orcamento } from '@/interfaces/OrcamentoInterface';
+import ComposicaoService from '@/services/ComposicaoService';
+import { Orcamento, CreateComposicao } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
 import AdicionarComposicaoDialog from './AdicionarComposicaoDialog';
 import AdicionarItemDialog from './AdicionarItemDialog';
 import DREViewer from '../components/DREViewer';
+
+// Valores padrão para Quick Add
+const QUICK_ADD_DEFAULTS = {
+  BDI: {
+    despesasAdministrativas: 12,
+    despesasComerciais: 5,
+    despesasFinanceiras: 3,
+    impostosIndiretos: 5,
+  },
+  MARGEM_LUCRO: 7,
+};
 
 const EditarOrcamento = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +64,11 @@ const EditarOrcamento = () => {
   const [dialogItem, setDialogItem] = useState(false);
   const [composicaoSelecionada, setComposicaoSelecionada] = useState<string | null>(null);
   const [itemParaEditar, setItemParaEditar] = useState<any>(null);
+
+  // Estados do Quick Add
+  const [quickAddNome, setQuickAddNome] = useState('');
+  const [quickAddTipo, setQuickAddTipo] = useState('');
+  const [isQuickAdding, setIsQuickAdding] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -105,6 +124,75 @@ const EditarOrcamento = () => {
         description: 'Não foi possível excluir o item',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleQuickAdd = async () => {
+    // Validação básica
+    if (!quickAddNome.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Nome da composição é obrigatório',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!quickAddTipo) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione um tipo de composição',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsQuickAdding(true);
+
+      const data: CreateComposicao = {
+        orcamentoId: orcamento!.id,
+        nome: quickAddNome,
+        tipo: quickAddTipo as CreateComposicao['tipo'],
+        bdi: {
+          despesasAdministrativas: { percentual: QUICK_ADD_DEFAULTS.BDI.despesasAdministrativas },
+          despesasComerciais: { percentual: QUICK_ADD_DEFAULTS.BDI.despesasComerciais },
+          despesasFinanceiras: { percentual: QUICK_ADD_DEFAULTS.BDI.despesasFinanceiras },
+          impostosIndiretos: { percentual: QUICK_ADD_DEFAULTS.BDI.impostosIndiretos },
+        },
+        margemLucro: {
+          percentual: QUICK_ADD_DEFAULTS.MARGEM_LUCRO,
+        },
+      };
+
+      await ComposicaoService.create(data);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Composição criada com sucesso',
+      });
+
+      // Limpar campos
+      setQuickAddNome('');
+      setQuickAddTipo('');
+
+      // Recarregar orçamento
+      carregarOrcamento();
+    } catch (error: any) {
+      console.error('Erro ao criar composição:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível criar a composição',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsQuickAdding(false);
+    }
+  };
+
+  const handleQuickAddKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && quickAddNome.trim() && quickAddTipo) {
+      handleQuickAdd();
     }
   };
 
@@ -295,17 +383,17 @@ const EditarOrcamento = () => {
         </div>
 
         {/* Cards de Resumo Financeiro */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm text-muted-foreground">Custo Direto</p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400 truncate">
                     {formatCurrency(orcamento.custoDirectoTotal)}
                   </p>
                 </div>
-                <Calculator className="h-8 w-8 text-blue-400 dark:text-blue-500" />
+                <Calculator className="h-7 w-7 text-blue-400 dark:text-blue-500 flex-shrink-0 ml-2" />
               </div>
             </CardContent>
           </Card>
@@ -313,16 +401,16 @@ const EditarOrcamento = () => {
           <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm text-muted-foreground">BDI Total</p>
-                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  <p className="text-lg font-bold text-purple-600 dark:text-purple-400 truncate">
                     {formatCurrency(orcamento.bdiTotal)}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground truncate">
                     {formatPercentage(orcamento.bdiMedio)}
                   </p>
                 </div>
-                <Settings className="h-8 w-8 text-purple-400 dark:text-purple-500" />
+                <Settings className="h-7 w-7 text-purple-400 dark:text-purple-500 flex-shrink-0 ml-2" />
               </div>
             </CardContent>
           </Card>
@@ -330,13 +418,30 @@ const EditarOrcamento = () => {
           <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">Margem Lucro</p>
+                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400 truncate">
+                    {formatCurrency(orcamento.margemLucroTotal)}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {formatPercentage(orcamento.margemLucroMedia)}
+                  </p>
+                </div>
+                <BarChart3 className="h-7 w-7 text-indigo-400 dark:text-indigo-500 flex-shrink-0 ml-2" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-elevation-2">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm text-muted-foreground">Subtotal</p>
-                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400 truncate">
                     {formatCurrency(orcamento.subtotal)}
                   </p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-amber-400 dark:text-amber-500" />
+                <BarChart3 className="h-7 w-7 text-amber-400 dark:text-amber-500 flex-shrink-0 ml-2" />
               </div>
             </CardContent>
           </Card>
@@ -344,13 +449,13 @@ const EditarOrcamento = () => {
           <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm text-muted-foreground">Tributos</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                  <p className="text-lg font-bold text-red-600 dark:text-red-400 truncate">
                     {formatCurrency(orcamento.tributosTotal)}
                   </p>
                 </div>
-                <FileText className="h-8 w-8 text-red-400 dark:text-red-500" />
+                <FileText className="h-7 w-7 text-red-400 dark:text-red-500 flex-shrink-0 ml-2" />
               </div>
             </CardContent>
           </Card>
@@ -358,13 +463,13 @@ const EditarOrcamento = () => {
           <Card className="shadow-elevation-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm text-muted-foreground">Total Venda</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400 truncate">
                     {formatCurrency(orcamento.totalVenda)}
                   </p>
                 </div>
-                <Calculator className="h-8 w-8 text-green-400 dark:text-green-500" />
+                <Calculator className="h-7 w-7 text-green-400 dark:text-green-500 flex-shrink-0 ml-2" />
               </div>
             </CardContent>
           </Card>
@@ -427,7 +532,8 @@ const EditarOrcamento = () => {
                                 </span>
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {composicao.itens.length} itens • BDI: {formatPercentage(composicao.bdi.percentual)} •
+                                {composicao.itens.length} itens • BDI: {formatPercentage(composicao.bdi.percentualTotal)} •
+                                Margem: {formatPercentage(composicao.margemLucro.percentual)} •
                                 Custo Direto: {formatCurrency(composicao.custoDirecto)}
                               </p>
                             </div>
@@ -526,6 +632,98 @@ const EditarOrcamento = () => {
                         </CardContent>
                       </Card>
                     ))}
+
+                    {/* Quick Add Row - Adicionar Rápido */}
+                    <div className="border-2 border-dashed rounded-lg p-4 bg-muted/30 hover:bg-muted/40 transition-colors">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Plus className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Adicionar Rápido (valores padrão)
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                          {/* Nome da Composição */}
+                          <div className="md:col-span-5">
+                            <Input
+                              placeholder="Nome da composição (Ex: ESTRUTURA METÁLICA)"
+                              value={quickAddNome}
+                              onChange={(e) => setQuickAddNome(e.target.value)}
+                              onKeyDown={handleQuickAddKeyDown}
+                              disabled={isQuickAdding}
+                              className="h-10"
+                            />
+                          </div>
+
+                          {/* Tipo */}
+                          <div className="md:col-span-3">
+                            <Select
+                              value={quickAddTipo}
+                              onValueChange={setQuickAddTipo}
+                              disabled={isQuickAdding}
+                            >
+                              <SelectTrigger className="h-10">
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="mobilizacao">Mobilização</SelectItem>
+                                <SelectItem value="desmobilizacao">Desmobilização</SelectItem>
+                                <SelectItem value="mo_fabricacao">MO Fabricação</SelectItem>
+                                <SelectItem value="mo_montagem">MO Montagem</SelectItem>
+                                <SelectItem value="jato_pintura">Jato/Pintura</SelectItem>
+                                <SelectItem value="ferramentas">Ferramentas</SelectItem>
+                                <SelectItem value="consumiveis">Consumíveis</SelectItem>
+                                <SelectItem value="materiais">Materiais</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Botões */}
+                          <div className="md:col-span-4 flex gap-2">
+                            <Button
+                              onClick={handleQuickAdd}
+                              disabled={isQuickAdding || !quickAddNome.trim() || !quickAddTipo}
+                              size="sm"
+                              className="flex-1"
+                            >
+                              {isQuickAdding ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                  Adicionando...
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  Adicionar Rápido
+                                </>
+                              )}
+                            </Button>
+
+                            <Button
+                              onClick={() => setDialogComposicao(true)}
+                              variant="outline"
+                              size="sm"
+                              disabled={isQuickAdding}
+                            >
+                              <Settings className="h-4 w-4 mr-2" />
+                              Completo
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Mensagem Informativa */}
+                        <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-2 rounded">
+                          <div className="mt-0.5">💡</div>
+                          <p>
+                            <strong>Adicionar Rápido</strong> cria composição com valores padrão:{' '}
+                            <strong>BDI Total 25%</strong> (Desp.Admin 12% + Comercial 5% + Financ 3% + Impostos 5%) e{' '}
+                            <strong>Margem Lucro 7%</strong>.{' '}
+                            Para customizar BDI detalhado, use <strong>"Adicionar Completo"</strong>.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>

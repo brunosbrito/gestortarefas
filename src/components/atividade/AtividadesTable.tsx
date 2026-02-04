@@ -331,6 +331,9 @@ export const AtividadesTable = () => {
                       className="w-[100px] border-r border-border/30"
                       align="center"
                     />
+                    <TableHead className="w-[180px] border-r border-border/30 text-center font-semibold text-foreground">
+                      Vínculo Orçamento
+                    </TableHead>
                     <TableHead className="w-16 text-center font-semibold text-foreground"></TableHead>
                   </TableRow>
                 </TableHeader>

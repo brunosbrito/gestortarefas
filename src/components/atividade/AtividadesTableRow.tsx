@@ -4,7 +4,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ChevronDown, ChevronRight, Users, Building2, Calendar, Clock } from 'lucide-react';
+import { ChevronDown, ChevronRight, Users, Building2, Calendar, Clock, DollarSign, CheckCircle, AlertCircle, Link } from 'lucide-react';
 import { Activity } from '@/interfaces/AtividadeInterface';
 import { cn } from '@/lib/utils';
 import {
@@ -159,6 +159,38 @@ export const AtividadesTableRow = memo(({
           </Badge>
         </TableCell>
 
+        {/* Item Orçamento - FASE 1 PCP */}
+        <TableCell className="text-center py-4 border-r border-border/30">
+          {atividade.itemComposicaoId ? (
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <Link className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-medium">Vinculado</span>
+              </div>
+              {/* Indicador de Budget */}
+              {atividade.custoPlanejado !== undefined && atividade.custoReal !== undefined && (
+                <div className="flex items-center gap-1">
+                  {atividade.custoReal <= atividade.custoPlanejado ? (
+                    <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                  )}
+                  <span className={cn(
+                    "text-xs font-semibold",
+                    atividade.custoReal <= atividade.custoPlanejado
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  )}>
+                    {atividade.custoReal <= atividade.custoPlanejado ? 'No Budget' : 'Over Budget'}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground">-</span>
+          )}
+        </TableCell>
+
         {/* Ações - Expandir */}
         <TableCell className="text-center py-4">
           <Button
@@ -183,7 +215,7 @@ export const AtividadesTableRow = memo(({
       <AnimatePresence>
         {isExpanded && (
           <TableRow className="bg-muted/20 hover:bg-muted/20">
-            <TableCell colSpan={8} className="p-0 overflow-hidden">
+            <TableCell colSpan={9} className="p-0 overflow-hidden">
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -277,6 +309,70 @@ export const AtividadesTableRow = memo(({
                       {formatDate(atividade.createdAt)}
                     </div>
                   </div>
+
+                  {/* FASE 1 PCP: Custo Planejado */}
+                  {atividade.custoPlanejado !== undefined && (
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Custo Planejado
+                      </div>
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="tabular-nums">
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(atividade.custoPlanejado)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* FASE 1 PCP: Custo Real */}
+                  {atividade.custoReal !== undefined && (
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Custo Real
+                      </div>
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <DollarSign className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                        <span className="tabular-nums">
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(atividade.custoReal)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* FASE 1 PCP: Variance */}
+                  {atividade.custoPlanejado !== undefined && atividade.custoReal !== undefined && (
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Variance
+                      </div>
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        {atividade.custoReal <= atividade.custoPlanejado ? (
+                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        )}
+                        <span className={cn(
+                          "tabular-nums font-bold",
+                          atividade.custoReal <= atividade.custoPlanejado
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        )}>
+                          {atividade.custoReal > atividade.custoPlanejado ? '+' : ''}
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(atividade.custoReal - atividade.custoPlanejado)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Observações */}
                   {atividade.observations && (

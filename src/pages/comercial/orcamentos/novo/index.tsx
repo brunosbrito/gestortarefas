@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight, Save, FileText, Wrench, Package } from 'lucide-r
 import OrcamentoService from '@/services/OrcamentoService';
 import { CreateOrcamento } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
+import { TextFormatSuggestion } from '@/components/ui/TextFormatSuggestion';
 
 const NovoOrcamento = () => {
   const navigate = useNavigate();
@@ -134,6 +135,14 @@ const NovoOrcamento = () => {
                     onChange={(e) => handleChange('nome', e.target.value)}
                     required
                   />
+                  <TextFormatSuggestion
+                    currentValue={formData.nome}
+                    fieldType="headline"
+                    onApply={(formatted) => handleChange('nome', formatted)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Títulos são formatados em MAIÚSCULO para melhor visualização
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -182,6 +191,11 @@ const NovoOrcamento = () => {
                       value={formData.clienteNome}
                       onChange={(e) => handleChange('clienteNome', e.target.value)}
                     />
+                    <TextFormatSuggestion
+                      currentValue={formData.clienteNome}
+                      fieldType="normal"
+                      onApply={(formatted) => handleChange('clienteNome', formatted)}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -191,6 +205,11 @@ const NovoOrcamento = () => {
                       placeholder="Ex: M-15706"
                       value={formData.codigoProjeto}
                       onChange={(e) => handleChange('codigoProjeto', e.target.value)}
+                    />
+                    <TextFormatSuggestion
+                      currentValue={formData.codigoProjeto}
+                      fieldType="headline"
+                      onApply={(formatted) => handleChange('codigoProjeto', formatted)}
                     />
                   </div>
                 </div>

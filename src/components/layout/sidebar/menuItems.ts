@@ -46,6 +46,9 @@ import {
   ArrowRightLeft,
   PackageSearch,
   GanttChartSquare,
+  CheckCircle,
+  GitBranch,
+  RotateCw,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -79,6 +82,11 @@ export const navItems: MenuItem[] = [
         icon: Building2,
         label: 'Obras',
         path: '/obras',
+      },
+      {
+        icon: TrendingUp,
+        label: 'Pipeline de Projetos',
+        path: '/pcp/pipeline',
       },
       {
         icon: Factory,
@@ -354,6 +362,50 @@ export const navItems: MenuItem[] = [
         icon: UserCircle,
         label: 'Clientes',
         path: '/comercial/clientes',
+      },
+    ],
+  },
+
+  // MÓDULO GESTÃO DE PROCESSOS
+  {
+    icon: ClipboardList,
+    label: 'Gestão de Processos',
+    subItems: [
+      {
+        icon: BarChart3,
+        label: 'Dashboard',
+        path: '/gestao-processos',
+      },
+      {
+        icon: CheckCircle,
+        label: 'Fila de Aprovação',
+        path: '/gestao-processos/aprovacao',
+        badge: 'count',
+      },
+      {
+        icon: Target,
+        label: 'Priorização (GUT)',
+        path: '/gestao-processos/priorizacao',
+      },
+      {
+        icon: GitBranch,
+        label: 'Desdobramento',
+        path: '/gestao-processos/desdobramento',
+      },
+      {
+        icon: RotateCw,
+        label: 'PDCA',
+        path: '/gestao-processos/pdca',
+      },
+      {
+        icon: Target,
+        label: 'Metas SMART',
+        path: '/gestao-processos/metas',
+      },
+      {
+        icon: ClipboardList,
+        label: 'Planos 5W2H',
+        path: '/gestao-processos/planos-acao',
       },
     ],
   },

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Header } from "./layout/Header";
 import { Sidebar } from "./layout/Sidebar";
 import { useUser } from "./layout/useUser";
-import { Menu, X, Keyboard } from "lucide-react";
+import { Menu, X, Keyboard, GripVertical } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { getStoredToken } from "@/services/AuthService";
@@ -10,11 +10,22 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useSystemHighContrast } from "@/hooks/useHighContrast";
 import { ShortcutsModal } from "./shortcuts/ShortcutsModal";
 
+const SIDEBAR_WIDTH_KEY = 'sidebar-width';
+const DEFAULT_SIDEBAR_WIDTH = 280;
+const MIN_SIDEBAR_WIDTH = 200;
+const MAX_SIDEBAR_WIDTH = 500;
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const user = useUser();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    const stored = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    return stored ? parseInt(stored, 10) : DEFAULT_SIDEBAR_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Atalhos de teclado globais
   useKeyboardShortcuts({
@@ -32,6 +43,44 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     }
   }, [navigate]);
 
+  // Persistir largura da sidebar no localStorage
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  // Handlers para redimensionamento da sidebar
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const newWidth = e.clientX;
+      if (newWidth >= MIN_SIDEBAR_WIDTH && newWidth <= MAX_SIDEBAR_WIDTH) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
   if (!user) {
     return <div>Carregando...</div>;
   }
@@ -48,7 +97,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static w-[280px] h-screen bg-card/95 backdrop-blur-xl border-r border-border/50 z-50 transition-all duration-300 ease-in-out transform ${
+        ref={sidebarRef}
+        style={{
+          width: `${sidebarWidth}px`,
+        }}
+        className={`fixed md:static h-screen bg-card/95 backdrop-blur-xl border-r border-border/50 z-50 transition-transform duration-300 ease-in-out transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 shadow-xl md:shadow-none flex flex-col`}
       >
@@ -64,6 +117,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <p className="text-[10px] text-muted-foreground/70">
               v2.0.0 • 2025
             </p>
+          </div>
+        </div>
+
+        {/* Resize Handle - Desktop only */}
+        <div
+          onMouseDown={() => setIsResizing(true)}
+          className="hidden md:block absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize group hover:bg-primary/20 transition-colors"
+          aria-label="Redimensionar barra lateral"
+        >
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-primary text-primary-foreground rounded-md p-1 shadow-lg">
+              <GripVertical className="w-3 h-3" />
+            </div>
           </div>
         </div>
       </aside>

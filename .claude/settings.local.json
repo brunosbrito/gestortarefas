@@ -10,7 +10,24 @@
       "Bash(npm install:*)",
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:dev:*)"
+      "Bash(npm run build:dev:*)",
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Bash(Get-Content \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-User-OneDrive---gmlestruturas-com-br-Documentos-GitHub-gestortarefas\\\\tasks\\\\bbf006d.output\" -Tail 30)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(xargs ls:*)",
+      "Bash(npm run lint:*)",
+      "Bash(for file in priorizacao/index.tsx desdobramento/index.tsx planos-acao/index.tsx pdca/index.tsx metas/index.tsx)",
+      "Bash(do echo \"Processando: $file\")",
+      "Bash(done)",
+      "Bash(git add:*)",
+      "Bash(if [ -f \"nul\" ])",
+      "Bash(then rm nul)",
+      "Bash(else echo \"Arquivo nul não encontrado\")",
+      "Bash(fi)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(layout\\): implementa sidebar redimensionável em todo o sistema\n\nAdiciona funcionalidade de redimensionamento manual da sidebar\ncom suporte a arrastar e persistência de preferências.\n\nMudanças principais:\n- Layout.tsx: Adiciona handle de redimensionamento na sidebar principal\n  * Largura ajustável entre 200px-500px\n  * Persiste preferência em localStorage\n  * Ícone de grip aparece ao hover na borda direita\n\n- LayoutGestaoProcessos.tsx: Novo componente de layout para módulo GP\n  * Implementa mesma funcionalidade de resize\n  * localStorage separado \\(sidebar-width-gestao-processos\\)\n  * Resolve problema de sidebar fixa no módulo Gestão de Processos\n\nArquivos atualizados no módulo Gestão de Processos \\(10\\):\n- Dashboard.tsx, FilaAprovacao.tsx\n- priorizacao/index.tsx, desdobramento/index.tsx\n- planos-acao/index.tsx, pdca/index.tsx, metas/index.tsx\n- planos-acao/[id]/index.tsx, pdca/[id]/index.tsx, metas/[id]/index.tsx\n\nFuncionalidades:\n✅ Sidebar redimensionável em desktop \\(200-500px\\)\n✅ Persistência de largura entre sessões\n✅ Feedback visual com ícone de grip ao hover\n✅ Cursor muda para ew-resize durante drag\n✅ Funciona em todas as páginas do sistema\n\nResolves: Sidebar ocupando espaço excessivo e falta de ajuste manual\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\bruno\\Desktop\\dev\\gestor tarefas api\\gestor-tarefas-api\\src\\modules\\user"

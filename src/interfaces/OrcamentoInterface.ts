@@ -28,7 +28,8 @@ export interface Orcamento {
   // Valores calculados (derivados automaticamente)
   custoDirectoTotal: number;
   bdiTotal: number;
-  subtotal: number;                  // custoDirecto + BDI
+  margemLucroTotal: number;
+  subtotal: number;                  // custoDirecto + BDI + margemLucro
   tributosTotal: number;
   totalVenda: number;
 
@@ -37,6 +38,8 @@ export interface Orcamento {
     receitaLiquida: number;
     lucroBruto: number;
     margemBruta: number;             // %
+    lucroOperacional: number;
+    margemOperacional: number;       // %
     lucroLiquido: number;
     margemLiquida: number;           // %
   };
@@ -44,6 +47,7 @@ export interface Orcamento {
   // Indicadores
   custoPorM2?: number;
   bdiMedio: number;                  // %
+  margemLucroMedia: number;          // %
 
   // Metadata
   createdAt: string;
@@ -62,15 +66,25 @@ export interface ComposicaoCustos {
   // Itens da composição (materiais, mão de obra, etc.)
   itens: ItemComposicao[];
 
-  // BDI específico desta composição (editável)
+  // BDI específico desta composição (editável) - Despesas Operacionais Detalhadas
   bdi: {
-    percentual: number;              // Editável: 25% (materiais), 10% (ferramentas)
+    despesasAdministrativas: { percentual: number; valor: number };  // Ex: 12%
+    despesasComerciais: { percentual: number; valor: number };       // Ex: 5%
+    despesasFinanceiras: { percentual: number; valor: number };      // Ex: 3%
+    impostosIndiretos: { percentual: number; valor: number };        // Ex: 5%
+    percentualTotal: number;         // Soma dos percentuais acima (Ex: 25%)
+    valorTotal: number;              // Soma dos valores calculados
+  };
+
+  // Margem de lucro pretendida (separada do BDI)
+  margemLucro: {
+    percentual: number;              // Ex: 7%
     valor: number;                   // Calculado: custoDirecto * percentual
   };
 
   // Valores calculados
   custoDirecto: number;              // Soma dos itens
-  subtotal: number;                  // custoDirecto + BDI
+  subtotal: number;                  // custoDirecto + BDI.valorTotal + margemLucro.valor
   percentualDoTotal: number;         // % em relação ao custo direto total
 
   // Análise ABC (se aplicável)
@@ -158,7 +172,20 @@ export interface CreateComposicao {
   orcamentoId: string;
   nome: string;
   tipo: ComposicaoCustos['tipo'];
-  bdiPercentual: number;
+
+  // BDI detalhado
+  bdi: {
+    despesasAdministrativas: { percentual: number };
+    despesasComerciais: { percentual: number };
+    despesasFinanceiras: { percentual: number };
+    impostosIndiretos: { percentual: number };
+  };
+
+  // Margem de lucro
+  margemLucro: {
+    percentual: number;
+  };
+
   ordem?: number;
 }
 

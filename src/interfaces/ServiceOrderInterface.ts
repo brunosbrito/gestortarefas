@@ -27,6 +27,12 @@ export interface ServiceOrder {
     id: number;
     name: string;
   };
+  // FASE 1 PCP: Integração com Orçamento
+  orcamentoId?: string; // Vincula a qual orçamento (QQP)
+  composicaoIds?: string[]; // Quais composições de custo esta OS executa
+  custoPlanejado?: number; // Soma das composições vinculadas
+  custoReal?: number; // Acumulado de materiais/MO consumidos
+  varianceCusto?: number; // custoReal - custoPlanejado (variance)
 }
 
 export interface CreateServiceOrder {
@@ -39,4 +45,7 @@ export interface CreateServiceOrder {
   quantity: number;
   weight: string;
   projectNumber: string;
+  // FASE 1 PCP: Integração com Orçamento
+  orcamentoId?: string;
+  composicaoIds?: string[];
 }

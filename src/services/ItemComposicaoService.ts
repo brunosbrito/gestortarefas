@@ -78,11 +78,20 @@ class ItemComposicaoService {
 
           // Recalcular composição
           const custoDirecto = calcularCustoDirectoComposicao(composicao.itens);
-          const bdiValor = calcularBDIComposicao(custoDirecto, composicao.bdi.percentual);
-          const subtotalComposicao = calcularSubtotalComposicao(custoDirecto, bdiValor);
+
+          // Extrair percentuais do BDI detalhado
+          const bdiPercentuais = {
+            despesasAdministrativas: composicao.bdi.despesasAdministrativas.percentual,
+            despesasComerciais: composicao.bdi.despesasComerciais.percentual,
+            despesasFinanceiras: composicao.bdi.despesasFinanceiras.percentual,
+            impostosIndiretos: composicao.bdi.impostosIndiretos.percentual,
+          };
+
+          const bdiDetalhado = calcularBDIComposicao(custoDirecto, bdiPercentuais);
+          const subtotalComposicao = calcularSubtotalComposicao(custoDirecto, bdiDetalhado.valorTotal);
 
           composicao.custoDirecto = custoDirecto;
-          composicao.bdi.valor = bdiValor;
+          composicao.bdi = bdiDetalhado;
           composicao.subtotal = subtotalComposicao;
 
           // Recalcular percentuais dos itens
@@ -154,11 +163,20 @@ class ItemComposicaoService {
 
             // Recalcular composição
             const custoDirecto = calcularCustoDirectoComposicao(composicao.itens);
-            const bdiValor = calcularBDIComposicao(custoDirecto, composicao.bdi.percentual);
-            const subtotalComposicao = calcularSubtotalComposicao(custoDirecto, bdiValor);
+
+            // Extrair percentuais do BDI detalhado
+            const bdiPercentuais = {
+              despesasAdministrativas: composicao.bdi.despesasAdministrativas.percentual,
+              despesasComerciais: composicao.bdi.despesasComerciais.percentual,
+              despesasFinanceiras: composicao.bdi.despesasFinanceiras.percentual,
+              impostosIndiretos: composicao.bdi.impostosIndiretos.percentual,
+            };
+
+            const bdiDetalhado = calcularBDIComposicao(custoDirecto, bdiPercentuais);
+            const subtotalComposicao = calcularSubtotalComposicao(custoDirecto, bdiDetalhado.valorTotal);
 
             composicao.custoDirecto = custoDirecto;
-            composicao.bdi.valor = bdiValor;
+            composicao.bdi = bdiDetalhado;
             composicao.subtotal = subtotalComposicao;
 
             // Recalcular percentuais dos itens
@@ -206,11 +224,20 @@ class ItemComposicaoService {
 
             // Recalcular composição
             const custoDirecto = calcularCustoDirectoComposicao(composicao.itens);
-            const bdiValor = calcularBDIComposicao(custoDirecto, composicao.bdi.percentual);
-            const subtotalComposicao = calcularSubtotalComposicao(custoDirecto, bdiValor);
+
+            // Extrair percentuais do BDI detalhado
+            const bdiPercentuais = {
+              despesasAdministrativas: composicao.bdi.despesasAdministrativas.percentual,
+              despesasComerciais: composicao.bdi.despesasComerciais.percentual,
+              despesasFinanceiras: composicao.bdi.despesasFinanceiras.percentual,
+              impostosIndiretos: composicao.bdi.impostosIndiretos.percentual,
+            };
+
+            const bdiDetalhado = calcularBDIComposicao(custoDirecto, bdiPercentuais);
+            const subtotalComposicao = calcularSubtotalComposicao(custoDirecto, bdiDetalhado.valorTotal);
 
             composicao.custoDirecto = custoDirecto;
-            composicao.bdi.valor = bdiValor;
+            composicao.bdi = bdiDetalhado;
             composicao.subtotal = subtotalComposicao;
 
             // Recalcular percentuais dos itens restantes

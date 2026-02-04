@@ -31,4 +31,10 @@ export interface Activity {
   unidadeTempo?: string;
   project: Project,
   serviceOrder: ServiceOrder
+  // FASE 1 PCP: Integração com Orçamento
+  itemComposicaoId?: string; // Vincula a item específico do orçamento
+  custoPlanejado?: number; // Do item vinculado no orçamento
+  custoReal?: number; // Materiais + horas trabalhadas consumidos
+  quantidadePlanejada?: number; // Quantidade do orçamento
+  quantidadeRealizada?: number; // Quantidade executada
 }

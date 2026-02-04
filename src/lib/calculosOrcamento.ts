@@ -26,17 +26,63 @@ export const calcularCustoDirectoComposicao = (itens: ItemComposicao[]): number 
 };
 
 /**
- * Calcula o valor do BDI de uma composição
+ * Calcula o valor do BDI de uma composição (VERSÃO DETALHADA)
  */
-export const calcularBDIComposicao = (custoDirecto: number, percentualBDI: number): number => {
-  return custoDirecto * (percentualBDI / 100);
+export const calcularBDIComposicao = (
+  custoDirecto: number,
+  bdiPercentuais: {
+    despesasAdministrativas: number;
+    despesasComerciais: number;
+    despesasFinanceiras: number;
+    impostosIndiretos: number;
+  }
+): {
+  despesasAdministrativas: { percentual: number; valor: number };
+  despesasComerciais: { percentual: number; valor: number };
+  despesasFinanceiras: { percentual: number; valor: number };
+  impostosIndiretos: { percentual: number; valor: number };
+  percentualTotal: number;
+  valorTotal: number;
+} => {
+  const despAdmin = custoDirecto * (bdiPercentuais.despesasAdministrativas / 100);
+  const despComercial = custoDirecto * (bdiPercentuais.despesasComerciais / 100);
+  const despFinanceira = custoDirecto * (bdiPercentuais.despesasFinanceiras / 100);
+  const impostosInd = custoDirecto * (bdiPercentuais.impostosIndiretos / 100);
+
+  const percentualTotal =
+    bdiPercentuais.despesasAdministrativas +
+    bdiPercentuais.despesasComerciais +
+    bdiPercentuais.despesasFinanceiras +
+    bdiPercentuais.impostosIndiretos;
+
+  const valorTotal = despAdmin + despComercial + despFinanceira + impostosInd;
+
+  return {
+    despesasAdministrativas: { percentual: bdiPercentuais.despesasAdministrativas, valor: despAdmin },
+    despesasComerciais: { percentual: bdiPercentuais.despesasComerciais, valor: despComercial },
+    despesasFinanceiras: { percentual: bdiPercentuais.despesasFinanceiras, valor: despFinanceira },
+    impostosIndiretos: { percentual: bdiPercentuais.impostosIndiretos, valor: impostosInd },
+    percentualTotal,
+    valorTotal,
+  };
 };
 
 /**
- * Calcula o subtotal de uma composição (custo direto + BDI)
+ * Calcula a margem de lucro de uma composição
  */
-export const calcularSubtotalComposicao = (custoDirecto: number, valorBDI: number): number => {
-  return custoDirecto + valorBDI;
+export const calcularMargemLucroComposicao = (custoDirecto: number, percentualLucro: number): number => {
+  return custoDirecto * (percentualLucro / 100);
+};
+
+/**
+ * Calcula o subtotal de uma composição (custo direto + BDI + Margem Lucro)
+ */
+export const calcularSubtotalComposicao = (
+  custoDirecto: number,
+  valorBDI: number,
+  valorMargemLucro: number
+): number => {
+  return custoDirecto + valorBDI + valorMargemLucro;
 };
 
 /**
@@ -108,10 +154,12 @@ export const calcularAnaliseABC = (itens: ItemComposicao[]): {
 export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
   custoDirectoTotal: number;
   bdiTotal: number;
+  margemLucroTotal: number;
   subtotal: number;
   tributosTotal: number;
   totalVenda: number;
   bdiMedio: number;
+  margemLucroMedia: number;
   custoPorM2?: number;
 } => {
   const composicoes = orcamento.composicoes || [];
@@ -119,11 +167,14 @@ export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
   // Custo direto total
   const custoDirectoTotal = composicoes.reduce((total, comp) => total + comp.custoDirecto, 0);
 
-  // BDI total
-  const bdiTotal = composicoes.reduce((total, comp) => total + comp.bdi.valor, 0);
+  // BDI total (soma de todas as despesas operacionais)
+  const bdiTotal = composicoes.reduce((total, comp) => total + comp.bdi.valorTotal, 0);
 
-  // Subtotal (custo direto + BDI)
-  const subtotal = custoDirectoTotal + bdiTotal;
+  // Margem de lucro total
+  const margemLucroTotal = composicoes.reduce((total, comp) => total + comp.margemLucro.valor, 0);
+
+  // Subtotal (custo direto + BDI + Margem Lucro)
+  const subtotal = custoDirectoTotal + bdiTotal + margemLucroTotal;
 
   // Tributos
   const tributos = orcamento.tributos || { temISS: false, aliquotaISS: 0, aliquotaSimples: 11.8 };
@@ -137,6 +188,9 @@ export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
   // BDI médio
   const bdiMedio = custoDirectoTotal > 0 ? (bdiTotal / custoDirectoTotal) * 100 : 0;
 
+  // Margem de lucro média
+  const margemLucroMedia = custoDirectoTotal > 0 ? (margemLucroTotal / custoDirectoTotal) * 100 : 0;
+
   // Custo por m²
   const custoPorM2 = orcamento.areaTotalM2 && orcamento.areaTotalM2 > 0
     ? totalVenda / orcamento.areaTotalM2
@@ -145,21 +199,26 @@ export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
   return {
     custoDirectoTotal,
     bdiTotal,
+    margemLucroTotal,
     subtotal,
     tributosTotal,
     totalVenda,
     bdiMedio,
+    margemLucroMedia,
     custoPorM2,
   };
 };
 
 /**
  * Calcula o DRE (Demonstrativo de Resultado do Exercício)
+ * NOVA ESTRUTURA: BDI Detalhado + Margem de Lucro Separada
  */
 export const calcularDRE = (orcamento: Partial<Orcamento>): {
   receitaLiquida: number;
   lucroBruto: number;
   margemBruta: number;
+  lucroOperacional: number;
+  margemOperacional: number;
   lucroLiquido: number;
   margemLiquida: number;
 } => {
@@ -174,8 +233,15 @@ export const calcularDRE = (orcamento: Partial<Orcamento>): {
   // Margem bruta = (Lucro bruto / Receita líquida) * 100
   const margemBruta = receitaLiquida > 0 ? (lucroBruto / receitaLiquida) * 100 : 0;
 
-  // Lucro líquido = Lucro bruto - BDI
-  const lucroLiquido = lucroBruto - valores.bdiTotal;
+  // Lucro operacional = Lucro bruto - BDI (Despesas Operacionais)
+  const lucroOperacional = lucroBruto - valores.bdiTotal;
+
+  // Margem operacional = (Lucro operacional / Total venda) * 100
+  const margemOperacional = valores.totalVenda > 0 ? (lucroOperacional / valores.totalVenda) * 100 : 0;
+
+  // Lucro líquido = Lucro operacional (já inclui margem de lucro pretendida)
+  // Margem de lucro foi adicionada no subtotal, então já está "dentro" do lucro operacional
+  const lucroLiquido = valores.margemLucroTotal;
 
   // Margem líquida = (Lucro líquido / Total venda) * 100
   const margemLiquida = valores.totalVenda > 0 ? (lucroLiquido / valores.totalVenda) * 100 : 0;
@@ -184,6 +250,8 @@ export const calcularDRE = (orcamento: Partial<Orcamento>): {
     receitaLiquida,
     lucroBruto,
     margemBruta,
+    lucroOperacional,
+    margemOperacional,
     lucroLiquido,
     margemLiquida,
   };
@@ -228,12 +296,12 @@ export const verificarAlertas = (orcamento: Partial<Orcamento>): {
   const composicoes = orcamento.composicoes || [];
   composicoes.forEach(comp => {
     const bdiPadrao = comp.tipo === 'ferramentas' ? 10 : 25;
-    const desvio = Math.abs(comp.bdi.percentual - bdiPadrao);
+    const desvio = Math.abs(comp.bdi.percentualTotal - bdiPadrao);
 
     if (desvio > 3) {
       alertas.push({
         tipo: 'alerta',
-        mensagem: `BDI de "${comp.nome}" (${comp.bdi.percentual}%) diverge do padrão (${bdiPadrao}%)`,
+        mensagem: `BDI de "${comp.nome}" (${comp.bdi.percentualTotal}%) diverge do padrão (${bdiPadrao}%)`,
       });
     }
   });

@@ -40,6 +40,12 @@ const GanttTestVanilla = lazy(() => import('./pages/cronograma/gantt/GanttTestVa
 // Módulo Comercial
 const Comercial = lazy(() => import('./pages/comercial'));
 
+// Módulo Gestão de Processos
+const GestaoProcessos = lazy(() => import('./pages/gestao-processos'));
+
+// Módulo PCP - Pipeline de Projetos (FASE 4)
+const PipelineProjetos = lazy(() => import('./pages/pcp/pipeline'));
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -79,6 +85,8 @@ function App() {
           <Route path="/cronograma/:id/gantt" element={<GanttView />} />
           <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} />
           <Route path="/comercial/*" element={<Comercial />} />
+          <Route path="/gestao-processos/*" element={<GestaoProcessos />} />
+          <Route path="/pcp/pipeline" element={<PipelineProjetos />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
             path="/obras/:projectId/os/:serviceOrderId/atividades"

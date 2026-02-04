@@ -43,13 +43,25 @@ class ComposicaoService {
         tipo: data.tipo,
         itens: [],
         bdi: {
-          percentual: data.bdiPercentual,
+          despesasAdministrativas: { percentual: data.bdi.despesasAdministrativas.percentual, valor: 0 },
+          despesasComerciais: { percentual: data.bdi.despesasComerciais.percentual, valor: 0 },
+          despesasFinanceiras: { percentual: data.bdi.despesasFinanceiras.percentual, valor: 0 },
+          impostosIndiretos: { percentual: data.bdi.impostosIndiretos.percentual, valor: 0 },
+          percentualTotal:
+            data.bdi.despesasAdministrativas.percentual +
+            data.bdi.despesasComerciais.percentual +
+            data.bdi.despesasFinanceiras.percentual +
+            data.bdi.impostosIndiretos.percentual,
+          valorTotal: 0,
+        },
+        margemLucro: {
+          percentual: data.margemLucro.percentual,
           valor: 0,
         },
         custoDirecto: 0,
         subtotal: 0,
         percentualDoTotal: 0,
-        ordem: orcamento.composicoes.length + 1,
+        ordem: data.ordem || orcamento.composicoes.length + 1,
       };
 
       // Adicionar ao orçamento
