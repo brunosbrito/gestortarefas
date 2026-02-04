@@ -27,6 +27,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import {
   TrendingUp,
@@ -375,22 +381,59 @@ export default function PipelineProjetos() {
             </BarChart>
           </ResponsiveContainer>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Lead → Proposta</p>
-              <p className="text-xl font-bold">{dashboard.funil.conversaoLeadProposta.toFixed(1)}%</p>
+          {/* Taxas de Conversão com Tooltip Explicativo */}
+          <div className="mt-6">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <h4 className="text-sm font-semibold text-muted-foreground">
+                Taxas de Conversão
+              </h4>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger>
+                    <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-sm">
+                      <strong>Taxas de Conversão:</strong> Percentual de projetos que avançaram
+                      de um estágio para o próximo no pipeline.
+                    </p>
+                    <p className="text-xs mt-1 text-muted-foreground">
+                      Exemplo: 80% de Lead → Proposta significa que 8 em cada 10 leads viraram propostas.
+                    </p>
+                  </TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
             </div>
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Proposta → Venda</p>
-              <p className="text-xl font-bold">{dashboard.funil.conversaoPropostaVenda.toFixed(1)}%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Venda → Execução</p>
-              <p className="text-xl font-bold">{dashboard.funil.conversaoVendaExecucao.toFixed(1)}%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Execução → Conclusão</p>
-              <p className="text-xl font-bold">{dashboard.funil.conversaoExecucaoConclusao.toFixed(1)}%</p>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-3 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground mb-1">Lead → Proposta</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {dashboard.funil.propostas} de {dashboard.funil.leads} projetos
+                </p>
+                <p className="text-xl font-bold">{dashboard.funil.conversaoLeadProposta.toFixed(1)}%</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground mb-1">Proposta → Venda</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {dashboard.funil.vendidos} de {dashboard.funil.propostas} propostas
+                </p>
+                <p className="text-xl font-bold">{dashboard.funil.conversaoPropostaVenda.toFixed(1)}%</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground mb-1">Venda → Execução</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {dashboard.funil.emExecucao} de {dashboard.funil.vendidos} vendidos
+                </p>
+                <p className="text-xl font-bold">{dashboard.funil.conversaoVendaExecucao.toFixed(1)}%</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground mb-1">Execução → Conclusão</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {dashboard.funil.concluidos} de {dashboard.funil.emExecucao} em execução
+                </p>
+                <p className="text-xl font-bold">{dashboard.funil.conversaoExecucaoConclusao.toFixed(1)}%</p>
+              </div>
             </div>
           </div>
         </CardContent>
