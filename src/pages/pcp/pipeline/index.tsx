@@ -355,11 +355,11 @@ export default function PipelineProjetos() {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={[
-                { name: 'Leads', quantidade: dashboard.funil.leads, fill: '#6B7280' },
-                { name: 'Propostas', quantidade: dashboard.funil.propostas, fill: '#3B82F6' },
-                { name: 'Vendidos', quantidade: dashboard.funil.vendidos, fill: '#10B981' },
-                { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, fill: '#F97316' },
-                { name: 'Concluídos', quantidade: dashboard.funil.concluidos, fill: '#059669' },
+                { name: 'Leads', quantidade: dashboard.funil.leads, fill: '#D1D5DB' },
+                { name: 'Propostas', quantidade: dashboard.funil.propostas, fill: '#93C5FD' },
+                { name: 'Vendidos', quantidade: dashboard.funil.vendidos, fill: '#86EFAC' },
+                { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, fill: '#FCD34D' },
+                { name: 'Concluídos', quantidade: dashboard.funil.concluidos, fill: '#6EE7B7' },
               ]}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
@@ -369,11 +369,11 @@ export default function PipelineProjetos() {
               <Tooltip />
               <Bar dataKey="quantidade" radius={[8, 8, 0, 0]}>
                 {[
-                  { name: 'Leads', fill: '#6B7280' },
-                  { name: 'Propostas', fill: '#3B82F6' },
-                  { name: 'Vendidos', fill: '#10B981' },
-                  { name: 'Em Execução', fill: '#F97316' },
-                  { name: 'Concluídos', fill: '#059669' },
+                  { name: 'Leads', fill: '#D1D5DB' },
+                  { name: 'Propostas', fill: '#93C5FD' },
+                  { name: 'Vendidos', fill: '#86EFAC' },
+                  { name: 'Em Execução', fill: '#FCD34D' },
+                  { name: 'Concluídos', fill: '#6EE7B7' },
                 ].map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
@@ -464,12 +464,12 @@ export default function PipelineProjetos() {
             <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorDisponivel" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.5}/>
+                  <stop offset="5%" stopColor="#6EE7B7" stopOpacity={0.9}/>
+                  <stop offset="95%" stopColor="#6EE7B7" stopOpacity={0.7}/>
                 </linearGradient>
                 <linearGradient id="colorNecessaria" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#F97316" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#F97316" stopOpacity={0.5}/>
+                  <stop offset="5%" stopColor="#FDBA74" stopOpacity={0.9}/>
+                  <stop offset="95%" stopColor="#FDBA74" stopOpacity={0.7}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" />
@@ -505,22 +505,22 @@ export default function PipelineProjetos() {
                 type="monotone"
                 dataKey="capacidadeDisponivel"
                 name="Capacidade Disponível"
-                stroke="#10B981"
+                stroke="#34D399"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorDisponivel)"
-                dot={{ fill: '#10B981', stroke: '#fff', strokeWidth: 2, r: 4 }}
+                dot={{ fill: '#34D399', stroke: '#fff', strokeWidth: 2, r: 4 }}
               />
               <Area
                 type="monotone"
                 dataKey="capacidadeNecessaria"
                 name="Capacidade Necessária"
-                stroke="#F97316"
+                stroke="#FB923C"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 fillOpacity={1}
                 fill="url(#colorNecessaria)"
-                dot={{ fill: '#F97316', stroke: '#fff', strokeWidth: 2, r: 5 }}
+                dot={{ fill: '#FB923C', stroke: '#fff', strokeWidth: 2, r: 5 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -1006,11 +1006,11 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
             <ResponsiveContainer width="100%" height={500}>
               <BarChart
                 data={[
-                  { name: 'Leads', quantidade: dashboard.funil.leads, fill: '#6B7280' },
-                  { name: 'Propostas', quantidade: dashboard.funil.propostas, fill: '#3B82F6' },
-                  { name: 'Vendidos', quantidade: dashboard.funil.vendidos, fill: '#10B981' },
-                  { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, fill: '#F97316' },
-                  { name: 'Concluídos', quantidade: dashboard.funil.concluidos, fill: '#059669' },
+                  { name: 'Leads', quantidade: dashboard.funil.leads, fill: '#D1D5DB' },
+                  { name: 'Propostas', quantidade: dashboard.funil.propostas, fill: '#93C5FD' },
+                  { name: 'Vendidos', quantidade: dashboard.funil.vendidos, fill: '#86EFAC' },
+                  { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, fill: '#FCD34D' },
+                  { name: 'Concluídos', quantidade: dashboard.funil.concluidos, fill: '#6EE7B7' },
                 ]}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
@@ -1020,11 +1020,11 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
                 <Tooltip />
                 <Bar dataKey="quantidade" radius={[8, 8, 0, 0]}>
                   {[
-                    { name: 'Leads', fill: '#6B7280' },
-                    { name: 'Propostas', fill: '#3B82F6' },
-                    { name: 'Vendidos', fill: '#10B981' },
-                    { name: 'Em Execução', fill: '#F97316' },
-                    { name: 'Concluídos', fill: '#059669' },
+                    { name: 'Leads', fill: '#D1D5DB' },
+                    { name: 'Propostas', fill: '#93C5FD' },
+                    { name: 'Vendidos', fill: '#86EFAC' },
+                    { name: 'Em Execução', fill: '#FCD34D' },
+                    { name: 'Concluídos', fill: '#6EE7B7' },
                   ].map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
@@ -1036,12 +1036,12 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
               <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorDisponivelExpanded" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.2}/>
+                    <stop offset="5%" stopColor="#6EE7B7" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#6EE7B7" stopOpacity={0.7}/>
                   </linearGradient>
                   <linearGradient id="colorNecessariaExpanded" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F97316" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#F97316" stopOpacity={0.2}/>
+                    <stop offset="5%" stopColor="#FDBA74" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#FDBA74" stopOpacity={0.7}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -1062,22 +1062,22 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
                   type="monotone"
                   dataKey="capacidadeDisponivel"
                   name="Capacidade Disponível"
-                  stroke="#10B981"
+                  stroke="#34D399"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorDisponivelExpanded)"
-                  dot={{ fill: '#10B981', stroke: '#fff', strokeWidth: 2, r: 5 }}
+                  dot={{ fill: '#34D399', stroke: '#fff', strokeWidth: 2, r: 5 }}
                 />
                 <Area
                   type="monotone"
                   dataKey="capacidadeNecessaria"
                   name="Capacidade Necessária"
-                  stroke="#F97316"
+                  stroke="#FB923C"
                   strokeWidth={3}
                   strokeDasharray="8 4"
                   fillOpacity={1}
                   fill="url(#colorNecessariaExpanded)"
-                  dot={{ fill: '#F97316', stroke: '#fff', strokeWidth: 2, r: 6 }}
+                  dot={{ fill: '#FB923C', stroke: '#fff', strokeWidth: 2, r: 6 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
