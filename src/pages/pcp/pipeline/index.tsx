@@ -448,16 +448,21 @@ export default function PipelineProjetos() {
                 dataKey="capacidadeDisponivel"
                 name="Capacidade Disponível"
                 stroke="#10B981"
+                strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorDisponivel)"
+                dot={{ fill: '#10B981', stroke: '#fff', strokeWidth: 2, r: 4 }}
               />
               <Area
                 type="monotone"
                 dataKey="capacidadeNecessaria"
                 name="Capacidade Necessária"
                 stroke="#F97316"
+                strokeWidth={2}
+                strokeDasharray="5 5"
                 fillOpacity={1}
                 fill="url(#colorNecessaria)"
+                dot={{ fill: '#F97316', stroke: '#fff', strokeWidth: 2, r: 5 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -1000,16 +1005,21 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
                   dataKey="capacidadeDisponivel"
                   name="Capacidade Disponível"
                   stroke="#10B981"
+                  strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorDisponivelExpanded)"
+                  dot={{ fill: '#10B981', stroke: '#fff', strokeWidth: 2, r: 5 }}
                 />
                 <Area
                   type="monotone"
                   dataKey="capacidadeNecessaria"
                   name="Capacidade Necessária"
                   stroke="#F97316"
+                  strokeWidth={3}
+                  strokeDasharray="8 4"
                   fillOpacity={1}
                   fill="url(#colorNecessariaExpanded)"
+                  dot={{ fill: '#F97316', stroke: '#fff', strokeWidth: 2, r: 6 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
