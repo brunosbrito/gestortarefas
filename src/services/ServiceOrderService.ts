@@ -181,7 +181,8 @@ export const getVariance = async (osId: number): Promise<{
   const planejado = await calcularCustoPlanejado(osId);
   const real = await calcularCustoReal(osId);
   const variance = real - planejado;
-  const variancePercentual = (variance / planejado) * 100;
+  // CORREÇÃO: Previne divisão por zero
+  const variancePercentual = planejado > 0 ? (variance / planejado) * 100 : 0;
 
   return {
     planejado,
