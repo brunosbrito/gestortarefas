@@ -45,6 +45,7 @@ import {
   Plus,
   ArrowRight,
   Info,
+  Maximize2,
 } from 'lucide-react';
 import PipelineProjetosService from '@/services/PipelineProjetosService';
 import {
@@ -55,7 +56,19 @@ import {
   SimulacaoNovoProjeto,
   ResultadoSimulacao,
 } from '@/interfaces/PipelineInterface';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
 
 // ============================================
 // MAPEAMENTO DE STATUS E CORES
@@ -91,6 +104,16 @@ const prioridadeColors: Record<PrioridadeProjeto, string> = {
 };
 
 // ============================================
+// UTILITÁRIOS
+// ============================================
+
+// Formatar data de yyyy-mm para mm/yyyy
+const formatarMes = (mes: string): string => {
+  const [ano, mesNum] = mes.split('-');
+  return `${mesNum}/${ano}`;
+};
+
+// ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
 
@@ -100,6 +123,7 @@ export default function PipelineProjetos() {
   const [dashboard, setDashboard] = useState<DashboardPipeline | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<StatusPipeline | 'todos'>('todos');
   const [showSimulacao, setShowSimulacao] = useState(false);
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
 
   // Carregar dashboard
   useEffect(() => {
@@ -134,6 +158,12 @@ export default function PipelineProjetos() {
       </div>
     );
   }
+
+  // Preparar dados do timeline com formato correto
+  const timelineData = dashboard.timelineFutura.map(item => ({
+    ...item,
+    mesFormatado: formatarMes(item.mes),
+  }));
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -298,11 +328,22 @@ export default function PipelineProjetos() {
       {/* Funil de Conversão */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Funil de Conversão
-          </CardTitle>
-          <CardDescription>Pipeline de vendas e execução</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Funil de Conversão
+              </CardTitle>
+              <CardDescription>Pipeline de vendas e execução</CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setExpandedChart('funil')}
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -355,26 +396,70 @@ export default function PipelineProjetos() {
         </CardContent>
       </Card>
 
-      {/* Timeline de Capacidade Futura */}
+      {/* Timeline de Capacidade Futura - GRÁFICO MELHORADO */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Timeline de Capacidade
-          </CardTitle>
-          <CardDescription>Projeção de utilização por período</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Timeline de Capacidade
+              </CardTitle>
+              <CardDescription>Projeção de utilização por período</CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setExpandedChart('timeline')}
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={dashboard.timelineFutura}>
+          <ResponsiveContainer width="100%" height={350}>
+            <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorDisponivel" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.2}/>
+                </linearGradient>
+                <linearGradient id="colorNecessaria" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#F97316" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#F97316" stopOpacity={0.2}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
+              <XAxis
+                dataKey="mesFormatado"
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={70}
+              />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+                labelFormatter={(value) => `Período: ${value}`}
+                formatter={(value: number) => [`${value.toLocaleString('pt-BR')}h`, '']}
+              />
               <Legend />
-              <Bar dataKey="capacidadeDisponivel" name="Capacidade Disponível" fill="#10B981" />
-              <Bar dataKey="capacidadeNecessaria" name="Capacidade Necessária" fill="#F97316" />
-            </BarChart>
+              <Area
+                type="monotone"
+                dataKey="capacidadeDisponivel"
+                name="Capacidade Disponível"
+                stroke="#10B981"
+                fillOpacity={1}
+                fill="url(#colorDisponivel)"
+              />
+              <Area
+                type="monotone"
+                dataKey="capacidadeNecessaria"
+                name="Capacidade Necessária"
+                stroke="#F97316"
+                fillOpacity={1}
+                fill="url(#colorNecessaria)"
+              />
+            </AreaChart>
           </ResponsiveContainer>
 
           {dashboard.analiseCapacidadeFutura.mesesComGargalo.length > 0 && (
@@ -387,7 +472,7 @@ export default function PipelineProjetos() {
                   </p>
                   <p className="text-sm text-red-800 dark:text-red-200 mt-1">
                     Meses críticos (>90% utilização):{' '}
-                    {dashboard.analiseCapacidadeFutura.mesesComGargalo.join(', ')}
+                    {dashboard.analiseCapacidadeFutura.mesesComGargalo.map(formatarMes).join(', ')}
                   </p>
                   {dashboard.analiseCapacidadeFutura.projetosEmRisco.length > 0 && (
                     <div className="mt-2">
@@ -432,6 +517,14 @@ export default function PipelineProjetos() {
         open={showSimulacao}
         onOpenChange={setShowSimulacao}
         onSuccess={carregarDashboard}
+      />
+
+      {/* Dialog de Gráfico Expandido */}
+      <ChartExpandDialog
+        open={expandedChart !== null}
+        onOpenChange={(open) => !open && setExpandedChart(null)}
+        chartType={expandedChart}
+        dashboard={dashboard}
       />
     </div>
   );
@@ -605,6 +698,25 @@ function SimulacaoDialog({ open, onOpenChange, onSuccess }: SimulacaoDialogProps
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAdicionarAoPipeline = async () => {
+    if (!resultado?.viavel) {
+      toast({
+        title: 'Atenção',
+        description: 'Apenas projetos viáveis podem ser adicionados ao pipeline',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Funcionalidade em Desenvolvimento',
+      description: 'Em breve você poderá adicionar projetos simulados ao pipeline',
+    });
+
+    // TODO: Implementar criação de projeto no pipeline
+    // await PipelineProjetosService.criarProjeto({ ... });
   };
 
   const handleFechar = () => {
@@ -783,10 +895,126 @@ function SimulacaoDialog({ open, onOpenChange, onSuccess }: SimulacaoDialogProps
           <Button variant="outline" onClick={handleFechar}>
             Fechar
           </Button>
+          {resultado?.viavel && (
+            <Button onClick={handleAdicionarAoPipeline} variant="secondary">
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar ao Pipeline
+            </Button>
+          )}
           <Button onClick={handleSimular} disabled={loading}>
             {loading ? 'Simulando...' : 'Simular'}
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================
+// COMPONENTE: DIALOG DE GRÁFICO EXPANDIDO
+// ============================================
+
+interface ChartExpandDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  chartType: string | null;
+  dashboard: DashboardPipeline | null;
+}
+
+function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartExpandDialogProps) {
+  if (!dashboard) return null;
+
+  const timelineData = dashboard.timelineFutura.map(item => ({
+    ...item,
+    mesFormatado: formatarMes(item.mes),
+  }));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-6xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>
+            {chartType === 'funil' ? 'Funil de Conversão' : 'Timeline de Capacidade'}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="py-4">
+          {chartType === 'funil' ? (
+            <ResponsiveContainer width="100%" height={500}>
+              <BarChart
+                data={[
+                  { name: 'Leads', quantidade: dashboard.funil.leads, fill: '#6B7280' },
+                  { name: 'Propostas', quantidade: dashboard.funil.propostas, fill: '#3B82F6' },
+                  { name: 'Vendidos', quantidade: dashboard.funil.vendidos, fill: '#10B981' },
+                  { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, fill: '#F97316' },
+                  { name: 'Concluídos', quantidade: dashboard.funil.concluidos, fill: '#059669' },
+                ]}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="quantidade" radius={[8, 8, 0, 0]}>
+                  {[
+                    { name: 'Leads', fill: '#6B7280' },
+                    { name: 'Propostas', fill: '#3B82F6' },
+                    { name: 'Vendidos', fill: '#10B981' },
+                    { name: 'Em Execução', fill: '#F97316' },
+                    { name: 'Concluídos', fill: '#059669' },
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ResponsiveContainer width="100%" height={500}>
+              <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorDisponivelExpanded" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="colorNecessariaExpanded" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#F97316" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#F97316" stopOpacity={0.2}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="mesFormatado"
+                  tick={{ fontSize: 14 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
+                />
+                <YAxis />
+                <Tooltip
+                  labelFormatter={(value) => `Período: ${value}`}
+                  formatter={(value: number) => [`${value.toLocaleString('pt-BR')}h`, '']}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="capacidadeDisponivel"
+                  name="Capacidade Disponível"
+                  stroke="#10B981"
+                  fillOpacity={1}
+                  fill="url(#colorDisponivelExpanded)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="capacidadeNecessaria"
+                  name="Capacidade Necessária"
+                  stroke="#F97316"
+                  fillOpacity={1}
+                  fill="url(#colorNecessariaExpanded)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
