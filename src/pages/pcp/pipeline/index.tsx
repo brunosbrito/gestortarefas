@@ -465,11 +465,11 @@ export default function PipelineProjetos() {
               <defs>
                 <linearGradient id="colorDisponivel" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.5}/>
                 </linearGradient>
                 <linearGradient id="colorNecessaria" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#F97316" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#F97316" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#F97316" stopOpacity={0.5}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" />
