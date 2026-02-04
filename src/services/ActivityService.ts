@@ -88,3 +88,89 @@ export const deleteActivity = async (id: number) => {
     throw error;
   }
 };
+
+// ============================================
+// FASE 1 PCP: Métodos de Integração com Orçamento
+// ============================================
+
+const USE_MOCK_PCP = true; // Frontend-only mode
+
+/**
+ * Vincula atividade a item de composição do orçamento
+ */
+export const vincularItemOrcamento = async (
+  atividadeId: number,
+  itemComposicaoId: string
+): Promise<any> => {
+  if (!USE_MOCK_PCP) {
+    const response = await api.post(`/activities/${atividadeId}/vincular-item-orcamento`, {
+      itemComposicaoId
+    });
+    return response.data;
+  }
+
+  // MOCK: Simula vinculação
+  return {
+    id: atividadeId,
+    itemComposicaoId,
+    custoPlanejado: 4250, // Mock
+    quantidadePlanejada: 500,
+    message: 'Item do orçamento vinculado com sucesso'
+  };
+};
+
+/**
+ * Registra consumo de materiais e horas trabalhadas em uma atividade
+ */
+export const registrarConsumo = async (
+  atividadeId: number,
+  consumo: {
+    materiais?: Array<{ itemId: string; quantidade: number; }>;
+    horasTrabalhadas?: number;
+    quantidadeExecutada?: number;
+  }
+): Promise<any> => {
+  if (!USE_MOCK_PCP) {
+    const response = await api.post(`/activities/${atividadeId}/registrar-consumo`, consumo);
+    return response.data;
+  }
+
+  // MOCK: Simula registro de consumo
+  const custoMateriais = consumo.materiais?.reduce((sum, m) => sum + (m.quantidade * 8.50), 0) || 0;
+  const custoHoras = (consumo.horasTrabalhadas || 0) * 35; // R$ 35/hora mock
+  const custoTotal = custoMateriais + custoHoras;
+
+  return {
+    id: atividadeId,
+    materiais: consumo.materiais,
+    horasTrabalhadas: consumo.horasTrabalhadas,
+    quantidadeRealizada: consumo.quantidadeExecutada,
+    custoReal: custoTotal,
+    message: 'Consumo registrado com sucesso'
+  };
+};
+
+/**
+ * Calcula custo real de uma atividade
+ */
+export const calcularCustoReal = async (atividadeId: number): Promise<{
+  custoPlanejado: number;
+  custoReal: number;
+  variance: number;
+  quantidadePlanejada: number;
+  quantidadeRealizada: number;
+}> => {
+  if (!USE_MOCK_PCP) {
+    const response = await api.get(`/activities/${atividadeId}/custo-real`);
+    return response.data;
+  }
+
+  // MOCK: Retorna dados mockados com alguma variance
+  return {
+    custoPlanejado: 4250,
+    custoReal: 4420, // 4% acima do planejado
+    variance: 170,
+    quantidadePlanejada: 500,
+    quantidadeRealizada: 520 // Consumiu mais material
+  };
+};
