@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { login, getStoredToken } from '@/services/AuthService';
+import { login, getStoredToken, storeRefreshToken } from '@/services/AuthService';
 import { Eye, EyeOff } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -36,6 +36,12 @@ const Login = () => {
       // Limpar tokens antigos de ambos os storages antes de salvar o novo
       localStorage.removeItem('authToken');
       sessionStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+
+      // Salvar refresh token (sempre no localStorage para persistir)
+      if (response.data.refresh_token) {
+        storeRefreshToken(response.data.refresh_token);
+      }
 
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');

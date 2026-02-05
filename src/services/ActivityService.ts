@@ -88,3 +88,32 @@ export const deleteActivity = async (id: number) => {
     throw error;
   }
 };
+
+// Função para obter uma atividade por ID
+export const getActivityById = async (id: number) => {
+  try {
+    const response = await api.get(`/activities/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching activity', error);
+    throw error;
+  }
+};
+
+// Função para atualizar colaboradores de uma atividade
+export const updateActivityCollaborators = async (
+  id: number,
+  collaboratorIds: number[],
+  changedBy: number
+) => {
+  try {
+    const response = await api.put(`/activities/${id}`, {
+      collaborators: collaboratorIds,
+      changedBy,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating activity collaborators', error);
+    throw error;
+  }
+};

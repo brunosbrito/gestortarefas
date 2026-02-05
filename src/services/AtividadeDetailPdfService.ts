@@ -1,9 +1,14 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import QRCode from 'qrcode';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PDF_COLORS, ACTIVITY_PDF_DEFAULTS } from './pdf/constants';
+
+// URL base do frontend para o QR code
+// Sempre usa a URL de produção para que o QR code funcione quando escaneado por dispositivos externos
+const FRONTEND_URL = 'https://gestor-tarefas.gmxindustrial.com.br';
 
 class AtividadeDetailPdfService {
   private static doc: jsPDF;
@@ -24,8 +29,11 @@ class AtividadeDetailPdfService {
     this.margin = ACTIVITY_PDF_DEFAULTS.margin;
     this.yPos = this.margin;
 
-    // Draw header
-    this.drawHeader(atividade);
+    // Generate QR code
+    const qrCodeDataUrl = await this.generateQRCode(atividade.id);
+
+    // Draw header with QR code
+    this.drawHeader(atividade, qrCodeDataUrl);
 
     // Draw description section
     this.drawDescriptionSection(atividade);
@@ -78,8 +86,29 @@ class AtividadeDetailPdfService {
     return this.doc;
   }
 
-  private static drawHeader(atividade: AtividadeStatus) {
-    const headerHeight = 30;
+  private static async generateQRCode(activityId: number): Promise<string> {
+    const url = `${FRONTEND_URL}/atividade/${activityId}`;
+    console.log('QR Code URL:', url); // Log para debug
+    try {
+      const qrCodeDataUrl = await QRCode.toDataURL(url, {
+        width: 300, // Aumentado para melhor qualidade
+        margin: 2,
+        errorCorrectionLevel: 'H', // Alta correção de erros para melhor leitura
+        color: {
+          dark: '#000000', // Preto puro para melhor contraste
+          light: '#FFFFFF',
+        },
+      });
+      return qrCodeDataUrl;
+    } catch (error) {
+      console.error('Erro ao gerar QR code:', error);
+      return '';
+    }
+  }
+
+  private static drawHeader(atividade: AtividadeStatus, qrCodeDataUrl?: string) {
+    const headerHeight = 38;
+    const qrSize = 28; // Aumentado para melhor leitura
 
     // Background cinza claro
     this.doc.setFillColor(224, 224, 224); // #E0E0E0
@@ -105,16 +134,28 @@ class AtividadeDetailPdfService {
     this.doc.setTextColor(60, 60, 60);
     this.doc.text(`Status: ${atividade.status}`, this.pageWidth / 2, 17, { align: 'center' });
 
-    // Right side: Document info
-    this.doc.setFontSize(9);
+    // Document info (ajustado para dar espaço ao QR code)
+    this.doc.setFontSize(8);
     this.doc.setTextColor(0, 0, 0);
-    this.doc.text(`Doc: AT-${atividade.cod_sequencial}`, this.pageWidth - this.margin, 10, { align: 'right' });
-    this.doc.text(`${format(new Date(), "dd/MM/yyyy", { locale: ptBR })}`, this.pageWidth - this.margin, 16, { align: 'right' });
+    this.doc.text(`Doc: AT-${atividade.cod_sequencial}`, this.pageWidth - this.margin - qrSize - 5, 8, { align: 'right' });
+    this.doc.text(`${format(new Date(), "dd/MM/yyyy", { locale: ptBR })}`, this.pageWidth - this.margin - qrSize - 5, 13, { align: 'right' });
+
+    // QR Code no canto direito
+    if (qrCodeDataUrl) {
+      const qrX = this.pageWidth - this.margin - qrSize;
+      const qrY = 3;
+      this.doc.addImage(qrCodeDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+
+      // Texto abaixo do QR code
+      this.doc.setFontSize(6);
+      this.doc.setTextColor(100, 100, 100);
+      this.doc.text('Escaneie para acessar', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+    }
 
     // Orange separator line
     this.doc.setDrawColor(255, 127, 14); // #FF7F0E
     this.doc.setLineWidth(1.2);
-    this.doc.line(this.margin, headerHeight - 4, this.pageWidth - this.margin, headerHeight - 4);
+    this.doc.line(this.margin, headerHeight - 2, this.pageWidth - this.margin, headerHeight - 2);
 
     this.yPos = headerHeight + 4;
   }

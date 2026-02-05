@@ -20,6 +20,7 @@ const Fabricas = lazy(() => import('./pages/Fabricas'));
 const Mineradoras = lazy(() => import('./pages/Mineradoras'));
 const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
 const Atividade = lazy(() => import('./pages/Atividade'));
+const AtividadeDetalhe = lazy(() => import('./pages/AtividadeDetalhe'));
 const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
 const EmConstrucao = lazy(() => import('./pages/EmConstrucao'));
 
@@ -41,6 +42,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/atividade" element={<Atividade />} />
+          <Route path="/atividade/:activityId" element={<AtividadeDetalhe />} />
           <Route path="/assistente-ia" element={<AssistenteIA />} />
           <Route path="/programacao" element={<Atividade />} />
           <Route path="/users" element={<Users />} />
