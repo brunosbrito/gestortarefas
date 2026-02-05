@@ -9,11 +9,11 @@ import ProjectService from '@/services/ObrasService';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 
 export interface AtividadeFiltros {
-  tarefaMacroId: string | null;
-  processoId: string | null;
-  colaboradorId: string | null;
-  obraId: string | null;
-  status: string | null;
+  tarefaMacroId: string[] | null;
+  processoId: string[] | null;
+  colaboradorId: string[] | null;
+  obraId: string[] | null;
+  status: string[] | null;
   dataInicio: string | null;
   dataFim: string | null;
 }
@@ -65,46 +65,47 @@ export const useAtividadeData = () => {
     if (todasAtividades) {
       let atividadesFiltradas = [...todasAtividades];
 
-      // Filtro por tarefa macro
-      if (filtros.tarefaMacroId) {
+      // Filtro por tarefa macro (múltipla seleção)
+      if (filtros.tarefaMacroId && filtros.tarefaMacroId.length > 0) {
         atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
-          const macroTaskId = typeof atividade.macroTask === 'object' 
-            ? atividade.macroTask?.id?.toString() 
-            : atividade.macroTask;
-          return macroTaskId === filtros.tarefaMacroId;
+          const macroTaskId = typeof atividade.macroTask === 'object'
+            ? atividade.macroTask?.id?.toString()
+            : atividade.macroTask?.toString();
+          return macroTaskId && filtros.tarefaMacroId!.includes(macroTaskId);
         });
       }
 
-      // Filtro por processo
-      if (filtros.processoId) {
+      // Filtro por processo (múltipla seleção)
+      if (filtros.processoId && filtros.processoId.length > 0) {
         atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
-          const processId = typeof atividade.process === 'object' 
-            ? atividade.process?.id?.toString() 
-            : atividade.process;
-          return processId === filtros.processoId;
+          const processId = typeof atividade.process === 'object'
+            ? atividade.process?.id?.toString()
+            : atividade.process?.toString();
+          return processId && filtros.processoId!.includes(processId);
         });
       }
 
-      // Filtro por colaborador
-      if (filtros.colaboradorId) {
+      // Filtro por colaborador (múltipla seleção)
+      if (filtros.colaboradorId && filtros.colaboradorId.length > 0) {
         atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
-          return atividade.collaborators?.some(colaborador => 
-            colaborador.id?.toString() === filtros.colaboradorId
+          return atividade.collaborators?.some(colaborador =>
+            colaborador.id && filtros.colaboradorId!.includes(colaborador.id.toString())
           );
         });
       }
 
-      // Filtro por obra
-      if (filtros.obraId) {
+      // Filtro por obra (múltipla seleção)
+      if (filtros.obraId && filtros.obraId.length > 0) {
         atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
-          return atividade.project?.id?.toString() === filtros.obraId;
+          const obraId = atividade.project?.id?.toString();
+          return obraId && filtros.obraId!.includes(obraId);
         });
       }
 
-      // Filtro por status
-      if (filtros.status && filtros.status !== 'todos') {
-        atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => 
-          atividade.status === filtros.status
+      // Filtro por status (múltipla seleção)
+      if (filtros.status && filtros.status.length > 0) {
+        atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) =>
+          filtros.status!.includes(atividade.status)
         );
       }
 

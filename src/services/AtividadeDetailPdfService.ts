@@ -476,52 +476,68 @@ class AtividadeDetailPdfService {
   private static drawProductivityReportSection() {
     this.drawSectionTitle('RELATÓRIO PRODUTIVIDADE');
 
-    const contentWidth = this.pageWidth - 2 * this.margin;
-    const col1Width = 28; // Labels
-    const col2Width = (contentWidth - col1Width * 4) / 4; // Values
+    // Draw 3 identical blocks for manual filling
+    for (let blockIndex = 0; blockIndex < 3; blockIndex++) {
+      this.drawProductivityBlock();
+    }
+  }
+
+  private static drawProductivityBlock() {
+    const scale = 0.9;
+    const contentWidth = (this.pageWidth - 2 * this.margin) * scale;
+    const startX = this.margin + ((this.pageWidth - 2 * this.margin) - contentWidth) / 2;
+
+    // Simplified layout with fewer columns (scaled)
+    const col1Width = 18 * scale; // DATA / HR INÍCIO / OBS label
+    const col2Width = 23 * scale; // DATA value / HR INÍCIO value
+    const col3Width = 28 * scale; // OPERADOR(ES) / HR TÉRMINO label
+    const col4Width = 23 * scale; // HR TÉRMINO value
+    const col5Width = 38 * scale; // OS FINALIZADA (S/N) label
+    const col6Width = 14 * scale; // OS FINALIZADA value
+    const col7Width = 30 * scale; // QTD PRODUZIDA label
+    const col8Width = contentWidth - col1Width - col2Width - col3Width - col4Width - col5Width - col6Width - col7Width;
+
+    // Check if we need a new page before drawing the block
+    this.checkPageBreak(18);
 
     autoTable(this.doc, {
       startY: this.yPos,
       body: [
-        ['OPERAÇÃO:', '', '', '', 'OPERADOR:', '', '', ''],
-        ['HORA INÍCIO:', '', 'PARADA:', '', 'RETORNO:', '', 'QTD PRODUZIDA:', ''],
-        ['HORA TÉRMINO:', '', 'OBSERVAÇÕES:', '', '', '', '', ''],
+        ['DATA:', '', 'OPERADOR(ES):', '', '', '', '', ''],
+        ['HR INÍCIO:', '', 'HR TÉRMINO:', '', 'OS FINALIZADA (S/N):', '', 'QTD PRODUZIDA:', ''],
+        ['OBS:', '', '', '', '', '', '', ''],
       ],
       theme: 'grid',
-      margin: { left: this.margin, right: this.margin },
+      margin: { left: startX, right: startX },
       tableWidth: contentWidth,
       styles: {
-        fontSize: ACTIVITY_PDF_DEFAULTS.fontSize.body - 1,
-        cellPadding: 2,
-        minCellHeight: 8,
+        fontSize: (ACTIVITY_PDF_DEFAULTS.fontSize.body - 1) * scale,
+        cellPadding: 1.2,
+        minCellHeight: 5.5,
       },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
         1: { cellWidth: col2Width },
-        2: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
-        3: { cellWidth: col2Width },
-        4: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
-        5: { cellWidth: col2Width },
-        6: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
-        7: { cellWidth: col2Width },
+        2: { fontStyle: 'bold', cellWidth: col3Width, fillColor: [240, 240, 240] },
+        3: { cellWidth: col4Width },
+        4: { fontStyle: 'bold', cellWidth: col5Width, fillColor: [240, 240, 240] },
+        5: { cellWidth: col6Width },
+        6: { fontStyle: 'bold', cellWidth: col7Width, fillColor: [240, 240, 240] },
+        7: { cellWidth: col8Width },
       },
       didParseCell: (data) => {
-        // Merge cells for OPERAÇÃO value (columns 1-3)
-        if (data.row.index === 0 && data.column.index === 1) {
-          data.cell.colSpan = 3;
-        }
-        // Merge cells for OPERADOR value (columns 5-7)
-        if (data.row.index === 0 && data.column.index === 5) {
-          data.cell.colSpan = 3;
-        }
-        // Merge cells for OBSERVAÇÕES value (columns 3-7)
-        if (data.row.index === 2 && data.column.index === 3) {
+        // Row 0: OPERADOR(ES) value spans columns 3-7
+        if (data.row.index === 0 && data.column.index === 3) {
           data.cell.colSpan = 5;
+        }
+        // Row 2: OBS value spans columns 1-7
+        if (data.row.index === 2 && data.column.index === 1) {
+          data.cell.colSpan = 7;
         }
       },
     });
 
-    this.yPos = (this.doc as any).lastAutoTable.finalY + ACTIVITY_PDF_DEFAULTS.sectionSpacing;
+    this.yPos = (this.doc as any).lastAutoTable.finalY + 2;
   }
 
   private static async drawImagesSection(atividade: AtividadeStatus) {
