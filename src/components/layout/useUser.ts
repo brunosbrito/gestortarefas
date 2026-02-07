@@ -12,16 +12,24 @@ export const useUser = () => {
     const getUser = async () => {
       try {
         const token = getStoredToken();
-        if (!token) {
-          setUser(null);
+        const userId = localStorage.getItem("userId");
+
+        // Se não houver token OU userId, limpar tudo e redirecionar
+        if (!token || !userId) {
+          // Limpar storage completamente
+          localStorage.removeItem('authToken');
+          sessionStorage.removeItem('authToken');
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+
+          // Redirecionar para login
+          window.location.href = '/';
           return;
         }
 
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-          const user: User = await UserService.getUserById(userId);
-          setUser(user);
-        }
+        // Buscar dados do usuário
+        const user: User = await UserService.getUserById(userId);
+        setUser(user);
       } catch (error: any) {
         console.error("Erro ao buscar usuário:", error);
 
