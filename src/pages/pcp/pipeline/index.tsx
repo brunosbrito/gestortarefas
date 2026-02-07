@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +26,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Tooltip as UITooltip,
   TooltipContent,
@@ -50,6 +61,7 @@ import {
   Filter,
   Plus,
   ArrowRight,
+  ArrowLeft,
   Info,
   Maximize2,
 } from 'lucide-react';
@@ -124,12 +136,20 @@ const formatarMes = (mes: string): string => {
 // ============================================
 
 export default function PipelineProjetos() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<DashboardPipeline | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<StatusPipeline | 'todos'>('todos');
   const [showSimulacao, setShowSimulacao] = useState(false);
   const [expandedChart, setExpandedChart] = useState<string | null>(null);
+
+  // Filtros avançados
+  const [showFiltros, setShowFiltros] = useState(false);
+  const [filtroPeriodoInicio, setFiltroPeriodoInicio] = useState<Date | undefined>();
+  const [filtroPeriodoFim, setFiltroPeriodoFim] = useState<Date | undefined>();
+  const [filtroClientes, setFiltroClientes] = useState<string[]>([]);
+  const [filtroNomesProjetos, setFiltroNomesProjetos] = useState<string[]>([]);
 
   // Carregar dashboard
   useEffect(() => {
@@ -140,7 +160,11 @@ export default function PipelineProjetos() {
     try {
       setLoading(true);
       const filtro = filtroStatus !== 'todos' ? { status: [filtroStatus] } : undefined;
-      const data = await PipelineProjetosService.gerarDashboard({ filtro });
+      let data = await PipelineProjetosService.gerarDashboard({ filtro });
+
+      // Aplicar filtros client-side
+      data = aplicarFiltrosClientSide(data);
+
       setDashboard(data);
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
@@ -154,14 +178,88 @@ export default function PipelineProjetos() {
     }
   };
 
+  // Função auxiliar para aplicar filtros client-side
+  const aplicarFiltrosClientSide = (data: DashboardPipeline): DashboardPipeline => {
+    let projetosFiltrados = [...data.projetos];
+
+    // Filtro por data (período)
+    if (filtroPeriodoInicio || filtroPeriodoFim) {
+      projetosFiltrados = projetosFiltrados.filter((projeto) => {
+        const dataProjeto = new Date(projeto.createdAt || projeto.dataIdentificacao || '2026-01-01');
+
+        if (filtroPeriodoInicio && dataProjeto < filtroPeriodoInicio) return false;
+        if (filtroPeriodoFim && dataProjeto > filtroPeriodoFim) return false;
+
+        return true;
+      });
+    }
+
+    // Filtro por clientes
+    if (filtroClientes.length > 0) {
+      projetosFiltrados = projetosFiltrados.filter((projeto) =>
+        filtroClientes.includes(projeto.clienteNome)
+      );
+    }
+
+    // Filtro por nomes de projetos
+    if (filtroNomesProjetos.length > 0) {
+      projetosFiltrados = projetosFiltrados.filter((projeto) =>
+        filtroNomesProjetos.includes(projeto.nome)
+      );
+    }
+
+    // Recalcular KPIs e funil baseado nos projetos filtrados
+    const leads = projetosFiltrados.filter((p) => p.status === 'lead').length;
+    const propostas = projetosFiltrados.filter((p) => p.status === 'proposta' || p.status === 'negociacao').length;
+    const vendidos = projetosFiltrados.filter((p) => p.status === 'vendido').length;
+    const emExecucao = projetosFiltrados.filter((p) => p.status === 'em_execucao').length;
+    const concluidos = projetosFiltrados.filter((p) => p.status === 'concluido').length;
+
+    // Calcular taxas de conversão
+    const conversaoLeadProposta = leads > 0 ? (propostas / leads) * 100 : 0;
+    const conversaoPropostaVenda = propostas > 0 ? (vendidos / propostas) * 100 : 0;
+    const conversaoVendaExecucao = vendidos > 0 ? (emExecucao / vendidos) * 100 : 0;
+    const conversaoExecucaoConclusao = emExecucao > 0 ? (concluidos / emExecucao) * 100 : 0;
+
+    const funil = {
+      leads,
+      propostas,
+      vendidos,
+      emExecucao,
+      concluidos,
+      conversaoLeadProposta,
+      conversaoPropostaVenda,
+      conversaoVendaExecucao,
+      conversaoExecucaoConclusao,
+    };
+
+    const valorTotal = projetosFiltrados.reduce((sum, p) => sum + (p.valorEstimado || 0), 0);
+    const horasTotal = projetosFiltrados.reduce((sum, p) => sum + (p.horasEstimadas || 0), 0);
+
+    return {
+      ...data,
+      projetos: projetosFiltrados,
+      funil,
+      kpis: {
+        ...data.kpis,
+        totalProjetos: projetosFiltrados.length,
+        valorTotal,
+      },
+      // Timeline e análise de capacidade permanecem inalteradas
+      // pois dependem de cálculos mais complexos
+    };
+  };
+
   if (loading || !dashboard) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando pipeline...</p>
+      <Layout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando pipeline...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
@@ -172,15 +270,27 @@ export default function PipelineProjetos() {
   }));
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Pipeline de Projetos</h1>
-          <p className="text-muted-foreground">
-            Visão estratégica de oportunidades e capacidade produtiva
-          </p>
-        </div>
+    <Layout>
+      <div className="space-y-6">
+        {/* Botão Voltar */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Pipeline de Projetos</h1>
+            <p className="text-muted-foreground">
+              Visão estratégica de oportunidades e capacidade produtiva
+            </p>
+          </div>
         <div className="flex gap-2">
           <Select value={filtroStatus} onValueChange={(v) => setFiltroStatus(v as any)}>
             <SelectTrigger className="w-[180px]">
@@ -206,7 +316,7 @@ export default function PipelineProjetos() {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-l-4 border-l-gray-500">
           <CardHeader className="pb-3">
             <CardDescription className="flex items-center gap-2">
               <Target className="w-4 h-4" />
@@ -221,7 +331,7 @@ export default function PipelineProjetos() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="pb-3">
             <CardDescription className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
@@ -236,7 +346,7 @@ export default function PipelineProjetos() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="pb-3">
             <CardDescription className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
@@ -254,7 +364,7 @@ export default function PipelineProjetos() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-yellow-500">
           <CardHeader className="pb-3">
             <CardDescription className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
@@ -275,7 +385,7 @@ export default function PipelineProjetos() {
 
       {/* KPI Financeiro e Capacidade */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+        <Card className="border-l-4 border-l-orange-500">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
@@ -293,7 +403,7 @@ export default function PipelineProjetos() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-purple-500">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
@@ -331,6 +441,267 @@ export default function PipelineProjetos() {
         </Card>
       </div>
 
+      {/* Filtros Avançados */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowFiltros(!showFiltros)}>
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              <CardTitle className="text-lg">Filtros Avançados</CardTitle>
+              <Badge variant="outline" className="ml-2">
+                {showFiltros ? 'Ocultar' : 'Expandir'}
+              </Badge>
+            </div>
+            <Button variant="ghost" size="sm">
+              {showFiltros ? 'Ocultar' : 'Mostrar'}
+            </Button>
+          </div>
+        </CardHeader>
+        {showFiltros && (
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Data Início */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Data Início
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {filtroPeriodoInicio ? format(filtroPeriodoInicio, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecione...'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={filtroPeriodoInicio}
+                      onSelect={setFiltroPeriodoInicio}
+                      locale={ptBR}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Data Fim */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Data Fim
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {filtroPeriodoFim ? format(filtroPeriodoFim, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecione...'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={filtroPeriodoFim}
+                      onSelect={setFiltroPeriodoFim}
+                      locale={ptBR}
+                      disabled={(date) => filtroPeriodoInicio ? date < filtroPeriodoInicio : false}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Clientes (Múltipla Seleção) */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Cliente{filtroClientes.length !== 1 ? 's' : ''}
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <Users className="mr-2 h-4 w-4" />
+                      {filtroClientes.length === 0 ? 'Todos' : `${filtroClientes.length} selecionado(s)`}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="start">
+                    <div className="flex justify-between items-center mb-3 pb-2 border-b">
+                      <span className="text-sm font-semibold">Selecionar Clientes</span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            const todosClientes = [
+                              'Logística Express Ltda',
+                              'Mineração Norte S.A.',
+                              'Indústria Química XYZ',
+                              'Indústria Moderna Ltda',
+                              'Indústria Tech Solutions',
+                              'Metalúrgica do Vale',
+                              'Energia Sustentável S.A.',
+                            ];
+                            setFiltroClientes(todosClientes);
+                          }}
+                        >
+                          Todos
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setFiltroClientes([])}
+                        >
+                          Limpar
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {[
+                        'Logística Express Ltda',
+                        'Mineração Norte S.A.',
+                        'Indústria Química XYZ',
+                        'Indústria Moderna Ltda',
+                        'Indústria Tech Solutions',
+                        'Metalúrgica do Vale',
+                        'Energia Sustentável S.A.',
+                      ].map((cliente) => (
+                        <div key={cliente} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={cliente}
+                            checked={filtroClientes.includes(cliente)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFiltroClientes([...filtroClientes, cliente]);
+                              } else {
+                                setFiltroClientes(filtroClientes.filter((c) => c !== cliente));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={cliente}
+                            className="text-sm font-normal leading-none cursor-pointer flex-1"
+                          >
+                            {cliente}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Projetos (Múltipla Seleção) */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Projeto{filtroNomesProjetos.length !== 1 ? 's' : ''}
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      {filtroNomesProjetos.length === 0 ? 'Todos' : `${filtroNomesProjetos.length} selecionado(s)`}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-96" align="start">
+                    <div className="flex justify-between items-center mb-3 pb-2 border-b">
+                      <span className="text-sm font-semibold">Selecionar Projetos</span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            const todosProjetos = dashboard?.projetos.map(p => p.nome) || [];
+                            setFiltroNomesProjetos(todosProjetos);
+                          }}
+                        >
+                          Todos
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setFiltroNomesProjetos([])}
+                        >
+                          Limpar
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {dashboard?.projetos.map((projeto) => (
+                        <div key={projeto.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={projeto.id}
+                            checked={filtroNomesProjetos.includes(projeto.nome)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFiltroNomesProjetos([...filtroNomesProjetos, projeto.nome]);
+                              } else {
+                                setFiltroNomesProjetos(filtroNomesProjetos.filter((p) => p !== projeto.nome));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={projeto.id}
+                            className="text-sm font-normal leading-none cursor-pointer flex-1"
+                          >
+                            {projeto.nome}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Botões de Ação */}
+            <div className="flex justify-between items-center mt-6">
+              <div className="text-sm text-muted-foreground">
+                {filtroClientes.length > 0 || filtroNomesProjetos.length > 0 || filtroPeriodoInicio || filtroPeriodoFim ? (
+                  <span className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    {filtroClientes.length + filtroNomesProjetos.length + (filtroPeriodoInicio ? 1 : 0) + (filtroPeriodoFim ? 1 : 0)} filtro(s) ativo(s)
+                  </span>
+                ) : (
+                  'Nenhum filtro ativo'
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFiltroPeriodoInicio(undefined);
+                    setFiltroPeriodoFim(undefined);
+                    setFiltroClientes([]);
+                    setFiltroNomesProjetos([]);
+                    carregarDashboard();
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={carregarDashboard}
+                >
+                  Aplicar Filtros
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
       {/* Funil de Conversão */}
       <Card>
         <CardHeader>
@@ -352,50 +723,45 @@ export default function PipelineProjetos() {
           </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={[
-                { name: 'Leads', quantidade: dashboard.funil.leads, fill: '#D1D5DB' },
-                { name: 'Propostas', quantidade: dashboard.funil.propostas, fill: '#93C5FD' },
-                { name: 'Vendidos', quantidade: dashboard.funil.vendidos, fill: '#86EFAC' },
-                { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, fill: '#FCD34D' },
-                { name: 'Concluídos', quantidade: dashboard.funil.concluidos, fill: '#6EE7B7' },
-              ]}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--popover))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  color: 'hsl(var(--popover-foreground))',
-                  padding: '8px 12px',
-                }}
-                labelStyle={{
-                  color: 'hsl(var(--popover-foreground))',
-                  fontWeight: 600,
-                  marginBottom: '4px',
-                }}
-                itemStyle={{
-                  color: 'hsl(var(--popover-foreground))',
-                }}
-              />
-              <Bar dataKey="quantidade" radius={[8, 8, 0, 0]}>
-                {[
-                  { name: 'Leads', fill: '#D1D5DB' },
-                  { name: 'Propostas', fill: '#93C5FD' },
-                  { name: 'Vendidos', fill: '#86EFAC' },
-                  { name: 'Em Execução', fill: '#FCD34D' },
-                  { name: 'Concluídos', fill: '#6EE7B7' },
-                ].map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {/* Gráfico Customizado de Barras Horizontais */}
+          <div className="space-y-4 py-4">
+            {[
+              { name: 'Leads', quantidade: dashboard.funil.leads, color: 'bg-gray-300' },
+              { name: 'Propostas', quantidade: dashboard.funil.propostas, color: 'bg-blue-300' },
+              { name: 'Vendidos', quantidade: dashboard.funil.vendidos, color: 'bg-green-300' },
+              { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, color: 'bg-yellow-300' },
+              { name: 'Concluídos', quantidade: dashboard.funil.concluidos, color: 'bg-emerald-300' },
+            ].map((item) => {
+              const maxValue = Math.max(
+                dashboard.funil.leads,
+                dashboard.funil.propostas,
+                dashboard.funil.vendidos,
+                dashboard.funil.emExecucao,
+                dashboard.funil.concluidos
+              );
+              const percentage = (item.quantidade / maxValue) * 100;
+
+              return (
+                <div key={item.name} className="flex items-center gap-4">
+                  <div className="w-32 text-sm font-medium text-muted-foreground text-right">
+                    {item.name}
+                  </div>
+                  <div className="flex-1 relative group">
+                    <div className="h-10 bg-muted/20 rounded-lg overflow-hidden">
+                      <div
+                        className={`h-full ${item.color} rounded-r-lg transition-all duration-500 ease-out flex items-center justify-end px-3`}
+                        style={{ width: `${percentage}%` }}
+                      >
+                        <span className="text-sm font-semibold text-gray-900">
+                          {item.quantidade}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
           {/* Taxas de Conversão com Tooltip Explicativo */}
           <div className="mt-6">
@@ -480,12 +846,12 @@ export default function PipelineProjetos() {
             <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorDisponivel" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6EE7B7" stopOpacity={0.9}/>
-                  <stop offset="95%" stopColor="#6EE7B7" stopOpacity={0.7}/>
+                  <stop offset="5%" stopColor="#A7F3D0" stopOpacity={0.6}/>
+                  <stop offset="95%" stopColor="#A7F3D0" stopOpacity={0.3}/>
                 </linearGradient>
                 <linearGradient id="colorNecessaria" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#FDBA74" stopOpacity={0.9}/>
-                  <stop offset="95%" stopColor="#FDBA74" stopOpacity={0.7}/>
+                  <stop offset="5%" stopColor="#FED7AA" stopOpacity={0.6}/>
+                  <stop offset="95%" stopColor="#FED7AA" stopOpacity={0.3}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" />
@@ -521,25 +887,122 @@ export default function PipelineProjetos() {
                 type="monotone"
                 dataKey="capacidadeDisponivel"
                 name="Capacidade Disponível"
-                stroke="#34D399"
+                stroke="#6EE7B7"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorDisponivel)"
-                dot={{ fill: '#34D399', stroke: '#fff', strokeWidth: 2, r: 4 }}
+                dot={{ fill: '#6EE7B7', stroke: '#fff', strokeWidth: 2, r: 4 }}
               />
               <Area
                 type="monotone"
                 dataKey="capacidadeNecessaria"
                 name="Capacidade Necessária"
-                stroke="#FB923C"
+                stroke="#FDBA74"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 fillOpacity={1}
                 fill="url(#colorNecessaria)"
-                dot={{ fill: '#FB923C', stroke: '#fff', strokeWidth: 2, r: 5 }}
+                dot={{ fill: '#FDBA74', stroke: '#fff', strokeWidth: 2, r: 5 }}
               />
             </AreaChart>
           </ResponsiveContainer>
+
+          {/* Tabela de Análise de Capacidade */}
+          <div className="mt-8 overflow-x-auto rounded-lg border-2 border-border shadow-sm bg-card">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-border bg-muted/30">
+                  <th className="text-left py-4 px-6 text-sm font-bold tracking-wide border-r border-border/40">Período</th>
+                  <th className="text-right py-4 px-6 text-sm font-bold tracking-wide border-r border-border/40">Disponível</th>
+                  <th className="text-right py-4 px-6 text-sm font-bold tracking-wide border-r border-border/40">Necessária</th>
+                  <th className="text-right py-4 px-6 text-sm font-bold tracking-wide border-r border-border/40">Diferença</th>
+                  <th className="text-center py-4 px-6 text-sm font-bold tracking-wide border-r border-border/40">Status</th>
+                  <th className="text-left py-4 px-6 text-sm font-bold tracking-wide">Recomendação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {timelineData.map((item, index) => {
+                  const diferenca = item.capacidadeDisponivel - item.capacidadeNecessaria;
+                  const utiliz = (item.capacidadeNecessaria / item.capacidadeDisponivel) * 100;
+                  // Thresholds ajustados: Sobrecarga >100%, Gargalo >95%, Atenção >85%, OK <=85%
+                  const status = utiliz > 100 ? 'Sobrecarga' : utiliz > 95 ? 'Gargalo' : utiliz > 85 ? 'Atenção' : 'OK';
+
+                  // Badges com fundo colorido
+                  const statusBadge = utiliz > 100
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-300 dark:border-red-700'
+                    : utiliz > 95
+                    ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-300 dark:border-orange-700'
+                    : utiliz > 85
+                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-700'
+                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-300 dark:border-green-700';
+
+                  // CONFIGURAÇÃO CCT (Convenção Coletiva de Trabalho - Metalúrgicos)
+                  const HORAS_MES_POR_PESSOA = 186; // 44h/semana × ~4.23 semanas (média anual considerando dias úteis)
+
+                  let recomendacao = '';
+                  if (utiliz > 100) {
+                    // SOBRECARGA: Ação urgente necessária
+                    const horasExtras = item.capacidadeNecessaria - item.capacidadeDisponivel;
+                    const pessoasAdicionais = Math.ceil(horasExtras / HORAS_MES_POR_PESSOA);
+                    recomendacao = `AÇÃO URGENTE: Planejar ${Math.round(horasExtras)}h extras, contratar +${pessoasAdicionais} pessoa(s) (própria ou terceirizada) ou reduzir escopo`;
+                  } else if (utiliz > 95) {
+                    // GARGALO: Próximo do limite
+                    const horasExtras = Math.round(item.capacidadeNecessaria - item.capacidadeDisponivel);
+                    recomendacao = `Planejar horas extras (aprox. ${Math.abs(horasExtras)}h), contratar mão de obra adicional ou reduzir escopo`;
+                  } else if (utiliz > 85) {
+                    // ATENÇÃO: Utilização alta mas controlável
+                    recomendacao = 'Monitorar de perto. Preparar plano de contingência (horas extras ou recursos adicionais)';
+                  } else {
+                    // OK: Capacidade adequada
+                    recomendacao = 'Capacidade adequada. Manter monitoramento';
+                  }
+
+                  return (
+                    <tr
+                      key={item.mes}
+                      className={`
+                        border-b border-border/30
+                        transition-colors duration-150
+                        hover:bg-muted/40
+                        ${index % 2 === 0 ? 'bg-transparent' : 'bg-muted/10'}
+                      `}
+                    >
+                      <td className="py-4 px-6 font-semibold text-base border-r border-border/30">
+                        {item.mesFormatado}
+                      </td>
+                      <td className="py-4 px-6 text-right font-medium text-base tabular-nums border-r border-border/30">
+                        {item.capacidadeDisponivel.toLocaleString('pt-BR')}h
+                      </td>
+                      <td className="py-4 px-6 text-right font-medium text-base tabular-nums border-r border-border/30">
+                        {Math.round(item.capacidadeNecessaria).toLocaleString('pt-BR')}h
+                      </td>
+                      <td className={`
+                        py-4 px-6 text-right font-bold text-base tabular-nums border-r border-border/30
+                        ${diferenca < 0
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-green-600 dark:text-green-400'
+                        }
+                      `}>
+                        {diferenca > 0 ? '+' : ''}{Math.round(diferenca).toLocaleString('pt-BR')}h
+                      </td>
+                      <td className="py-4 px-6 text-center border-r border-border/30">
+                        <span className={`
+                          inline-flex items-center justify-center
+                          px-3 py-1.5 rounded-full text-xs font-bold tracking-wide
+                          ${statusBadge}
+                        `}>
+                          {status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-sm leading-relaxed text-muted-foreground">
+                        {recomendacao}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {dashboard.analiseCapacidadeFutura.mesesComGargalo.length > 0 && (
             <div className="mt-4 p-4 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800">
@@ -605,7 +1068,8 @@ export default function PipelineProjetos() {
         chartType={expandedChart}
         dashboard={dashboard}
       />
-    </div>
+      </div>
+    </Layout>
   );
 }
 
@@ -1019,50 +1483,44 @@ function ChartExpandDialog({ open, onOpenChange, chartType, dashboard }: ChartEx
 
         <div className="py-4">
           {chartType === 'funil' ? (
-            <ResponsiveContainer width="100%" height={500}>
-              <BarChart
-                data={[
-                  { name: 'Leads', quantidade: dashboard.funil.leads, fill: '#D1D5DB' },
-                  { name: 'Propostas', quantidade: dashboard.funil.propostas, fill: '#93C5FD' },
-                  { name: 'Vendidos', quantidade: dashboard.funil.vendidos, fill: '#86EFAC' },
-                  { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, fill: '#FCD34D' },
-                  { name: 'Concluídos', quantidade: dashboard.funil.concluidos, fill: '#6EE7B7' },
-                ]}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    color: 'hsl(var(--popover-foreground))',
-                    padding: '8px 12px',
-                  }}
-                  labelStyle={{
-                    color: 'hsl(var(--popover-foreground))',
-                    fontWeight: 600,
-                    marginBottom: '4px',
-                  }}
-                  itemStyle={{
-                    color: 'hsl(var(--popover-foreground))',
-                  }}
-                />
-                <Bar dataKey="quantidade" radius={[8, 8, 0, 0]}>
-                  {[
-                    { name: 'Leads', fill: '#D1D5DB' },
-                    { name: 'Propostas', fill: '#93C5FD' },
-                    { name: 'Vendidos', fill: '#86EFAC' },
-                    { name: 'Em Execução', fill: '#FCD34D' },
-                    { name: 'Concluídos', fill: '#6EE7B7' },
-                  ].map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-6 p-6">
+              {[
+                { name: 'Leads', quantidade: dashboard.funil.leads, color: 'bg-gray-300' },
+                { name: 'Propostas', quantidade: dashboard.funil.propostas, color: 'bg-blue-300' },
+                { name: 'Vendidos', quantidade: dashboard.funil.vendidos, color: 'bg-green-300' },
+                { name: 'Em Execução', quantidade: dashboard.funil.emExecucao, color: 'bg-yellow-300' },
+                { name: 'Concluídos', quantidade: dashboard.funil.concluidos, color: 'bg-emerald-300' },
+              ].map((item) => {
+                const maxValue = Math.max(
+                  dashboard.funil.leads,
+                  dashboard.funil.propostas,
+                  dashboard.funil.vendidos,
+                  dashboard.funil.emExecucao,
+                  dashboard.funil.concluidos
+                );
+                const percentage = (item.quantidade / maxValue) * 100;
+
+                return (
+                  <div key={item.name} className="flex items-center gap-6">
+                    <div className="w-40 text-base font-medium text-muted-foreground text-right">
+                      {item.name}
+                    </div>
+                    <div className="flex-1 relative group">
+                      <div className="h-14 bg-muted/20 rounded-lg overflow-hidden">
+                        <div
+                          className={`h-full ${item.color} rounded-r-lg transition-all duration-500 ease-out flex items-center justify-end px-4`}
+                          style={{ width: `${percentage}%` }}
+                        >
+                          <span className="text-base font-semibold text-gray-900">
+                            {item.quantidade}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height={500}>
               <AreaChart data={timelineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>

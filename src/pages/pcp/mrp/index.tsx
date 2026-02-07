@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import {
   Card,
@@ -31,6 +33,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Package,
   AlertTriangle,
   DollarSign,
@@ -43,6 +65,15 @@ import {
   ChevronDown,
   ChevronRight,
   Download,
+  ArrowLeft,
+  Maximize2,
+  FileText,
+  BarChart3,
+  Filter,
+  Info,
+  Eye,
+  ExternalLink,
+  Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -59,7 +90,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -70,12 +101,23 @@ import {
 } from 'recharts';
 
 export default function DashboardMRPPage() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<DashboardMRP | null>(null);
   const [relatorio, setRelatorio] = useState<RelatorioMRP | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [selectedProjeto, setSelectedProjeto] = useState<string>('todos');
+  const [selectedProjetos, setSelectedProjetos] = useState<string[]>([]);
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
+  const [origemDialogOpen, setOrigemDialogOpen] = useState<string | null>(null);
+
+  // Filtros para "Necessidades por Projeto"
+  const [filtroProjetosPorProjeto, setFiltroProjetosPorProjeto] = useState<string[]>([]);
+  const [filtroStatusProjeto, setFiltroStatusProjeto] = useState<'todos' | 'com_falta' | 'sem_falta'>('todos');
+
+  // Filtros para "Top 10 - Itens Mais Críticos"
+  const [filtroProjetosTop10, setFiltroProjetosTop10] = useState<string[]>([]);
+  const [filtroValorMinimo, setFiltroValorMinimo] = useState<number>(0);
 
   // Carrega dados do dashboard
   useEffect(() => {
@@ -126,7 +168,19 @@ export default function DashboardMRPPage() {
       if (resultado.success) {
         toast({
           title: 'Requisições Geradas!',
-          description: `${resultado.requisicoes.length} requisições de compra foram criadas no módulo de Suprimentos`,
+          description: (
+            <div className="space-y-2">
+              <p>{resultado.requisicoes.length} requisições de compra foram criadas no módulo de Suprimentos</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2"
+                onClick={() => navigate('/suprimentos/requisicoes')}
+              >
+                Visualizar Requisições
+              </Button>
+            </div>
+          ),
         });
         // Recarrega dashboard para atualizar estado
         await loadDashboard();
@@ -156,18 +210,20 @@ export default function DashboardMRPPage() {
 
   if (loading || !dashboard || !relatorio) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      <Layout>
+        <div className="flex justify-center items-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
     );
   }
 
-  // Filtrar necessidades por projeto se selecionado
+  // Filtrar necessidades por projetos selecionados
   const necessidadesFiltradas =
-    selectedProjeto === 'todos'
+    selectedProjetos.length === 0
       ? relatorio.necessidadesConsolidadas || []
       : (relatorio.necessidadesConsolidadas || []).filter((n) =>
-          n.projetosOrigem.some((p) => p.projetoId === Number(selectedProjeto))
+          n.projetosOrigem.some((p) => selectedProjetos.includes(p.projetoId.toString()))
         );
 
   // Dados para gráficos
@@ -195,14 +251,26 @@ export default function DashboardMRPPage() {
   const coresABC = ['#FF7F0E', '#1F77B4', '#2CA02C'];
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">MRP - Planejamento de Materiais</h1>
-          <p className="text-muted-foreground mt-1">
-            Análise consolidada de necessidades multi-projeto
-          </p>
+    <Layout>
+      <div className="space-y-6">
+        {/* Botão Voltar */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">MRP - Planejamento de Materiais</h1>
+            <p className="text-muted-foreground mt-1">
+              Análise consolidada de necessidades multi-projeto
+            </p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={loadDashboard}>
@@ -317,13 +385,52 @@ export default function DashboardMRPPage() {
         {/* Breakdown por Classe ABC */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Breakdown por Classe ABC
-            </CardTitle>
-            <CardDescription>
-              Distribuição de valor por classificação
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Breakdown por Classe ABC
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <div className="space-y-2 text-xs">
+                          <p className="font-semibold">Como é calculado:</p>
+                          <p>• Classe A: 80% do valor (alta criticidade)</p>
+                          <p>• Classe B: 15% do valor (média criticidade)</p>
+                          <p>• Classe C: 5% do valor (baixa criticidade)</p>
+                          <p className="text-muted-foreground mt-2">
+                            Baseado em Service Orders + BOM + Estoque
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardTitle>
+                <CardDescription>
+                  Distribuição de valor por classificação
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOrigemDialogOpen('abc')}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Ver Origem
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setExpandedChart('abc')}
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -342,7 +449,7 @@ export default function DashboardMRPPage() {
                     <Cell key={`cell-${index}`} fill={coresABC[index % coresABC.length]} />
                   ))}
                 </Pie>
-                <Tooltip
+                <RechartsTooltip
                   formatter={(value: number) =>
                     new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
@@ -359,13 +466,53 @@ export default function DashboardMRPPage() {
         {/* Timeline de Necessidades */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Timeline de Necessidades
-            </CardTitle>
-            <CardDescription>
-              Próximos 90 dias
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Timeline de Necessidades
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <div className="space-y-2 text-xs">
+                          <p className="font-semibold">Como é calculado:</p>
+                          <p>1. Sistema lê Service Orders ativas</p>
+                          <p>2. Explode BOM de cada orçamento</p>
+                          <p>3. Consulta estoque no almoxarifado</p>
+                          <p>4. Projeta necessidades dos próximos 90 dias</p>
+                          <p className="text-muted-foreground mt-2">
+                            Dados atualizados em tempo real
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardTitle>
+                <CardDescription>
+                  Próximos 90 dias
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOrigemDialogOpen('timeline')}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Ver Origem
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setExpandedChart('timeline')}
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -379,7 +526,7 @@ export default function DashboardMRPPage() {
                   })}
                 />
                 <YAxis />
-                <Tooltip
+                <RechartsTooltip
                   labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
                   formatter={(value: number) =>
                     new Intl.NumberFormat('pt-BR', {
@@ -401,44 +548,250 @@ export default function DashboardMRPPage() {
         </Card>
       </div>
 
-      {/* Breakdown por Projeto */}
-      <Card>
+      {/* Breakdown por Projeto - BARRAS HORIZONTAIS */}
+      <Card className="border-l-4 border-l-indigo-500">
         <CardHeader>
-          <CardTitle>Necessidades por Projeto</CardTitle>
-          <CardDescription>
-            Distribuição de materiais necessários por projeto
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Necessidades por Projeto</CardTitle>
+              <CardDescription>
+                Distribuição de materiais necessários por projeto
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Filtros */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filtros
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold mb-3">Filtrar Projetos</h4>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {dashboard.porProjeto.map((projeto) => (
+                          <div key={projeto.projetoId} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`projeto-filter-${projeto.projetoId}`}
+                              checked={filtroProjetosPorProjeto.includes(projeto.projetoId.toString())}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFiltroProjetosPorProjeto([...filtroProjetosPorProjeto, projeto.projetoId.toString()]);
+                                } else {
+                                  setFiltroProjetosPorProjeto(filtroProjetosPorProjeto.filter((id) => id !== projeto.projetoId.toString()));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`projeto-filter-${projeto.projetoId}`}
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              {projeto.projetoNome}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      {filtroProjetosPorProjeto.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 w-full"
+                          onClick={() => setFiltroProjetosPorProjeto([])}
+                        >
+                          Limpar seleção
+                        </Button>
+                      )}
+                    </div>
+                    <Separator />
+                    <div>
+                      <h4 className="font-semibold mb-3">Status</h4>
+                      <Select
+                        value={filtroStatusProjeto}
+                        onValueChange={(value: any) => setFiltroStatusProjeto(value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todos">Todos os Projetos</SelectItem>
+                          <SelectItem value="com_falta">Com Falta de Material</SelectItem>
+                          <SelectItem value="sem_falta">Sem Falta de Material</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Exportar */}
+              <Button variant="outline" size="sm" title="Exportar PDF">
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+              <Button variant="outline" size="sm" title="Exportar Excel">
+                <Download className="w-4 h-4 mr-2" />
+                Excel
+              </Button>
+
+              {/* Expandir */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setExpandedChart('projeto')}
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={dashboard.porProjeto}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="projetoNome" />
-              <YAxis />
-              <Tooltip
-                formatter={(value: number) =>
-                  new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  }).format(value)
+          {/* Gráfico Customizado de Barras Horizontais */}
+          <div className="space-y-4 py-4">
+            {dashboard.porProjeto
+              .filter((projeto) => {
+                // Filtro por projetos selecionados
+                if (filtroProjetosPorProjeto.length > 0 && !filtroProjetosPorProjeto.includes(projeto.projetoId.toString())) {
+                  return false;
                 }
-              />
-              <Bar dataKey="valorTotal" fill="#1F77B4" name="Valor Total" />
-            </BarChart>
-          </ResponsiveContainer>
+                // Filtro por status
+                if (filtroStatusProjeto === 'com_falta' && projeto.quantidadeFalta === 0) {
+                  return false;
+                }
+                if (filtroStatusProjeto === 'sem_falta' && projeto.quantidadeFalta > 0) {
+                  return false;
+                }
+                return true;
+              })
+              .map((projeto) => {
+                const maxValue = Math.max(...dashboard.porProjeto.map(p => p.valorTotal));
+                const percentage = (projeto.valorTotal / maxValue) * 100;
+                const cor = projeto.quantidadeFalta > 0 ? 'bg-red-400' : 'bg-blue-400';
+
+                return (
+                  <div key={projeto.projetoId} className="flex items-center gap-4">
+                    <div className="w-48 text-sm font-medium text-muted-foreground text-right truncate">
+                      {projeto.projetoNome}
+                    </div>
+                    <div className="flex-1 relative group">
+                      <div className="h-10 bg-muted/20 rounded-lg overflow-hidden">
+                        <div
+                          className={`h-full ${cor} rounded-r-lg transition-all duration-500 ease-out flex items-center justify-end px-3`}
+                          style={{ width: `${percentage}%` }}
+                        >
+                          <span className="text-sm font-semibold text-white">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                              minimumFractionDigits: 0,
+                            }).format(projeto.valorTotal)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </CardContent>
       </Card>
 
       {/* Itens Mais Críticos */}
-      <Card>
+      <Card className="border-l-4 border-l-red-500">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            Top 10 - Itens Mais Críticos
-          </CardTitle>
-          <CardDescription>
-            Materiais com maior falta de estoque
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                Top 10 - Itens Mais Críticos
+              </CardTitle>
+              <CardDescription>
+                Materiais com maior falta de estoque
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Filtros */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filtros
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold mb-3">Filtrar por Projeto</h4>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {dashboard.porProjeto.map((projeto) => (
+                          <div key={projeto.projetoId} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`top10-projeto-${projeto.projetoId}`}
+                              checked={filtroProjetosTop10.includes(projeto.projetoId.toString())}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFiltroProjetosTop10([...filtroProjetosTop10, projeto.projetoId.toString()]);
+                                } else {
+                                  setFiltroProjetosTop10(filtroProjetosTop10.filter((id) => id !== projeto.projetoId.toString()));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`top10-projeto-${projeto.projetoId}`}
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              {projeto.projetoNome}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      {filtroProjetosTop10.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 w-full"
+                          onClick={() => setFiltroProjetosTop10([])}
+                        >
+                          Limpar seleção
+                        </Button>
+                      )}
+                    </div>
+                    <Separator />
+                    <div>
+                      <h4 className="font-semibold mb-3">Valor Mínimo (R$)</h4>
+                      <Select
+                        value={filtroValorMinimo.toString()}
+                        onValueChange={(value) => setFiltroValorMinimo(Number(value))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Todos os Valores</SelectItem>
+                          <SelectItem value="1000">Acima de R$ 1.000</SelectItem>
+                          <SelectItem value="5000">Acima de R$ 5.000</SelectItem>
+                          <SelectItem value="10000">Acima de R$ 10.000</SelectItem>
+                          <SelectItem value="50000">Acima de R$ 50.000</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Exportar */}
+              <Button variant="outline" size="sm" title="Exportar PDF">
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+              <Button variant="outline" size="sm" title="Exportar Excel">
+                <Download className="w-4 h-4 mr-2" />
+                Excel
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -453,31 +806,41 @@ export default function DashboardMRPPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dashboard.itensMaisCriticos.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-mono font-semibold">
-                    {item.codigoMaterial}
-                  </TableCell>
-                  <TableCell className="max-w-[300px] truncate">
-                    {item.descricao}
-                  </TableCell>
-                  <TableCell className="text-right font-bold tabular-nums">
-                    {item.quantidadeFaltante.toLocaleString('pt-BR')}
-                  </TableCell>
-                  <TableCell className="text-right font-bold tabular-nums text-red-600">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(item.valorFaltante)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline">{item.quantidadeProjetos}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm tabular-nums">
-                    {new Date(item.prazoLimite).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {dashboard.itensMaisCriticos
+                .filter((item) => {
+                  // Filtro por valor mínimo
+                  if (item.valorFaltante < filtroValorMinimo) {
+                    return false;
+                  }
+                  // Note: filtro por projeto seria implementado se tivéssemos a lista de projetos por item
+                  // Como não temos essa info na estrutura atual, mantemos apenas o filtro de valor
+                  return true;
+                })
+                .map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-mono font-semibold">
+                      {item.codigoMaterial}
+                    </TableCell>
+                    <TableCell className="max-w-[300px] truncate">
+                      {item.descricao}
+                    </TableCell>
+                    <TableCell className="text-right font-bold tabular-nums">
+                      {item.quantidadeFaltante.toLocaleString('pt-BR')}
+                    </TableCell>
+                    <TableCell className="text-right font-bold tabular-nums text-red-600">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(item.valorFaltante)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline">{item.quantidadeProjetos}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm tabular-nums">
+                      {new Date(item.prazoLimite).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </CardContent>
@@ -494,19 +857,75 @@ export default function DashboardMRPPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-3">
-              <Select value={selectedProjeto} onValueChange={setSelectedProjeto}>
-                <SelectTrigger className="w-[250px]">
-                  <SelectValue placeholder="Filtrar por projeto" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os Projetos</SelectItem>
-                  {dashboard.porProjeto.map((p) => (
-                    <SelectItem key={p.projetoId} value={p.projetoId.toString()}>
-                      {p.projetoNome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Seleção Múltipla de Projetos */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[250px] justify-start">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    {selectedProjetos.length === 0
+                      ? 'Todos os Projetos'
+                      : `${selectedProjetos.length} projeto(s) selecionado(s)`}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="start">
+                  <div className="flex justify-between items-center mb-3 pb-2 border-b">
+                    <span className="text-sm font-semibold">Selecionar Projetos</span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setSelectedProjetos([])}
+                      >
+                        Todos
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setSelectedProjetos([])}
+                      >
+                        Limpar
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {dashboard.porProjeto.map((projeto) => (
+                      <div key={projeto.projetoId} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`projeto-${projeto.projetoId}`}
+                          checked={selectedProjetos.includes(projeto.projetoId.toString())}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedProjetos([...selectedProjetos, projeto.projetoId.toString()]);
+                            } else {
+                              setSelectedProjetos(selectedProjetos.filter((id) => id !== projeto.projetoId.toString()));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`projeto-${projeto.projetoId}`}
+                          className="text-sm font-normal leading-none cursor-pointer flex-1"
+                        >
+                          {projeto.projetoNome}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Botões de Exportação */}
+              <Button variant="outline" size="sm" title="Exportar PDF">
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+              <Button variant="outline" size="sm" title="Exportar Excel">
+                <Download className="w-4 h-4 mr-2" />
+                Excel
+              </Button>
+
+              {/* Gerar Requisições */}
               {relatorio.sugestoes && relatorio.sugestoes.length > 0 && (
                 <Button
                   onClick={() => handleGerarRequisicoes(relatorio.sugestoes)}
@@ -713,6 +1132,276 @@ export default function DashboardMRPPage() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+
+      {/* Dialog de Gráfico Expandido */}
+      <Dialog open={expandedChart !== null} onOpenChange={(open) => !open && setExpandedChart(null)}>
+        <DialogContent className="max-w-6xl">
+          <DialogHeader>
+            <DialogTitle>
+              {expandedChart === 'abc'
+                ? 'Breakdown por Classe ABC'
+                : expandedChart === 'timeline'
+                ? 'Timeline de Necessidades'
+                : 'Necessidades por Projeto'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            {expandedChart === 'abc' && (
+              <ResponsiveContainer width="100%" height={500}>
+                <PieChart>
+                  <Pie
+                    data={dadosClasseABC}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(entry) => `${entry.name}: ${entry.percentual.toFixed(1)}%`}
+                    outerRadius={150}
+                    fill="#8884d8"
+                    dataKey="valor"
+                  >
+                    {dadosClasseABC.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={coresABC[index % coresABC.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    formatter={(value: number) =>
+                      new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(value)
+                    }
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+
+            {expandedChart === 'timeline' && (
+              <ResponsiveContainer width="100%" height={500}>
+                <LineChart data={dashboard.timelineNecessidades}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="data"
+                    tickFormatter={(value) =>
+                      new Date(value).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                      })
+                    }
+                  />
+                  <YAxis />
+                  <RechartsTooltip
+                    labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                    formatter={(value: number) =>
+                      new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(value)
+                    }
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="valorTotal"
+                    stroke="#FF7F0E"
+                    strokeWidth={3}
+                    name="Valor Total"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+
+            {expandedChart === 'projeto' && (
+              <div className="space-y-6 p-6">
+                {dashboard.porProjeto.map((projeto) => {
+                  const maxValue = Math.max(...dashboard.porProjeto.map((p) => p.valorTotal));
+                  const percentage = (projeto.valorTotal / maxValue) * 100;
+                  const cor = projeto.quantidadeFalta > 0 ? 'bg-red-400' : 'bg-blue-400';
+
+                  return (
+                    <div key={projeto.projetoId} className="flex items-center gap-6">
+                      <div className="w-56 text-base font-medium text-muted-foreground text-right">
+                        {projeto.projetoNome}
+                      </div>
+                      <div className="flex-1 relative group">
+                        <div className="h-14 bg-muted/20 rounded-lg overflow-hidden">
+                          <div
+                            className={`h-full ${cor} rounded-r-lg transition-all duration-500 ease-out flex items-center justify-end px-4`}
+                            style={{ width: `${percentage}%` }}
+                          >
+                            <span className="text-base font-semibold text-white">
+                              {new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                                minimumFractionDigits: 0,
+                              }).format(projeto.valorTotal)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Origem dos Dados */}
+      <Dialog open={origemDialogOpen !== null} onOpenChange={(open) => !open && setOrigemDialogOpen(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {origemDialogOpen === 'abc' && 'Origem dos Dados - Classe ABC'}
+              {origemDialogOpen === 'timeline' && 'Origem dos Dados - Timeline de Necessidades'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                {origemDialogOpen === 'abc' && 'Este gráfico exibe materiais classificados por valor (ABC). Os dados são calculados em tempo real a partir de:'}
+                {origemDialogOpen === 'timeline' && 'Esta timeline projeta as necessidades de materiais nos próximos 90 dias. Os dados são calculados em tempo real a partir de:'}
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-base">Fontes de Dados:</h4>
+
+              <div className="space-y-3">
+                {/* Service Orders */}
+                <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <Package className="w-5 h-5 mt-0.5 text-blue-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium">Service Orders Ativas</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {dashboard?.porProjeto?.length || 0} projetos em execução com ordens de produção
+                    </p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => {
+                        setOrigemDialogOpen(null);
+                        navigate('/obras');
+                      }}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Ver Service Orders →
+                    </Button>
+                  </div>
+                </div>
+
+                {/* BOM */}
+                <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <FileText className="w-5 h-5 mt-0.5 text-green-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium">BOM (Bill of Materials)</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Composições de custos e itens dos orçamentos vinculados às orders
+                    </p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => {
+                        setOrigemDialogOpen(null);
+                        navigate('/comercial/orcamentos');
+                      }}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Ver Orçamentos →
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Estoque */}
+                <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <Database className="w-5 h-5 mt-0.5 text-orange-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium">Estoque Atual</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Almoxarifado com itens, quantidades disponíveis e níveis de estoque
+                    </p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => {
+                        setOrigemDialogOpen(null);
+                        navigate('/suprimentos/almoxarifado');
+                      }}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Ver Estoque →
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Pedidos em Aberto */}
+                <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <ShoppingCart className="w-5 h-5 mt-0.5 text-purple-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium">Pedidos em Aberto</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Requisições e ordens de compra já solicitadas mas ainda não recebidas
+                    </p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => {
+                        setOrigemDialogOpen(null);
+                        navigate('/suprimentos/requisicoes');
+                      }}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Ver Requisições →
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <h4 className="font-semibold text-base">Cálculo do MRP:</h4>
+              <div className="bg-muted/30 p-4 rounded-lg font-mono text-xs space-y-1">
+                <p className="text-foreground">1. <span className="text-blue-500">Explosão de BOM</span> → Necessidades Brutas</p>
+                <p className="text-foreground">2. Necessidades Brutas - <span className="text-orange-500">Estoque</span> - <span className="text-purple-500">Pedidos</span> = <span className="font-bold">Necessidades Líquidas</span></p>
+                <p className="text-foreground">3. Classificação <span className="text-green-500">ABC</span>: Valor × Criticidade</p>
+
+                {origemDialogOpen === 'abc' && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-muted-foreground">• Classe A: 80% do valor (alta criticidade)</p>
+                    <p className="text-muted-foreground">• Classe B: 15% do valor (média criticidade)</p>
+                    <p className="text-muted-foreground">• Classe C: 5% do valor (baixa criticidade)</p>
+                  </div>
+                )}
+
+                {origemDialogOpen === 'timeline' && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-muted-foreground">• Projeção baseada nas datas de necessidade das Service Orders</p>
+                    <p className="text-muted-foreground">• Janela de 90 dias a partir de hoje</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <AlertDescription className="text-blue-800 dark:text-blue-200">
+                <strong>Dados em tempo real:</strong> Estes cálculos são executados sempre que você abre esta página,
+                garantindo que as informações estejam sempre atualizadas com o estado atual do sistema.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </DialogContent>
+      </Dialog>
+      </div>
+    </Layout>
   );
 }

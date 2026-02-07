@@ -34,6 +34,9 @@ import {
   AnaliseCapacidadeRequest,
   SimulacaoNovoProjeto,
 } from '@/interfaces/CapacidadeInterface';
+import ProcessService from '@/services/ProcessService';
+import TarefaMacroService from '@/services/TarefaMacroService';
+import { getAllActivities } from '@/services/ActivityService';
 
 // ============================================
 // SERVICE CLASS
@@ -481,6 +484,285 @@ class CapacidadeProdutivaServiceClass {
   ];
 
   // ============================================
+  // MÉTODOS AUXILIARES - INTEGRAÇÃO COM DADOS REAIS
+  // ============================================
+
+  /**
+   * Mapeia nome de TAREFA MACRO para tipo de operação do centro de trabalho
+   * Baseado nos processos reais da GMX
+   */
+  private mapearTarefaMacroParaTipo(tarefaMacro: string): string {
+    const nome = tarefaMacro.toUpperCase().trim();
+
+    // Mapeamento específico GMX
+    if (nome.includes('SOLDA')) return 'soldagem';
+    if (nome.includes('PREPARAÇÃO') || nome.includes('PREPARACAO')) return 'preparacao';
+    if (nome.includes('ACABAMENTO')) return 'acabamento';
+    if (nome.includes('JATEAMENTO')) return 'pintura'; // Jateamento faz parte da Pintura
+    if (nome.includes('MONTAGEM') && !nome.includes('GABARITO')) return 'montagem';
+    if (nome.includes('MOBILIZAÇÃO') || nome.includes('MOBILIZACAO')) return 'transporte';
+    if (nome.includes('PERITAGEM') || nome.includes('AVALIAÇÃO') || nome.includes('AVALIACAO')) return 'inspecao';
+    if (nome.includes('PINTURA')) return 'pintura';
+    if (nome.includes('QUALIDADE')) return 'administrativo';
+    if (nome.includes('ORGANIZAÇÃO') || nome.includes('ORGANIZACAO') || nome.includes('5S')) return '5s';
+    if (nome.includes('RETRABALHO')) return 'retrabalho';
+    if (nome.includes('TRANSPORTE')) return 'transporte';
+    if (nome.includes('MANUTENÇÃO') || nome.includes('MANUTENCAO')) return 'manutencao';
+    if (nome.includes('CORTE')) return 'preparacao'; // Corte faz parte da Preparação
+    if (nome.includes('EXPEDIÇÃO') || nome.includes('EXPEDICAO') || nome.includes('CARGA') || nome.includes('DESCARGA')) return 'transporte';
+    if (nome.includes('TESTES') || nome.includes('ENSAIOS')) return 'inspecao';
+
+    // Default: montagem (mais genérico)
+    return 'montagem';
+  }
+
+  /**
+   * Busca centros de trabalho baseados em TAREFAS MACRO reais do banco de dados
+   * IMPORTANTE: Usa Tarefas Macro como fonte principal (não Processos)
+   */
+  private async buscarCentrosReais(): Promise<CentroTrabalho[]> {
+    try {
+      const tarefaMacroService = new TarefaMacroService();
+      const tarefasMacro = await tarefaMacroService.getAll();
+
+      console.log('[CapacidadeService] ========== TAREFAS MACRO ==========');
+      console.log('[CapacidadeService] Tarefas Macro encontradas:', tarefasMacro.length);
+      console.log('[CapacidadeService] Lista completa:', tarefasMacro.map(t => t.name));
+
+      // Se não houver tarefas macro, retorna centros padrão GMX
+      if (!tarefasMacro || tarefasMacro.length === 0) {
+        console.warn('[CapacidadeService] ⚠️ Nenhuma Tarefa Macro encontrada no banco. Usando centros padrão GMX.');
+        return this.criarCentrosPadraoGMX();
+      }
+
+      // Agrupa tarefas macro por tipo de operação
+      const centrosPorTipo = new Map<string, { tarefas: any[]; nome: string }>();
+
+      for (const tarefa of tarefasMacro) {
+        // Ignora "MONTAGEM GABARITO" conforme solicitado
+        if (tarefa.name.toUpperCase().includes('MONTAGEM') && tarefa.name.toUpperCase().includes('GABARITO')) {
+          console.log('[CapacidadeService] ❌ Ignorando tarefa:', tarefa.name);
+          continue;
+        }
+
+        const tipoOperacao = this.mapearTarefaMacroParaTipo(tarefa.name);
+        console.log(`[CapacidadeService] ✓ Mapeando: "${tarefa.name}" → ${tipoOperacao}`);
+
+        if (!centrosPorTipo.has(tipoOperacao)) {
+          centrosPorTipo.set(tipoOperacao, {
+            tarefas: [],
+            nome: this.getNomeCentroPorTipo(tipoOperacao),
+          });
+        }
+
+        centrosPorTipo.get(tipoOperacao)!.tarefas.push(tarefa);
+      }
+
+      console.log('[CapacidadeService] Tipos de operação únicos:', Array.from(centrosPorTipo.keys()));
+
+      // Busca activities para calcular demanda
+      const activities = await getAllActivities();
+      console.log('[CapacidadeService] Activities encontradas:', activities.length);
+
+      // Cria centros de trabalho reais
+      const centrosReais: CentroTrabalho[] = [];
+      let centroIndex = 1;
+
+      for (const [tipoOperacao, dados] of centrosPorTipo.entries()) {
+        // Calcula capacidade estimada (pode ser refinado depois)
+        const numRecursos = this.estimarRecursosPorTipo(tipoOperacao);
+        const horasPorRecurso = 45; // 45h/semana padrão
+        const capacidadeTotal = numRecursos * horasPorRecurso;
+
+        const centro: CentroTrabalho = {
+          id: `ct-real-${centroIndex++}`,
+          nome: dados.nome,
+          descricao: `Tarefas: ${dados.tarefas.map((t) => t.name).join(', ')}`,
+          tipoOperacao: tipoOperacao as any, // Usa tipo customizado GMX
+          recursosIds: [], // Será preenchido se integrar com recursos
+          localizacao: 'GMX - Planta Principal',
+          capacidadeTotalSemana: capacidadeTotal,
+        };
+
+        centrosReais.push(centro);
+        console.log(`[CapacidadeService] ✓ Centro criado: ${centro.nome} (${centro.capacidadeTotalSemana}h/semana)`);
+      }
+
+      console.log('[CapacidadeService] ========== RESULTADO ==========');
+      console.log('[CapacidadeService] Centros reais criados:', centrosReais.length);
+      console.log('[CapacidadeService] Lista:', centrosReais.map(c => c.nome));
+      console.log('[CapacidadeService] ==================================');
+
+      return centrosReais;
+    } catch (error) {
+      console.error('[CapacidadeService] ❌ Erro ao buscar centros reais:', error);
+      // Fallback para centros padrão GMX
+      console.warn('[CapacidadeService] ⚠️ Usando centros padrão GMX como fallback');
+      return this.criarCentrosPadraoGMX();
+    }
+  }
+
+  /**
+   * Cria centros de trabalho padrão GMX baseados nas 11 categorias
+   * Usado como fallback quando não há tarefas macro no banco
+   */
+  private criarCentrosPadraoGMX(): CentroTrabalho[] {
+    const centrosPadrao: Array<{ nome: string; tipo: string; recursos: number }> = [
+      { nome: 'Soldagem', tipo: 'soldagem', recursos: 3 },
+      { nome: 'Preparação', tipo: 'preparacao', recursos: 3 },
+      { nome: 'Acabamento', tipo: 'acabamento', recursos: 2 },
+      { nome: 'Pintura', tipo: 'pintura', recursos: 2 },
+      { nome: 'Montagem', tipo: 'montagem', recursos: 4 },
+      { nome: 'Transporte', tipo: 'transporte', recursos: 2 },
+      { nome: 'Inspeção', tipo: 'inspecao', recursos: 2 },
+      { nome: 'Administrativo', tipo: 'administrativo', recursos: 2 },
+      { nome: '5S', tipo: '5s', recursos: 1 },
+      { nome: 'Retrabalho', tipo: 'retrabalho', recursos: 2 },
+      { nome: 'Manutenção', tipo: 'manutencao', recursos: 1 },
+    ];
+
+    return centrosPadrao.map((c, index) => ({
+      id: `ct-gmx-${index + 1}`,
+      nome: c.nome,
+      descricao: `Centro de trabalho GMX - ${c.nome}`,
+      tipoOperacao: c.tipo as any,
+      recursosIds: [],
+      localizacao: 'GMX - Planta Principal',
+      capacidadeTotalSemana: c.recursos * 45,
+    }));
+  }
+
+  /**
+   * Retorna nome amigável do centro baseado no tipo de operação GMX
+   */
+  private getNomeCentroPorTipo(tipo: string): string {
+    const nomes: Record<string, string> = {
+      soldagem: 'Soldagem',
+      preparacao: 'Preparação',
+      acabamento: 'Acabamento',
+      pintura: 'Pintura',
+      montagem: 'Montagem',
+      transporte: 'Transporte',
+      inspecao: 'Inspeção',
+      administrativo: 'Administrativo',
+      '5s': '5S',
+      retrabalho: 'Retrabalho',
+      manutencao: 'Manutenção',
+    };
+    return nomes[tipo] || `Centro - ${tipo}`;
+  }
+
+  /**
+   * Estima número de recursos por tipo GMX (pode ser refinado com dados reais depois)
+   */
+  private estimarRecursosPorTipo(tipo: string): number {
+    const estimativas: Record<string, number> = {
+      soldagem: 3,          // Soldadores
+      preparacao: 3,        // Corte, Furação, Ajustes
+      acabamento: 2,        // Acabamento
+      pintura: 2,           // Pintura + Jateamento
+      montagem: 4,          // Montadores
+      transporte: 2,        // Motoristas/Operadores
+      inspecao: 2,          // Inspetores
+      administrativo: 2,    // Qualidade
+      '5s': 1,              // Organização
+      retrabalho: 2,        // Retrabalho
+      manutencao: 1,        // Manutenção
+    };
+    return estimativas[tipo] || 2;
+  }
+
+  /**
+   * Calcula demanda real por centro baseado em activities ativas
+   * IMPORTANTE: Usa macroTask (Tarefa Macro) como fonte principal
+   */
+  private async calcularDemandaPorCentro(
+    centros: CentroTrabalho[],
+    periodoInicio: string,
+    periodoFim: string
+  ): Promise<Map<string, number>> {
+    try {
+      const activities = await getAllActivities();
+      const tarefaMacroService = new TarefaMacroService();
+      const tarefasMacro = await tarefaMacroService.getAll();
+
+      // Cria mapa de tarefaMacroId -> tipoOperacao
+      const tarefaParaTipo = new Map<number, string>();
+      for (const tarefa of tarefasMacro) {
+        // Ignora MONTAGEM GABARITO
+        if (tarefa.name.toUpperCase().includes('MONTAGEM') && tarefa.name.toUpperCase().includes('GABARITO')) {
+          continue;
+        }
+        tarefaParaTipo.set(tarefa.id, this.mapearTarefaMacroParaTipo(tarefa.name));
+      }
+
+      // Calcula demanda por tipo de operação
+      const demandaPorTipo = new Map<string, number>();
+
+      for (const activity of activities) {
+        // Filtra apenas activities ativas ou planejadas
+        if (activity.status === 'Concluída' || activity.status === 'Cancelado') continue;
+
+        // Pega a tarefa macro da activity
+        const tarefaMacroId = typeof activity.macroTask === 'object' ? activity.macroTask.id : Number(activity.macroTask);
+        if (!tarefaMacroId || !tarefaParaTipo.has(tarefaMacroId)) {
+          // Fallback: tenta usar processo se macroTask não existir
+          if (activity.process) {
+            const processService = new ProcessService();
+            const processos = await processService.getAll();
+            const processo = processos.find((p) => p.id === (typeof activity.process === 'object' ? activity.process.id : Number(activity.process)));
+            if (processo) {
+              // Mapeia processo para tipo usando lógica similar
+              const tipo = this.mapearTarefaMacroParaTipo(processo.name);
+              const atual = demandaPorTipo.get(tipo) || 0;
+              let horasEstimadas = this.calcularHorasActivity(activity);
+              demandaPorTipo.set(tipo, atual + horasEstimadas);
+            }
+          }
+          continue;
+        }
+
+        const tipoOperacao = tarefaParaTipo.get(tarefaMacroId)!;
+
+        // Calcula horas estimadas
+        let horasEstimadas = this.calcularHorasActivity(activity);
+
+        // Acumula demanda por tipo
+        const atual = demandaPorTipo.get(tipoOperacao) || 0;
+        demandaPorTipo.set(tipoOperacao, atual + horasEstimadas);
+      }
+
+      // Mapeia demanda por tipo para demanda por centro
+      const demandaPorCentro = new Map<string, number>();
+      for (const centro of centros) {
+        const demanda = demandaPorTipo.get(centro.tipoOperacao) || 0;
+        demandaPorCentro.set(centro.id, demanda);
+      }
+
+      console.log('[CapacidadeService] Demanda calculada por centro:', Object.fromEntries(demandaPorCentro));
+      return demandaPorCentro;
+    } catch (error) {
+      console.error('[CapacidadeService] Erro ao calcular demanda:', error);
+      return new Map();
+    }
+  }
+
+  /**
+   * Calcula horas estimadas de uma activity
+   */
+  private calcularHorasActivity(activity: any): number {
+    let horasEstimadas = 0;
+    if (activity.timePerUnit && activity.quantity) {
+      horasEstimadas = activity.timePerUnit * activity.quantity;
+    } else if (activity.estimatedTime) {
+      // Parse estimatedTime se for string como "8:30"
+      const parts = activity.estimatedTime.toString().split(':');
+      horasEstimadas = parseInt(parts[0]) + (parts[1] ? parseInt(parts[1]) / 60 : 0);
+    }
+    return horasEstimadas;
+  }
+
+  // ============================================
   // MÉTODOS PRINCIPAIS
   // ============================================
 
@@ -541,12 +823,12 @@ class CapacidadeProdutivaServiceClass {
         horasLivres: analise.horasLivres,
       }));
 
-    // Capacidade por centro de trabalho
-    const capacidadePorCentro = this.mockCentrosTrabalho.map((centro) => {
-      const recursosCenter = analiseConsolidada.analisesPorRecurso.filter((a) =>
-        centro.recursosIds.includes(a.recurso.id)
-      );
-      const demandaTotal = recursosCenter.reduce((sum, r) => sum + r.horasAlocadas, 0);
+    // Capacidade por centro de trabalho (INTEGRAÇÃO COM DADOS REAIS)
+    const centrosReais = await this.buscarCentrosReais();
+    const demandaPorCentro = await this.calcularDemandaPorCentro(centrosReais, dataInicio, dataFim);
+
+    const capacidadePorCentro = centrosReais.map((centro) => {
+      const demandaTotal = demandaPorCentro.get(centro.id) || 0;
       const capacidadeTotal = centro.capacidadeTotalSemana * 4; // ~1 mês
       const taxaUtilizacao = capacidadeTotal > 0 ? (demandaTotal / capacidadeTotal) * 100 : 0;
 

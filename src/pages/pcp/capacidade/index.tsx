@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import {
   Card,
@@ -48,6 +50,10 @@ import {
   Target,
   CheckCircle,
   XCircle,
+  ArrowLeft,
+  Maximize2,
+  FileText,
+  Download,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -98,11 +104,13 @@ const formatarMonetarioCompacto = (valor: number): string => {
 // ============================================
 
 export default function DashboardCapacidadePage() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<DashboardCapacidade | null>(null);
   const [expandedRecursos, setExpandedRecursos] = useState<Set<number>>(new Set());
   const [simuladorOpen, setSimuladorOpen] = useState(false);
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
 
   // Estados do simulador
   const [simNomeProjeto, setSimNomeProjeto] = useState('');
@@ -192,25 +200,29 @@ export default function DashboardCapacidadePage() {
 
   if (loading) {
     return (
-      <div className="space-y-6 p-6">
-        <Card>
-          <CardContent className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </CardContent>
-        </Card>
-      </div>
+      <Layout>
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
     );
   }
 
   if (!dashboard) {
     return (
-      <div className="space-y-6 p-6">
-        <Card>
-          <CardContent className="flex justify-center items-center h-40">
-            <p className="text-muted-foreground">Nenhum dado disponível</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Layout>
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="flex justify-center items-center h-40">
+              <p className="text-muted-foreground">Nenhum dado disponível</p>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
     );
   }
 
@@ -239,14 +251,26 @@ export default function DashboardCapacidadePage() {
   }));
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Capacidade Produtiva</h1>
-          <p className="text-muted-foreground mt-1">
-            Análise consolidada multi-projeto de recursos e gargalos
-          </p>
+    <Layout>
+      <div className="space-y-6">
+        {/* Botão Voltar */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Capacidade Produtiva</h1>
+            <p className="text-muted-foreground mt-1">
+              Análise consolidada multi-projeto de recursos e gargalos
+            </p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={() => setSimuladorOpen(true)}>
@@ -264,7 +288,7 @@ export default function DashboardCapacidadePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Taxa de Utilização Geral */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card>
+          <Card className="border-l-4 border-l-blue-500">
             <CardHeader className="pb-3">
               <CardDescription className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
@@ -288,7 +312,7 @@ export default function DashboardCapacidadePage() {
 
         {/* Gargalos Detectados */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card className={dashboard.kpis.quantidadeGargalos > 0 ? 'border-red-200 dark:border-red-900' : ''}>
+          <Card className={`border-l-4 ${dashboard.kpis.quantidadeGargalos > 0 ? 'border-l-red-500 border-red-200 dark:border-red-900' : 'border-l-orange-500'}`}>
             <CardHeader className="pb-3">
               <CardDescription className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
@@ -306,7 +330,7 @@ export default function DashboardCapacidadePage() {
 
         {/* Horas Extras Necessárias */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Card>
+          <Card className="border-l-4 border-l-purple-500">
             <CardHeader className="pb-3">
               <CardDescription className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
@@ -324,7 +348,7 @@ export default function DashboardCapacidadePage() {
 
         {/* Custo Estimado Horas Extras */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <Card>
+          <Card className="border-l-4 border-l-green-500">
             <CardHeader className="pb-3">
               <CardDescription className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
@@ -343,7 +367,7 @@ export default function DashboardCapacidadePage() {
 
       {/* KPIs Secundários - Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="border-l-4 border-l-blue-500">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -356,7 +380,7 @@ export default function DashboardCapacidadePage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-green-500">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -369,7 +393,7 @@ export default function DashboardCapacidadePage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-red-500">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -388,8 +412,20 @@ export default function DashboardCapacidadePage() {
         {/* Gráfico 1: Recursos por Tipo (PieChart) */}
         <Card>
           <CardHeader>
-            <CardTitle>Recursos por Tipo</CardTitle>
-            <CardDescription>Distribuição e utilização média por tipo de recurso</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recursos por Tipo</CardTitle>
+                <CardDescription>Distribuição e utilização média por tipo de recurso</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setExpandedChart('recursos-tipo')}
+                title="Expandir gráfico"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -417,8 +453,20 @@ export default function DashboardCapacidadePage() {
         {/* Gráfico 2: Timeline de Capacidade (LineChart) */}
         <Card>
           <CardHeader>
-            <CardTitle>Timeline de Capacidade</CardTitle>
-            <CardDescription>Evolução de horas disponíveis vs alocadas (semanal)</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Timeline de Capacidade</CardTitle>
+                <CardDescription>Evolução de horas disponíveis vs alocadas (semanal)</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setExpandedChart('timeline')}
+                title="Expandir gráfico"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -439,14 +487,32 @@ export default function DashboardCapacidadePage() {
       {/* Gráfico 3: Capacidade por Centro de Trabalho (BarChart) */}
       <Card>
         <CardHeader>
-          <CardTitle>Capacidade por Centro de Trabalho</CardTitle>
-          <CardDescription>Comparativo de capacidade total vs demanda por centro</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Capacidade por Centro de Trabalho</CardTitle>
+              <CardDescription>Comparativo de capacidade total vs demanda por centro</CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setExpandedChart('centros-trabalho')}
+              title="Expandir gráfico"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={450}>
             <BarChart data={dadosCentrosTrabalho}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis
+                dataKey="name"
+                angle={-45}
+                textAnchor="end"
+                height={100}
+                style={{ fontSize: '12px' }}
+              />
               <YAxis />
               <Tooltip />
               <Legend />
@@ -464,10 +530,24 @@ export default function DashboardCapacidadePage() {
       {/* Tabela de Recursos */}
       <Card>
         <CardHeader>
-          <CardTitle>Recursos Produtivos</CardTitle>
-          <CardDescription>
-            Detalhamento de capacidade e alocação por recurso individual
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recursos Produtivos</CardTitle>
+              <CardDescription>
+                Detalhamento de capacidade e alocação por recurso individual
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" title="Exportar PDF">
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+              <Button variant="outline" size="sm" title="Exportar Excel">
+                <Download className="w-4 h-4 mr-2" />
+                Excel
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -606,11 +686,25 @@ export default function DashboardCapacidadePage() {
         {/* Mais Utilizados */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Top 10 Recursos Mais Utilizados
-            </CardTitle>
-            <CardDescription>Recursos com maior taxa de alocação</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Top 10 Recursos Mais Utilizados
+                </CardTitle>
+                <CardDescription>Recursos com maior taxa de alocação</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" title="Exportar PDF">
+                  <FileText className="w-4 h-4 mr-2" />
+                  PDF
+                </Button>
+                <Button variant="outline" size="sm" title="Exportar Excel">
+                  <Download className="w-4 h-4 mr-2" />
+                  Excel
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -645,11 +739,25 @@ export default function DashboardCapacidadePage() {
         {/* Ociosos */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="w-5 h-5" />
-              Recursos Ociosos
-            </CardTitle>
-            <CardDescription>Recursos com baixa utilização (&lt;50%)</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="w-5 h-5" />
+                  Recursos Ociosos
+                </CardTitle>
+                <CardDescription>Recursos com baixa utilização (&lt;50%)</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" title="Exportar PDF">
+                  <FileText className="w-4 h-4 mr-2" />
+                  PDF
+                </Button>
+                <Button variant="outline" size="sm" title="Exportar Excel">
+                  <Download className="w-4 h-4 mr-2" />
+                  Excel
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {dashboard.recursosOciosos.length > 0 ? (
@@ -677,6 +785,80 @@ export default function DashboardCapacidadePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog de Expansão de Gráficos */}
+      <Dialog open={expandedChart !== null} onOpenChange={(open) => !open && setExpandedChart(null)}>
+        <DialogContent className="max-w-6xl">
+          <DialogHeader>
+            <DialogTitle>
+              {expandedChart === 'recursos-tipo'
+                ? 'Recursos por Tipo'
+                : expandedChart === 'timeline'
+                ? 'Timeline de Capacidade'
+                : 'Capacidade por Centro de Trabalho'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {expandedChart === 'recursos-tipo' && (
+              <ResponsiveContainer width="100%" height={500}>
+                <PieChart>
+                  <Pie
+                    data={dadosRecursosPorTipo}
+                    dataKey="quantidade"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={150}
+                    label={(entry) => `${entry.name}: ${entry.quantidade}`}
+                  >
+                    {dadosRecursosPorTipo.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CORES_TIPOS[index % CORES_TIPOS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+            {expandedChart === 'timeline' && (
+              <ResponsiveContainer width="100%" height={500}>
+                <LineChart data={dadosTimeline}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="data" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="Disponível" stroke="#3b82f6" strokeWidth={3} />
+                  <Line type="monotone" dataKey="Alocado" stroke="#f97316" strokeWidth={3} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+            {expandedChart === 'centros-trabalho' && (
+              <ResponsiveContainer width="100%" height={600}>
+                <BarChart data={dadosCentrosTrabalho}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={120}
+                    style={{ fontSize: '14px' }}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="Capacidade" fill="#3b82f6" />
+                  <Bar dataKey="Demanda" fill="#f97316">
+                    {dadosCentrosTrabalho.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.ehGargalo ? '#ef4444' : '#f97316'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog Simulador */}
       <Dialog open={simuladorOpen} onOpenChange={setSimuladorOpen}>
@@ -809,6 +991,7 @@ export default function DashboardCapacidadePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </Layout>
   );
 }

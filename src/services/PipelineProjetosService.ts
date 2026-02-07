@@ -43,7 +43,7 @@ class PipelineProjetosServiceClass {
   // ============================================
 
   private mockProjetos: ProjetoPipeline[] = [
-    // LEADS (3)
+    // LEADS (5) - Topo do funil
     {
       id: 'proj-001',
       codigo: 'LEAD-2026-001',
@@ -86,9 +86,71 @@ class PipelineProjetosServiceClass {
       createdAt: '2026-02-03T14:00:00Z',
       updatedAt: '2026-02-03T14:00:00Z',
     },
-    // (Antigo lead convertido em proposta)
+    {
+      id: 'proj-010',
+      codigo: 'LEAD-2026-003',
+      nome: 'Estrutura Metálica - Passarela Industrial',
+      clienteNome: 'Indústria Tech Solutions',
+      status: 'lead',
+      prioridade: 'baixa',
+      tipoProjeto: 'estrutura_metalica',
+      dataIdentificacao: '2026-02-04',
+      horasEstimadas: 300,
+      pesoEstimadoKg: 8000,
+      valorEstimado: 180000,
+      margemEstimada: 12,
+      probabilidadeFechamento: 30,
+      dataInicioDesejada: '2026-06-01',
+      dataFimPrevista: '2026-07-15',
+      responsavel: 'Carlos Pereira',
+      observacoes: 'Lead frio, apenas sondagem inicial',
+      createdAt: '2026-02-04T11:00:00Z',
+      updatedAt: '2026-02-04T11:00:00Z',
+    },
+    {
+      id: 'proj-011',
+      codigo: 'LEAD-2026-004',
+      nome: 'Caldeiraria - Tubulações Industriais',
+      clienteNome: 'Metalúrgica do Vale',
+      status: 'lead',
+      prioridade: 'media',
+      tipoProjeto: 'caldeiraria',
+      dataIdentificacao: '2026-02-05',
+      horasEstimadas: 600,
+      pesoEstimadoKg: 20000,
+      valorEstimado: 350000,
+      margemEstimada: 14,
+      probabilidadeFechamento: 50,
+      dataInicioDesejada: '2026-05-01',
+      dataFimPrevista: '2026-07-31',
+      responsavel: 'Maria Santos',
+      observacoes: 'Aguardando visita técnica',
+      createdAt: '2026-02-05T09:00:00Z',
+      updatedAt: '2026-02-05T09:00:00Z',
+    },
+    {
+      id: 'proj-012',
+      codigo: 'LEAD-2026-005',
+      nome: 'Estrutura Metálica - Torre de Resfriamento',
+      clienteNome: 'Energia Sustentável S.A.',
+      status: 'lead',
+      prioridade: 'alta',
+      tipoProjeto: 'estrutura_metalica',
+      dataIdentificacao: '2026-02-06',
+      horasEstimadas: 950,
+      pesoEstimadoKg: 32000,
+      valorEstimado: 580000,
+      margemEstimada: 16,
+      probabilidadeFechamento: 70,
+      dataInicioDesejada: '2026-04-15',
+      dataFimPrevista: '2026-08-30',
+      responsavel: 'João Silva',
+      observacoes: 'Cliente com histórico positivo, alta chance',
+      createdAt: '2026-02-06T14:00:00Z',
+      updatedAt: '2026-02-06T14:00:00Z',
+    },
 
-    // PROPOSTAS (3)
+    // PROPOSTAS (3) - Convertidas de leads
     {
       id: 'proj-004',
       codigo: 'PROP-2026-001',
@@ -612,10 +674,29 @@ class PipelineProjetosServiceClass {
         return sum + horasPorMes;
       }, 0);
 
-      // Capacidade disponível (mock: 45h/semana × 4 semanas × 10 pessoas)
-      const capacidadeDisponivel = 45 * 4 * 10;
+      // Capacidade disponível baseada em CCT Metalúrgicos
+      // 186h/mês por pessoa (44h/semana × dias úteis médios, já descontados feriados)
+      const HORAS_MES_POR_PESSOA = 186;
+
+      // Simular variação de equipe: meses 2 e 4 com menos pessoas (gargalo)
+      const pessoasDisponiveis = i === 2 || i === 4 ? 8 : 10;
+      const capacidadeDisponivel = HORAS_MES_POR_PESSOA * pessoasDisponiveis;
+
+      // Simular SOBRECARGA CRÍTICA em Março (i === 2)
+      // Forçar capacidade necessária = disponível + 450h para evidenciar problema
+      let horasNecessarias: number;
+      if (i === 2) {
+        // MARÇO: Sobrecarga de 450h (25% acima da capacidade)
+        horasNecessarias = capacidadeDisponivel + 450;
+      } else if (i === 4) {
+        // MAIO: Gargalo moderado
+        horasNecessarias = horasAlocadas * 1.25;
+      } else {
+        horasNecessarias = horasAlocadas;
+      }
+
       const taxaUtilizacao = capacidadeDisponivel > 0
-        ? (horasAlocadas / capacidadeDisponivel) * 100
+        ? (horasNecessarias / capacidadeDisponivel) * 100
         : 0;
 
       timeline.push({
@@ -631,7 +712,7 @@ class PipelineProjetosServiceClass {
           ),
         })),
         capacidadeDisponivel,
-        capacidadeNecessaria: horasAlocadas,
+        capacidadeNecessaria: horasNecessarias,
         taxaUtilizacao,
         ehGargalo: taxaUtilizacao > 90,
       });
