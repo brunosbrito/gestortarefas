@@ -1,21 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { Header } from "./layout/Header";
 import { Sidebar } from "./layout/Sidebar";
 import { useUser } from "./layout/useUser";
 import { Menu, X, Keyboard } from "lucide-react";
 import { Button } from "./ui/button";
-import { useNavigate } from "react-router-dom";
-import { getStoredToken } from "@/services/AuthService";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useSystemHighContrast } from "@/hooks/useHighContrast";
 import { ShortcutsModal } from "./shortcuts/ShortcutsModal";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
+  // Hook gerencia autenticação e redirecionamento automaticamente
   const user = useUser();
-  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
-  const hasRedirected = useRef(false);
 
   // Atalhos de teclado globais
   useKeyboardShortcuts({
@@ -26,26 +23,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   // Detectar preferência de alto contraste do sistema
   useSystemHighContrast();
 
-  // Verificar autenticação apenas uma vez
-  useEffect(() => {
-    // Evitar múltiplos redirecionamentos
-    if (hasRedirected.current) {
-      return;
-    }
-
-    const token = getStoredToken();
-    const userId = localStorage.getItem("userId");
-
-    // Se não houver token ou userId, redirecionar para login
-    if (!token || !userId) {
-      hasRedirected.current = true;
-      console.log('Layout: Sem autenticação, redirecionando para login...');
-      navigate('/', { replace: true });
-      return;
-    }
-  }, [navigate]);
-
   // Mostrar loading enquanto carrega usuário
+  // useUser hook cuida de redirecionar se erro 401
   if (!user) {
     return (
       <div className="flex items-center justify-center h-screen">
