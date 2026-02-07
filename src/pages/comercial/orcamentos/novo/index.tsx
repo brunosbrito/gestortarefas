@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,8 +88,8 @@ const NovoOrcamento = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="p-8">
+    <Layout>
+      <div className="space-y-8">
         {/* Header */}
         <div className="mb-8">
           <Button
@@ -351,7 +352,7 @@ const NovoOrcamento = () => {
           </div>
         </form>
       </div>
-    </div>
+    </Layout>
   );
 };
 

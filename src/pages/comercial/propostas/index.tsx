@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, FileText, Filter, X, Eye, Download, Copy, Trash2, ArrowUpDown, ChevronRight } from 'lucide-react';
+import { Plus, FileText, Filter, X, Eye, Download, Copy, Trash2, ArrowUpDown, ChevronRight, ArrowLeft } from 'lucide-react';
 import PropostaService from '@/services/PropostaService';
 import { Proposta } from '@/interfaces/PropostaInterface';
 import { formatCurrency } from '@/lib/currency';
@@ -31,6 +33,7 @@ type SortField = 'numero' | 'titulo' | 'cliente' | 'valorTotal' | 'dataEmissao';
 type SortOrder = 'asc' | 'desc';
 
 const PropostasListPage = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -202,17 +205,27 @@ const PropostasListPage = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <Layout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-8 w-8 text-blue-600" />
-            Propostas Comerciais
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gestão de propostas profissionais formato GMX
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/comercial')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+              <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              Propostas Comerciais
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Gestão de propostas profissionais formato GMX
+            </p>
+          </div>
         </div>
       </div>
 
@@ -267,7 +280,7 @@ const PropostasListPage = () => {
           {/* Header da Tabela */}
           <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-blue-600" />
+              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
                 <h3 className="font-semibold">Propostas</h3>
                 <p className="text-sm text-muted-foreground">
@@ -284,7 +297,7 @@ const PropostasListPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setDialogNova(true)}
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Proposta
@@ -373,7 +386,7 @@ const PropostasListPage = () => {
                         <TableCell className="text-center">
                           <StatusBadge status={prop.status} />
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-blue-600">
+                        <TableCell className="text-right font-semibold text-blue-600 dark:text-blue-400">
                           {formatCurrency(prop.valorTotal, prop.moeda)}
                         </TableCell>
                         <TableCell className="text-center">
@@ -478,7 +491,8 @@ const PropostasListPage = () => {
           onExportPDF={handleExportarPDF}
         />
       )}
-    </div>
+      </div>
+    </Layout>
   );
 };
 

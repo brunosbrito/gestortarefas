@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +19,7 @@ import {
   Package
 } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
+import OrcamentoPdfService from '@/services/OrcamentoPdfService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
@@ -31,6 +33,7 @@ const EditarOrcamento = () => {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [orcamento, setOrcamento] = useState<Orcamento | null>(null);
   const [activeTab, setActiveTab] = useState('composicoes');
 
@@ -68,6 +71,66 @@ const EditarOrcamento = () => {
     setDialogItem(true);
   };
 
+  const handleExportarPDF = async () => {
+    if (!orcamento) return;
+
+    try {
+      setExportingPdf(true);
+      await OrcamentoPdfService.generatePDF(orcamento);
+      toast({
+        title: 'Sucesso',
+        description: 'PDF gerado com sucesso!',
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
+  const handleSalvar = async () => {
+    if (!orcamento || !id) return;
+
+    try {
+      setSaving(true);
+
+      // Atualizar orçamento no backend
+      const updatedOrcamento = await OrcamentoService.update(id, {
+        nome: orcamento.nome,
+        tipo: orcamento.tipo,
+        clienteNome: orcamento.clienteNome,
+        codigoProjeto: orcamento.codigoProjeto,
+        areaTotalM2: orcamento.areaTotalM2,
+        metrosLineares: orcamento.metrosLineares,
+        pesoTotalProjeto: orcamento.pesoTotalProjeto,
+        composicoes: orcamento.composicoes,
+        tributos: orcamento.tributos,
+      });
+
+      // Atualizar estado local
+      setOrcamento(updatedOrcamento);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Orçamento salvo com sucesso!',
+      });
+    } catch (error) {
+      console.error('Erro ao salvar orçamento:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar o orçamento',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -94,8 +157,8 @@ const EditarOrcamento = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="p-6 space-y-6">
+    <Layout>
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -146,12 +209,26 @@ const EditarOrcamento = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => {/* TODO: Exportar PDF */}}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
+            <Button
+              variant="outline"
+              onClick={handleExportarPDF}
+              disabled={exportingPdf}
+            >
+              {exportingPdf ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  Gerando PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar PDF
+                </>
+              )}
             </Button>
             <Button
               disabled={saving}
+              onClick={handleSalvar}
               className="bg-gradient-to-r from-blue-600 to-blue-500"
             >
               {saving ? (
@@ -485,7 +562,7 @@ const EditarOrcamento = () => {
           />
         )}
       </div>
-    </div>
+    </Layout>
   );
 };
 

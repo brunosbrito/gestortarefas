@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, FileText, Filter, X, Eye, Copy, Trash2, ArrowUpDown, ChevronRight, Download, Wrench, Package } from 'lucide-react';
+import { Plus, FileText, Filter, X, Eye, Copy, Trash2, ArrowUpDown, ChevronRight, Download, Wrench, Package, ArrowLeft } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
@@ -192,17 +193,27 @@ const OrcamentosListPage = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <Layout>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-8 w-8 text-blue-600" />
-            Orçamentos (QQP)
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Sistema de composição de custos e formação de preços
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/comercial')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+              <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              Orçamentos (QQP)
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Sistema de composição de custos e formação de preços
+            </p>
+          </div>
         </div>
       </div>
 
@@ -234,13 +245,13 @@ const OrcamentosListPage = () => {
                   <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="servico">
                     <div className="flex items-center gap-2">
-                      <Wrench className="h-4 w-4 text-blue-600" />
+                      <Wrench className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       Serviço
                     </div>
                   </SelectItem>
                   <SelectItem value="produto">
                     <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-green-600" />
+                      <Package className="h-4 w-4 text-green-600 dark:text-green-400" />
                       Produto
                     </div>
                   </SelectItem>
@@ -280,7 +291,7 @@ const OrcamentosListPage = () => {
           {/* Header da Tabela */}
           <div className="p-4 border-b flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-blue-600" />
+              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <div>
                 <h3 className="font-semibold">Orçamentos</h3>
                 <p className="text-sm text-muted-foreground">
@@ -398,7 +409,7 @@ const OrcamentosListPage = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>{orc.nome}</TableCell>
-                        <TableCell className="text-right font-semibold text-blue-600">
+                        <TableCell className="text-right font-semibold text-blue-600 dark:text-blue-400">
                           {formatCurrency(orc.totalVenda)}
                         </TableCell>
                         <TableCell className="text-center">
@@ -497,7 +508,8 @@ const OrcamentosListPage = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 };
 

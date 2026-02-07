@@ -22,8 +22,17 @@ export const useUser = () => {
           const user: User = await UserService.getUserById(userId);
           setUser(user);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erro ao buscar usuário:", error);
+
+        // Se for erro 401 (não autorizado), limpar token e redirecionar para login
+        if (error?.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          window.location.href = '/';
+          return;
+        }
+
         toast({
           variant: "destructive",
           title: "Erro ao carregar perfil",

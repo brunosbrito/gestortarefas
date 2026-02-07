@@ -9,8 +9,9 @@ import { calcularValoresOrcamento, calcularDRE } from '@/lib/calculosOrcamento';
 
 const URL = `${API_URL}/api/orcamentos`;
 
-// MOCK DATA - Remover quando backend estiver pronto
-const USE_MOCK = true; // Alterar para false quando backend estiver funcionando
+// MOCK DATA - Controlado por variável de ambiente
+// Para ativar: definir VITE_USE_MOCK_DATA=true no arquivo .env.local
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
 const mockOrcamentos: Orcamento[] = [];
 let mockIdCounter = 1;

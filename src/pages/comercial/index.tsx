@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Lazy load das páginas
 const Dashboard = lazy(() => import('./Dashboard'));
@@ -19,18 +20,20 @@ const PageLoader = () => (
 
 const Comercial = () => {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route index element={<Dashboard />} />
-        <Route path="orcamentos">
-          <Route index element={<OrcamentosList />} />
-          <Route path="novo" element={<NovoOrcamento />} />
-          <Route path=":id" element={<EditarOrcamento />} />
-        </Route>
-        <Route path="propostas" element={<PropostasList />} />
-        <Route path="*" element={<Navigate to="/comercial" replace />} />
-      </Routes>
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="orcamentos">
+            <Route index element={<OrcamentosList />} />
+            <Route path="novo" element={<NovoOrcamento />} />
+            <Route path=":id" element={<EditarOrcamento />} />
+          </Route>
+          <Route path="propostas" element={<PropostasList />} />
+          <Route path="*" element={<Navigate to="/comercial" replace />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Header } from "./layout/Header";
 import { Sidebar } from "./layout/Sidebar";
 import { useUser } from "./layout/useUser";
@@ -15,6 +15,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const hasRedirected = useRef(false);
 
   // Atalhos de teclado globais
   useKeyboardShortcuts({
@@ -25,19 +26,39 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   // Detectar preferência de alto contraste do sistema
   useSystemHighContrast();
 
+  // Verificar autenticação apenas uma vez
   useEffect(() => {
+    // Evitar múltiplos redirecionamentos
+    if (hasRedirected.current) {
+      return;
+    }
+
     const token = getStoredToken();
-    if (!token) {
-      navigate("/");
+    const userId = localStorage.getItem("userId");
+
+    // Se não houver token ou userId, redirecionar para login
+    if (!token || !userId) {
+      hasRedirected.current = true;
+      console.log('Layout: Sem autenticação, redirecionando para login...');
+      navigate('/', { replace: true });
+      return;
     }
   }, [navigate]);
 
+  // Mostrar loading enquanto carrega usuário
   if (!user) {
-    return <div>Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-muted-foreground">Carregando perfil...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Overlay para mobile */}
       {isSidebarOpen && (
         <div
@@ -101,7 +122,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </Button>
         </div>
 
-        <div className="container mx-auto p-4 md:p-6 max-w-7xl">{children}</div>
+        <div className="container mx-auto p-4 md:p-6 max-w-7xl min-h-0">{children}</div>
       </main>
 
       {/* Modal de Atalhos */}
