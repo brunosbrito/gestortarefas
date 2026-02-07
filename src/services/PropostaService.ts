@@ -13,8 +13,18 @@ import axios from 'axios';
 
 const URL = `${API_URL}/api/propostas`;
 
+// MOCK DATA - Controlado por variável de ambiente
+const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+const mockPropostas: Proposta[] = [];
+
 class PropostaService {
   async getAll(filtros?: FiltrosProposta): Promise<Proposta[]> {
+    if (USE_MOCK) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return [...mockPropostas];
+    }
+
     try {
       const response = await axios.get(URL, { params: filtros });
       return response.data;
