@@ -200,7 +200,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Card Orçamentos */}
           <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-blue-400/5"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-blue-400/5 pointer-events-none"></div>
             <CardHeader className="relative border-b bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/40 dark:to-transparent">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -235,7 +235,7 @@ const Dashboard = () => {
                 ))}
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 relative z-10">
                 <Button
                   onClick={() => navigate('/comercial/orcamentos')}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg hover:shadow-xl transition-all"
