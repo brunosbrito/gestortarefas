@@ -17,7 +17,8 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { ArrowLeft, Save, FileText, Wrench, Package } from 'lucide-react';
+import { Save, FileText, Wrench, Package } from 'lucide-react';
+import PageHeader from '@/components/comercial/PageHeader';
 import OrcamentoService from '@/services/OrcamentoService';
 import { CreateOrcamento } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
@@ -97,28 +98,13 @@ const NovoOrcamento = () => {
     <Layout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/comercial/orcamentos')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
-              <FileText className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Novo Orçamento</h1>
-              <p className="text-muted-foreground mt-1">
-                Crie um novo orçamento com composição de custos
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          icon={FileText}
+          title="Novo Orçamento"
+          description="Crie um novo orçamento com composição de custos"
+          showBackButton
+          onBack={() => navigate('/comercial/orcamentos')}
+        />
 
         {/* Formulário */}
         <Form {...form}>
