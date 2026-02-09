@@ -8,7 +8,7 @@ import { PDF_COLORS, ACTIVITY_PDF_DEFAULTS } from './pdf/constants';
 
 // URL base do frontend para o QR code
 // Sempre usa a URL de produção para que o QR code funcione quando escaneado por dispositivos externos
-const FRONTEND_URL = 'https://gestor-tarefas.gmxindustrial.com.br';
+const FRONTEND_URL = 'https://gestor.gmxindustrial.com.br';
 
 class AtividadeDetailPdfService {
   private static doc: jsPDF;
