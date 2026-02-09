@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
 import AdicionarComposicaoDialog from './AdicionarComposicaoDialog';
 import AdicionarItemDialog from './AdicionarItemDialog';
+import ComposicoesGridInline from './ComposicoesGridInline';
 
 const EditarOrcamento = () => {
   const { id } = useParams<{ id: string }>();
@@ -103,6 +104,65 @@ const EditarOrcamento = () => {
         description: 'Não foi possível deletar a composição',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleEditarBDI = async (composicaoId: string, novoBDI: number) => {
+    try {
+      await ComposicaoService.update({
+        id: composicaoId,
+        bdiPercentual: novoBDI,
+      });
+
+      toast({
+        title: 'Sucesso',
+        description: 'BDI atualizado com sucesso',
+      });
+
+      // Recarregar orçamento
+      carregarOrcamento();
+    } catch (error) {
+      console.error('Erro ao atualizar BDI:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o BDI',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReordenarComposicoes = async (composicoesReordenadas: any[]) => {
+    if (!orcamento) return;
+
+    try {
+      // Atualizar ordem localmente primeiro para feedback visual rápido
+      setOrcamento({
+        ...orcamento,
+        composicoes: composicoesReordenadas,
+      });
+
+      // Salvar no backend
+      await OrcamentoService.update(id!, {
+        id: id!,
+        composicoes: composicoesReordenadas,
+      });
+
+      // Recarregar orçamento completo para garantir sincronização
+      await carregarOrcamento();
+
+      toast({
+        title: 'Sucesso',
+        description: 'Ordem das composições atualizada',
+      });
+    } catch (error) {
+      console.error('Erro ao reordenar composições:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível reordenar as composições',
+        variant: 'destructive',
+      });
+      // Recarregar em caso de erro
+      carregarOrcamento();
     }
   };
 
@@ -376,9 +436,9 @@ const EditarOrcamento = () => {
 
           <TabsContent value="composicoes" className="space-y-4">
             <Card>
-              <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+              <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent dark:from-slate-800 dark:to-transparent dark:border-slate-700">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Composições de Custos</CardTitle>
+                  <CardTitle className="dark:text-slate-100">Composições de Custos</CardTitle>
                   <Button
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-blue-500"
@@ -390,143 +450,14 @@ const EditarOrcamento = () => {
                 </div>
               </CardHeader>
               <CardContent className="pt-6">
-                {orcamento.composicoes.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      Nenhuma composição adicionada ainda
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Clique em "Adicionar Composição" para começar
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {orcamento.composicoes.map((composicao) => (
-                      <Card key={composicao.id} className="border-blue-200">
-                        <CardHeader className="bg-blue-50/50">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <CardTitle className="text-lg">{composicao.nome}</CardTitle>
-                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">
-                                  {composicao.tipo.replace('_', ' ')}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {composicao.itens.length} itens • BDI: {formatPercentage(composicao.bdi.percentual)} •
-                                Custo Direto: {formatCurrency(composicao.custoDirecto)}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="text-right">
-                                <p className="text-sm text-muted-foreground">Subtotal</p>
-                                <p className="text-xl font-bold text-blue-600">
-                                  {formatCurrency(composicao.subtotal)}
-                                </p>
-                              </div>
-                              <div className="flex gap-1 ml-4">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleEditarComposicao(composicao)}
-                                  className="hover:bg-blue-100"
-                                >
-                                  <Edit className="h-4 w-4 text-blue-600" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleDeletarComposicao(composicao.id)}
-                                  className="hover:bg-red-100"
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-600" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-4 space-y-3">
-                          {composicao.itens.length === 0 ? (
-                            <div className="text-center py-6 border-2 border-dashed border-muted rounded-lg">
-                              <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                              <p className="text-sm text-muted-foreground">
-                                Nenhum item adicionado
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="mt-3"
-                                onClick={() => handleAdicionarItem(composicao.id)}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Adicionar Item
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="space-y-2">
-                                {composicao.itens.map((item, index) => (
-                                  <div
-                                    key={item.id}
-                                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                                  >
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                                        {item.codigo && (
-                                          <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">
-                                            {item.codigo}
-                                          </span>
-                                        )}
-                                        <span className="font-medium">{item.descricao}</span>
-                                      </div>
-                                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                        <span>{item.quantidade} {item.unidade}</span>
-                                        <span>×</span>
-                                        <span>{formatCurrency(item.valorUnitario)}</span>
-                                        {item.material && <span>• {item.material}</span>}
-                                        {item.cargo && <span>• {item.cargo}</span>}
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                      <div className="text-right">
-                                        <p className="text-sm font-bold">
-                                          {formatCurrency(item.subtotal)}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {formatPercentage(item.percentual)}
-                                        </p>
-                                      </div>
-                                      <div className="flex gap-1">
-                                        <Button size="sm" variant="ghost">
-                                          <Edit className="h-3 w-3" />
-                                        </Button>
-                                        <Button size="sm" variant="ghost">
-                                          <Trash2 className="h-3 w-3 text-red-600" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              <div className="flex justify-end pt-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleAdicionarItem(composicao.id)}
-                                >
-                                  <Plus className="h-4 w-4 mr-2" />
-                                  Adicionar Item
-                                </Button>
-                              </div>
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                <ComposicoesGridInline
+                  composicoes={orcamento.composicoes}
+                  totalVenda={orcamento.totalVenda}
+                  onEditBDI={handleEditarBDI}
+                  onEdit={handleEditarComposicao}
+                  onDelete={handleDeletarComposicao}
+                  onReorder={handleReordenarComposicoes}
+                />
               </CardContent>
             </Card>
           </TabsContent>

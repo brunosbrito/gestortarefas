@@ -3,6 +3,7 @@ import {
   Orcamento,
   CreateOrcamento,
   UpdateOrcamento,
+  ComposicaoCustos,
 } from '@/interfaces/OrcamentoInterface';
 import axios from 'axios';
 import { calcularValoresOrcamento, calcularDRE } from '@/lib/calculosOrcamento';
@@ -62,6 +63,37 @@ let mockIdCounter = counters.id;
 let mockServicoCounter = counters.servico;
 let mockProdutoCounter = counters.produto;
 
+// Configuração das 8 composições padrão com seus BDIs específicos
+const DEFAULT_COMPOSICOES = [
+  { tipo: 'mobilizacao', nome: 'Mobilização', bdiPercentual: 10 },
+  { tipo: 'desmobilizacao', nome: 'Desmobilização', bdiPercentual: 10 },
+  { tipo: 'mo_fabricacao', nome: 'MO Fabricação', bdiPercentual: 15 },
+  { tipo: 'mo_montagem', nome: 'MO Montagem', bdiPercentual: 15 },
+  { tipo: 'jato_pintura', nome: 'Jato/Pintura', bdiPercentual: 12 },
+  { tipo: 'ferramentas', nome: 'Ferramentas', bdiPercentual: 8 },
+  { tipo: 'consumiveis', nome: 'Consumíveis', bdiPercentual: 8 },
+  { tipo: 'materiais', nome: 'Materiais', bdiPercentual: 25 },
+] as const;
+
+// Função para gerar as 8 composições padrão vazias
+const generateDefaultComposicoes = (orcamentoId: string): ComposicaoCustos[] => {
+  return DEFAULT_COMPOSICOES.map((config, index) => ({
+    id: `comp-${orcamentoId}-${index + 1}`,
+    orcamentoId,
+    nome: config.nome,
+    tipo: config.tipo as ComposicaoCustos['tipo'],
+    itens: [],
+    bdi: {
+      percentual: config.bdiPercentual,
+      valor: 0,
+    },
+    custoDirecto: 0,
+    subtotal: 0,
+    percentualDoTotal: 0,
+    ordem: index + 1,
+  }));
+};
+
 const generateMockOrcamento = (data: CreateOrcamento): Orcamento => {
   const id = `mock-${mockIdCounter++}`;
 
@@ -87,7 +119,7 @@ const generateMockOrcamento = (data: CreateOrcamento): Orcamento => {
     areaTotalM2: data.areaTotalM2,
     metrosLineares: data.metrosLineares,
     pesoTotalProjeto: data.pesoTotalProjeto,
-    composicoes: [],
+    composicoes: generateDefaultComposicoes(id), // Gerar 8 composições padrão
     tributos: data.tributos || {
       temISS: false,
       aliquotaISS: 3,
