@@ -33,6 +33,7 @@ import { CargoService } from '@/services/CargoService';
 import { Cargo } from '@/interfaces/CargoInterface';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
 import CargoFormDialog from './CargoFormDialog';
+import PopularCargosButton from './PopularCargosButton';
 import Layout from '@/components/Layout';
 import {
   AlertDialog,
@@ -281,6 +282,10 @@ const TabelaCargos = () => {
               <Table className="h-4 w-4" />
             </Button>
           </div>
+          {/* Botão Popular Cargos - só aparece quando não há cargos */}
+          {cargos.length === 0 && (
+            <PopularCargosButton onComplete={carregarCargos} />
+          )}
           <Button
             onClick={handleNovo}
             className="bg-gradient-to-r from-blue-600 to-blue-500"
