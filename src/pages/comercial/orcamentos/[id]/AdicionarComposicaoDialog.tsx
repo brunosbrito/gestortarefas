@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -70,13 +70,38 @@ const AdicionarComposicaoDialog = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Atualizar form quando composicaoParaEditar mudar
+  useEffect(() => {
+    if (composicaoParaEditar) {
+      setFormData({
+        nome: composicaoParaEditar.nome,
+        tipo: composicaoParaEditar.tipo,
+        bdiPercentual: composicaoParaEditar.bdi.percentual.toString(),
+      });
+    } else {
+      setFormData({
+        nome: '',
+        tipo: '',
+        bdiPercentual: '',
+      });
+    }
+    setErrors({});
+  }, [composicaoParaEditar, open]);
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    // Auto-fill BDI padrão quando tipo mudar
-    if (field === 'tipo' && value && !composicaoParaEditar) {
+    // Auto-fill BDI e Nome quando tipo mudar (SEMPRE - tanto em criação quanto edição)
+    if (field === 'tipo' && value) {
       const bdiPadrao = BDI_PADRAO[value] || 25;
-      setFormData((prev) => ({ ...prev, bdiPercentual: bdiPadrao.toString() }));
+      const tipoObj = TIPOS_COMPOSICAO.find(t => t.value === value);
+      const nomeAutoPreenchido = tipoObj?.label || '';
+
+      setFormData((prev) => ({
+        ...prev,
+        bdiPercentual: bdiPadrao.toString(),
+        nome: nomeAutoPreenchido // Auto-preenche nome com o label do tipo
+      }));
     }
 
     // Limpar erro do campo

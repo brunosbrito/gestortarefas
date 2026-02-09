@@ -94,10 +94,22 @@ class ComposicaoService {
         const compIndex = orc.composicoes.findIndex((c) => c.id === data.id);
 
         if (compIndex !== -1) {
+          // Preparar dados de atualização
+          const updateData: any = { ...data };
+
+          // Se tem bdiPercentual, converter para estrutura bdi
+          if ('bdiPercentual' in data && data.bdiPercentual !== undefined) {
+            updateData.bdi = {
+              percentual: data.bdiPercentual,
+              valor: 0, // Será recalculado
+            };
+            delete updateData.bdiPercentual;
+          }
+
           // Atualizar composição
           orc.composicoes[compIndex] = {
             ...orc.composicoes[compIndex],
-            ...data,
+            ...updateData,
           };
 
           // Salvar orçamento

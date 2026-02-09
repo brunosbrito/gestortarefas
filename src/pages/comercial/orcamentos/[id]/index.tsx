@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import OrcamentoService from '@/services/OrcamentoService';
 import OrcamentoPdfService from '@/services/OrcamentoPdfService';
+import ComposicaoService from '@/services/ComposicaoService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
@@ -41,6 +42,7 @@ const EditarOrcamento = () => {
   const [dialogComposicao, setDialogComposicao] = useState(false);
   const [dialogItem, setDialogItem] = useState(false);
   const [composicaoSelecionada, setComposicaoSelecionada] = useState<string | null>(null);
+  const [composicaoParaEditar, setComposicaoParaEditar] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -69,6 +71,39 @@ const EditarOrcamento = () => {
   const handleAdicionarItem = (composicaoId: string) => {
     setComposicaoSelecionada(composicaoId);
     setDialogItem(true);
+  };
+
+  const handleEditarComposicao = (composicao: any) => {
+    setComposicaoParaEditar(composicao);
+    setDialogComposicao(true);
+  };
+
+  const handleNovaComposicao = () => {
+    setComposicaoParaEditar(null);
+    setDialogComposicao(true);
+  };
+
+  const handleDeletarComposicao = async (composicaoId: string) => {
+    if (!confirm('Tem certeza que deseja deletar esta composição?')) return;
+
+    try {
+      await ComposicaoService.delete(composicaoId);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Composição deletada com sucesso',
+      });
+
+      // Recarregar orçamento
+      carregarOrcamento();
+    } catch (error) {
+      console.error('Erro ao deletar composição:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível deletar a composição',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleExportarPDF = async () => {
@@ -347,7 +382,7 @@ const EditarOrcamento = () => {
                   <Button
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-blue-500"
-                    onClick={() => setDialogComposicao(true)}
+                    onClick={handleNovaComposicao}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar Composição
@@ -371,7 +406,7 @@ const EditarOrcamento = () => {
                       <Card key={composicao.id} className="border-blue-200">
                         <CardHeader className="bg-blue-50/50">
                           <div className="flex items-center justify-between">
-                            <div>
+                            <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <CardTitle className="text-lg">{composicao.nome}</CardTitle>
                                 <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">
@@ -383,11 +418,31 @@ const EditarOrcamento = () => {
                                 Custo Direto: {formatCurrency(composicao.custoDirecto)}
                               </p>
                             </div>
-                            <div className="text-right">
-                              <p className="text-sm text-muted-foreground">Subtotal</p>
-                              <p className="text-xl font-bold text-blue-600">
-                                {formatCurrency(composicao.subtotal)}
-                              </p>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <p className="text-sm text-muted-foreground">Subtotal</p>
+                                <p className="text-xl font-bold text-blue-600">
+                                  {formatCurrency(composicao.subtotal)}
+                                </p>
+                              </div>
+                              <div className="flex gap-1 ml-4">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditarComposicao(composicao)}
+                                  className="hover:bg-blue-100"
+                                >
+                                  <Edit className="h-4 w-4 text-blue-600" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDeletarComposicao(composicao.id)}
+                                  className="hover:bg-red-100"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </CardHeader>
@@ -551,6 +606,7 @@ const EditarOrcamento = () => {
           onOpenChange={setDialogComposicao}
           orcamentoId={orcamento.id}
           onSuccess={carregarOrcamento}
+          composicaoParaEditar={composicaoParaEditar}
         />
 
         {composicaoSelecionada && (

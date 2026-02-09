@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   GanttChartSquare,
   FileText,
+  DollarSign,
+  Receipt,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -91,9 +93,25 @@ export const navItems: MenuItem[] = [
 
   // MÓDULO COMERCIAL
   {
-    icon: FileText,
+    icon: Briefcase,
     label: 'Comercial',
-    path: '/comercial',
+    subItems: [
+      {
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        path: '/comercial',
+      },
+      {
+        icon: Receipt,
+        label: 'Orçamentos (QQP)',
+        path: '/comercial/orcamentos',
+      },
+      {
+        icon: DollarSign,
+        label: 'Propostas',
+        path: '/comercial/propostas',
+      },
+    ],
   },
 
   // MÓDULO CRONOGRAMAS (desabilitado nesta branch - existe apenas na branch Modulo_Cronograma)

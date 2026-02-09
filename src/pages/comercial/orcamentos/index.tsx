@@ -25,6 +25,7 @@ import OrcamentoService from '@/services/OrcamentoService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
+import { containsNormalized } from '@/lib/normalizeText';
 
 type SortField = 'numero' | 'nome' | 'totalVenda' | 'margemLiquida' | 'bdiMedio';
 type SortOrder = 'asc' | 'desc';
@@ -116,8 +117,8 @@ const OrcamentosListPage = () => {
   // Filtros
   const orcamentosFiltrados = orcamentos.filter(orc => {
     const matchBusca =
-      orc.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      orc.numero.toLowerCase().includes(busca.toLowerCase());
+      containsNormalized(orc.nome, busca) ||
+      containsNormalized(orc.numero, busca);
 
     const matchTipo =
       filtroTipo === 'todos' ||
@@ -194,7 +195,7 @@ const OrcamentosListPage = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-6 min-h-screen pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

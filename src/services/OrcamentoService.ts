@@ -13,10 +13,54 @@ const URL = `${API_URL}/api/orcamentos`;
 // Para ativar: definir VITE_USE_MOCK_DATA=true no arquivo .env.local
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
-const mockOrcamentos: Orcamento[] = [];
-let mockIdCounter = 1;
-let mockServicoCounter = 0; // Contador separado para S-xxx|2026
-let mockProdutoCounter = 0; // Contador separado para P-xxx|2026
+// LocalStorage keys
+const STORAGE_KEY = 'gestortarefas_mock_orcamentos';
+const COUNTERS_KEY = 'gestortarefas_mock_counters';
+
+// Função para carregar dados do localStorage
+const loadMockData = (): Orcamento[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Função para salvar dados no localStorage
+const saveMockData = (orcamentos: Orcamento[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(orcamentos));
+  } catch (error) {
+    console.error('Erro ao salvar mock no localStorage:', error);
+  }
+};
+
+// Função para carregar contadores
+const loadCounters = () => {
+  try {
+    const stored = localStorage.getItem(COUNTERS_KEY);
+    return stored ? JSON.parse(stored) : { id: 1, servico: 0, produto: 0 };
+  } catch {
+    return { id: 1, servico: 0, produto: 0 };
+  }
+};
+
+// Função para salvar contadores
+const saveCounters = (counters: { id: number; servico: number; produto: number }) => {
+  try {
+    localStorage.setItem(COUNTERS_KEY, JSON.stringify(counters));
+  } catch (error) {
+    console.error('Erro ao salvar contadores:', error);
+  }
+};
+
+// Inicializar com dados do localStorage
+const mockOrcamentos: Orcamento[] = loadMockData();
+const counters = loadCounters();
+let mockIdCounter = counters.id;
+let mockServicoCounter = counters.servico;
+let mockProdutoCounter = counters.produto;
 
 const generateMockOrcamento = (data: CreateOrcamento): Orcamento => {
   const id = `mock-${mockIdCounter++}`;
@@ -79,6 +123,11 @@ class OrcamentoService {
 
       const orcamento = generateMockOrcamento(data);
       mockOrcamentos.push(orcamento);
+
+      // Salvar no localStorage
+      saveMockData(mockOrcamentos);
+      saveCounters({ id: mockIdCounter, servico: mockServicoCounter, produto: mockProdutoCounter });
+
       return orcamento;
     }
 
@@ -94,7 +143,10 @@ class OrcamentoService {
   async getAll(): Promise<Orcamento[]> {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 300));
-      return [...mockOrcamentos];
+
+      // Recarregar do localStorage para garantir dados atualizados
+      const dados = loadMockData();
+      return [...dados];
     }
 
     try {
@@ -150,6 +202,9 @@ class OrcamentoService {
         updatedAt: new Date().toISOString(),
       };
 
+      // CRITICAL: Salvar no localStorage
+      saveMockData(mockOrcamentos);
+
       return mockOrcamentos[index];
     }
 
@@ -169,6 +224,8 @@ class OrcamentoService {
       const index = mockOrcamentos.findIndex((o) => o.id === id);
       if (index !== -1) {
         mockOrcamentos.splice(index, 1);
+        // CRITICAL: Salvar no localStorage
+        saveMockData(mockOrcamentos);
       }
       return;
     }
