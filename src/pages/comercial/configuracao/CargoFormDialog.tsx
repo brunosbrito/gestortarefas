@@ -212,6 +212,16 @@ const CargoFormDialog = ({
         return;
       }
 
+      // Validação CLT: não pode acumular periculosidade e insalubridade
+      if (temPericulosidade && grauInsalubridade !== 'nenhum') {
+        toast({
+          title: 'Erro de validação',
+          description: 'Não é permitido acumular periculosidade e insalubridade (CLT Art. 193, § 2º)',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const horasMesNum = parseFloat(horasMes);
       if (isNaN(horasMesNum) || horasMesNum <= 0) {
         toast({
@@ -352,27 +362,62 @@ const CargoFormDialog = ({
             <h3 className="font-semibold text-orange-900 dark:text-orange-100">
               B) Periculosidade e C) Insalubridade
             </h3>
+
+            {/* Alert CLT */}
+            <Alert className="border-orange-300 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-xs text-orange-900 dark:text-orange-100">
+                <strong>CLT Art. 193, § 2º:</strong> Não é permitido acumular periculosidade e insalubridade.
+                O trabalhador deve optar pelo adicional mais vantajoso.
+              </AlertDescription>
+            </Alert>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="periculosidade"
                     checked={temPericulosidade}
-                    onCheckedChange={(checked) => setTemPericulosidade(checked as boolean)}
-                    className="bg-green-50 dark:bg-green-950"
+                    disabled={grauInsalubridade !== 'nenhum'}
+                    onCheckedChange={(checked) => {
+                      setTemPericulosidade(checked as boolean);
+                      if (checked) {
+                        // Se marcar periculosidade, desmarcar insalubridade
+                        setGrauInsalubridade('nenhum');
+                      }
+                    }}
+                    className="bg-green-50 dark:bg-green-950 disabled:opacity-50"
                   />
-                  <Label htmlFor="periculosidade" className="cursor-pointer">
+                  <Label
+                    htmlFor="periculosidade"
+                    className={`cursor-pointer ${grauInsalubridade !== 'nenhum' ? 'opacity-50' : ''}`}
+                  >
                     Possui Periculosidade (30%)
                   </Label>
                 </div>
                 <p className="text-sm text-muted-foreground ml-6">
                   Valor: {formatCurrency(preview.valorPericulosidade)}
                 </p>
+                {grauInsalubridade !== 'nenhum' && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400 ml-6">
+                    Desative a insalubridade para habilitar
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="insalubridade">Grau de Insalubridade</Label>
-                <Select value={grauInsalubridade} onValueChange={(v: any) => setGrauInsalubridade(v)}>
-                  <SelectTrigger className="bg-green-50 dark:bg-green-950">
+                <Select
+                  value={grauInsalubridade}
+                  disabled={temPericulosidade}
+                  onValueChange={(v: any) => {
+                    setGrauInsalubridade(v);
+                    if (v !== 'nenhum') {
+                      // Se marcar insalubridade, desmarcar periculosidade
+                      setTemPericulosidade(false);
+                    }
+                  }}
+                >
+                  <SelectTrigger className={`bg-green-50 dark:bg-green-950 ${temPericulosidade ? 'opacity-50' : ''}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -385,6 +430,11 @@ const CargoFormDialog = ({
                 <p className="text-sm text-muted-foreground">
                   Valor: {formatCurrency(preview.valorInsalubridade)}
                 </p>
+                {temPericulosidade && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                    Desmarque a periculosidade para habilitar
+                  </p>
+                )}
               </div>
             </div>
             <div className="pt-2 border-t">
