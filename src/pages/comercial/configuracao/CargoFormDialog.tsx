@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, X as XIcon, Calculator, AlertCircle, Check, ChevronsUpDown } from 'lucide-react';
+import { Save, X as XIcon, Calculator, AlertCircle, Check, ChevronsUpDown, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -359,13 +359,21 @@ const CargoFormDialog = ({
                       placeholder="Buscar ou digitar novo cargo..."
                       value={nome}
                       onValueChange={setNome}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && nome.trim()) {
+                          e.preventDefault();
+                          setComboboxOpen(false);
+                        }
+                      }}
                     />
                     <CommandList>
                       <CommandEmpty>
                         <div className="py-6 text-center text-sm">
-                          <p className="text-muted-foreground">Nenhum cargo encontrado.</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Digite o nome e pressione Enter para criar "{nome}"
+                          <p className="text-green-600 dark:text-green-400 font-medium">
+                            ✓ Novo cargo: "{nome}"
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Pressione <kbd className="px-1.5 py-0.5 text-xs font-semibold border rounded bg-muted">Enter</kbd> ou clique fora para confirmar
                           </p>
                         </div>
                       </CommandEmpty>
@@ -388,6 +396,18 @@ const CargoFormDialog = ({
                             {nomeCargo}
                           </CommandItem>
                         ))}
+                      </CommandGroup>
+                      <CommandGroup>
+                        <CommandItem
+                          onSelect={() => {
+                            setNome('');
+                            setComboboxOpen(false);
+                          }}
+                          className="text-green-600 dark:text-green-400 font-medium"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Cadastrar Novo
+                        </CommandItem>
                       </CommandGroup>
                     </CommandList>
                   </Command>

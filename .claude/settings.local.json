@@ -15,7 +15,9 @@
       "Bash(npx eslint:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(dir \"C:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\" /B)"
+      "Bash(dir \"C:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\" /B)",
+      "Bash(curl:*)",
+      "Bash(git diff:*)"
     ]
   }
 }

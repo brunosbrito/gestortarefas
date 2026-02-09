@@ -509,7 +509,7 @@ const TabelaCargos = () => {
               </TableHeader>
               <TableBody>
                 {getSortedCargos().map((cargo) => (
-                  <TableRow key={cargo.id} className="hover:bg-muted/50">
+                  <TableRow key={cargo.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors duration-150">
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {cargo.categoria === 'fabricacao' ? (
