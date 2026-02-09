@@ -11,6 +11,9 @@ import {
   LayoutGrid,
   Table,
   Eye,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +53,8 @@ import {
 } from '@/components/ui/dialog';
 
 type ViewMode = 'card' | 'grid';
+type SortField = 'nome' | 'categoria' | 'salarioBase' | 'totalSalario' | 'valorEncargos' | 'totalCustosDiversos' | 'totalCustosMO' | 'custoHH';
+type SortDirection = 'asc' | 'desc';
 
 const TabelaCargos = () => {
   const { toast } = useToast();
@@ -64,6 +69,8 @@ const TabelaCargos = () => {
     const saved = localStorage.getItem('tabela_cargos_view_mode');
     return (saved as ViewMode) || 'card';
   });
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
     carregarCargos();
@@ -126,6 +133,78 @@ const TabelaCargos = () => {
   const handleSalvarCargo = () => {
     setDialogAberto(false);
     carregarCargos();
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Se já está ordenando por este campo, inverte a direção
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Novo campo, começa com ascendente
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortedCargos = () => {
+    if (!sortField) return cargos;
+
+    return [...cargos].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case 'nome':
+          aValue = a.nome.toLowerCase();
+          bValue = b.nome.toLowerCase();
+          break;
+        case 'categoria':
+          aValue = a.categoria;
+          bValue = b.categoria;
+          break;
+        case 'salarioBase':
+          aValue = a.salarioBase;
+          bValue = b.salarioBase;
+          break;
+        case 'totalSalario':
+          aValue = a.totalSalario;
+          bValue = b.totalSalario;
+          break;
+        case 'valorEncargos':
+          aValue = a.valorEncargos;
+          bValue = b.valorEncargos;
+          break;
+        case 'totalCustosDiversos':
+          aValue = a.totalCustosDiversos;
+          bValue = b.totalCustosDiversos;
+          break;
+        case 'totalCustosMO':
+          aValue = a.totalCustosMO;
+          bValue = b.totalCustosMO;
+          break;
+        case 'custoHH':
+          aValue = a.custoHH;
+          bValue = b.custoHH;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 text-muted-foreground" />;
+    }
+    return sortDirection === 'asc' ? (
+      <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
+    ) : (
+      <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />
+    );
   };
 
   const getCategoriaCor = (categoria: Cargo['categoria']) => {
@@ -347,22 +426,84 @@ const TabelaCargos = () => {
             <TableComponent>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Cargo</TableHead>
-                  <TableHead className="w-[120px]">Categoria</TableHead>
+                  <TableHead className="w-[200px]">
+                    <button
+                      onClick={() => handleSort('nome')}
+                      className="flex items-center hover:text-blue-600 transition-colors"
+                    >
+                      Cargo
+                      {renderSortIcon('nome')}
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[120px]">
+                    <button
+                      onClick={() => handleSort('categoria')}
+                      className="flex items-center hover:text-blue-600 transition-colors"
+                    >
+                      Categoria
+                      {renderSortIcon('categoria')}
+                    </button>
+                  </TableHead>
                   <TableHead className="w-[100px]">Adicionais</TableHead>
-                  <TableHead className="text-right w-[120px]">Salário Base</TableHead>
-                  <TableHead className="text-right w-[120px]">Total Salário</TableHead>
-                  <TableHead className="text-right w-[120px]">Encargos</TableHead>
-                  <TableHead className="text-right w-[120px]">Custos Div.</TableHead>
-                  <TableHead className="text-right w-[140px]">Total MO</TableHead>
+                  <TableHead className="text-right w-[120px]">
+                    <button
+                      onClick={() => handleSort('salarioBase')}
+                      className="flex items-center ml-auto hover:text-blue-600 transition-colors"
+                    >
+                      Salário Base
+                      {renderSortIcon('salarioBase')}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right w-[120px]">
+                    <button
+                      onClick={() => handleSort('totalSalario')}
+                      className="flex items-center ml-auto hover:text-blue-600 transition-colors"
+                    >
+                      Total Salário
+                      {renderSortIcon('totalSalario')}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right w-[120px]">
+                    <button
+                      onClick={() => handleSort('valorEncargos')}
+                      className="flex items-center ml-auto hover:text-blue-600 transition-colors"
+                    >
+                      Encargos
+                      {renderSortIcon('valorEncargos')}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right w-[120px]">
+                    <button
+                      onClick={() => handleSort('totalCustosDiversos')}
+                      className="flex items-center ml-auto hover:text-blue-600 transition-colors"
+                    >
+                      Custos Div.
+                      {renderSortIcon('totalCustosDiversos')}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right w-[140px]">
+                    <button
+                      onClick={() => handleSort('totalCustosMO')}
+                      className="flex items-center ml-auto hover:text-blue-600 transition-colors"
+                    >
+                      Total MO
+                      {renderSortIcon('totalCustosMO')}
+                    </button>
+                  </TableHead>
                   <TableHead className="text-right w-[140px] bg-blue-50 dark:bg-blue-950/40">
-                    <div className="font-bold text-blue-600 dark:text-blue-400">Custo HH</div>
+                    <button
+                      onClick={() => handleSort('custoHH')}
+                      className="flex items-center ml-auto hover:text-blue-700 transition-colors"
+                    >
+                      <div className="font-bold text-blue-600 dark:text-blue-400">Custo HH</div>
+                      {renderSortIcon('custoHH')}
+                    </button>
                   </TableHead>
                   <TableHead className="text-center w-[100px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cargos.map((cargo) => (
+                {getSortedCargos().map((cargo) => (
                   <TableRow key={cargo.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
