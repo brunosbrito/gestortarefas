@@ -686,7 +686,7 @@ const CargoFormDialog = ({
         {/* Footer com botões */}
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            <X className="mr-2 h-4 w-4" />
+            <XIcon className="mr-2 h-4 w-4" />
             Cancelar
           </Button>
           <Button onClick={handleSalvar} disabled={saving}>
