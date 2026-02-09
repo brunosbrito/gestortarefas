@@ -73,7 +73,7 @@ const Dashboard = () => {
         error={error}
         onRetry={handleRetry}
       >
-        <div className="space-y-8">
+        <div className="space-y-8 pb-24 min-h-[150vh]">
         {/* Header Moderno */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl opacity-10 dark:opacity-20"></div>
