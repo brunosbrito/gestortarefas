@@ -3,16 +3,67 @@ import { NormalizedActivity, ActivityStatistics } from '@/types/dashboard';
 import { normalizeActivityStatus, ACTIVITY_STATUS } from '@/constants/activityStatus';
 
 /**
+ * Converte string de tempo (formato "Xh Ymin" ou "Xh" ou "Ymin") para horas decimais
+ */
+const parseTimeToHours = (timeString: string | number | null | undefined): number => {
+  if (timeString === null || timeString === undefined) {
+    return 0;
+  }
+
+  // Se já for número, assumir que está em horas
+  if (typeof timeString === 'number') {
+    return timeString;
+  }
+
+  if (typeof timeString !== 'string') {
+    return 0;
+  }
+
+  // Tenta extrair horas e minutos do formato "Xh Ymin"
+  const hoursMatch = timeString.match(/(\d+)\s*h/i);
+  const minutesMatch = timeString.match(/(\d+)\s*min/i);
+
+  const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+  const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
+
+  return hours + (minutes / 60);
+};
+
+/**
+ * Converte totalTime (que vem em minutos da API) para horas decimais
+ */
+const convertTotalTimeToHours = (totalTime: number | string | null | undefined): number => {
+  if (totalTime === null || totalTime === undefined) {
+    return 0;
+  }
+
+  const numericValue = typeof totalTime === 'string' ? parseFloat(totalTime) : totalTime;
+
+  if (isNaN(numericValue) || numericValue < 0) {
+    return 0;
+  }
+
+  // totalTime vem em minutos, converter para horas
+  return numericValue / 60;
+};
+
+/**
  * Normaliza uma atividade vinda da API para o formato padronizado
  */
 export const normalizeActivity = (activity: any): NormalizedActivity => {
   const status = normalizeActivityStatus(activity.status);
   
+  // Converter estimatedTime de string para número (horas)
+  const estimatedTimeHours = parseTimeToHours(activity.estimatedTime);
+
+  // Converter totalTime de minutos para horas
+  const actualTimeHours = convertTotalTimeToHours(activity.totalTime);
+
   // Calcular tempo total se disponível
-  const totalTime = activity.totalTime || (activity.timePerUnit && activity.quantity 
-    ? activity.timePerUnit * activity.quantity 
+  const totalTime = activity.totalTime || (activity.timePerUnit && activity.quantity
+    ? activity.timePerUnit * activity.quantity
     : null);
-  
+
   // Verificar se está atrasada
   const isDelayed = checkIfDelayed(activity, status);
   
@@ -33,12 +84,12 @@ export const normalizeActivity = (activity: any): NormalizedActivity => {
     projectId: activity.projectId || activity.project?.id,
     serviceOrderId: activity.orderServiceId || activity.serviceOrder?.id,
     
-    // Dados de tempo
+    // Dados de tempo (convertidos para horas decimais)
     timePerUnit: activity.timePerUnit,
     quantity: activity.quantity,
-    estimatedTime: activity.estimatedTime,
-    actualTime: activity.actualTime,
-    totalTime,
+    estimatedTime: estimatedTimeHours,
+    actualTime: actualTimeHours,
+    totalTime: convertTotalTimeToHours(totalTime),
     
     // Datas normalizadas
     startDate: parseDate(activity.startDate),

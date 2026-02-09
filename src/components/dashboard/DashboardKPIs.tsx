@@ -33,10 +33,11 @@ export const DashboardKPIs = () => {
     const totalEstimated = Number(activities.reduce((sum, a) => sum + (Number(a.estimatedTime) || 0), 0));
     const totalActual = Number(activities.reduce((sum, a) => sum + (Number(a.actualTime) || 0), 0));
 
-    // 2. Calcular eficiência geral
-    const overallEfficiency = totalEstimated > 0
+    // 2. Calcular eficiência geral (limitada entre -100% e 100%)
+    const rawEfficiency = totalEstimated > 0
       ? ((totalEstimated - totalActual) / totalEstimated) * 100
       : 0;
+    const overallEfficiency = Math.max(-100, Math.min(100, rawEfficiency));
 
     // 3. Calcular taxa no prazo (completed on time)
     const completedActivities = activities.filter(a => a.isCompleted);
@@ -67,8 +68,10 @@ export const DashboardKPIs = () => {
       ? completedActivities.reduce((sum, a) => {
           const est = Number(a.estimatedTime) || 0;
           const act = Number(a.actualTime) || 0;
+          // Calcular eficiência e limitar entre -100% e 100%
           const eff = est > 0 ? ((est - act) / est) * 100 : 0;
-          return sum + eff;
+          const limitedEff = Math.max(-100, Math.min(100, eff));
+          return sum + limitedEff;
         }, 0) / completedActivities.length
       : 0;
 

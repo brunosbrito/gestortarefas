@@ -75,9 +75,9 @@ export function UploadImageDialog({
       setUploading(true);
 
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      formData.append('image', selectedFile);
       formData.append('description', description);
-      formData.append('createdBy', localStorage.getItem('userId') || '0');
+      formData.append('createdById', localStorage.getItem('userId') || '0');
 
       await uploadActivityImage(atividadeId, formData);
 

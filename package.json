@@ -43,6 +43,8 @@
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.47.12",
+    "@syncfusion/ej2-react-charts": "^32.2.3",
+    "@syncfusion/ej2-react-gantt": "^32.2.3",
     "@tanstack/react-query": "^5.56.2",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",

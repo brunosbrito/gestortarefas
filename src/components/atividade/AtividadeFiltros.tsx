@@ -5,12 +5,21 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Filter, X, Calendar as CalendarIcon, Check, ChevronDown } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Filter, X, Calendar as CalendarIcon, Check, ChevronDown, Layers } from 'lucide-react';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+
+export type GanttGroupBy = 'obra' | 'tarefaMacro' | 'colaborador' | null;
 
 const STATUS_OPTIONS = [
   { value: 'Planejadas', label: 'Planejadas' },
@@ -75,7 +84,7 @@ const MultiSelectFilter = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[250px] p-0" align="start">
-          <ScrollArea className="max-h-[300px]">
+          <ScrollArea className="h-[200px]">
             <div className="p-2 space-y-1">
               {options.map((option) => (
                 <div
@@ -119,6 +128,10 @@ interface AtividadeFiltrosProps {
   colaboradores?: any[];
   obras?: any[];
   isLoading?: boolean;
+  // Props para agrupamento do Gantt
+  showGroupingSelector?: boolean;
+  groupBy?: GanttGroupBy;
+  onGroupByChange?: (groupBy: GanttGroupBy) => void;
 }
 
 export const AtividadeFiltrosComponent = ({
@@ -129,7 +142,10 @@ export const AtividadeFiltrosComponent = ({
   processos = [],
   colaboradores = [],
   obras = [],
-  isLoading = false
+  isLoading = false,
+  showGroupingSelector = false,
+  groupBy = null,
+  onGroupByChange,
 }: AtividadeFiltrosProps) => {
   const [filtrosTemp, setFiltrosTemp] = useState<AtividadeFiltros>(filtros);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -232,7 +248,7 @@ export const AtividadeFiltrosComponent = ({
           />
 
           {/* Filtro Data Range */}
-          <div className="space-y-2 md:col-span-3">
+          <div className="space-y-2 md:col-span-2">
             <label className="text-sm font-medium">Período</label>
             <Popover>
               <PopoverTrigger asChild>
@@ -271,6 +287,30 @@ export const AtividadeFiltrosComponent = ({
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Seletor de Agrupamento para Gantt */}
+          {showGroupingSelector && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Layers className="w-4 h-4 text-primary" />
+                Agrupar Gantt por
+              </label>
+              <Select
+                value={groupBy || 'none'}
+                onValueChange={(value) => onGroupByChange?.(value === 'none' ? null : value as GanttGroupBy)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sem agrupamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem agrupamento</SelectItem>
+                  <SelectItem value="obra">Obra/Projeto</SelectItem>
+                  <SelectItem value="tarefaMacro">Tarefa Macro</SelectItem>
+                  <SelectItem value="colaborador">Colaborador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-between">

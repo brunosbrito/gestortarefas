@@ -2,131 +2,143 @@ import { Card } from '@/components/ui/card';
 import { HardDrive, BarChart3, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Text,
+  ChartComponent,
+  SeriesCollectionDirective,
+  SeriesDirective,
+  Inject,
   Legend,
-  CartesianGrid
-} from 'recharts';
+  Category,
+  Tooltip,
+  DataLabel,
+  ColumnSeries,
+} from '@syncfusion/ej2-react-charts';
+import '@/config/syncfusionLocale';
 import { MacroTaskStatistic } from '@/interfaces/ActivityStatistics';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface MacroTasksChartProps {
   macroTasks: MacroTaskStatistic[];
 }
 
-// Componente personalizado para os ticks do eixo X
-const CustomXAxisTick = (props: any) => {
-  const { x, y, payload } = props;
-  const truncatedText = payload.value.length > 8 ? `${payload.value.substring(0, 8)}...` : payload.value;
-
-  return (
-    <Text
-      x={x}
-      y={y}
-      textAnchor="end"
-      fontSize={11}
-      angle={-45}
-      dy={8}
-    >
-      {truncatedText}
-    </Text>
-  );
-};
-
 export const MacroTasksChart = ({ macroTasks }: MacroTasksChartProps) => {
   const hasData = macroTasks && macroTasks.length > 0;
   const [isExpanded, setIsExpanded] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
-  const renderChart = (height: string = "h-80") => (
-    <div className={height}>
+  // Preparar dados com valores arredondados para exibição
+  const chartData = useMemo(() => {
+    return macroTasks.map(task => ({
+      ...task,
+      macroTask: task.macroTask.length > 15 ? `${task.macroTask.substring(0, 15)}...` : task.macroTask,
+      fullName: task.macroTask,
+      estimatedHours: Math.round(task.estimatedHours * 10) / 10,
+      actualHours: Math.round(task.actualHours * 10) / 10,
+    }));
+  }, [macroTasks]);
+
+  const primaryXAxis = useMemo(() => ({
+    valueType: 'Category' as const,
+    labelRotation: -45,
+    labelStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+      size: '11px',
+    },
+    majorGridLines: { width: 0 },
+    majorTickLines: { width: 0 },
+  }), [isDark]);
+
+  const primaryYAxis = useMemo(() => ({
+    title: 'Horas',
+    titleStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+      size: '12px',
+    },
+    labelStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+    },
+    majorGridLines: {
+      width: 1,
+      color: isDark ? 'rgba(71, 85, 105, 0.3)' : 'rgba(0, 0, 0, 0.1)',
+      dashArray: '3,3',
+    },
+    lineStyle: { width: 0 },
+    labelFormat: '{value}h',
+  }), [isDark]);
+
+  const tooltipRender = (args: any) => {
+    if (args.point && args.series) {
+      const dataIndex = args.point.index;
+      const originalData = macroTasks[dataIndex];
+      if (originalData) {
+        const difference = originalData.hoursDifference;
+        const differenceText = difference > 0 ? `+${difference}%` : `${difference}%`;
+        const estimatedHours = Math.round(originalData.estimatedHours * 10) / 10;
+        const actualHours = Math.round(originalData.actualHours * 10) / 10;
+
+        // Usar formato de texto simples para o tooltip
+        args.text = `<b>${originalData.macroTask}</b><br/>` +
+          `Atividades: ${originalData.activityCount}<br/>` +
+          `Previsto: ${estimatedHours}h<br/>` +
+          `Trabalhado: ${actualHours}h<br/>` +
+          `Eficiência: ${differenceText}`;
+      }
+    }
+  };
+
+  const renderChart = (height: string = '320px') => (
+    <div style={{ height }}>
       {!hasData ? (
         <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
           <BarChart3 className="w-12 h-12 opacity-30" />
           <p className="text-sm">Nenhum dado disponível para o período selecionado</p>
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart margin={{ top: 20, right: 30, left: 20, bottom: 100 }} data={macroTasks}>
-            <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-            <XAxis
-              dataKey="macroTask"
-              tick={<CustomXAxisTick />}
-              interval={macroTasks.length > 5 ? Math.ceil(macroTasks.length / 4) - 1 : 0}
-              height={80}
-            />
-            <YAxis
-              label={{ value: 'Horas', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: 12, textAnchor: 'middle' } }}
-              tickFormatter={(value) => {
-                if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                return value.toString();
-              }}
-            />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  const difference = data.hoursDifference;
-                  const differenceColor = difference > 0 ? "text-red-500" : "text-green-500";
-                  const efficiency = data.estimatedHours > 0
-                    ? ((data.estimatedHours - data.actualHours) / data.estimatedHours * 100).toFixed(1)
-                    : 0;
-
-                  return (
-                    <div className="bg-card/95 backdrop-blur-sm p-3 border border-border/50 rounded-lg shadow-lg min-w-[200px]">
-                      <p className="font-semibold mb-2 text-base">{data.macroTask}</p>
-                      <div className="space-y-1.5 text-sm">
-                        <p className="flex justify-between">
-                          <span>Atividades:</span>
-                          <span className="font-medium">{data.activityCount}</span>
-                        </p>
-                        <div className="h-px bg-border my-1"></div>
-                        <p className="flex justify-between">
-                          <span>Previsto:</span>
-                          <span className="font-medium text-blue-600">{data.estimatedHours}h</span>
-                        </p>
-                        <p className="flex justify-between">
-                          <span>Trabalhado:</span>
-                          <span className="font-medium text-orange-600">{data.actualHours}h</span>
-                        </p>
-                        <div className="h-px bg-border my-1"></div>
-                        <p className="flex justify-between items-center">
-                          <span>Eficiência:</span>
-                          <span className={cn("font-semibold", differenceColor)}>
-                            {difference > 0 ? '+' : ''}{difference}%
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend
-              wrapperStyle={{ paddingTop: '10px' }}
-              iconType="rect"
-            />
-            <Bar
-              dataKey="estimatedHours"
+        <ChartComponent
+          primaryXAxis={primaryXAxis}
+          primaryYAxis={primaryYAxis}
+          tooltip={{ enable: true, shared: false, enableMarker: true }}
+          tooltipRender={tooltipRender}
+          enableHtmlSanitizer={false}
+          legendSettings={{
+            visible: true,
+            position: 'Bottom',
+            textStyle: { color: isDark ? '#e2e8f0' : '#334155' },
+          }}
+          background={isDark ? '#0f172a' : '#ffffff'}
+          chartArea={{ border: { width: 0 } }}
+          height={height}
+          locale="pt-BR"
+        >
+          <Inject services={[ColumnSeries, Legend, Tooltip, DataLabel, Category]} />
+          <SeriesCollectionDirective>
+            <SeriesDirective
+              dataSource={chartData}
+              xName="macroTask"
+              yName="estimatedHours"
               name="Horas Previstas"
+              type="Column"
               fill="#3B82F6"
-              radius={[4, 4, 0, 0]}
+              cornerRadius={{ topLeft: 4, topRight: 4 }}
+              columnWidth={0.7}
+              columnSpacing={0.1}
             />
-            <Bar
-              dataKey="actualHours"
+            <SeriesDirective
+              dataSource={chartData}
+              xName="macroTask"
+              yName="actualHours"
               name="Horas Trabalhadas"
+              type="Column"
               fill="#FF7F0E"
-              radius={[4, 4, 0, 0]}
+              cornerRadius={{ topLeft: 4, topRight: 4 }}
+              columnWidth={0.7}
+              columnSpacing={0.1}
             />
-          </BarChart>
-        </ResponsiveContainer>
+          </SeriesCollectionDirective>
+        </ChartComponent>
       )}
     </div>
   );
@@ -174,7 +186,7 @@ export const MacroTasksChart = ({ macroTasks }: MacroTasksChartProps) => {
                   </DialogTitle>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
-                  {renderChart("h-full")}
+                  {renderChart('calc(90vh - 120px)')}
                 </div>
               </DialogContent>
             </Dialog>

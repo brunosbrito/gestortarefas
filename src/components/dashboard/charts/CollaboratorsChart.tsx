@@ -1,20 +1,22 @@
-
 import { Card } from '@/components/ui/card';
 import { User, LineChart as LineChartIcon, Maximize2 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
+  ChartComponent,
+  SeriesCollectionDirective,
+  SeriesDirective,
+  Inject,
   Legend,
-  ResponsiveContainer,
-  CartesianGrid
-} from 'recharts';
+  Category,
+  Tooltip,
+  LineSeries,
+  AxisModel,
+} from '@syncfusion/ej2-react-charts';
+import '@/config/syncfusionLocale';
 import { CollaboratorStatistic } from '@/interfaces/ActivityStatistics';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface CollaboratorsChartProps {
   collaborators: CollaboratorStatistic[];
@@ -23,74 +25,138 @@ interface CollaboratorsChartProps {
 export const CollaboratorsChart = ({ collaborators }: CollaboratorsChartProps) => {
   const hasData = collaborators.length > 0;
   const [isExpanded, setIsExpanded] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
-  const renderChart = (height: string = "h-80") => (
-    <div className={height}>
+  // Preparar dados com valores arredondados
+  const chartData = useMemo(() => {
+    return collaborators.map(collab => ({
+      ...collab,
+      name: collab.name.length > 12 ? `${collab.name.substring(0, 12)}...` : collab.name,
+      fullName: collab.name,
+      hoursWorked: Math.round(collab.hoursWorked * 10) / 10,
+    }));
+  }, [collaborators]);
+
+  const primaryXAxis = useMemo<AxisModel>(() => ({
+    valueType: 'Category',
+    labelRotation: collaborators.length > 5 ? -45 : 0,
+    labelStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+      size: '11px',
+    },
+    majorGridLines: { width: 0 },
+    majorTickLines: { width: 0 },
+  }), [isDark, collaborators.length]);
+
+  const primaryYAxis = useMemo<AxisModel>(() => ({
+    title: 'Horas',
+    titleStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+      size: '12px',
+    },
+    labelStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+    },
+    majorGridLines: {
+      width: 1,
+      color: isDark ? 'rgba(71, 85, 105, 0.3)' : 'rgba(0, 0, 0, 0.1)',
+      dashArray: '3,3',
+    },
+    lineStyle: { width: 0 },
+    minimum: 0,
+    labelFormat: '{value}h',
+  }), [isDark]);
+
+  const secondaryYAxis = useMemo<AxisModel[]>(() => [{
+    name: 'activityAxis',
+    opposedPosition: true,
+    title: 'Atividades',
+    titleStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+      size: '12px',
+    },
+    labelStyle: {
+      color: isDark ? '#94a3b8' : '#64748b',
+    },
+    majorGridLines: { width: 0 },
+    lineStyle: { width: 0 },
+    minimum: 0,
+  }], [isDark]);
+
+  const tooltipRender = (args: any) => {
+    if (args.point && args.series) {
+      const dataIndex = args.point.index;
+      const originalData = collaborators[dataIndex];
+      if (originalData) {
+        const hoursWorked = Math.round(originalData.hoursWorked * 10) / 10;
+        args.text = `<b>${originalData.name}</b><br/>` +
+          `Horas Trabalhadas: ${hoursWorked}h<br/>` +
+          `Atividades: ${originalData.activityCount}`;
+      }
+    }
+  };
+
+  const renderChart = (height: string = '320px') => (
+    <div style={{ height }}>
       {!hasData ? (
         <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
           <LineChartIcon className="w-12 h-12 opacity-30" />
-          <p className="text-sm">Nenhum dado disponível para o período selecionado</p>
+          <p className="text-sm">Nenhum dado disponivel para o periodo selecionado</p>
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }} data={collaborators}>
-            <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-            <XAxis dataKey="name" fontSize={11} />
-            <YAxis
-              yAxisId="left"
-              label={{ value: 'Horas', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: 12, textAnchor: 'middle' } }}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              label={{ value: 'Atividades', angle: 90, position: 'insideRight', offset: 10, style: { fontSize: 12, textAnchor: 'middle' } }}
-            />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  return (
-                    <div className="bg-card/95 backdrop-blur-sm p-3 border border-border/50 rounded-lg shadow-lg min-w-[200px]">
-                      <p className="font-semibold mb-2 text-base">{data.name}</p>
-                      <div className="space-y-1.5 text-sm">
-                        <p className="flex justify-between">
-                          <span>Horas Trabalhadas:</span>
-                          <span className="font-medium text-orange-600">{data.hoursWorked}h</span>
-                        </p>
-                        <p className="flex justify-between">
-                          <span>Atividades:</span>
-                          <span className="font-medium text-blue-600">{data.activityCount}</span>
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
+        <ChartComponent
+          primaryXAxis={primaryXAxis}
+          primaryYAxis={primaryYAxis}
+          axes={secondaryYAxis}
+          tooltip={{ enable: true, shared: false, enableMarker: true }}
+          tooltipRender={tooltipRender}
+          enableHtmlSanitizer={false}
+          legendSettings={{
+            visible: true,
+            position: 'Bottom',
+            textStyle: { color: isDark ? '#e2e8f0' : '#334155' },
+          }}
+          background={isDark ? '#0f172a' : '#ffffff'}
+          chartArea={{ border: { width: 0 } }}
+          height={height}
+          locale="pt-BR"
+        >
+          <Inject services={[LineSeries, Legend, Tooltip, Category]} />
+          <SeriesCollectionDirective>
+            <SeriesDirective
+              dataSource={chartData}
+              xName="name"
+              yName="hoursWorked"
+              name="Horas Trabalhadas"
+              type="Line"
+              fill="#FF7F0E"
+              width={2}
+              marker={{
+                visible: true,
+                fill: '#FF7F0E',
+                width: 8,
+                height: 8,
               }}
             />
-            <Legend
-              wrapperStyle={{ paddingTop: '10px' }}
-              iconType="line"
+            <SeriesDirective
+              dataSource={chartData}
+              xName="name"
+              yName="activityCount"
+              name="Numero de Atividades"
+              type="Line"
+              fill="#3B82F6"
+              width={2}
+              yAxisName="activityAxis"
+              marker={{
+                visible: true,
+                fill: '#3B82F6',
+                width: 8,
+                height: 8,
+              }}
             />
-            <Line
-              yAxisId="left"
-              type="monotone"
-              dataKey="hoursWorked"
-              name="Horas Trabalhadas"
-              stroke="#FF7F0E"
-              strokeWidth={2}
-              activeDot={{ r: 8 }}
-            />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="activityCount"
-              name="Número de Atividades"
-              stroke="#3B82F6"
-              strokeWidth={2}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+          </SeriesCollectionDirective>
+        </ChartComponent>
       )}
     </div>
   );
@@ -106,10 +172,10 @@ export const CollaboratorsChart = ({ collaborators }: CollaboratorsChartProps) =
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">
-                Contribuição por Colaborador
+                Contribuicao por Colaborador
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Horas trabalhadas e número de atividades
+                Horas trabalhadas e numero de atividades
               </p>
             </div>
           </div>
@@ -130,15 +196,15 @@ export const CollaboratorsChart = ({ collaborators }: CollaboratorsChartProps) =
                       <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
-                      <div className="text-lg font-semibold">Contribuição por Colaborador</div>
+                      <div className="text-lg font-semibold">Contribuicao por Colaborador</div>
                       <div className="text-xs text-muted-foreground font-normal mt-0.5">
-                        Horas trabalhadas e número de atividades - {collaborators.length} colaboradores
+                        Horas trabalhadas e numero de atividades - {collaborators.length} colaboradores
                       </div>
                     </div>
                   </DialogTitle>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
-                  {renderChart("h-full")}
+                  {renderChart('calc(90vh - 120px)')}
                 </div>
               </DialogContent>
             </Dialog>
