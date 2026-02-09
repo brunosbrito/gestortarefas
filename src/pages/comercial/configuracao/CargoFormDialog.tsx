@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, X as XIcon, Calculator, AlertCircle } from 'lucide-react';
+import { Save, X as XIcon, Calculator, AlertCircle, Check, ChevronsUpDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,19 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { CargoService } from '@/services/CargoService';
 import {
@@ -29,6 +42,7 @@ import {
   CALCULOS_MO,
 } from '@/interfaces/CargoInterface';
 import { formatCurrency } from '@/lib/currency';
+import { cn } from '@/lib/utils';
 
 interface CargoFormDialogProps {
   open: boolean;
@@ -46,6 +60,8 @@ const CargoFormDialog = ({
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [salarioMinimoRef, setSalarioMinimoRef] = useState(1612.0);
+  const [nomesDisponiveis, setNomesDisponiveis] = useState<string[]>([]);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
 
   // Campos do formulário
   const [nome, setNome] = useState('');
@@ -72,6 +88,7 @@ const CargoFormDialog = ({
   useEffect(() => {
     if (open) {
       carregarSalarioMinimo();
+      carregarNomesCargos();
       if (cargo) {
         // Edição
         setNome(cargo.nome);
@@ -104,6 +121,17 @@ const CargoFormDialog = ({
   const carregarSalarioMinimo = async () => {
     const config = await CargoService.getConfiguracao();
     setSalarioMinimoRef(config.salarioMinimoReferencia);
+  };
+
+  const carregarNomesCargos = async () => {
+    try {
+      const cargos = await CargoService.listAtivos();
+      // Extrair nomes únicos e ordenar alfabeticamente
+      const nomes = [...new Set(cargos.map(c => c.nome))].sort();
+      setNomesDisponiveis(nomes);
+    } catch (error) {
+      console.error('Erro ao carregar nomes de cargos:', error);
+    }
   };
 
   const resetForm = () => {
@@ -313,13 +341,61 @@ const CargoFormDialog = ({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="nome">Nome do Cargo *</Label>
-              <Input
-                id="nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                placeholder="Ex: SOLDADOR"
-                className="bg-green-50 dark:bg-green-950"
-              />
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboboxOpen}
+                    className="w-full justify-between bg-green-50 dark:bg-green-950 hover:bg-green-100 dark:hover:bg-green-900"
+                  >
+                    {nome || "Selecione ou digite um cargo..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder="Buscar ou digitar novo cargo..."
+                      value={nome}
+                      onValueChange={setNome}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        <div className="py-6 text-center text-sm">
+                          <p className="text-muted-foreground">Nenhum cargo encontrado.</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Digite o nome e pressione Enter para criar "{nome}"
+                          </p>
+                        </div>
+                      </CommandEmpty>
+                      <CommandGroup heading="Cargos Cadastrados">
+                        {nomesDisponiveis.map((nomeCargo) => (
+                          <CommandItem
+                            key={nomeCargo}
+                            value={nomeCargo}
+                            onSelect={(currentValue) => {
+                              setNome(currentValue);
+                              setComboboxOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                nome === nomeCargo ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {nomeCargo}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-muted-foreground">
+                Selecione um cargo existente ou digite um novo nome
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="categoria">Categoria *</Label>
