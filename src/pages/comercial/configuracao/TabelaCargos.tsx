@@ -603,11 +603,11 @@ const TabelaCargos = () => {
       <Dialog open={!!cargoParaVisualizar} onOpenChange={() => setCargoParaVisualizar(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-xl">
               {cargoParaVisualizar?.categoria === 'fabricacao' ? (
-                <Wrench className="h-5 w-5 text-blue-600" />
+                <Wrench className="h-6 w-6 text-blue-600" />
               ) : (
-                <HardHat className="h-5 w-5 text-green-600" />
+                <HardHat className="h-6 w-6 text-green-600" />
               )}
               {cargoParaVisualizar?.nome}
             </DialogTitle>
@@ -617,84 +617,96 @@ const TabelaCargos = () => {
           </DialogHeader>
 
           {cargoParaVisualizar && (
-            <div className="space-y-6">
+            <div className="space-y-1">
               {/* Custo HH em Destaque */}
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">
-                  CUSTO HOMEM HORA (HH)
+              <div className="p-5 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+                <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1 uppercase tracking-wide">
+                  Custo Homem Hora (HH)
                 </p>
-                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
                   {formatCurrency(cargoParaVisualizar.custoHH)}/h
                 </p>
               </div>
 
-              {/* Informações Básicas */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Categoria e Tipo de Contrato */}
+              <div className="grid grid-cols-2 gap-4 py-3 border-b border-gray-200 dark:border-gray-800">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Categoria</Label>
+                  <p className="text-xs text-muted-foreground mb-1">Categoria</p>
                   <Badge className={getCategoriaCor(cargoParaVisualizar.categoria)} variant="outline">
                     {getCategoriaNome(cargoParaVisualizar.categoria)}
                   </Badge>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Tipo de Contrato</Label>
-                  <p className="font-medium capitalize">{cargoParaVisualizar.tipoContrato}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Tipo de Contrato</p>
+                  <p className="font-medium capitalize text-sm">{cargoParaVisualizar.tipoContrato}</p>
                 </div>
               </div>
 
-              {/* Valores Salariais */}
-              <div>
-                <h3 className="font-semibold mb-3 text-blue-900 dark:text-blue-100">Composição Salarial</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">A) Salário Base</Label>
-                    <p className="font-semibold">{formatCurrency(cargoParaVisualizar.salarioBase)}</p>
+              {/* Composição Salarial */}
+              <div className="py-4 border-b border-gray-200 dark:border-gray-800">
+                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-blue-900 dark:text-blue-100">
+                  Composição Salarial
+                </h3>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4 py-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">A) Salário Base</p>
+                      <p className="font-semibold text-lg">{formatCurrency(cargoParaVisualizar.salarioBase)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">B) Periculosidade (30%)</p>
+                      <p className="font-semibold text-lg">
+                        {cargoParaVisualizar.temPericulosidade ? (
+                          <span className="text-orange-600">{formatCurrency(cargoParaVisualizar.valorPericulosidade)}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">B) Periculosidade (30%)</Label>
-                    <p className="font-semibold">
-                      {cargoParaVisualizar.temPericulosidade ? (
-                        <span className="text-orange-600">{formatCurrency(cargoParaVisualizar.valorPericulosidade)}</span>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </p>
+
+                  <div className="grid grid-cols-2 gap-4 py-2 border-t border-dashed border-gray-200 dark:border-gray-700">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">C) Insalubridade</p>
+                      <p className="font-semibold text-lg">
+                        {cargoParaVisualizar.grauInsalubridade !== 'nenhum' ? (
+                          <span className="text-red-600">
+                            {formatCurrency(cargoParaVisualizar.valorInsalubridade)}
+                            <span className="text-xs ml-1 text-muted-foreground">({cargoParaVisualizar.grauInsalubridade})</span>
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">D) Total do Salário</p>
+                      <p className="font-bold text-lg text-blue-600">{formatCurrency(cargoParaVisualizar.totalSalario)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">C) Insalubridade</Label>
-                    <p className="font-semibold">
-                      {cargoParaVisualizar.grauInsalubridade !== 'nenhum' ? (
-                        <span className="text-red-600">
-                          {formatCurrency(cargoParaVisualizar.valorInsalubridade)}
-                          <span className="text-xs ml-1">({cargoParaVisualizar.grauInsalubridade})</span>
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">D) Total do Salário</Label>
-                    <p className="font-bold">{formatCurrency(cargoParaVisualizar.totalSalario)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">E) Encargos Sociais (58,7%)</Label>
-                    <p className="font-semibold">{formatCurrency(cargoParaVisualizar.valorEncargos)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">F) Total Custos Diversos</Label>
-                    <p className="font-semibold">{formatCurrency(cargoParaVisualizar.totalCustosDiversos)}</p>
+
+                  <div className="grid grid-cols-2 gap-4 py-2 border-t border-dashed border-gray-200 dark:border-gray-700">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">E) Encargos Sociais (58,7%)</p>
+                      <p className="font-semibold text-lg">{formatCurrency(cargoParaVisualizar.valorEncargos)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">F) Total Custos Diversos</p>
+                      <p className="font-semibold text-lg">{formatCurrency(cargoParaVisualizar.totalCustosDiversos)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Custos Diversos Detalhados */}
-              <div>
-                <h3 className="font-semibold mb-3 text-purple-900 dark:text-purple-100">Custos Diversos (Detalhados)</h3>
-                <div className="grid grid-cols-3 gap-3 text-sm">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Alimentação Total</Label>
-                    <p className="font-mono">
+              <div className="py-4 border-b border-gray-200 dark:border-gray-800">
+                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-purple-900 dark:text-purple-100">
+                  Custos Diversos (Detalhados)
+                </h3>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">Alimentação Total</p>
+                    <p className="font-mono font-medium">
                       {formatCurrency(
                         cargoParaVisualizar.custos.alimentacao.cafeManha +
                         cargoParaVisualizar.custos.alimentacao.almoco +
@@ -703,48 +715,48 @@ const TabelaCargos = () => {
                       )}
                     </p>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Transporte</Label>
-                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.transporte)}</p>
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">Transporte</p>
+                    <p className="font-mono font-medium">{formatCurrency(cargoParaVisualizar.custos.transporte)}</p>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Uniforme</Label>
-                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.uniforme)}</p>
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">Uniforme</p>
+                    <p className="font-mono font-medium">{formatCurrency(cargoParaVisualizar.custos.uniforme)}</p>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Desp. Admissionais</Label>
-                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.despesasAdmissionais)}</p>
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">Desp. Admissionais</p>
+                    <p className="font-mono font-medium">{formatCurrency(cargoParaVisualizar.custos.despesasAdmissionais)}</p>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Assist. Médica</Label>
-                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.assistenciaMedica)}</p>
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">Assist. Médica</p>
+                    <p className="font-mono font-medium">{formatCurrency(cargoParaVisualizar.custos.assistenciaMedica)}</p>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">EPI's / EPC</Label>
-                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.epiEpc)}</p>
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">EPI's / EPC</p>
+                    <p className="font-mono font-medium">{formatCurrency(cargoParaVisualizar.custos.epiEpc)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Totais Finais */}
-              <div className="pt-4 border-t">
+              <div className="py-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">G) Horas/Mês</Label>
-                    <p className="font-bold text-lg">{cargoParaVisualizar.horasMes}h</p>
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">G) Horas/Mês</p>
+                    <p className="font-bold text-2xl text-gray-900 dark:text-gray-100">{cargoParaVisualizar.horasMes}h</p>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">H) Total Custos MO (sem BDI)</Label>
-                    <p className="font-bold text-lg">{formatCurrency(cargoParaVisualizar.totalCustosMO)}</p>
+                  <div className="py-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">H) Total Custos MO (sem BDI)</p>
+                    <p className="font-bold text-2xl text-blue-600 dark:text-blue-400">{formatCurrency(cargoParaVisualizar.totalCustosMO)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Observações */}
               {cargoParaVisualizar.observacoes && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">Observações</Label>
-                  <p className="text-sm">{cargoParaVisualizar.observacoes}</p>
+                <div className="py-3 border-t border-gray-200 dark:border-gray-800">
+                  <p className="text-xs text-muted-foreground mb-1">Observações</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{cargoParaVisualizar.observacoes}</p>
                 </div>
               )}
             </div>
