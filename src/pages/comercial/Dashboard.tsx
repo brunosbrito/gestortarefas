@@ -16,7 +16,9 @@ import {
   Plus,
   BarChart3,
   Calendar,
-  Users
+  Users,
+  Settings,
+  Wrench
 } from 'lucide-react';
 import { useOrcamentos } from '@/hooks/useOrcamentos';
 import { usePropostas } from '@/hooks/usePropostas';
@@ -197,7 +199,7 @@ const Dashboard = () => {
         </div>
 
         {/* Módulos - Cards Principais */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Card Orçamentos */}
           <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-blue-400/5 pointer-events-none"></div>
@@ -304,6 +306,63 @@ const Dashboard = () => {
                   className="border-green-200 hover:bg-green-50"
                 >
                   <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card Configurações */}
+          <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-purple-400/5"></div>
+            <CardHeader className="relative border-b bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-950/40 dark:to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-purple-400 flex items-center justify-center shadow-lg">
+                    <Settings className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl">Configurações</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Tabelas de custos e composições
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="relative pt-6 space-y-4">
+              <div className="space-y-3">
+                {[
+                  { icon: Wrench, text: 'Tabela de cargos e salários' },
+                  { icon: Settings, text: 'Configuração salarial (salário mínimo)' },
+                  { icon: BarChart3, text: 'Composição de custos de MO' },
+                  { icon: CheckCircle2, text: 'Cálculos automáticos de HH' },
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center group-hover/item:bg-purple-100 dark:group-hover/item:bg-purple-950/60 transition-colors">
+                      <item.icon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <span className="text-sm text-muted-foreground group-hover/item:text-foreground transition-colors">
+                      {item.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-2 pt-4">
+                <Button
+                  onClick={() => navigate('/comercial/configuracao/cargos')}
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Wrench className="mr-2 h-4 w-4" />
+                  Tabela de Cargos
+                </Button>
+                <Button
+                  onClick={() => navigate('/comercial/configuracao/salarial')}
+                  variant="outline"
+                  className="w-full border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/20"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Configuração Salarial
                 </Button>
               </div>
             </CardContent>

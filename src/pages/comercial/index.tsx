@@ -8,6 +8,8 @@ const OrcamentosList = lazy(() => import('./orcamentos'));
 const NovoOrcamento = lazy(() => import('./orcamentos/novo'));
 const EditarOrcamento = lazy(() => import('./orcamentos/[id]'));
 const PropostasList = lazy(() => import('./propostas'));
+const ConfiguracaoSalarial = lazy(() => import('./configuracao/ConfiguracaoSalarial'));
+const TabelaCargos = lazy(() => import('./configuracao/TabelaCargos'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -30,6 +32,10 @@ const Comercial = () => {
             <Route path=":id" element={<EditarOrcamento />} />
           </Route>
           <Route path="propostas" element={<PropostasList />} />
+          <Route path="configuracao">
+            <Route path="salarial" element={<ConfiguracaoSalarial />} />
+            <Route path="cargos" element={<TabelaCargos />} />
+          </Route>
           <Route path="*" element={<Navigate to="/comercial" replace />} />
         </Routes>
       </Suspense>
