@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CargoService } from '@/services/CargoService';
 import { ConfiguracaoSalarial as ConfiguracaoSalarialInterface } from '@/interfaces/CargoInterface';
 import { formatCurrency } from '@/lib/currency';
+import Layout from '@/components/Layout';
 
 const ConfiguracaoSalarial = () => {
   const { toast } = useToast();
@@ -92,11 +93,13 @@ const ConfiguracaoSalarial = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+      <Layout>
+        <div className="container mx-auto p-6">
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
@@ -106,7 +109,8 @@ const ConfiguracaoSalarial = () => {
   const insalubrideMaxima = salarioMinimoNum * 0.4;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <Layout>
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -284,6 +288,7 @@ const ConfiguracaoSalarial = () => {
         </Card>
       </div>
     </div>
+    </Layout>
   );
 };
 

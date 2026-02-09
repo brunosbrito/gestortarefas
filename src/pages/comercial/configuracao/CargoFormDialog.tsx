@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, X, Calculator, AlertCircle } from 'lucide-react';
+import { Save, X as XIcon, Calculator, AlertCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -375,22 +375,47 @@ const CargoFormDialog = ({
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <Checkbox
+                  {/* Checkbox customizado com X */}
+                  <button
+                    type="button"
                     id="periculosidade"
-                    checked={temPericulosidade}
                     disabled={grauInsalubridade !== 'nenhum'}
-                    onCheckedChange={(checked) => {
-                      setTemPericulosidade(checked as boolean);
-                      if (checked) {
-                        // Se marcar periculosidade, desmarcar insalubridade
-                        setGrauInsalubridade('nenhum');
+                    onClick={() => {
+                      if (grauInsalubridade === 'nenhum') {
+                        const newValue = !temPericulosidade;
+                        setTemPericulosidade(newValue);
+                        if (newValue) {
+                          setGrauInsalubridade('nenhum');
+                        }
                       }
                     }}
-                    className="bg-green-50 dark:bg-green-950 disabled:opacity-50"
-                  />
+                    className={`
+                      h-5 w-5 rounded border-2 flex items-center justify-center
+                      transition-all duration-200
+                      ${grauInsalubridade !== 'nenhum'
+                        ? 'opacity-50 cursor-not-allowed border-gray-300 bg-gray-100'
+                        : temPericulosidade
+                        ? 'border-orange-500 bg-orange-500 hover:bg-orange-600'
+                        : 'border-gray-300 bg-green-50 dark:bg-green-950 hover:border-orange-400'
+                      }
+                    `}
+                  >
+                    {temPericulosidade && (
+                      <XIcon className="h-4 w-4 text-white font-bold" strokeWidth={3} />
+                    )}
+                  </button>
                   <Label
                     htmlFor="periculosidade"
                     className={`cursor-pointer ${grauInsalubridade !== 'nenhum' ? 'opacity-50' : ''}`}
+                    onClick={() => {
+                      if (grauInsalubridade === 'nenhum') {
+                        const newValue = !temPericulosidade;
+                        setTemPericulosidade(newValue);
+                        if (newValue) {
+                          setGrauInsalubridade('nenhum');
+                        }
+                      }
+                    }}
                   >
                     Possui Periculosidade (30%)
                   </Label>

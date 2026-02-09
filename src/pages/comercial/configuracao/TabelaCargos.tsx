@@ -10,11 +10,13 @@ import {
   Wrench,
   LayoutGrid,
   Table,
+  Eye,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
 import {
   Table as TableComponent,
   TableBody,
@@ -28,6 +30,7 @@ import { CargoService } from '@/services/CargoService';
 import { Cargo } from '@/interfaces/CargoInterface';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
 import CargoFormDialog from './CargoFormDialog';
+import Layout from '@/components/Layout';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +41,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 type ViewMode = 'card' | 'grid';
 
@@ -48,6 +58,7 @@ const TabelaCargos = () => {
   const [cargoSelecionado, setCargoSelecionado] = useState<Cargo | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [cargoParaDeletar, setCargoParaDeletar] = useState<Cargo | null>(null);
+  const [cargoParaVisualizar, setCargoParaVisualizar] = useState<Cargo | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     // Recuperar preferência do localStorage
     const saved = localStorage.getItem('tabela_cargos_view_mode');
@@ -145,16 +156,19 @@ const TabelaCargos = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center py-12">
-          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+      <Layout>
+        <div className="container mx-auto p-6">
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <Layout>
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -256,8 +270,18 @@ const TabelaCargos = () => {
                   <Button
                     size="sm"
                     variant="ghost"
+                    onClick={() => setCargoParaVisualizar(cargo)}
+                    className="hover:bg-green-100 dark:hover:bg-green-900"
+                    title="Visualizar"
+                  >
+                    <Eye className="h-4 w-4 text-green-600" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     onClick={() => handleEditar(cargo)}
                     className="hover:bg-blue-100 dark:hover:bg-blue-900"
+                    title="Editar"
                   >
                     <Edit className="h-4 w-4 text-blue-600" />
                   </Button>
@@ -266,6 +290,7 @@ const TabelaCargos = () => {
                     variant="ghost"
                     onClick={() => setCargoParaDeletar(cargo)}
                     className="hover:bg-red-100 dark:hover:bg-red-900"
+                    title="Deletar"
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
                   </Button>
@@ -399,8 +424,18 @@ const TabelaCargos = () => {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => setCargoParaVisualizar(cargo)}
+                          className="hover:bg-green-100 dark:hover:bg-green-900 h-8 w-8 p-0"
+                          title="Visualizar"
+                        >
+                          <Eye className="h-4 w-4 text-green-600" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           onClick={() => handleEditar(cargo)}
                           className="hover:bg-blue-100 dark:hover:bg-blue-900 h-8 w-8 p-0"
+                          title="Editar"
                         >
                           <Edit className="h-4 w-4 text-blue-600" />
                         </Button>
@@ -409,6 +444,7 @@ const TabelaCargos = () => {
                           variant="ghost"
                           onClick={() => setCargoParaDeletar(cargo)}
                           className="hover:bg-red-100 dark:hover:bg-red-900 h-8 w-8 p-0"
+                          title="Deletar"
                         >
                           <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
@@ -421,6 +457,159 @@ const TabelaCargos = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Dialog de Visualização */}
+      <Dialog open={!!cargoParaVisualizar} onOpenChange={() => setCargoParaVisualizar(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {cargoParaVisualizar?.categoria === 'fabricacao' ? (
+                <Wrench className="h-5 w-5 text-blue-600" />
+              ) : (
+                <HardHat className="h-5 w-5 text-green-600" />
+              )}
+              {cargoParaVisualizar?.nome}
+            </DialogTitle>
+            <DialogDescription>
+              Detalhes completos da composição de custos
+            </DialogDescription>
+          </DialogHeader>
+
+          {cargoParaVisualizar && (
+            <div className="space-y-6">
+              {/* Custo HH em Destaque */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">
+                  CUSTO HOMEM HORA (HH)
+                </p>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {formatCurrency(cargoParaVisualizar.custoHH)}/h
+                </p>
+              </div>
+
+              {/* Informações Básicas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Categoria</Label>
+                  <Badge className={getCategoriaCor(cargoParaVisualizar.categoria)} variant="outline">
+                    {getCategoriaNome(cargoParaVisualizar.categoria)}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Tipo de Contrato</Label>
+                  <p className="font-medium capitalize">{cargoParaVisualizar.tipoContrato}</p>
+                </div>
+              </div>
+
+              {/* Valores Salariais */}
+              <div>
+                <h3 className="font-semibold mb-3 text-blue-900 dark:text-blue-100">Composição Salarial</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">A) Salário Base</Label>
+                    <p className="font-semibold">{formatCurrency(cargoParaVisualizar.salarioBase)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">B) Periculosidade (30%)</Label>
+                    <p className="font-semibold">
+                      {cargoParaVisualizar.temPericulosidade ? (
+                        <span className="text-orange-600">{formatCurrency(cargoParaVisualizar.valorPericulosidade)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">C) Insalubridade</Label>
+                    <p className="font-semibold">
+                      {cargoParaVisualizar.grauInsalubridade !== 'nenhum' ? (
+                        <span className="text-red-600">
+                          {formatCurrency(cargoParaVisualizar.valorInsalubridade)}
+                          <span className="text-xs ml-1">({cargoParaVisualizar.grauInsalubridade})</span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">D) Total do Salário</Label>
+                    <p className="font-bold">{formatCurrency(cargoParaVisualizar.totalSalario)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">E) Encargos Sociais (58,7%)</Label>
+                    <p className="font-semibold">{formatCurrency(cargoParaVisualizar.valorEncargos)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">F) Total Custos Diversos</Label>
+                    <p className="font-semibold">{formatCurrency(cargoParaVisualizar.totalCustosDiversos)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Custos Diversos Detalhados */}
+              <div>
+                <h3 className="font-semibold mb-3 text-purple-900 dark:text-purple-100">Custos Diversos (Detalhados)</h3>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Alimentação Total</Label>
+                    <p className="font-mono">
+                      {formatCurrency(
+                        cargoParaVisualizar.custos.alimentacao.cafeManha +
+                        cargoParaVisualizar.custos.alimentacao.almoco +
+                        cargoParaVisualizar.custos.alimentacao.janta +
+                        cargoParaVisualizar.custos.alimentacao.cestaBasica
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Transporte</Label>
+                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.transporte)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Uniforme</Label>
+                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.uniforme)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Desp. Admissionais</Label>
+                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.despesasAdmissionais)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Assist. Médica</Label>
+                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.assistenciaMedica)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">EPI's / EPC</Label>
+                    <p className="font-mono">{formatCurrency(cargoParaVisualizar.custos.epiEpc)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Totais Finais */}
+              <div className="pt-4 border-t">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">G) Horas/Mês</Label>
+                    <p className="font-bold text-lg">{cargoParaVisualizar.horasMes}h</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">H) Total Custos MO (sem BDI)</Label>
+                    <p className="font-bold text-lg">{formatCurrency(cargoParaVisualizar.totalCustosMO)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observações */}
+              {cargoParaVisualizar.observacoes && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Observações</Label>
+                  <p className="text-sm">{cargoParaVisualizar.observacoes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de Formulário */}
       <CargoFormDialog
@@ -455,6 +644,7 @@ const TabelaCargos = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </Layout>
   );
 };
 
