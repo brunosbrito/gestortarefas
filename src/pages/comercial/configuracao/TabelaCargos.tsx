@@ -8,11 +8,21 @@ import {
   AlertCircle,
   HardHat,
   Wrench,
+  LayoutGrid,
+  Table,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Table as TableComponent,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { CargoService } from '@/services/CargoService';
 import { Cargo } from '@/interfaces/CargoInterface';
@@ -29,6 +39,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+type ViewMode = 'card' | 'grid';
+
 const TabelaCargos = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -36,10 +48,20 @@ const TabelaCargos = () => {
   const [cargoSelecionado, setCargoSelecionado] = useState<Cargo | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
   const [cargoParaDeletar, setCargoParaDeletar] = useState<Cargo | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    // Recuperar preferência do localStorage
+    const saved = localStorage.getItem('tabela_cargos_view_mode');
+    return (saved as ViewMode) || 'card';
+  });
 
   useEffect(() => {
     carregarCargos();
   }, []);
+
+  useEffect(() => {
+    // Salvar preferência no localStorage
+    localStorage.setItem('tabela_cargos_view_mode', viewMode);
+  }, [viewMode]);
 
   const carregarCargos = async () => {
     try {
@@ -146,13 +168,34 @@ const TabelaCargos = () => {
             </p>
           </div>
         </div>
-        <Button
-          onClick={handleNovo}
-          className="bg-gradient-to-r from-blue-600 to-blue-500"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Cargo
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* Toggle de Visualização */}
+          <div className="flex items-center gap-1 border rounded-lg p-1">
+            <Button
+              variant={viewMode === 'card' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('card')}
+              className={viewMode === 'card' ? 'bg-blue-600' : ''}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className={viewMode === 'grid' ? 'bg-blue-600' : ''}
+            >
+              <Table className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button
+            onClick={handleNovo}
+            className="bg-gradient-to-r from-blue-600 to-blue-500"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Cargo
+          </Button>
+        </div>
       </div>
 
       {/* Alert de Ajuda */}
@@ -166,9 +209,10 @@ const TabelaCargos = () => {
         </Alert>
       )}
 
-      {/* Grid de Cargos */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {cargos.map((cargo) => (
+      {/* Visualização em Cards */}
+      {viewMode === 'card' && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {cargos.map((cargo) => (
           <Card
             key={cargo.id}
             className="hover:shadow-lg transition-shadow border-l-4"
@@ -267,8 +311,116 @@ const TabelaCargos = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Visualização em Grid (Tabela) */}
+      {viewMode === 'grid' && (
+        <Card>
+          <CardContent className="p-0">
+            <TableComponent>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">Cargo</TableHead>
+                  <TableHead className="w-[120px]">Categoria</TableHead>
+                  <TableHead className="w-[100px]">Adicionais</TableHead>
+                  <TableHead className="text-right w-[120px]">Salário Base</TableHead>
+                  <TableHead className="text-right w-[120px]">Total Salário</TableHead>
+                  <TableHead className="text-right w-[120px]">Encargos</TableHead>
+                  <TableHead className="text-right w-[120px]">Custos Div.</TableHead>
+                  <TableHead className="text-right w-[140px]">Total MO</TableHead>
+                  <TableHead className="text-right w-[140px] bg-blue-50 dark:bg-blue-950/40">
+                    <div className="font-bold text-blue-600 dark:text-blue-400">Custo HH</div>
+                  </TableHead>
+                  <TableHead className="text-center w-[100px]">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cargos.map((cargo) => (
+                  <TableRow key={cargo.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {cargo.categoria === 'fabricacao' ? (
+                          <Wrench className="h-4 w-4 text-blue-600" />
+                        ) : (
+                          <HardHat className="h-4 w-4 text-green-600" />
+                        )}
+                        <span>{cargo.nome}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getCategoriaCor(cargo.categoria)} variant="outline">
+                        {getCategoriaNome(cargo.categoria)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        {cargo.temPericulosidade && (
+                          <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                            Peric.
+                          </Badge>
+                        )}
+                        {cargo.grauInsalubridade !== 'nenhum' && (
+                          <Badge variant="outline" className="text-xs text-red-600 border-red-300">
+                            Insalub.
+                          </Badge>
+                        )}
+                        {!cargo.temPericulosidade && cargo.grauInsalubridade === 'nenhum' && (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatCurrency(cargo.salarioBase)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatCurrency(cargo.totalSalario)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatCurrency(cargo.valorEncargos)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm">
+                      {formatCurrency(cargo.totalCustosDiversos)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm font-semibold">
+                      {formatCurrency(cargo.totalCustosMO)}
+                      <div className="text-xs text-muted-foreground">
+                        {cargo.horasMes}h/mês
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right bg-blue-50 dark:bg-blue-950/40">
+                      <div className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                        {formatCurrency(cargo.custoHH)}/h
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditar(cargo)}
+                          className="hover:bg-blue-100 dark:hover:bg-blue-900 h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setCargoParaDeletar(cargo)}
+                          className="hover:bg-red-100 dark:hover:bg-red-900 h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </TableComponent>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dialog de Formulário */}
       <CargoFormDialog
