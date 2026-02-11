@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { MenuItem } from "./types";
+import { MenuItem, SubMenuItem } from "./types";
 import { cn } from "@/lib/utils";
 
 interface SidebarMenuItemProps {
@@ -9,13 +9,98 @@ interface SidebarMenuItemProps {
   isExpanded: boolean;
   isActive: boolean;
   onToggle: () => void;
+  expandedItems?: string[];
+  onToggleNested?: (label: string) => void;
 }
+
+// Component for nested sub-items
+const NestedSubMenuItem = ({
+  subItem,
+  depth = 1,
+  expandedItems = [],
+  onToggleNested
+}: {
+  subItem: SubMenuItem;
+  depth?: number;
+  expandedItems?: string[];
+  onToggleNested?: (label: string) => void;
+}) => {
+  const location = useLocation();
+  const hasNestedItems = subItem.subItems && subItem.subItems.length > 0;
+  const isActive = location.pathname === subItem.path;
+  const isExpanded = expandedItems.includes(subItem.label);
+
+  return (
+    <div className="space-y-1">
+      <Link
+        to={subItem.path || "#"}
+        onClick={(e) => {
+          if (hasNestedItems) {
+            e.preventDefault();
+            if (onToggleNested) {
+              onToggleNested(subItem.label);
+            }
+          }
+        }}
+        role={hasNestedItems ? "button" : undefined}
+        aria-expanded={hasNestedItems ? isExpanded : undefined}
+        aria-current={isActive && !hasNestedItems ? "page" : undefined}
+        aria-label={hasNestedItems ? `${subItem.label} - ${isExpanded ? 'expandido' : 'recolhido'}` : subItem.label}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm",
+          "transition-all duration-200",
+          isActive && !hasNestedItems
+            ? "bg-primary/10 text-primary font-medium border-l-2 border-primary -ml-[2px]"
+            : "text-foreground/60 hover:text-foreground hover:bg-accent/30"
+        )}
+      >
+        <subItem.icon className="w-4 h-4" />
+        <span className="flex-1 truncate">{subItem.label}</span>
+        {hasNestedItems && (
+          <div className="transition-transform duration-200">
+            {isExpanded ? (
+              <ChevronDown className="w-3 h-3" />
+            ) : (
+              <ChevronRight className="w-3 h-3" />
+            )}
+          </div>
+        )}
+      </Link>
+
+      {/* Nested sub-items */}
+      {isExpanded && hasNestedItems && (
+        <div className="pl-4 space-y-1 py-1 overflow-hidden border-l-2 border-border/20 ml-[18px]">
+          {subItem.subItems.map((nestedItem, index) => (
+            <Link
+              key={nestedItem.path || `nested-${index}`}
+              to={nestedItem.path || "#"}
+              aria-current={location.pathname === nestedItem.path ? "page" : undefined}
+              aria-label={nestedItem.label}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 min-h-[40px] rounded-lg text-xs",
+                "transition-all duration-200",
+                location.pathname === nestedItem.path
+                  ? "bg-primary/10 text-primary font-medium border-l-2 border-primary -ml-[2px]"
+                  : "text-foreground/50 hover:text-foreground hover:bg-accent/20"
+              )}
+            >
+              <nestedItem.icon className="w-3.5 h-3.5" />
+              <span className="truncate">{nestedItem.label}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const SidebarMenuItem = ({
   item,
   isExpanded,
   isActive,
-  onToggle
+  onToggle,
+  expandedItems = [],
+  onToggleNested
 }: SidebarMenuItemProps) => {
   const location = useLocation();
   const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -77,23 +162,13 @@ export const SidebarMenuItem = ({
       {/* Sub-items with animation */}
       {isExpanded && hasSubItems && (
         <div className="pl-6 space-y-1 py-1 overflow-hidden border-l-2 border-border/30 ml-[18px]">
-          {item.subItems.map((subItem) => (
-            <Link
-              key={subItem.path}
-              to={subItem.path}
-              aria-current={location.pathname === subItem.path ? "page" : undefined}
-              aria-label={subItem.label}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm",
-                "transition-all duration-200",
-                location.pathname === subItem.path
-                  ? "bg-primary/10 text-primary font-medium border-l-2 border-primary -ml-[2px]"
-                  : "text-foreground/60 hover:text-foreground hover:bg-accent/30"
-              )}
-            >
-              <subItem.icon className="w-4 h-4" />
-              <span className="truncate">{subItem.label}</span>
-            </Link>
+          {item.subItems.map((subItem, index) => (
+            <NestedSubMenuItem
+              key={subItem.path || `sub-${index}`}
+              subItem={subItem}
+              expandedItems={expandedItems}
+              onToggleNested={onToggleNested}
+            />
           ))}
         </div>
       )}

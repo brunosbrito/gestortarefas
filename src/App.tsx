@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 
 // Login carregado imediatamente (página inicial)
@@ -16,6 +16,10 @@ const Colaboradores = lazy(() => import('./pages/gerenciamento/colaboradores'));
 const TarefasMacro = lazy(() => import('./pages/gerenciamento/tarefas-macro'));
 const Processos = lazy(() => import('./pages/gerenciamento/processos'));
 const ValorPorCargo = lazy(() => import('./pages/gerenciamento/valor-por-cargo'));
+const TabelaMateriais = lazy(() => import('./pages/comercial/cadastros/TabelaMateriais'));
+const TabelaTintas = lazy(() => import('./pages/comercial/cadastros/tintas'));
+const TabelaFornecedoresServico = lazy(() => import('./pages/comercial/cadastros/fornecedores-servico'));
+const CalculadoraPintura = lazy(() => import('./pages/comercial/calculadora-pintura'));
 const Fabricas = lazy(() => import('./pages/Fabricas'));
 const Mineradoras = lazy(() => import('./pages/Mineradoras'));
 const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
@@ -73,6 +77,17 @@ function App() {
           <Route path="/gerenciamento/tarefas-macro" element={<TarefasMacro />} />
           <Route path="/gerenciamento/processos" element={<Processos />} />
           <Route path="/gerenciamento/valor-por-cargo" element={<ValorPorCargo />} />
+
+          {/* Redirects de rotas antigas para novas */}
+          <Route path="/gerenciamento/materiais" element={<Navigate to="/comercial/cadastros/materiais" replace />} />
+          <Route path="/gerenciamento/tintas" element={<Navigate to="/comercial/cadastros/tintas" replace />} />
+          <Route path="/gerenciamento/fornecedores-servico" element={<Navigate to="/comercial/cadastros/fornecedores-servico" replace />} />
+
+          {/* Novas rotas do módulo Comercial > Cadastros */}
+          <Route path="/comercial/cadastros/materiais" element={<TabelaMateriais />} />
+          <Route path="/comercial/cadastros/tintas" element={<TabelaTintas />} />
+          <Route path="/comercial/cadastros/fornecedores-servico" element={<TabelaFornecedoresServico />} />
+          <Route path="/comercial/calculadora-pintura" element={<CalculadoraPintura />} />
         </Routes>
       </Suspense>
       <Toaster />

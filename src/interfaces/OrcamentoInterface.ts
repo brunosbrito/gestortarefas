@@ -7,6 +7,7 @@ export interface Orcamento {
   numero: string;                    // Auto-gerado: S-001|2026 (serviço) ou P-001|2026 (produto)
   nome: string;                      // Nome do orçamento
   tipo: 'servico' | 'produto';       // Tipo do orçamento (separa numeração e organização)
+  status?: 'rascunho' | 'em_analise' | 'aprovado' | 'rejeitado';  // Status do orçamento
 
   // Dados do projeto
   areaTotalM2?: number;
@@ -18,7 +19,66 @@ export interface Orcamento {
   // Composições de custos (core do orçamento)
   composicoes: ComposicaoCustos[];
 
-  // Configurações de tributos
+  // Configurações gerais (BDI, Tributos, Encargos)
+  configuracoes: {
+    bdi: number;                     // Padrão: 0.25 (25%) - TOTAL CALCULADO
+    tributos: {
+      iss: number;                   // Padrão: 0.03 (3%)
+      simples: number;               // Padrão: 0.118 (11.8%)
+      total: number;                 // Calculado: iss + simples = 0.148 (14.8%)
+    };
+    encargos: number;                // Padrão: 0.58724 (58.724%) - TOTAL CALCULADO
+  };
+
+  // Configurações detalhadas (opcional - para checkboxes e componentes individuais)
+  configuracoesDetalhadas?: {
+    bdi: {
+      lucro: { percentual: number; habilitado: boolean; };
+      despesas: { percentual: number; habilitado: boolean; };
+    };
+    faixaSimples: number;            // Faixa atual (1-6)
+    encargos: {
+      grupoA: { fgts: { percentual: number; habilitado: boolean; }; };
+      grupoB: {
+        ferias: { percentual: number; habilitado: boolean; };
+        umTercoFerias: { percentual: number; habilitado: boolean; };
+        decimoTerceiro: { percentual: number; habilitado: boolean; };
+        fgtsFerias: { percentual: number; habilitado: boolean; };
+        fgts13: { percentual: number; habilitado: boolean; };
+        avisoTrabalhado: { percentual: number; habilitado: boolean; };
+        acidentes: { percentual: number; habilitado: boolean; };
+        faltasJustificadas: { percentual: number; habilitado: boolean; };
+      };
+      grupoC: {
+        rescisao: { percentual: number; habilitado: boolean; };
+        avisoIndenizado: { percentual: number; habilitado: boolean; };
+      };
+      grupoD: { reincidencia: { percentual: number; habilitado: boolean; }; };
+    };
+  };
+
+  // QQP Suprimentos (Orçamento Previsto)
+  qqpSuprimentos: {
+    materiais: number;
+    pintura: number;
+    ferramentas: number;
+    consumiveis: number;
+    total: number;
+  };
+
+  // QQP Cliente (Precificação Final)
+  qqpCliente: {
+    suprimentos: number;
+    maoObra: number;
+    bdi: number;
+    subtotal: number;
+    tributos: number;
+    total: number;
+    area?: number;                   // Área total (m²)
+    precoM2?: number;                // R$/m²
+  };
+
+  // Configurações de tributos (DEPRECATED - usar configuracoes.tributos)
   tributos: {
     temISS: boolean;
     aliquotaISS: number;             // Padrão: 3% (editável)

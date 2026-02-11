@@ -18,7 +18,10 @@ import {
   Calendar,
   Users,
   Settings,
-  Wrench
+  Wrench,
+  FileStack,
+  Scissors,
+  Paintbrush,
 } from 'lucide-react';
 import { useOrcamentos } from '@/hooks/useOrcamentos';
 import { usePropostas } from '@/hooks/usePropostas';
@@ -197,6 +200,55 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Ferramentas Rápidas - Novo */}
+        <Card className="border-none shadow-lg">
+          <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent dark:from-slate-900/40 dark:to-transparent">
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              Ferramentas Rápidas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                variant="outline"
+                className="h-24 flex-col gap-2 hover:border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-950/20"
+                onClick={() => navigate('/comercial/orcamentos/templates')}
+              >
+                <FileStack className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <div className="text-center">
+                  <div className="font-semibold">Templates</div>
+                  <div className="text-xs text-muted-foreground">Reutilizar orçamentos</div>
+                </div>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-24 flex-col gap-2 hover:border-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
+                onClick={() => navigate('/comercial/orcamentos/lista-corte')}
+              >
+                <Scissors className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                <div className="text-center">
+                  <div className="font-semibold">Lista de Corte</div>
+                  <div className="text-xs text-muted-foreground">Otimização FFD</div>
+                </div>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-24 flex-col gap-2 hover:border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                onClick={() => navigate('/comercial/calculadora-pintura')}
+              >
+                <Paintbrush className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="text-center">
+                  <div className="font-semibold">Calc. Pintura</div>
+                  <div className="text-xs text-muted-foreground">Jateamento e pintura</div>
+                </div>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Módulos - Cards Principais */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

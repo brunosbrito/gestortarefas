@@ -7,6 +7,7 @@ import {
 } from '@/interfaces/OrcamentoInterface';
 import axios from 'axios';
 import { calcularValoresOrcamento, calcularDRE } from '@/lib/calculosOrcamento';
+import { mockOrcamentosIniciais } from '@/data/mockOrcamentos';
 
 const URL = `${API_URL}/api/orcamentos`;
 
@@ -22,9 +23,18 @@ const COUNTERS_KEY = 'gestortarefas_mock_counters';
 const loadMockData = (): Orcamento[] => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
+
+    // Se não houver dados no localStorage, usar dados iniciais
+    if (!stored) {
+      console.log('📦 Inicializando localStorage com 3 orçamentos mockados');
+      saveMockData(mockOrcamentosIniciais);
+      return mockOrcamentosIniciais;
+    }
+
+    return JSON.parse(stored);
+  } catch (error) {
+    console.warn('⚠️ Erro ao carregar mock do localStorage, usando dados iniciais', error);
+    return mockOrcamentosIniciais;
   }
 };
 
@@ -41,8 +51,34 @@ const saveMockData = (orcamentos: Orcamento[]) => {
 const loadCounters = () => {
   try {
     const stored = localStorage.getItem(COUNTERS_KEY);
-    return stored ? JSON.parse(stored) : { id: 1, servico: 0, produto: 0 };
-  } catch {
+
+    // Se não houver contadores, inicializar baseado nos dados mockados
+    if (!stored) {
+      const orcamentos = loadMockData();
+
+      // Extrair números dos IDs e números de orçamento
+      const maxId = orcamentos.reduce((max, orc) => {
+        const match = orc.id.match(/orc-(\d+)/);
+        return match ? Math.max(max, parseInt(match[1])) : max;
+      }, 0);
+
+      const servicoCount = orcamentos.filter((o) => o.tipo === 'servico').length;
+      const produtoCount = orcamentos.filter((o) => o.tipo === 'produto').length;
+
+      console.log(
+        `🔢 Contadores inicializados: ID=${maxId + 1}, Serviço=${servicoCount}, Produto=${produtoCount}`
+      );
+
+      return {
+        id: maxId + 1,
+        servico: servicoCount,
+        produto: produtoCount,
+      };
+    }
+
+    return JSON.parse(stored);
+  } catch (error) {
+    console.warn('⚠️ Erro ao carregar contadores, usando valores padrão', error);
     return { id: 1, servico: 0, produto: 0 };
   }
 };
@@ -95,18 +131,19 @@ const generateDefaultComposicoes = (orcamentoId: string): ComposicaoCustos[] => 
 };
 
 const generateMockOrcamento = (data: CreateOrcamento): Orcamento => {
-  const id = `mock-${mockIdCounter++}`;
+  const id = `orc-${String(mockIdCounter).padStart(3, '0')}`;
+  mockIdCounter++;
 
-  // Gerar número no formato: S-001|2026 (serviço) ou P-001|2026 (produto)
+  // Gerar número no formato: S-2026-001 (serviço) ou P-2026-001 (produto)
   const ano = new Date().getFullYear();
   let numero: string;
 
   if (data.tipo === 'servico') {
     mockServicoCounter++;
-    numero = `S-${String(mockServicoCounter).padStart(3, '0')}|${ano}`;
+    numero = `S-${ano}-${String(mockServicoCounter).padStart(3, '0')}`;
   } else {
     mockProdutoCounter++;
-    numero = `P-${String(mockProdutoCounter).padStart(3, '0')}|${ano}`;
+    numero = `P-${ano}-${String(mockProdutoCounter).padStart(3, '0')}`;
   }
 
   const orcamento: Orcamento = {
@@ -194,20 +231,38 @@ class OrcamentoService {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const orcamento = mockOrcamentos.find((o) => o.id === id);
+      // Recarregar do localStorage para garantir dados atualizados
+      const dados = loadMockData();
+      const orcamento = dados.find((o) => o.id === id);
+
       if (!orcamento) {
+        console.error(`❌ Orçamento ${id} não encontrado. IDs disponíveis:`, dados.map(o => o.id));
         throw new Error('Orçamento não encontrado');
       }
 
-      // Recalcular valores antes de retornar
-      const valores = calcularValoresOrcamento(orcamento);
-      const dre = calcularDRE(orcamento);
+      console.log(`✅ Orçamento ${id} encontrado:`, orcamento.nome);
 
-      return {
-        ...orcamento,
-        ...valores,
-        dre,
-      };
+      // Recalcular valores antes de retornar
+      try {
+        const valores = calcularValoresOrcamento(orcamento);
+        console.log('📊 Valores calculados:', valores);
+
+        const dre = calcularDRE(orcamento);
+        console.log('💰 DRE calculado:', dre);
+
+        const resultado = {
+          ...orcamento,
+          ...valores,
+          dre,
+        };
+
+        console.log('✅ Orçamento completo retornando:', resultado);
+        return resultado;
+      } catch (error) {
+        console.error('❌ Erro ao calcular valores/DRE:', error);
+        // Retornar orçamento sem recalcular se houver erro
+        return orcamento;
+      }
     }
 
     try {

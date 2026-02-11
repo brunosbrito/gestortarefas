@@ -4,7 +4,10 @@
  * @param moeda - Moeda para formatação ('BRL' ou 'USD')
  * @returns String formatada como moeda
  */
-export const formatCurrency = (value: number, moeda: 'BRL' | 'USD' = 'BRL'): string => {
+export const formatCurrency = (value: number | undefined | null, moeda: 'BRL' | 'USD' = 'BRL'): string => {
+  if (value === undefined || value === null || isNaN(value)) {
+    return '-';
+  }
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: moeda,
@@ -17,7 +20,10 @@ export const formatCurrency = (value: number, moeda: 'BRL' | 'USD' = 'BRL'): str
  * @param decimals - Número de casas decimais (padrão: 1)
  * @returns String formatada como percentual
  */
-export const formatPercentage = (value: number, decimals: number = 1): string => {
+export const formatPercentage = (value: number | undefined | null, decimals: number = 1): string => {
+  if (value === undefined || value === null || isNaN(value)) {
+    return '-';
+  }
   return `${value.toFixed(decimals)}%`;
 };
 

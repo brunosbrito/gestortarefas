@@ -19,6 +19,18 @@ import {
   FileText,
   DollarSign,
   Receipt,
+  Package,
+  Paintbrush,
+  Wrench,
+  FolderOpen,
+  FilePlus,
+  FileStack,
+  Scissors,
+  FileBarChart,
+  Box,
+  Truck,
+  Palette,
+  BarChart3,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -97,19 +109,91 @@ export const navItems: MenuItem[] = [
     label: 'Comercial',
     subItems: [
       {
-        icon: LayoutDashboard,
+        icon: BarChart3,
         label: 'Dashboard',
-        path: '/comercial',
+        path: '/comercial/dashboard',
       },
       {
-        icon: Receipt,
-        label: 'Orçamentos (QQP)',
-        path: '/comercial/orcamentos',
+        icon: FolderOpen,
+        label: 'CADASTROS',
+        subItems: [
+          {
+            icon: Package,
+            label: 'Materiais',
+            path: '/comercial/cadastros/materiais',
+          },
+          {
+            icon: Palette,
+            label: 'Tintas',
+            path: '/comercial/cadastros/tintas',
+          },
+          {
+            icon: Wrench,
+            label: 'Fornecedores',
+            path: '/comercial/cadastros/fornecedores-servico',
+          },
+          {
+            icon: Users,
+            label: 'Cargos',
+            path: '/comercial/configuracao/cargos',
+          },
+          {
+            icon: DollarSign,
+            label: 'Configuração Salarial',
+            path: '/comercial/configuracao/salarial',
+          },
+          {
+            icon: Box,
+            label: 'Consumíveis',
+            path: '/comercial/cadastros/consumiveis',
+          },
+          {
+            icon: Truck,
+            label: 'Mobilização',
+            path: '/comercial/cadastros/mobilizacao',
+          },
+          {
+            icon: Truck,
+            label: 'Desmobilização',
+            path: '/comercial/cadastros/desmobilizacao',
+          },
+        ],
       },
       {
-        icon: DollarSign,
-        label: 'Propostas',
-        path: '/comercial/propostas',
+        icon: FolderOpen,
+        label: 'ORÇAMENTOS',
+        subItems: [
+          {
+            icon: FileText,
+            label: 'Orçamentos',
+            path: '/comercial/orcamentos',
+          },
+          {
+            icon: FilePlus,
+            label: 'Propostas',
+            path: '/comercial/propostas',
+          },
+          {
+            icon: FileStack,
+            label: 'Templates',
+            path: '/comercial/orcamentos/templates',
+          },
+          {
+            icon: Scissors,
+            label: 'Lista de Corte',
+            path: '/comercial/orcamentos/lista-corte',
+          },
+          {
+            icon: Paintbrush,
+            label: 'Calculadora de Pintura',
+            path: '/comercial/calculadora-pintura',
+          },
+        ],
+      },
+      {
+        icon: FileBarChart,
+        label: 'Relatórios',
+        path: '/comercial/relatorios',
       },
     ],
   },
