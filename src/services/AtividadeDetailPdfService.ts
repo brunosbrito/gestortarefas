@@ -524,22 +524,21 @@ class AtividadeDetailPdfService {
   }
 
   private static drawProductivityBlock() {
-    const scale = 0.9;
-    const contentWidth = (this.pageWidth - 2 * this.margin) * scale;
-    const startX = this.margin + ((this.pageWidth - 2 * this.margin) - contentWidth) / 2;
+    const contentWidth = this.pageWidth - 2 * this.margin;
+    const startX = this.margin;
 
-    // Simplified layout with fewer columns (scaled)
-    const col1Width = 18 * scale; // DATA / HR INÍCIO / OBS label
-    const col2Width = 23 * scale; // DATA value / HR INÍCIO value
-    const col3Width = 28 * scale; // OPERADOR(ES) / HR TÉRMINO label
-    const col4Width = 23 * scale; // HR TÉRMINO value
-    const col5Width = 38 * scale; // OS FINALIZADA (S/N) label
-    const col6Width = 14 * scale; // OS FINALIZADA value
-    const col7Width = 30 * scale; // QTD PRODUZIDA label
+    // Simplified layout with fewer columns (full width - total must be < contentWidth ~180mm)
+    const col1Width = 18; // DATA / HR INÍCIO / OBS label
+    const col2Width = 24; // DATA value / HR INÍCIO value
+    const col3Width = 28; // OPERADOR(ES) / HR TÉRMINO label
+    const col4Width = 24; // HR TÉRMINO value
+    const col5Width = 36; // OS FINALIZADA (S/N) label
+    const col6Width = 14; // OS FINALIZADA value
+    const col7Width = 28; // QTD PRODUZIDA label
     const col8Width = contentWidth - col1Width - col2Width - col3Width - col4Width - col5Width - col6Width - col7Width;
 
     // Check if we need a new page before drawing the block
-    this.checkPageBreak(18);
+    this.checkPageBreak(16);
 
     autoTable(this.doc, {
       startY: this.yPos,
@@ -549,12 +548,12 @@ class AtividadeDetailPdfService {
         ['OBS:', '', '', '', '', '', '', ''],
       ],
       theme: 'grid',
-      margin: { left: startX, right: startX },
+      margin: { left: startX, right: this.margin },
       tableWidth: contentWidth,
       styles: {
-        fontSize: (ACTIVITY_PDF_DEFAULTS.fontSize.body - 1) * scale,
-        cellPadding: 1.2,
-        minCellHeight: 5.5,
+        fontSize: ACTIVITY_PDF_DEFAULTS.fontSize.body - 1,
+        cellPadding: 1,
+        minCellHeight: 5,
       },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: col1Width, fillColor: [240, 240, 240] },
@@ -578,7 +577,7 @@ class AtividadeDetailPdfService {
       },
     });
 
-    this.yPos = (this.doc as any).lastAutoTable.finalY + 2;
+    this.yPos = (this.doc as any).lastAutoTable.finalY + 1;
   }
 
   private static async drawImagesSection(atividade: AtividadeStatus) {
@@ -588,7 +587,7 @@ class AtividadeDetailPdfService {
     const imageWidth = (contentWidth - spacing * (imagesPerRow - 1)) / imagesPerRow;
 
     // Check if we need a new page for images
-    if (this.yPos + maxHeight + 15 > this.pageHeight - 15) {
+    if (this.yPos + maxHeight + 15 > this.pageHeight - 10) {
       this.doc.addPage();
       this.yPos = this.margin;
     }
@@ -631,7 +630,7 @@ class AtividadeDetailPdfService {
               }
 
               // Check page break
-              if (this.yPos + maxHeight + 10 > this.pageHeight - 15) {
+              if (this.yPos + maxHeight + 10 > this.pageHeight - 10) {
                 this.doc.addPage();
                 this.yPos = this.margin;
                 currentX = this.margin;
@@ -695,20 +694,20 @@ class AtividadeDetailPdfService {
       this.doc.text(
         'GMX Industrial',
         this.margin,
-        this.pageHeight - 5
+        this.pageHeight - 3
       );
 
       this.doc.text(
         `${i}/${totalPages}`,
         this.pageWidth - this.margin,
-        this.pageHeight - 5,
+        this.pageHeight - 3,
         { align: 'right' }
       );
     }
   }
 
   private static checkPageBreak(requiredHeight: number): boolean {
-    if (this.yPos + requiredHeight > this.pageHeight - 12) {
+    if (this.yPos + requiredHeight > this.pageHeight - 8) {
       this.doc.addPage();
       this.yPos = this.margin;
       return true;
