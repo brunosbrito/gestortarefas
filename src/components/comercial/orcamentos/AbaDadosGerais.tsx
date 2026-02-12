@@ -55,20 +55,31 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
   const faixaInfo = faixasSimples.find(f => f.faixa === faixaSelecionada) || faixaAtual;
   const proximaFaixa = faixasSimples.find(f => f.faixa === faixaSelecionada + 1);
 
-  // BDI com checkboxes funcionais
-  const [bdiComponentes, setBdiComponentes] = useState({
-    lucro: { nome: 'Lucro', percentual: 23, habilitado: true },
-    despesas: { nome: 'Despesas Administrativas', percentual: 2, habilitado: true },
+  // BDI detalhado com checkboxes e inputs editáveis
+  const [bdiDetalhado, setBdiDetalhado] = useState({
+    lucro: { nome: 'Lucro', percentual: 20, habilitado: true },
+    admCentral: { nome: 'Administração Central', percentual: 3, habilitado: true },
+    admLocal: { nome: 'Administração Local', percentual: 0, habilitado: false },
+    seguro: { nome: 'Seguro', percentual: 0, habilitado: false },
+    despesasGerais: { nome: 'Despesas Gerais', percentual: 2, habilitado: true },
   });
 
-  const handleToggleBDI = (key: 'lucro' | 'despesas') => {
-    setBdiComponentes(prev => ({
+  const handleToggleBDI = (key: keyof typeof bdiDetalhado) => {
+    setBdiDetalhado(prev => ({
       ...prev,
       [key]: { ...prev[key], habilitado: !prev[key].habilitado }
     }));
   };
 
-  const totalBDI = Object.values(bdiComponentes).reduce(
+  const handleChangeBDIPercentual = (key: keyof typeof bdiDetalhado, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setBdiDetalhado(prev => ({
+      ...prev,
+      [key]: { ...prev[key], percentual: numValue }
+    }));
+  };
+
+  const totalBDI = Object.values(bdiDetalhado).reduce(
     (sum, item) => sum + (item.habilitado ? item.percentual : 0),
     0
   );
@@ -76,7 +87,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
   // Inicializar estados com dados salvos (se existirem)
   useEffect(() => {
     if (orcamento.configuracoesDetalhadas?.bdi) {
-      setBdiComponentes(orcamento.configuracoesDetalhadas.bdi);
+      setBdiDetalhado(orcamento.configuracoesDetalhadas.bdi);
     }
     if (orcamento.configuracoesDetalhadas?.faixaSimples) {
       setFaixaSelecionada(orcamento.configuracoesDetalhadas.faixaSimples);
@@ -156,7 +167,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
           encargos: totalEncargos / 100,  // Converter para decimal
         },
         configuracoesDetalhadas: {
-          bdi: bdiComponentes,
+          bdi: bdiDetalhado,
           faixaSimples: faixaSelecionada,
           encargos: encargosComponentes,
         },
@@ -251,44 +262,153 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
               </div>
 
               <CollapsibleContent className="mt-4 space-y-2">
-                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiComponentes.lucro.habilitado ? 'opacity-50' : ''}`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        id="bdi-lucro"
-                        checked={bdiComponentes.lucro.habilitado}
-                        onCheckedChange={() => handleToggleBDI('lucro')}
+                {/* Lucro */}
+                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiDetalhado.lucro.habilitado ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="bdi-lucro"
+                      checked={bdiDetalhado.lucro.habilitado}
+                      onCheckedChange={() => handleToggleBDI('lucro')}
+                    />
+                    <label
+                      htmlFor="bdi-lucro"
+                      className={`text-sm font-medium cursor-pointer flex-1 ${!bdiDetalhado.lucro.habilitado ? 'line-through' : ''}`}
+                    >
+                      💰 {bdiDetalhado.lucro.nome}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={bdiDetalhado.lucro.percentual}
+                        onChange={(e) => handleChangeBDIPercentual('lucro', e.target.value)}
+                        disabled={!bdiDetalhado.lucro.habilitado}
+                        className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.lucro.habilitado ? 'line-through' : ''}`}
                       />
-                      <label
-                        htmlFor="bdi-lucro"
-                        className={`text-sm font-medium cursor-pointer ${!bdiComponentes.lucro.habilitado ? 'line-through' : ''}`}
-                      >
-                        💰 {bdiComponentes.lucro.nome}
-                      </label>
+                      <span className="text-sm font-bold">%</span>
                     </div>
-                    <span className={`font-mono font-bold text-green-600 ${!bdiComponentes.lucro.habilitado ? 'line-through' : ''}`}>
-                      {bdiComponentes.lucro.percentual.toFixed(2)}%
-                    </span>
                   </div>
                 </div>
-                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiComponentes.despesas.habilitado ? 'opacity-50' : ''}`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        id="bdi-despesas"
-                        checked={bdiComponentes.despesas.habilitado}
-                        onCheckedChange={() => handleToggleBDI('despesas')}
+
+                {/* Administração Central */}
+                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiDetalhado.admCentral.habilitado ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="bdi-admCentral"
+                      checked={bdiDetalhado.admCentral.habilitado}
+                      onCheckedChange={() => handleToggleBDI('admCentral')}
+                    />
+                    <label
+                      htmlFor="bdi-admCentral"
+                      className={`text-sm font-medium cursor-pointer flex-1 ${!bdiDetalhado.admCentral.habilitado ? 'line-through' : ''}`}
+                    >
+                      🏢 {bdiDetalhado.admCentral.nome}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={bdiDetalhado.admCentral.percentual}
+                        onChange={(e) => handleChangeBDIPercentual('admCentral', e.target.value)}
+                        disabled={!bdiDetalhado.admCentral.habilitado}
+                        className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.admCentral.habilitado ? 'line-through' : ''}`}
                       />
-                      <label
-                        htmlFor="bdi-despesas"
-                        className={`text-sm font-medium cursor-pointer ${!bdiComponentes.despesas.habilitado ? 'line-through' : ''}`}
-                      >
-                        📋 {bdiComponentes.despesas.nome}
-                      </label>
+                      <span className="text-sm font-bold">%</span>
                     </div>
-                    <span className={`font-mono font-bold text-green-600 ${!bdiComponentes.despesas.habilitado ? 'line-through' : ''}`}>
-                      {bdiComponentes.despesas.percentual.toFixed(2)}%
-                    </span>
+                  </div>
+                </div>
+
+                {/* Administração Local */}
+                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiDetalhado.admLocal.habilitado ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="bdi-admLocal"
+                      checked={bdiDetalhado.admLocal.habilitado}
+                      onCheckedChange={() => handleToggleBDI('admLocal')}
+                    />
+                    <label
+                      htmlFor="bdi-admLocal"
+                      className={`text-sm font-medium cursor-pointer flex-1 ${!bdiDetalhado.admLocal.habilitado ? 'line-through' : ''}`}
+                    >
+                      🏗️ {bdiDetalhado.admLocal.nome}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={bdiDetalhado.admLocal.percentual}
+                        onChange={(e) => handleChangeBDIPercentual('admLocal', e.target.value)}
+                        disabled={!bdiDetalhado.admLocal.habilitado}
+                        className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.admLocal.habilitado ? 'line-through' : ''}`}
+                      />
+                      <span className="text-sm font-bold">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seguro */}
+                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiDetalhado.seguro.habilitado ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="bdi-seguro"
+                      checked={bdiDetalhado.seguro.habilitado}
+                      onCheckedChange={() => handleToggleBDI('seguro')}
+                    />
+                    <label
+                      htmlFor="bdi-seguro"
+                      className={`text-sm font-medium cursor-pointer flex-1 ${!bdiDetalhado.seguro.habilitado ? 'line-through' : ''}`}
+                    >
+                      🛡️ {bdiDetalhado.seguro.nome}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={bdiDetalhado.seguro.percentual}
+                        onChange={(e) => handleChangeBDIPercentual('seguro', e.target.value)}
+                        disabled={!bdiDetalhado.seguro.habilitado}
+                        className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.seguro.habilitado ? 'line-through' : ''}`}
+                      />
+                      <span className="text-sm font-bold">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Despesas Gerais */}
+                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiDetalhado.despesasGerais.habilitado ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="bdi-despesasGerais"
+                      checked={bdiDetalhado.despesasGerais.habilitado}
+                      onCheckedChange={() => handleToggleBDI('despesasGerais')}
+                    />
+                    <label
+                      htmlFor="bdi-despesasGerais"
+                      className={`text-sm font-medium cursor-pointer flex-1 ${!bdiDetalhado.despesasGerais.habilitado ? 'line-through' : ''}`}
+                    >
+                      📋 {bdiDetalhado.despesasGerais.nome}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={bdiDetalhado.despesasGerais.percentual}
+                        onChange={(e) => handleChangeBDIPercentual('despesasGerais', e.target.value)}
+                        disabled={!bdiDetalhado.despesasGerais.habilitado}
+                        className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.despesasGerais.habilitado ? 'line-through' : ''}`}
+                      />
+                      <span className="text-sm font-bold">%</span>
+                    </div>
                   </div>
                 </div>
               </CollapsibleContent>

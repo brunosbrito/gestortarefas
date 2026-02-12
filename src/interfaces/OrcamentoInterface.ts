@@ -34,7 +34,10 @@ export interface Orcamento {
   configuracoesDetalhadas?: {
     bdi: {
       lucro: { percentual: number; habilitado: boolean; };
-      despesas: { percentual: number; habilitado: boolean; };
+      admCentral: { percentual: number; habilitado: boolean; };
+      admLocal: { percentual: number; habilitado: boolean; };
+      seguro: { percentual: number; habilitado: boolean; };
+      despesasGerais: { percentual: number; habilitado: boolean; };
     };
     faixaSimples: number;            // Faixa atual (1-6)
     encargos: {
