@@ -87,7 +87,14 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
   // Inicializar estados com dados salvos (se existirem)
   useEffect(() => {
     if (orcamento.configuracoesDetalhadas?.bdi) {
-      setBdiDetalhado(orcamento.configuracoesDetalhadas.bdi);
+      // Fazer merge dos dados salvos com os padrões (para retrocompatibilidade)
+      setBdiDetalhado(prev => ({
+        lucro: orcamento.configuracoesDetalhadas.bdi.lucro || prev.lucro,
+        admCentral: orcamento.configuracoesDetalhadas.bdi.admCentral || prev.admCentral,
+        admLocal: orcamento.configuracoesDetalhadas.bdi.admLocal || prev.admLocal,
+        seguro: orcamento.configuracoesDetalhadas.bdi.seguro || prev.seguro,
+        despesasGerais: orcamento.configuracoesDetalhadas.bdi.despesasGerais || prev.despesasGerais,
+      }));
     }
     if (orcamento.configuracoesDetalhadas?.faixaSimples) {
       setFaixaSelecionada(orcamento.configuracoesDetalhadas.faixaSimples);
