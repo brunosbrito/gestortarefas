@@ -120,7 +120,7 @@ export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
   const custoDirectoTotal = composicoes.reduce((total, comp) => total + comp.custoDirecto, 0);
 
   // BDI total
-  const bdiTotal = composicoes.reduce((total, comp) => total + comp.bdi.valor, 0);
+  const bdiTotal = composicoes.reduce((total, comp) => total + (comp.bdi?.valor || 0), 0);
 
   // Subtotal (custo direto + BDI)
   const subtotal = custoDirectoTotal + bdiTotal;
@@ -227,6 +227,8 @@ export const verificarAlertas = (orcamento: Partial<Orcamento>): {
   // BDI fora do padrão (verifica composições individuais)
   const composicoes = orcamento.composicoes || [];
   composicoes.forEach(comp => {
+    if (!comp.bdi) return; // Pula se BDI não estiver inicializado
+
     const bdiPadrao = comp.tipo === 'ferramentas' ? 10 : 25;
     const desvio = Math.abs(comp.bdi.percentual - bdiPadrao);
 

@@ -289,9 +289,9 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">BDI ({composicaoPintura.bdi.percentual}%)</Label>
+                  <Label className="text-muted-foreground">BDI ({composicaoPintura.bdi?.percentual || 0}%)</Label>
                   <p className="text-xl font-bold text-blue-600">
-                    {formatCurrency(composicaoPintura.bdi.valor)}
+                    {formatCurrency(composicaoPintura.bdi?.valor || 0)}
                   </p>
                 </div>
                 <div>
