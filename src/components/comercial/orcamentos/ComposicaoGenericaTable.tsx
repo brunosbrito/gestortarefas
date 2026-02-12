@@ -179,9 +179,9 @@ export default function ComposicaoGenericaTable({
             <p className="text-xl font-bold">{formatCurrency(composicao.custoDirecto)}</p>
           </div>
           <div>
-            <Label className="text-muted-foreground">BDI ({composicao.bdi.percentual}%)</Label>
+            <Label className="text-muted-foreground">BDI ({composicao.bdi?.percentual || 0}%)</Label>
             <p className="text-xl font-bold text-blue-600">
-              {formatCurrency(composicao.bdi.valor)}
+              {formatCurrency(composicao.bdi?.valor || 0)}
             </p>
           </div>
           <div>
