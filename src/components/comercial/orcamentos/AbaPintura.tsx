@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Paintbrush, Plus, Info } from 'lucide-react';
+import { Paintbrush, Plus, Info, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -12,8 +12,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Orcamento } from '@/interfaces/OrcamentoInterface';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Orcamento, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency } from '@/lib/currency';
+import { useToast } from '@/hooks/use-toast';
+import OrcamentoService from '@/services/OrcamentoService';
+import AddPinturaItemDialog from './AddPinturaItemDialog';
+import EditItemDialog from './EditItemDialog';
 
 interface AbaPinturaProps {
   orcamento: Orcamento;
@@ -21,7 +31,10 @@ interface AbaPinturaProps {
 }
 
 export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
-  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const [dialogAddAberto, setDialogAddAberto] = useState(false);
+  const [dialogEditAberto, setDialogEditAberto] = useState(false);
+  const [itemParaEditar, setItemParaEditar] = useState<ItemComposicao | null>(null);
 
   // Calcular área total AUTOMATICAMENTE dos materiais do orçamento
   const areaTotal = useMemo(() => {
@@ -38,10 +51,89 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
 
   // Buscar composição de pintura
   const composicaoPintura = orcamento.composicoes.find((c) => c.tipo === 'jato_pintura');
+  const composicaoMateriais = orcamento.composicoes.find((c) => c.tipo === 'materiais');
 
-  const handleAdicionarItem = () => {
-    // TODO: Abrir dialog para adicionar item de pintura
-    console.log('Adicionar item de pintura');
+  const handleAdicionarItem = async (novoItem: Omit<ItemComposicao, 'id' | 'composicaoId' | 'ordem'>) => {
+    if (!composicaoPintura) return;
+
+    try {
+      const itemCompleto: ItemComposicao = {
+        ...novoItem,
+        id: Date.now().toString(),
+        composicaoId: composicaoPintura.id,
+        ordem: composicaoPintura.itens.length + 1,
+      };
+
+      composicaoPintura.itens.push(itemCompleto);
+      await OrcamentoService.update(orcamento.id, orcamento);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Item de pintura adicionado com sucesso',
+      });
+
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao adicionar item de pintura',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleEditarItem = (item: ItemComposicao) => {
+    setItemParaEditar(item);
+    setDialogEditAberto(true);
+  };
+
+  const handleAtualizarItem = async (itemAtualizado: ItemComposicao) => {
+    if (!composicaoPintura) return;
+
+    try {
+      const index = composicaoPintura.itens.findIndex((i) => i.id === itemAtualizado.id);
+      if (index !== -1) {
+        composicaoPintura.itens[index] = itemAtualizado;
+        await OrcamentoService.update(orcamento.id, orcamento);
+
+        toast({
+          title: 'Sucesso',
+          description: 'Item atualizado com sucesso',
+        });
+
+        onUpdate();
+      }
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar item',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExcluirItem = async (itemId: string) => {
+    if (!composicaoPintura) return;
+
+    if (!confirm('Tem certeza que deseja excluir este item?')) return;
+
+    try {
+      composicaoPintura.itens = composicaoPintura.itens.filter((i) => i.id !== itemId);
+      await OrcamentoService.update(orcamento.id, orcamento);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Item excluído com sucesso',
+      });
+
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao excluir item',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -102,7 +194,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Itens de Jateamento e Pintura</CardTitle>
-            <Button onClick={handleAdicionarItem}>
+            <Button onClick={() => setDialogAddAberto(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Adicionar Item
             </Button>
@@ -150,7 +242,26 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                         {formatCurrency(item.subtotal)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {/* TODO: Ações (editar, excluir) */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditarItem(item)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleExcluirItem(item.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -200,6 +311,22 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <AddPinturaItemDialog
+        open={dialogAddAberto}
+        onOpenChange={setDialogAddAberto}
+        onAdd={handleAdicionarItem}
+        composicaoId={composicaoPintura?.id || ''}
+        areaTotal={areaTotal}
+      />
+
+      <EditItemDialog
+        open={dialogEditAberto}
+        onOpenChange={setDialogEditAberto}
+        onUpdate={handleAtualizarItem}
+        item={itemParaEditar}
+      />
     </div>
   );
 }
