@@ -27,3 +27,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary files and scripts
+nul
+*-temp.ts
+popular-*.js
+gerar-*.js
+extracao-*.md
+perfis-u-*.md
+perfis-u-*.ts
