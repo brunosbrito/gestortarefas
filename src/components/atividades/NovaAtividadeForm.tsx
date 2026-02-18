@@ -178,7 +178,7 @@ export function NovaAtividadeForm({
       observation: atividadeInicial?.observation || '',
       projectId,
       orderServiceId,
-      createdBy: 1,
+      createdBy: Number(localStorage.getItem('userId')) || 1,
     },
   });
 
@@ -272,7 +272,7 @@ export function NovaAtividadeForm({
         observation: atividadeInicial.observation || '',
         projectId,
         orderServiceId,
-        createdBy: 1,
+        createdBy: Number(localStorage.getItem('userId')) || 1,
       });
 
       // Se tiver campos opcionais preenchidos, expandir a seção
