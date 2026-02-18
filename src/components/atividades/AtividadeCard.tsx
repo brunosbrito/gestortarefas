@@ -80,15 +80,17 @@ export const AtividadeCard = ({
   };
 
   const calculateElapsedTime = (totalTime: number, startDate?: string) => {
-    if (!startDate) return totalTime / 3600;
+    // totalTime já vem em horas decimais da API
+    if (!startDate) return totalTime;
 
     const startDateTime = new Date(startDate);
     const now = new Date();
 
+    // Converte totalTime (horas) para segundos e soma com tempo decorrido desde startDate
     const elapsedSeconds = (now.getTime() - startDateTime.getTime()) / 1000;
-    console.log('total', totalTime, elapsedSeconds, 'ms');
+    const totalTimeInSeconds = totalTime * 3600;
 
-    const totalElapsedSeconds = totalTime * 3600 + elapsedSeconds;
+    const totalElapsedSeconds = totalTimeInSeconds + elapsedSeconds;
     const hours = Math.floor(totalElapsedSeconds / 3600);
     const minutes = Math.floor((totalElapsedSeconds % 3600) / 60);
     return hours + minutes / 60;

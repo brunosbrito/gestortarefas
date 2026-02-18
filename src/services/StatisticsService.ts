@@ -19,7 +19,9 @@ const parseTimeToHours = (timeString: string | null | undefined): number => {
 };
 
 /**
- * Converte totalTime (que vem em minutos da API) para horas decimais
+ * Converte totalTime para horas
+ * NOTA: totalTime pode vir em minutos da API, então verificamos o valor
+ * Se for > 1000, assumimos que está em minutos e convertemos para horas
  */
 const getTotalTimeInHours = (totalTime: number | string | null | undefined): number => {
   if (totalTime === null || totalTime === undefined) {
@@ -33,8 +35,13 @@ const getTotalTimeInHours = (totalTime: number | string | null | undefined): num
     return 0;
   }
 
-  // totalTime vem em minutos, converter para horas
-  return numericValue / 60;
+  // Se o valor for muito alto (> 500), provavelmente está em minutos
+  // Valores razoáveis em horas para uma atividade seriam < 500h
+  if (numericValue > 500) {
+    return numericValue / 60; // Converter de minutos para horas
+  }
+
+  return numericValue;
 };
 
 export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: number | null) => {

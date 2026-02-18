@@ -6,10 +6,64 @@ import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem, hoverScale, tapScale } from '@/lib/animations';
 import { useDashboardStore } from '@/stores/dashboardStore';
 
+/**
+ * Converte totalTime/actualTime para horas
+ * Se for > 500, assumimos que está em minutos e convertemos para horas
+ */
+const getTimeInHours = (time: number | string | null | undefined): number => {
+  if (time === null || time === undefined) return 0;
+  const numericValue = typeof time === 'string' ? parseFloat(time) : time;
+  if (isNaN(numericValue) || numericValue < 0) return 0;
+  if (numericValue > 500) return numericValue / 60;
+  return numericValue;
+};
+
+/**
+ * Converte estimatedTime para horas (pode ser string "Xh Ymin" ou número)
+ */
+const getEstimatedTimeInHours = (estimatedTime: number | string | null | undefined): number => {
+  if (estimatedTime === null || estimatedTime === undefined) return 0;
+
+  if (typeof estimatedTime === 'string') {
+    // Tenta extrair horas e minutos do formato "Xh Ymin"
+    const hoursMatch = estimatedTime.match(/(\d+)\s*h/i);
+    const minutesMatch = estimatedTime.match(/(\d+)\s*min/i);
+    const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
+
+    if (hours > 0 || minutes > 0) {
+      return hours + (minutes / 60);
+    }
+
+    // Se não encontrar formato "Xh Ymin", tenta converter como número
+    const numericValue = parseFloat(estimatedTime);
+    if (!isNaN(numericValue) && numericValue > 0) {
+      return numericValue > 500 ? numericValue / 60 : numericValue;
+    }
+    return 0;
+  }
+
+  if (estimatedTime > 500) return estimatedTime / 60;
+  return estimatedTime;
+};
+
+/**
+ * Obtém o tempo trabalhado de uma atividade, usando totalTime como fallback
+ */
+const getActualTimeFromActivity = (activity: any): number => {
+  // Tentar usar totalTime primeiro, depois actualTime
+  const totalTime = getTimeInHours(activity.totalTime);
+  if (totalTime > 0) return totalTime;
+
+  const actualTime = getTimeInHours(activity.actualTime);
+  return actualTime;
+};
+
 interface KPICardData {
   title: string;
   value: string | number;
   subtitle: string;
+  explanation: string;
   icon: React.ComponentType<{ className?: string }>;
   borderColor: string;
   bgTint: string;
@@ -23,55 +77,61 @@ interface KPICardData {
  * Exibe 6 métricas principais calculadas a partir das atividades filtradas
  */
 export const DashboardKPIs = () => {
-  const { filteredData, statistics, activityStatus } = useDashboardStore();
+  // Usar selectors específicos para garantir re-render quando dados mudam
+  const filteredActivities = useDashboardStore(state => state.filteredData.activities);
+  const collaborators = useDashboardStore(state => state.statistics.collaborators);
+  const emExecucao = useDashboardStore(state => state.activityStatus.emExecucao);
 
   // Calcular KPIs com useMemo para performance
   const kpis = useMemo(() => {
-    const activities = filteredData.activities || [];
+    const activities = filteredActivities || [];
 
-    // 1. Calcular totais de horas (garantir que sejam números)
-    const totalEstimated = Number(activities.reduce((sum, a) => sum + (Number(a.estimatedTime) || 0), 0));
-    const totalActual = Number(activities.reduce((sum, a) => sum + (Number(a.actualTime) || 0), 0));
+    // 1. Calcular totais de horas com conversão de unidades
+    const totalEstimated = activities.reduce((sum, a) => sum + getEstimatedTimeInHours(a.estimatedTime), 0);
+    const totalActual = activities.reduce((sum, a) => sum + getActualTimeFromActivity(a), 0);
 
-    // 2. Calcular eficiência geral (limitada entre -100% e 100%)
-    const rawEfficiency = totalEstimated > 0
-      ? ((totalEstimated - totalActual) / totalEstimated) * 100
+    // 2. Calcular eficiência geral (fórmula: estimado/trabalhado * 100)
+    // 100% = no prazo, > 100% = eficiente (terminou antes), < 100% = ineficiente (atrasou)
+    const overallEfficiency = totalActual > 0 && totalEstimated > 0
+      ? Math.min(200, Math.max(0, (totalEstimated / totalActual) * 100))
       : 0;
-    const overallEfficiency = Math.max(-100, Math.min(100, rawEfficiency));
 
     // 3. Calcular taxa no prazo (completed on time)
     const completedActivities = activities.filter(a => a.isCompleted);
-    const onTimeActivities = completedActivities.filter(a =>
-      (Number(a.actualTime) || 0) <= (Number(a.estimatedTime) || 0)
-    );
+    const onTimeActivities = completedActivities.filter(a => {
+      const est = getEstimatedTimeInHours(a.estimatedTime);
+      const act = getActualTimeFromActivity(a);
+      return est > 0 && act > 0 && act <= est;
+    });
     const onTimeRate = completedActivities.length > 0
       ? (onTimeActivities.length / completedActivities.length) * 100
       : 0;
 
     // 4. Contar atividades críticas
-    const criticalCount = activities.filter(a =>
-      a.status === 'Paralizada' ||
-      a.isDelayed ||
-      (a.actualTime && a.estimatedTime && Number(a.actualTime) > Number(a.estimatedTime) * 1.2)
-    ).length;
+    const criticalCount = activities.filter(a => {
+      if (a.status === 'Paralizada' || a.isDelayed) return true;
+      const est = getEstimatedTimeInHours(a.estimatedTime);
+      const act = getActualTimeFromActivity(a);
+      return est > 0 && act > 0 && act > est * 1.2;
+    }).length;
 
     // 5. Calcular utilização de equipe
-    const activeActivities = activityStatus.emExecucao || 0;
-    const totalCollaborators = (statistics.collaborators?.length || 1);
+    const activeActivities = emExecucao || 0;
+    const totalCollaborators = (collaborators?.length || 1);
     const utilization = (activeActivities / totalCollaborators);
 
-    // 6. Saldo de horas (diferença)
-    const budgetDiff = totalActual - totalEstimated;
+    // 6. Saldo de horas (diferença): positivo = economizou, negativo = gastou mais
+    const budgetDiff = totalEstimated - totalActual;
 
-    // 7. Eficiência média por atividade concluída
+    // 7. Eficiência média por atividade concluída (fórmula: estimado/trabalhado * 100)
+    // 100% = no prazo, > 100% = eficiente, < 100% = ineficiente
     const avgEfficiency = completedActivities.length > 0
       ? completedActivities.reduce((sum, a) => {
-          const est = Number(a.estimatedTime) || 0;
-          const act = Number(a.actualTime) || 0;
-          // Calcular eficiência e limitar entre -100% e 100%
-          const eff = est > 0 ? ((est - act) / est) * 100 : 0;
-          const limitedEff = Math.max(-100, Math.min(100, eff));
-          return sum + limitedEff;
+          const est = getEstimatedTimeInHours(a.estimatedTime);
+          const act = getActualTimeFromActivity(a);
+          // Limitar eficiência entre 0% e 200% para evitar valores extremos
+          const eff = act > 0 && est > 0 ? Math.min(200, Math.max(0, (est / act) * 100)) : 0;
+          return sum + eff;
         }, 0) / completedActivities.length
       : 0;
 
@@ -79,18 +139,20 @@ export const DashboardKPIs = () => {
       {
         title: 'Eficiência Geral',
         value: `${overallEfficiency.toFixed(1)}%`,
-        subtitle: overallEfficiency >= 0 ? 'Dentro do prazo' : 'Acima do prazo',
-        icon: overallEfficiency >= 0 ? TrendingUp : TrendingDown,
-        borderColor: overallEfficiency >= 0 ? 'border-l-green-500' : 'border-l-red-500',
-        bgTint: overallEfficiency >= 0 ? 'bg-green-50/50 dark:bg-green-950/20' : 'bg-red-50/50 dark:bg-red-950/20',
-        textColor: overallEfficiency >= 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300',
-        iconBg: overallEfficiency >= 0 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30',
-        iconColor: overallEfficiency >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+        subtitle: overallEfficiency >= 100 ? 'Dentro do prazo' : 'Acima do prazo',
+        explanation: `Estimado: ${totalEstimated.toFixed(1)}h | Trabalhado: ${totalActual.toFixed(1)}h`,
+        icon: overallEfficiency >= 100 ? TrendingUp : TrendingDown,
+        borderColor: overallEfficiency >= 100 ? 'border-l-green-500' : 'border-l-red-500',
+        bgTint: overallEfficiency >= 100 ? 'bg-green-50/50 dark:bg-green-950/20' : 'bg-red-50/50 dark:bg-red-950/20',
+        textColor: overallEfficiency >= 100 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300',
+        iconBg: overallEfficiency >= 100 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30',
+        iconColor: overallEfficiency >= 100 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
       },
       {
         title: 'Taxa No Prazo',
         value: `${onTimeRate.toFixed(1)}%`,
         subtitle: `${onTimeActivities.length} de ${completedActivities.length}`,
+        explanation: `Atividades concluídas dentro do tempo estimado`,
         icon: Target,
         borderColor: 'border-l-blue-500',
         bgTint: 'bg-blue-50/50 dark:bg-blue-950/20',
@@ -101,18 +163,20 @@ export const DashboardKPIs = () => {
       {
         title: 'Saldo de Horas',
         value: budgetDiff > 0 ? `+${budgetDiff.toFixed(1)}h` : `${budgetDiff.toFixed(1)}h`,
-        subtitle: `${totalActual.toFixed(1)}h / ${totalEstimated.toFixed(1)}h`,
+        subtitle: budgetDiff >= 0 ? 'Economia de tempo' : 'Tempo excedido',
+        explanation: `Estimado: ${totalEstimated.toFixed(1)}h | Trabalhado: ${totalActual.toFixed(1)}h`,
         icon: Clock,
-        borderColor: budgetDiff > 0 ? 'border-l-orange-500' : 'border-l-green-500',
-        bgTint: budgetDiff > 0 ? 'bg-orange-50/50 dark:bg-orange-950/20' : 'bg-green-50/50 dark:bg-green-950/20',
-        textColor: budgetDiff > 0 ? 'text-orange-700 dark:text-orange-300' : 'text-green-700 dark:text-green-300',
-        iconBg: budgetDiff > 0 ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-green-100 dark:bg-green-900/30',
-        iconColor: budgetDiff > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'
+        borderColor: budgetDiff >= 0 ? 'border-l-green-500' : 'border-l-red-500',
+        bgTint: budgetDiff >= 0 ? 'bg-green-50/50 dark:bg-green-950/20' : 'bg-red-50/50 dark:bg-red-950/20',
+        textColor: budgetDiff >= 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300',
+        iconBg: budgetDiff >= 0 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30',
+        iconColor: budgetDiff >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
       },
       {
         title: 'Atividades Críticas',
         value: criticalCount,
         subtitle: criticalCount > 0 ? 'Requer atenção' : 'Tudo em ordem',
+        explanation: `Paralizadas + Atrasadas + Acima de 120% do tempo`,
         icon: AlertTriangle,
         borderColor: criticalCount > 0 ? 'border-l-red-500' : 'border-l-green-500',
         bgTint: criticalCount > 0 ? 'bg-red-50/50 dark:bg-red-950/20' : 'bg-green-50/50 dark:bg-green-950/20',
@@ -124,6 +188,7 @@ export const DashboardKPIs = () => {
         title: 'Utilização de Equipe',
         value: utilization.toFixed(1),
         subtitle: `${activeActivities} ativ. / ${totalCollaborators} colab.`,
+        explanation: `Atividades em execução por colaborador`,
         icon: Users,
         borderColor: 'border-l-purple-500',
         bgTint: 'bg-purple-50/50 dark:bg-purple-950/20',
@@ -134,18 +199,19 @@ export const DashboardKPIs = () => {
       {
         title: 'Eficiência Média',
         value: `${avgEfficiency.toFixed(1)}%`,
-        subtitle: 'Por atividade concluída',
-        icon: TrendingUp,
-        borderColor: 'border-l-cyan-500',
-        bgTint: 'bg-cyan-50/50 dark:bg-cyan-950/20',
-        textColor: 'text-cyan-700 dark:text-cyan-300',
-        iconBg: 'bg-cyan-100 dark:bg-cyan-900/30',
-        iconColor: 'text-cyan-600 dark:text-cyan-400'
+        subtitle: avgEfficiency >= 100 ? 'Dentro do prazo' : 'Acima do prazo',
+        explanation: `Média de ${completedActivities.length} atividades concluídas`,
+        icon: avgEfficiency >= 100 ? TrendingUp : TrendingDown,
+        borderColor: avgEfficiency >= 100 ? 'border-l-green-500' : 'border-l-red-500',
+        bgTint: avgEfficiency >= 100 ? 'bg-green-50/50 dark:bg-green-950/20' : 'bg-red-50/50 dark:bg-red-950/20',
+        textColor: avgEfficiency >= 100 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300',
+        iconBg: avgEfficiency >= 100 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30',
+        iconColor: avgEfficiency >= 100 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
       }
     ];
 
     return kpiData;
-  }, [filteredData.activities, statistics.collaborators, activityStatus.emExecucao]);
+  }, [filteredActivities, collaborators, emExecucao]);
 
   return (
     <Card className="border border-border/50 shadow-elevation-2 overflow-hidden">
@@ -218,6 +284,9 @@ export const DashboardKPIs = () => {
                         </h3>
                         <p className="text-xs text-muted-foreground line-clamp-2">
                           {kpi.subtitle}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/70 italic mt-1">
+                          {kpi.explanation}
                         </p>
                       </div>
 

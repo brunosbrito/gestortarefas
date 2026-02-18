@@ -51,23 +51,38 @@ export const MacroTasksChart = ({ macroTasks }: MacroTasksChartProps) => {
     majorTickLines: { width: 0 },
   }), [isDark]);
 
+  // Calcular intervalo ideal baseado no valor máximo
+  const maxValue = useMemo(() => {
+    if (!hasData) return 50;
+    const values = macroTasks.flatMap(t => [t.estimatedHours, t.actualHours]);
+    return Math.max(...values, 10);
+  }, [macroTasks, hasData]);
+
+  const yAxisInterval = useMemo(() => {
+    if (maxValue <= 20) return 2;
+    if (maxValue <= 50) return 5;
+    if (maxValue <= 100) return 10;
+    if (maxValue <= 200) return 25;
+    if (maxValue <= 500) return 50;
+    if (maxValue <= 1000) return 100;
+    if (maxValue <= 5000) return 500;
+    return Math.ceil(maxValue / 10);
+  }, [maxValue]);
+
   const primaryYAxis = useMemo(() => ({
-    title: 'Horas',
-    titleStyle: {
-      color: isDark ? '#94a3b8' : '#64748b',
-      size: '12px',
-    },
     labelStyle: {
       color: isDark ? '#94a3b8' : '#64748b',
+      size: '11px',
     },
-    majorGridLines: {
-      width: 1,
-      color: isDark ? 'rgba(71, 85, 105, 0.3)' : 'rgba(0, 0, 0, 0.1)',
-      dashArray: '3,3',
-    },
+    majorGridLines: { width: 0 },
+    minorGridLines: { width: 0 },
+    majorTickLines: { width: 0 },
+    minorTickLines: { width: 0 },
     lineStyle: { width: 0 },
     labelFormat: '{value}h',
-  }), [isDark]);
+    minimum: 0,
+    interval: yAxisInterval,
+  }), [isDark, yAxisInterval]);
 
   const tooltipRender = (args: any) => {
     if (args.point && args.series) {
@@ -163,7 +178,7 @@ export const MacroTasksChart = ({ macroTasks }: MacroTasksChartProps) => {
           </div>
           <div className="flex items-center gap-3">
             <div className="text-xs text-muted-foreground">
-              {macroTasks.length} tarefas
+              {macroTasks.length} tarefas macro
             </div>
             <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
               <DialogTrigger asChild>
@@ -180,7 +195,7 @@ export const MacroTasksChart = ({ macroTasks }: MacroTasksChartProps) => {
                     <div>
                       <div className="text-lg font-semibold">Performance por Tarefa Macro</div>
                       <div className="text-xs text-muted-foreground font-normal mt-0.5">
-                        Comparação de horas previstas vs trabalhadas - {macroTasks.length} tarefas
+                        Comparação de horas previstas vs trabalhadas - {macroTasks.length} tarefas macro
                       </div>
                     </div>
                   </DialogTitle>

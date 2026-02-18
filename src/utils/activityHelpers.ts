@@ -30,7 +30,9 @@ const parseTimeToHours = (timeString: string | number | null | undefined): numbe
 };
 
 /**
- * Converte totalTime (que vem em minutos da API) para horas decimais
+ * Converte totalTime para horas
+ * NOTA: totalTime pode vir em minutos da API, então verificamos o valor
+ * Se for > 500, assumimos que está em minutos e convertemos para horas
  */
 const convertTotalTimeToHours = (totalTime: number | string | null | undefined): number => {
   if (totalTime === null || totalTime === undefined) {
@@ -43,8 +45,12 @@ const convertTotalTimeToHours = (totalTime: number | string | null | undefined):
     return 0;
   }
 
-  // totalTime vem em minutos, converter para horas
-  return numericValue / 60;
+  // Se o valor for muito alto (> 500), provavelmente está em minutos
+  if (numericValue > 500) {
+    return numericValue / 60;
+  }
+
+  return numericValue;
 };
 
 /**

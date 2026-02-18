@@ -17,65 +17,111 @@ import '@/config/syncfusionLocale';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { startOfWeek, subWeeks, isWithinInterval } from 'date-fns';
+import { startOfWeek, subWeeks, isWithinInterval, format, addDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface TrendDataPoint {
-  period: string;         // "Sem 1", "Sem 2", ...
-  completedCount: number; // Atividades concluidas
-  avgEfficiency: number;  // Eficiencia media (%)
-  onTimeRate: number;     // Taxa no prazo (%)
+  period: string;
+  completedCount: number;
+  efficiency: number;    // Eficiência Média (%)
+  onTimeRate: number;    // Taxa No Prazo (%)
 }
+
+/**
+ * Converte totalTime para horas
+ * Se for > 500, assumimos que está em minutos e convertemos para horas
+ */
+const getTotalTimeInHours = (totalTime: number | string | null | undefined): number => {
+  if (totalTime === null || totalTime === undefined) return 0;
+  const numericValue = typeof totalTime === 'string' ? parseFloat(totalTime) : totalTime;
+  if (isNaN(numericValue) || numericValue < 0) return 0;
+  if (numericValue > 500) return numericValue / 60;
+  return numericValue;
+};
+
+/**
+ * Converte estimatedTime para horas (pode ser string "Xh Ymin" ou número)
+ */
+const getEstimatedTimeInHours = (estimatedTime: number | string | null | undefined): number => {
+  if (estimatedTime === null || estimatedTime === undefined) return 0;
+
+  if (typeof estimatedTime === 'string') {
+    // Tenta extrair horas e minutos do formato "Xh Ymin"
+    const hoursMatch = estimatedTime.match(/(\d+)\s*h/i);
+    const minutesMatch = estimatedTime.match(/(\d+)\s*min/i);
+    const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
+
+    if (hours > 0 || minutes > 0) {
+      return hours + (minutes / 60);
+    }
+
+    // Se não encontrar formato "Xh Ymin", tenta converter como número
+    const numericValue = parseFloat(estimatedTime);
+    if (!isNaN(numericValue) && numericValue > 0) {
+      return numericValue > 500 ? numericValue / 60 : numericValue;
+    }
+    return 0;
+  }
+
+  if (estimatedTime > 500) return estimatedTime / 60;
+  return estimatedTime;
+};
 
 /**
  * Calcula dados de tendencia de produtividade das ultimas 12 semanas
  */
 const calculateTrendData = (activities: any[]): TrendDataPoint[] => {
-  // Filtrar apenas atividades concluidas com endDate
   const completedActivities = activities.filter(a =>
-    a.isCompleted && a.endDate
+    a.status === 'Concluída' && a.endDate
   );
 
-  if (completedActivities.length === 0) return [];
-
-  // Gerar ultimas 12 semanas
   const weeks: TrendDataPoint[] = [];
   const now = new Date();
 
   for (let i = 11; i >= 0; i--) {
-    const weekStart = startOfWeek(subWeeks(now, i), { weekStartsOn: 1 }); // Segunda-feira
+    const weekStart = startOfWeek(subWeeks(now, i), { weekStartsOn: 1 });
     const weekEnd = startOfWeek(subWeeks(now, i - 1), { weekStartsOn: 1 });
 
-    // Filtrar atividades concluidas nesta semana
     const weekActivities = completedActivities.filter(a => {
       const endDate = new Date(a.endDate);
       return isWithinInterval(endDate, { start: weekStart, end: weekEnd });
     });
 
-    // Calcular metricas para esta semana
     const completedCount = weekActivities.length;
 
-    const avgEfficiency = completedCount > 0
+    // Eficiência: (estimado / trabalhado) * 100, limitado a 0-100%
+    // 100% = no prazo ou melhor, < 100% = atrasado
+    const efficiency = completedCount > 0
       ? weekActivities.reduce((sum, a) => {
-          const est = Number(a.estimatedTime) || 0;
-          const act = Number(a.actualTime) || 0;
-          const eff = est > 0 ? ((est - act) / est) * 100 : 0;
-          // Limitar eficiencia entre -100 e 100
-          return sum + Math.max(-100, Math.min(100, eff));
+          const est = getEstimatedTimeInHours(a.estimatedTime);
+          const act = getTotalTimeInHours(a.totalTime) || getTotalTimeInHours(a.actualTime) || 0;
+          // Se terminou no prazo ou antes, eficiência = 100%
+          // Se atrasou, eficiência = (estimado/trabalhado) * 100
+          const eff = act > 0 && est > 0 ? Math.min(100, (est / act) * 100) : 0;
+          return sum + eff;
         }, 0) / completedCount
       : 0;
 
-    const onTimeCount = weekActivities.filter(a =>
-      (Number(a.actualTime) || 0) <= (Number(a.estimatedTime) || 0)
-    ).length;
+    // Taxa no prazo: % de atividades que terminaram dentro do tempo estimado
+    const onTimeCount = weekActivities.filter(a => {
+      const est = getEstimatedTimeInHours(a.estimatedTime);
+      const act = getTotalTimeInHours(a.totalTime) || getTotalTimeInHours(a.actualTime) || 0;
+      return est > 0 && act > 0 && act <= est;
+    }).length;
     const onTimeRate = completedCount > 0
       ? (onTimeCount / completedCount) * 100
       : 0;
 
+    // Formatar label com range de datas: "08-14 fev"
+    const weekEndDay = addDays(weekStart, 6);
+    const weekLabel = `${format(weekStart, "dd")}-${format(weekEndDay, "dd")} ${format(weekStart, "MMM", { locale: ptBR })}`;
+
     weeks.push({
-      period: `Sem ${12 - i}`,
+      period: weekLabel,
       completedCount,
-      avgEfficiency: parseFloat(avgEfficiency.toFixed(1)),
+      efficiency: parseFloat(efficiency.toFixed(1)),
       onTimeRate: parseFloat(onTimeRate.toFixed(1))
     });
   }
@@ -83,17 +129,12 @@ const calculateTrendData = (activities: any[]): TrendDataPoint[] => {
   return weeks;
 };
 
-/**
- * Componente de grafico de tendencias de produtividade
- * Exibe atividades concluidas, eficiencia e taxa no prazo nas ultimas 12 semanas
- */
 export const ProductivityTrendsChart = () => {
   const { filteredData } = useDashboardStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Calcular dados de tendencia com useMemo
   const trendData = useMemo(() =>
     calculateTrendData(filteredData.activities || []),
     [filteredData.activities]
@@ -102,50 +143,72 @@ export const ProductivityTrendsChart = () => {
   const hasData = trendData.length > 0 && trendData.some(d => d.completedCount > 0);
   const totalCompleted = trendData.reduce((sum, d) => sum + d.completedCount, 0);
 
+  // Calcular intervalo do eixo Y para atividades
+  const maxCompleted = useMemo(() => {
+    const max = Math.max(...trendData.map(d => d.completedCount), 1);
+    return max;
+  }, [trendData]);
+
+  const yAxisInterval = useMemo(() => {
+    if (maxCompleted <= 5) return 1;
+    if (maxCompleted <= 10) return 2;
+    if (maxCompleted <= 20) return 5;
+    if (maxCompleted <= 50) return 10;
+    return 20;
+  }, [maxCompleted]);
+
+  // Eixo X
   const primaryXAxis = useMemo<AxisModel>(() => ({
     valueType: 'Category',
-    labelRotation: -45,
     labelStyle: {
       color: isDark ? '#94a3b8' : '#64748b',
-      size: '11px',
+      size: '10px',
     },
     majorGridLines: { width: 0 },
     majorTickLines: { width: 0 },
   }), [isDark]);
 
+  // Eixo Y primário (Atividades Concluídas - esquerda)
   const primaryYAxis = useMemo<AxisModel>(() => ({
-    title: 'Atividades Concluidas',
+    title: 'Atividades Concluídas',
     titleStyle: {
       color: isDark ? '#94a3b8' : '#64748b',
-      size: '12px',
+      size: '11px',
     },
     labelStyle: {
       color: isDark ? '#94a3b8' : '#64748b',
+      size: '10px',
     },
-    majorGridLines: {
-      width: 1,
-      color: isDark ? 'rgba(71, 85, 105, 0.3)' : 'rgba(0, 0, 0, 0.1)',
-      dashArray: '3,3',
-    },
+    majorGridLines: { width: 0 },
+    minorGridLines: { width: 0 },
+    majorTickLines: { width: 0 },
+    minorTickLines: { width: 0 },
     lineStyle: { width: 0 },
     minimum: 0,
-  }), [isDark]);
+    interval: yAxisInterval,
+  }), [isDark, yAxisInterval]);
 
-  const secondaryYAxis = useMemo<AxisModel[]>(() => [{
+  // Configuração dos eixos secundários
+  const axes = useMemo(() => [{
     name: 'percentAxis',
     opposedPosition: true,
     title: 'Percentual (%)',
     titleStyle: {
       color: isDark ? '#94a3b8' : '#64748b',
-      size: '12px',
+      size: '11px',
     },
     labelStyle: {
       color: isDark ? '#94a3b8' : '#64748b',
+      size: '10px',
     },
     majorGridLines: { width: 0 },
+    minorGridLines: { width: 0 },
+    majorTickLines: { width: 0 },
+    minorTickLines: { width: 0 },
     lineStyle: { width: 0 },
     minimum: 0,
-    maximum: 100,
+    maximum: 120,
+    interval: 20,
     labelFormat: '{value}%',
   }], [isDark]);
 
@@ -154,10 +217,14 @@ export const ProductivityTrendsChart = () => {
       const dataIndex = args.point.index;
       const data = trendData[dataIndex];
       if (data) {
-        args.text = `<b>${data.period}</b><br/>` +
-          `Concluídas: ${data.completedCount}<br/>` +
-          `Eficiência Média: ${data.avgEfficiency}%<br/>` +
-          `Taxa No Prazo: ${data.onTimeRate}%`;
+        const seriesName = args.series.name;
+        if (seriesName.includes('Atividades')) {
+          args.text = `<b>${data.period}</b><br/>Concluídas: ${data.completedCount}`;
+        } else if (seriesName.includes('Eficiência')) {
+          args.text = `<b>${data.period}</b><br/>Eficiência: ${data.efficiency}%`;
+        } else {
+          args.text = `<b>${data.period}</b><br/>Taxa No Prazo: ${data.onTimeRate}%`;
+        }
       }
     }
   };
@@ -167,20 +234,20 @@ export const ProductivityTrendsChart = () => {
       {!hasData ? (
         <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
           <BarChart3 className="w-12 h-12 opacity-30" />
-          <p className="text-sm">Nenhuma atividade concluida no periodo selecionado</p>
+          <p className="text-sm">Nenhuma atividade concluída no período selecionado</p>
         </div>
       ) : (
         <ChartComponent
           primaryXAxis={primaryXAxis}
           primaryYAxis={primaryYAxis}
-          axes={secondaryYAxis}
-          tooltip={{ enable: true, shared: false, enableMarker: true }}
+          axes={axes}
+          tooltip={{ enable: true, shared: false }}
           tooltipRender={tooltipRender}
           enableHtmlSanitizer={false}
           legendSettings={{
             visible: true,
             position: 'Bottom',
-            textStyle: { color: isDark ? '#e2e8f0' : '#334155' },
+            textStyle: { color: isDark ? '#e2e8f0' : '#334155', size: '11px' },
           }}
           background={isDark ? '#0f172a' : '#ffffff'}
           chartArea={{ border: { width: 0 } }}
@@ -189,21 +256,23 @@ export const ProductivityTrendsChart = () => {
         >
           <Inject services={[ColumnSeries, LineSeries, Legend, Tooltip, Category]} />
           <SeriesCollectionDirective>
+            {/* Barras: Atividades Concluídas */}
             <SeriesDirective
               dataSource={trendData}
               xName="period"
               yName="completedCount"
-              name="Atividades Concluidas"
+              name="Atividades Concluídas"
               type="Column"
               fill="#3B82F6"
               cornerRadius={{ topLeft: 4, topRight: 4 }}
               columnWidth={0.6}
             />
+            {/* Linha: Eficiência Média */}
             <SeriesDirective
               dataSource={trendData}
               xName="period"
-              yName="avgEfficiency"
-              name="Eficiencia Media (%)"
+              yName="efficiency"
+              name="Eficiência Média (%)"
               type="Line"
               fill="#10B981"
               width={2}
@@ -213,23 +282,26 @@ export const ProductivityTrendsChart = () => {
                 fill: '#10B981',
                 width: 8,
                 height: 8,
+                shape: 'Circle',
               }}
             />
+            {/* Linha: Taxa No Prazo */}
             <SeriesDirective
               dataSource={trendData}
               xName="period"
               yName="onTimeRate"
               name="Taxa No Prazo (%)"
               type="Line"
-              fill="#FF7F0E"
+              fill="#F97316"
               width={2}
-              dashArray="5,5"
+              dashArray="5,3"
               yAxisName="percentAxis"
               marker={{
                 visible: true,
-                fill: '#FF7F0E',
+                fill: '#F97316',
                 width: 8,
                 height: 8,
+                shape: 'Triangle',
               }}
             />
           </SeriesCollectionDirective>
@@ -249,10 +321,10 @@ export const ProductivityTrendsChart = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">
-                Tendencias de Produtividade
+                Tendências de Produtividade
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Ultimas 12 semanas - Atividades concluidas e eficiencia
+                Últimas 12 semanas - Atividades concluídas e eficiência
               </p>
             </div>
           </div>
@@ -273,9 +345,9 @@ export const ProductivityTrendsChart = () => {
                       <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div>
-                      <div className="text-lg font-semibold">Tendencias de Produtividade</div>
+                      <div className="text-lg font-semibold">Tendências de Produtividade</div>
                       <div className="text-xs text-muted-foreground font-normal mt-0.5">
-                        Ultimas 12 semanas - {totalCompleted} {totalCompleted === 1 ? 'atividade concluida' : 'atividades concluidas'}
+                        Últimas 12 semanas - {totalCompleted} {totalCompleted === 1 ? 'atividade concluída' : 'atividades concluídas'}
                       </div>
                     </div>
                   </DialogTitle>
@@ -290,7 +362,7 @@ export const ProductivityTrendsChart = () => {
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-4">
         {renderChart()}
       </div>
     </Card>
