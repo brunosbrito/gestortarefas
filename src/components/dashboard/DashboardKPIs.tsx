@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem, hoverScale, tapScale } from '@/lib/animations';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import { ACTIVITY_STATUS } from '@/constants/activityStatus';
 
 /**
  * Converte totalTime/actualTime para horas
@@ -77,10 +78,8 @@ interface KPICardData {
  * Exibe 6 métricas principais calculadas a partir das atividades filtradas
  */
 export const DashboardKPIs = () => {
-  // Usar selectors específicos para garantir re-render quando dados mudam
+  // Usar selector específico para garantir re-render quando dados mudam
   const filteredActivities = useDashboardStore(state => state.filteredData.activities);
-  const collaborators = useDashboardStore(state => state.statistics.collaborators);
-  const emExecucao = useDashboardStore(state => state.activityStatus.emExecucao);
 
   // Calcular KPIs com useMemo para performance
   const kpis = useMemo(() => {
@@ -109,15 +108,43 @@ export const DashboardKPIs = () => {
 
     // 4. Contar atividades críticas
     const criticalCount = activities.filter(a => {
-      if (a.status === 'Paralizada' || a.isDelayed) return true;
+      if (a.status === ACTIVITY_STATUS.PARALIZADA || a.isDelayed) return true;
       const est = getEstimatedTimeInHours(a.estimatedTime);
       const act = getActualTimeFromActivity(a);
       return est > 0 && act > 0 && act > est * 1.2;
     }).length;
 
-    // 5. Calcular utilização de equipe
-    const activeActivities = emExecucao || 0;
-    const totalCollaborators = (collaborators?.length || 1);
+    // 5. Calcular utilização de equipe (usando colaboradores únicos das atividades filtradas)
+    const activeActivities = activities.filter(a => a.status === ACTIVITY_STATUS.EM_ANDAMENTO).length;
+
+    // Contar colaboradores únicos de todas as atividades filtradas
+    const uniqueCollaboratorIds = new Set<number>();
+    activities.forEach(a => {
+      // Verificar campo team (normalizado)
+      if (a.team && Array.isArray(a.team)) {
+        a.team.forEach((member: any) => {
+          const memberId = member?.collaboratorId || member?.id;
+          if (memberId) uniqueCollaboratorIds.add(memberId);
+        });
+      }
+      // Verificar campo collaborators (pode vir direto da API)
+      if ((a as any).collaborators && Array.isArray((a as any).collaborators)) {
+        (a as any).collaborators.forEach((member: any) => {
+          const memberId = member?.collaboratorId || member?.id;
+          if (memberId) uniqueCollaboratorIds.add(memberId);
+        });
+      }
+      // Verificar campo activityCollaborators (tabela de junção)
+      if ((a as any).activityCollaborators && Array.isArray((a as any).activityCollaborators)) {
+        (a as any).activityCollaborators.forEach((ac: any) => {
+          const memberId = ac?.collaboratorId || ac?.collaborator?.id;
+          if (memberId) uniqueCollaboratorIds.add(memberId);
+        });
+      }
+      // Fallback para collaboratorId da atividade
+      if (a.collaboratorId) uniqueCollaboratorIds.add(a.collaboratorId);
+    });
+    const totalCollaborators = uniqueCollaboratorIds.size || 1;
     const utilization = (activeActivities / totalCollaborators);
 
     // 6. Saldo de horas (diferença): positivo = economizou, negativo = gastou mais
@@ -211,7 +238,7 @@ export const DashboardKPIs = () => {
     ];
 
     return kpiData;
-  }, [filteredActivities, collaborators, emExecucao]);
+  }, [filteredActivities]);
 
   return (
     <Card className="border border-border/50 shadow-elevation-2 overflow-hidden">
