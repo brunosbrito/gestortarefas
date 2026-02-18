@@ -45,6 +45,12 @@ export const PeriodFilter = ({
   const [obras, setObras] = useState<Obra[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Sincronizar estado local com filtros externos (ex: ao limpar filtros)
+  useEffect(() => {
+    setStartDate(currentFilters.startDate || undefined);
+    setEndDate(currentFilters.endDate || undefined);
+  }, [currentFilters.startDate, currentFilters.endDate]);
+
   useEffect(() => {
     const fetchObras = async () => {
       try {
