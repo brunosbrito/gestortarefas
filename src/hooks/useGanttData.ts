@@ -17,18 +17,89 @@ const statusToProgress: Record<string, number> = {
   'Paralizadas': 25,
 };
 
+function getMacroTaskName(activity: ActivityLike): string {
+  const macro = activity.macroTask;
+  if (typeof macro === 'object' && macro !== null) {
+    return (macro as { name?: string }).name || '';
+  }
+  return macro?.toString() || '';
+}
+
+function getProcessName(activity: ActivityLike): string {
+  const process = activity.process;
+  if (typeof process === 'object' && process !== null) {
+    return (process as { name?: string }).name || '';
+  }
+  return process?.toString() || '';
+}
+
+function getProjectName(activity: ActivityLike): string {
+  if ('project' in activity && typeof activity.project === 'object' && activity.project) {
+    return activity.project.name || '';
+  }
+  return '';
+}
+
+function getServiceOrderName(activity: ActivityLike): string {
+  if ('serviceOrder' in activity && typeof activity.serviceOrder === 'object' && activity.serviceOrder) {
+    const so = activity.serviceOrder as { name?: string; description?: string };
+    return so.name || so.description || '';
+  }
+  return '';
+}
+
+function getCreatedByName(activity: ActivityLike): string {
+  if ('createdBy' in activity && typeof activity.createdBy === 'object' && activity.createdBy) {
+    const user = activity.createdBy as { name?: string };
+    return user.name || '';
+  }
+  return '';
+}
+
+function getCollaboratorNames(activity: ActivityLike): string {
+  if (!Array.isArray(activity.collaborators) || activity.collaborators.length === 0) {
+    return '';
+  }
+
+  const firstCollab = activity.collaborators[0];
+  if (typeof firstCollab === 'object' && firstCollab !== null) {
+    // AtividadeStatus com objetos Colaborador
+    const names = activity.collaborators
+      .slice(0, 3)
+      .map((c: { name?: string }) => c.name || '')
+      .filter(Boolean)
+      .join(', ');
+    if (activity.collaborators.length > 3) {
+      return `${names} +${activity.collaborators.length - 3}`;
+    }
+    return names;
+  }
+
+  // Activity com IDs
+  return `${activity.collaborators.length} colaborador(es)`;
+}
+
+// Função para normalizar data removendo o horário (apenas data)
+function normalizeDate(dateInput: string | Date | null | undefined): Date | null {
+  if (!dateInput) return null;
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return null;
+  // Criar nova data apenas com ano, mês e dia (sem horário)
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 function transformActivityToGantt(activity: ActivityLike, parentID?: number): GanttTask {
   // Tentar obter data de início: startDate > originalStartDate > createdAt
   let startDate: Date | null = null;
   if (activity.startDate) {
-    startDate = new Date(activity.startDate);
+    startDate = normalizeDate(activity.startDate);
   } else if ('originalStartDate' in activity && activity.originalStartDate) {
-    startDate = new Date(activity.originalStartDate);
+    startDate = normalizeDate(activity.originalStartDate);
   } else if ('createdAt' in activity && activity.createdAt) {
-    startDate = new Date(activity.createdAt);
+    startDate = normalizeDate(activity.createdAt);
   }
 
-  const endDate = activity.endDate ? new Date(activity.endDate) : null;
+  const endDate = normalizeDate(activity.endDate);
 
   let duration: number | undefined;
   if (startDate && endDate) {
@@ -42,12 +113,22 @@ function transformActivityToGantt(activity: ActivityLike, parentID?: number): Ga
     duration = 1;
   }
 
-  const collaboratorCount = Array.isArray(activity.collaborators)
-    ? activity.collaborators.length
-    : 0;
-  const collaboratorNames = collaboratorCount > 0
-    ? `${collaboratorCount} colaborador(es)`
-    : '';
+  // Formatar tempo estimado
+  let estimatedTimeFormatted = '';
+  if (activity.estimatedTime) {
+    const hours = parseFloat(activity.estimatedTime);
+    if (hours >= 1) {
+      estimatedTimeFormatted = `${hours.toFixed(1)}h`;
+    } else {
+      estimatedTimeFormatted = `${Math.round(hours * 60)}min`;
+    }
+  }
+
+  // Formatar data de criação
+  let createdAtFormatted = '';
+  if ('createdAt' in activity && activity.createdAt) {
+    createdAtFormatted = new Date(activity.createdAt).toLocaleDateString('pt-BR');
+  }
 
   return {
     TaskID: activity.id,
@@ -57,10 +138,22 @@ function transformActivityToGantt(activity: ActivityLike, parentID?: number): Ga
     Duration: duration,
     Progress: statusToProgress[activity.status] ?? 0,
     Status: activity.status,
-    Collaborators: collaboratorNames,
+    Collaborators: getCollaboratorNames(activity),
     ActivityId: activity.id,
     ParentID: parentID,
     isGroup: false,
+    // Campos adicionais
+    MacroTask: getMacroTaskName(activity),
+    Process: getProcessName(activity),
+    Project: getProjectName(activity),
+    ServiceOrder: getServiceOrderName(activity),
+    EstimatedTime: estimatedTimeFormatted,
+    Quantity: 'quantity' in activity ? activity.quantity : undefined,
+    CompletedQuantity: 'completedQuantity' in activity ? activity.completedQuantity : undefined,
+    Observation: activity.observation || '',
+    CreatedBy: getCreatedByName(activity),
+    CreatedAt: createdAtFormatted,
+    CodSequencial: 'cod_sequencial' in activity ? activity.cod_sequencial : undefined,
   };
 }
 
@@ -117,13 +210,13 @@ function calculateGroupProgress(activities: ActivityLike[]): number {
 
 function getActivityStartDate(activity: ActivityLike): Date | null {
   if (activity.startDate) {
-    return new Date(activity.startDate);
+    return normalizeDate(activity.startDate);
   }
   if ('originalStartDate' in activity && activity.originalStartDate) {
-    return new Date(activity.originalStartDate);
+    return normalizeDate(activity.originalStartDate);
   }
   if ('createdAt' in activity && activity.createdAt) {
-    return new Date(activity.createdAt);
+    return normalizeDate(activity.createdAt);
   }
   return null;
 }
@@ -142,10 +235,12 @@ function createGroupTask(
 
   const endDates = activities
     .filter(a => a.endDate)
-    .map(a => new Date(a.endDate!).getTime());
+    .map(a => normalizeDate(a.endDate))
+    .filter((d): d is Date => d !== null)
+    .map(d => d.getTime());
 
-  const startDate = dates.length > 0 ? new Date(Math.min(...dates)) : null;
-  const endDate = endDates.length > 0 ? new Date(Math.max(...endDates)) : null;
+  const startDate = dates.length > 0 ? normalizeDate(new Date(Math.min(...dates))) : null;
+  const endDate = endDates.length > 0 ? normalizeDate(new Date(Math.max(...endDates))) : null;
 
   let duration: number | undefined;
   if (startDate && endDate) {

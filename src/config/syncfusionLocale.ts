@@ -1,6 +1,6 @@
-import { L10n, setCulture, loadCldr } from '@syncfusion/ej2-base';
+import { L10n, setCulture } from '@syncfusion/ej2-base';
 
-// Configurar localização para português brasileiro
+// Definir cultura para pt-BR
 setCulture('pt-BR');
 
 L10n.load({
@@ -207,6 +207,23 @@ L10n.load({
       ZoomIn: 'Aumentar Zoom',
       ZoomOut: 'Diminuir Zoom',
       Reset: 'Redefinir',
+    },
+    datepicker: {
+      placeholder: 'Selecione uma data',
+      today: 'Hoje',
+    },
+    calendar: {
+      today: 'Hoje',
+    },
+    daterangepicker: {
+      placeholder: 'Selecione um período',
+      startLabel: 'Data Inicial',
+      endLabel: 'Data Final',
+      applyText: 'Aplicar',
+      cancelText: 'Cancelar',
+      selectedDays: 'Dias Selecionados',
+      days: 'Dias',
+      customRange: 'Período Personalizado',
     },
   },
 });

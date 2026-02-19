@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Maximize2 } from 'lucide-react';
 import { GanttChartDialog } from './GanttChartDialog';
+import { GanttColumnSelector, useGanttColumns } from './GanttColumnSelector';
 
 // Tipo genérico para atividades
 type ActivityLike = Activity | AtividadeStatus;
@@ -42,6 +43,10 @@ export function GanttChart({
   const { theme } = useTheme();
   const ganttRef = useRef<GanttComponent>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { visibleColumns } = useGanttColumns();
+
+  // Key para forçar re-render quando colunas mudam
+  const columnsKey = visibleColumns.map(c => c.field).join('-');
 
   const ganttData = useGanttData(activities, groupBy);
 
@@ -121,20 +126,25 @@ export function GanttChart({
       <Card className={theme === 'dark' ? 'gantt-dark-mode' : ''}>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg">{title}</CardTitle>
-          {showExpandButton && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsDialogOpen(true)}
-              title="Expandir"
-            >
-              <Maximize2 className="h-4 w-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            <GanttColumnSelector variant="compact" />
+            {showExpandButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDialogOpen(true)}
+                title="Expandir"
+                className="h-7 w-7"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="gantt-chart-container">
             <GanttComponent
+              key={columnsKey}
               ref={ganttRef}
               dataSource={ganttData}
               taskFields={taskFields}
@@ -148,15 +158,19 @@ export function GanttChart({
               allowSelection={true}
               gridLines="Both"
               treeColumnIndex={0}
+              dateFormat="dd/MM/yyyy"
               locale="pt-BR"
             >
               <ColumnsDirective>
-                <ColumnDirective field="TaskName" headerText="Atividade" width={250} />
-                <ColumnDirective field="StartDate" headerText="Início" width={100} format="dd/MM/yyyy" />
-                <ColumnDirective field="EndDate" headerText="Fim" width={100} format="dd/MM/yyyy" />
-                <ColumnDirective field="Duration" headerText="Dias" width={70} textAlign="Center" />
-                <ColumnDirective field="Progress" headerText="%" width={60} textAlign="Center" />
-                <ColumnDirective field="Status" headerText="Status" width={120} />
+                {visibleColumns.map((col) => (
+                  <ColumnDirective
+                    key={col.field}
+                    field={col.field}
+                    headerText={col.headerText}
+                    width={col.width}
+                    textAlign={col.textAlign}
+                  />
+                ))}
               </ColumnsDirective>
               <Inject services={[Selection, DayMarkers]} />
             </GanttComponent>

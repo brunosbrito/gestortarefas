@@ -19,10 +19,13 @@ import { useGanttData } from '@/hooks/useGanttData';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
+  DialogOverlay,
 } from '@/components/ui/dialog';
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { GanttColumnSelector, useGanttColumns } from './GanttColumnSelector';
 
 // Tipo genérico para atividades
 type ActivityLike = Activity | AtividadeStatus;
@@ -46,6 +49,10 @@ export function GanttChartDialog({
 }: GanttChartDialogProps) {
   const { theme } = useTheme();
   const ganttRef = useRef<GanttComponent>(null);
+  const { visibleColumns } = useGanttColumns();
+
+  // Key para forçar re-render quando colunas mudam
+  const columnsKey = visibleColumns.map(c => c.field).join('-');
 
   const ganttData = useGanttData(activities, groupBy);
 
@@ -76,6 +83,11 @@ export function GanttChartDialog({
   }), []);
 
   const toolbarItems = ['ZoomIn', 'ZoomOut', 'ZoomToFit', 'ExpandAll', 'CollapseAll'];
+
+  const filterSettings = useMemo(() => ({
+    type: 'Excel' as const,
+    hierarchyMode: 'Parent' as const,
+  }), []);
 
   const handleRecordClick = (args: { data?: GanttTask }) => {
     if (args.data && onTaskClick) {
@@ -108,14 +120,36 @@ export function GanttChartDialog({
   }, [ganttData]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`max-w-[95vw] max-h-[95vh] w-full h-[90vh] ${theme === 'dark' ? 'gantt-dark-mode' : ''}`}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+      <DialogPortal>
+        <DialogOverlay className="bg-black/50 z-[100]" />
+        <DialogPrimitive.Content
+          className={`fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] max-w-[95vw] max-h-[95vh] w-full h-[90vh] border bg-background p-6 shadow-lg rounded-lg z-[100] ${theme === 'dark' ? 'gantt-dark-mode' : ''}`}
+          onPointerDownOutside={(e) => {
+            // Sempre prevenir fechar ao clicar fora - usuário deve usar o X
+            e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            // Sempre prevenir fechar ao interagir fora - usuário deve usar o X
+            e.preventDefault();
+          }}
+          onFocusOutside={(e) => {
+            // Prevenir fechar ao perder foco
+            e.preventDefault();
+          }}
+        >
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10">
+            <span className="h-4 w-4">✕</span>
+            <span className="sr-only">Fechar</span>
+          </DialogPrimitive.Close>
+          <DialogHeader className="flex flex-row items-center justify-between pr-8">
+            <DialogTitle>{title}</DialogTitle>
+            <GanttColumnSelector variant="compact" />
+          </DialogHeader>
         <div className="flex-1 overflow-hidden gantt-chart-container">
           {ganttData.length > 0 ? (
             <GanttComponent
+              key={columnsKey}
               ref={ganttRef}
               dataSource={ganttData}
               taskFields={taskFields}
@@ -128,20 +162,25 @@ export function GanttChartDialog({
               recordClick={handleRecordClick}
               allowSelection={true}
               allowFiltering={true}
+              filterSettings={filterSettings}
               allowSorting={true}
               gridLines="Both"
               treeColumnIndex={0}
               toolbar={toolbarItems}
+              dateFormat="dd/MM/yyyy"
               locale="pt-BR"
             >
               <ColumnsDirective>
-                <ColumnDirective field="TaskName" headerText="Atividade" width={300} />
-                <ColumnDirective field="StartDate" headerText="Início" width={120} format="dd/MM/yyyy" />
-                <ColumnDirective field="EndDate" headerText="Fim" width={120} format="dd/MM/yyyy" />
-                <ColumnDirective field="Duration" headerText="Dias" width={80} textAlign="Center" />
-                <ColumnDirective field="Progress" headerText="Progresso" width={100} textAlign="Center" />
-                <ColumnDirective field="Status" headerText="Status" width={130} />
-                <ColumnDirective field="Collaborators" headerText="Colaboradores" width={150} />
+                {visibleColumns.map((col) => (
+                  <ColumnDirective
+                    key={col.field}
+                    field={col.field}
+                    headerText={col.headerText}
+                    width={col.width}
+                    textAlign={col.textAlign}
+                    allowFiltering={true}
+                  />
+                ))}
               </ColumnsDirective>
               <Inject services={[Selection, DayMarkers, Filter, Sort, Toolbar]} />
             </GanttComponent>
@@ -151,7 +190,8 @@ export function GanttChartDialog({
             </div>
           )}
         </div>
-      </DialogContent>
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   );
 }

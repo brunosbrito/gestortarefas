@@ -9,9 +9,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Edit2, MoveHorizontal, Trash2, Upload } from 'lucide-react';
+import { Edit2, MoveHorizontal, Trash2, Upload, FileEdit } from 'lucide-react';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { NovaAtividadeForm } from '../NovaAtividadeForm';
+import { EditarAtividadeConcluidaDialog } from '../EditarAtividadeConcluidaDialog';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { deleteActivity } from '@/services/ActivityService';
@@ -39,8 +40,11 @@ export const AtividadeActions = ({
 }: AtividadeActionsProps) => {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditConcluidaDialogOpen, setIsEditConcluidaDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const isConcluida = atividade.status === 'Concluídas';
 
   const handleDelete = async () => {
     try {
@@ -122,6 +126,19 @@ export const AtividadeActions = ({
         </label>
       </div>
 
+      {/* Botão de editar dados de conclusão (apenas para atividades concluídas) */}
+      {isConcluida && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 h-8"
+          onClick={() => setIsEditConcluidaDialogOpen(true)}
+          title="Editar dados de conclusão"
+        >
+          <FileEdit className="w-3.5 h-3.5" />
+        </Button>
+      )}
+
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogTrigger asChild>
           <Button variant="destructive" size="sm" className="flex-1 h-8">
@@ -152,6 +169,17 @@ export const AtividadeActions = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de edição de atividade concluída */}
+      <EditarAtividadeConcluidaDialog
+        open={isEditConcluidaDialogOpen}
+        onOpenChange={setIsEditConcluidaDialogOpen}
+        atividade={atividade}
+        onSuccess={() => {
+          setIsEditConcluidaDialogOpen(false);
+          if (onEditSuccess) onEditSuccess();
+        }}
+      />
     </div>
   );
 };

@@ -38,7 +38,11 @@ import {
   X,
   ChevronsUpDown,
   Check,
+  CalendarIcon,
 } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
   Collapsible,
@@ -64,6 +68,7 @@ const formSchema = z.object({
   collaborators: z
     .array(z.number())
     .min(1, 'Selecione pelo menos um colaborador'),
+  plannedStartDate: z.date().optional(),
   observation: z.string().optional(),
   imagem: z.any().optional(),
   imagemDescricao: z.string().optional(),
@@ -175,6 +180,7 @@ export function NovaAtividadeForm({
       timePerUnit: 1,
       unidadeTempo: 'horas',
       collaborators: determinarColaboradoresIniciais(),
+      plannedStartDate: undefined,
       observation: atividadeInicial?.observation || '',
       projectId,
       orderServiceId,
@@ -260,6 +266,11 @@ export function NovaAtividadeForm({
         unidadeTempoValue = parsed.unidadeTempo;
       }
 
+      // Determinar data prevista para início
+      const plannedStartDateValue = atividadeInicial.plannedStartDate
+        ? new Date(atividadeInicial.plannedStartDate)
+        : undefined;
+
       // Reset do formulário com os valores da atividade
       form.reset({
         macroTask: macroTaskValue,
@@ -269,6 +280,7 @@ export function NovaAtividadeForm({
         timePerUnit: timePerUnitValue || 1,
         unidadeTempo: unidadeTempoValue || 'horas',
         collaborators: colaboradoresIniciais,
+        plannedStartDate: plannedStartDateValue,
         observation: atividadeInicial.observation || '',
         projectId,
         orderServiceId,
@@ -352,6 +364,10 @@ export function NovaAtividadeForm({
       formData.append('createdBy', values.createdBy.toString());
       formData.append('collaboratorIds', JSON.stringify(collaboratorIds));
 
+      if (values.plannedStartDate) {
+        formData.append('plannedStartDate', values.plannedStartDate.toISOString());
+      }
+
       // Debug: Log dos dados enviados
       console.log('Dados enviados:', {
         macroTaskId: values.macroTask,
@@ -363,6 +379,7 @@ export function NovaAtividadeForm({
         orderServiceId: values.orderServiceId,
         createdBy: values.createdBy,
         collaboratorIds: collaboratorIds,
+        plannedStartDate: values.plannedStartDate?.toISOString(),
       });
 
       if (values.observation) {
@@ -384,7 +401,7 @@ export function NovaAtividadeForm({
       if (editMode && atividadeInicial?.id) {
         // Para edição, enviar JSON em vez de FormData (backend PUT não aceita FormData)
         const userId = localStorage.getItem('userId') || '1';
-        const updateData = {
+        const updateData: Record<string, unknown> = {
           macroTask: parseInt(values.macroTask),
           process: parseInt(values.process),
           description: values.description,
@@ -394,6 +411,10 @@ export function NovaAtividadeForm({
           observation: values.observation || '',
           changedBy: parseInt(userId),
         };
+
+        if (values.plannedStartDate) {
+          updateData.plannedStartDate = values.plannedStartDate.toISOString();
+        }
 
         await updateActivity(atividadeInicial.id, updateData);
         toast({
@@ -691,6 +712,49 @@ export function NovaAtividadeForm({
                   })}
                 </div>
               )}
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+
+        {/* Data Prevista para Início */}
+        <FormField
+          control={form.control}
+          name="plannedStartDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs font-medium">
+                Data Prevista para Início
+              </FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-9",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value ? (
+                        format(field.value, "dd/MM/yyyy", { locale: ptBR })
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    locale={ptBR}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage className="text-xs" />
             </FormItem>
           )}

@@ -7,7 +7,7 @@ import { ServiceOrder } from "./ServiceOrderInterface";
 export interface Activity {
   id: number;
   description: string;
-  status: 'Planejado' | 'Pendente' | 'Em andamento' | 'Concluída';
+  status: 'Planejadas' | 'Atrasadas' | 'Em execução' | 'Paralizadas' | 'Concluídas';
   observation?: string;
   imageUrl?: string;
   imageDescription?: string;
@@ -19,6 +19,7 @@ export interface Activity {
   quantity?: number;
   estimatedTime?: string;
   actualTime?: number;
+  plannedStartDate?: string;
   startDate?: string;
   endDate?: string;
   pauseDate?: string;

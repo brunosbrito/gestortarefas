@@ -25,6 +25,7 @@ import { AtividadesOSTable } from '@/components/atividades/AtividadesOSTable';
 
 const statusListas = [
   'Planejadas',
+  'Atrasadas',
   'Em execução',
   'Paralizadas',
   'Concluídas',
@@ -57,9 +58,24 @@ const Atividades = () => {
         });
         return;
       }
-      
+
       const data = await getActivitiesByServiceOrderId(serviceOrderId);
-      setAtividades(data);
+
+      // Verificar atividades atrasadas
+      const now = new Date();
+      const processedData = data.map((atividade: AtividadeStatus) => {
+        // Se a atividade está Planejada e tem data prevista de início que já passou
+        if (
+          atividade.status === 'Planejadas' &&
+          atividade.plannedStartDate &&
+          new Date(atividade.plannedStartDate) < now
+        ) {
+          return { ...atividade, status: 'Atrasadas' };
+        }
+        return atividade;
+      });
+
+      setAtividades(processedData);
     } catch (error) {
       console.error("Erro ao carregar atividades:", error);
       toast({
@@ -166,7 +182,7 @@ const Atividades = () => {
 
         {viewMode === 'kanban' ? (
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="flex gap-4 overflow-x-auto pb-4">
+            <div className="flex gap-3 overflow-x-auto pb-4">
               {statusListas.map((status) => (
                 <StatusList
                   key={status}
