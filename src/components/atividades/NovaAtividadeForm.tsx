@@ -65,6 +65,7 @@ const formSchema = z.object({
   quantity: z.number().min(1, 'Unidade é obrigatória'),
   timePerUnit: z.number().min(1, 'Tempo por unidade é obrigatório'),
   unidadeTempo: z.enum(['minutos', 'horas'] as const),
+  plannedStartDate: z.string().optional(),
   collaborators: z
     .array(z.number())
     .min(1, 'Selecione pelo menos um colaborador'),
@@ -99,6 +100,10 @@ export function NovaAtividadeForm({
 }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>('');
+  const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
+  const [totalTimeOverride, setTotalTimeOverride] = useState<string>(
+    atividadeInicial?.totalTime ? String(atividadeInicial.totalTime) : ''
+  );
   const [tarefasMacro, setTarefasMacro] = useState<TarefaMacro[]>([]);
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -179,6 +184,9 @@ export function NovaAtividadeForm({
       quantity: atividadeInicial?.quantity || 1,
       timePerUnit: 1,
       unidadeTempo: 'horas',
+      plannedStartDate: atividadeInicial?.plannedStartDate
+        ? atividadeInicial.plannedStartDate.substring(0, 10)
+        : '',
       collaborators: determinarColaboradoresIniciais(),
       plannedStartDate: undefined,
       observation: atividadeInicial?.observation || '',
@@ -192,8 +200,7 @@ export function NovaAtividadeForm({
     const loadTarefasMacro = async () => {
       try {
         const response = await TarefaMacroService.getAll();
-        const data = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
-        setTarefasMacro(data);
+        setTarefasMacro(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error('Erro ao carregar tarefas macro:', error);
       }
@@ -205,8 +212,7 @@ export function NovaAtividadeForm({
     const loadProcessos = async () => {
       try {
         const response = await ProcessService.getAll();
-        const data = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
-        setProcessos(data);
+        setProcessos(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error('Erro ao carregar processos:', error);
       }
@@ -218,8 +224,7 @@ export function NovaAtividadeForm({
     const loadColaboradores = async () => {
       try {
         const response = await ColaboradorService.getAll();
-        const data = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : []);
-        setColaboradores(data);
+        setColaboradores(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error('Erro ao carregar colaboradores:', error);
       }
@@ -363,6 +368,9 @@ export function NovaAtividadeForm({
       formData.append('orderServiceId', values.orderServiceId.toString());
       formData.append('createdBy', values.createdBy.toString());
       formData.append('collaboratorIds', JSON.stringify(collaboratorIds));
+      if (values.plannedStartDate) {
+        formData.append('plannedStartDate', values.plannedStartDate);
+      }
 
       if (values.plannedStartDate) {
         formData.append('plannedStartDate', values.plannedStartDate.toISOString());
@@ -399,24 +407,13 @@ export function NovaAtividadeForm({
       }
 
       if (editMode && atividadeInicial?.id) {
-        // Para edição, enviar JSON em vez de FormData (backend PUT não aceita FormData)
-        const userId = localStorage.getItem('userId') || '1';
-        const updateData: Record<string, unknown> = {
-          macroTask: parseInt(values.macroTask),
-          process: parseInt(values.process),
-          description: values.description,
-          quantity: values.quantity,
-          estimatedTime: estimatedTimeValue,
-          collaborators: collaboratorIds,
-          observation: values.observation || '',
-          changedBy: parseInt(userId),
-        };
-
-        if (values.plannedStartDate) {
-          updateData.plannedStartDate = values.plannedStartDate.toISOString();
+        if (totalTimeOverride !== '') {
+          const parsed = parseFloat(totalTimeOverride);
+          if (!isNaN(parsed) && parsed >= 0) {
+            formData.append('totalTime', parsed.toString());
+          }
         }
-
-        await updateActivity(atividadeInicial.id, updateData);
+        await updateActivity(atividadeInicial.id, formData);
         toast({
           title: 'Sucesso!',
           description: 'Atividade atualizada com sucesso.',
@@ -522,22 +519,47 @@ export function NovaAtividadeForm({
           />
         </div>
 
-        {/* Linha 2: Descrição da Atividade */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs font-medium">
-                Atividade <span className="text-destructive">*</span>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Digite a atividade"
-                  {...field}
-                  className={cn(
-                    "h-9",
-                    form.formState.errors.description && "border-destructive"
+        {/* Conteúdo */}
+        <div className="space-y-6 md:space-y-8 pb-4 mt-4">
+          {/* Seção: Informações Básicas */}
+          <div ref={setSectionRef(0)}>
+            <FormSection icon={FileText} title="Informações Básicas">
+            <FormField
+              control={form.control}
+              name="macroTask"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
+                    Tarefa Macro <span className="text-destructive">*</span>
+                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_MACRO_TASK} />
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setMacroTaskSelectedValue(value);
+                    }}
+                    value={macroTaskSelectedValue || field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className={cn(
+                        form.formState.errors.macroTask && "border-destructive bg-destructive/5"
+                      )}>
+                        <SelectValue placeholder="Selecione a tarefa macro" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {tarefasMacro.map((tarefa) => (
+                        <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
+                          {tarefa.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.macroTask && (
+                    <FormMessage className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {form.formState.errors.macroTask.message}
+                    </FormMessage>
                   )}
                 />
               </FormControl>
@@ -711,6 +733,120 @@ export function NovaAtividadeForm({
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Data Início Prevista */}
+            <FormField
+              control={form.control}
+              name="plannedStartDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
+                    Data Início Prevista
+                    <span className="text-xs text-muted-foreground font-normal">(Opcional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Data em que esta atividade deveria começar. Será sinalizada como "Em Atraso" se não iniciada até esta data.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Alterar Horas Trabalhadas — somente em edição */}
+            {editMode && (
+              <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-600" />
+                  <label htmlFor="totalTimeOverride" className="text-sm font-medium">
+                    Alterar Horas
+                    <span className="ml-1 text-xs text-muted-foreground font-normal">(Opcional — sobrescreve o total atual)</span>
+                  </label>
+                </div>
+                <Input
+                  id="totalTimeOverride"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder={`Atual: ${atividadeInicial?.totalTime ?? 0}h`}
+                  value={totalTimeOverride}
+                  onChange={e => setTotalTimeOverride(e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Informe o total de horas trabalhadas correto. Deixe em branco para manter o valor atual.
+                </p>
+              </div>
+            )}
+          </FormSection>
+          </div>
+
+          <Separator className="my-8" />
+
+          {/* Seção: Equipe */}
+          <div ref={setSectionRef(2)}>
+            <FormSection icon={Users} title="Equipe">
+            <FormField
+              control={form.control}
+              name="collaborators"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5 font-medium">
+                    Colaboradores <span className="text-destructive">*</span>
+                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_COLLABORATORS} />
+                  </FormLabel>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-lg border border-border/50 bg-muted/20 max-h-60 overflow-y-auto">
+                    {colaboradores.map((colaborador) => (
+                      <FormField
+                        key={colaborador.id}
+                        control={form.control}
+                        name="collaborators"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={colaborador.id}
+                              className="flex items-center space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                                  checked={field.value?.includes(colaborador.id)}
+                                  onChange={(e) => {
+                                    return e.target.checked
+                                      ? field.onChange([...field.value, colaborador.id])
+                                      : field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== colaborador.id
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">
+                                {colaborador.name}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {form.formState.errors.collaborators && (
+                    <FormMessage className="flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {form.formState.errors.collaborators.message}
+                    </FormMessage>
+                  )}
+                </FormItem>
               )}
               <FormMessage className="text-xs" />
             </FormItem>
@@ -822,27 +958,36 @@ export function NovaAtividadeForm({
                 initialDescription={atividadeInicial?.fileDescription}
               />
             </div>
-          </CollapsibleContent>
-        </Collapsible>
+          </FormSection>
+          </div>
+        </div>
 
-        {/* Botão de Submit */}
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full h-10 font-semibold"
-        >
-          {isSubmitting ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Salvando...</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>{editMode ? 'Salvar Alterações' : 'Criar Atividade'}</span>
-            </div>
-          )}
-        </Button>
+        {/* Footer Sticky */}
+        <div className="sticky bottom-0 p-4 md:p-6 bg-card/95 backdrop-blur-xl border-t border-border/50 shadow-lg z-40">
+          <div className="max-w-4xl mx-auto flex items-center justify-end gap-3">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className={cn(
+                "min-w-[200px] h-11 font-semibold shadow-lg transition-all",
+                "bg-primary hover:bg-primary/90",
+                isSubmitting && "opacity-70"
+              )}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Salvando...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>{editMode ? 'Salvar Alterações' : 'Criar Atividade'}</span>
+                </div>
+              )}
+            </Button>
+          </div>
+        </div>
       </form>
     </Form>
   );

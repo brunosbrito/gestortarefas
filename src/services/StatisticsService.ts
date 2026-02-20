@@ -1,53 +1,20 @@
 import api from '@/lib/axios';
 
-/**
- * Converte string de tempo (formato "Xh Ymin" ou "Xh" ou "Ymin") para horas decimais
- */
-const parseTimeToHours = (timeString: string | null | undefined): number => {
-  if (!timeString || typeof timeString !== 'string') {
-    return 0;
-  }
+import API_URL from '@/config';
+import axios from 'axios';
+import { parseTimeToHours } from '@/utils/timeHelpers';
 
-  // Tenta extrair horas e minutos do formato "Xh Ymin"
-  const hoursMatch = timeString.match(/(\d+)\s*h/i);
-  const minutesMatch = timeString.match(/(\d+)\s*min/i);
-
-  const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-  const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
-
-  return hours + (minutes / 60);
-};
-
-/**
- * Converte totalTime para horas
- * NOTA: totalTime pode vir em minutos da API, então verificamos o valor
- * Se for > 1000, assumimos que está em minutos e convertemos para horas
- */
-const getTotalTimeInHours = (totalTime: number | string | null | undefined): number => {
-  if (totalTime === null || totalTime === undefined) {
-    return 0;
-  }
-
-  // Se for string, tenta converter para número
-  const numericValue = typeof totalTime === 'string' ? parseFloat(totalTime) : totalTime;
-
-  if (isNaN(numericValue) || numericValue < 0) {
-    return 0;
-  }
-
-  // Se o valor for muito alto (> 500), provavelmente está em minutos
-  // Valores razoáveis em horas para uma atividade seriam < 500h
-  if (numericValue > 500) {
-    return numericValue / 60; // Converter de minutos para horas
-  }
-
-  return numericValue;
-};
-
-export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: number | null) => {
+export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: number | null, includeInProgress: boolean = true) => {
   try {
-    const response = await api.get('/activities');
-    let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+    const response = await axios.get(`${API_URL}/activities`);
+    // Incluir atividades concluídas E em andamento por padrão (novo comportamento para PCP)
+    let activities = includeInProgress
+      ? response.data.filter((x: any) =>
+          x.status === 'Concluídas' ||
+          x.status === 'Concluída' ||
+          x.status === 'Em andamento'
+        )
+      : response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Aplicar filtros antes da agregação
     if (obraId !== null && obraId !== undefined) {
@@ -131,10 +98,17 @@ export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: num
   }
 };
 
-export const dataProcess = async (obraId?: number | null, serviceOrderId?: number | null) => {
+export const dataProcess = async (obraId?: number | null, serviceOrderId?: number | null, includeInProgress: boolean = true) => {
   try {
-    const response = await api.get('/activities');
-    let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+    const response = await axios.get(`${API_URL}/activities`);
+    // Incluir atividades concluídas E em andamento por padrão (novo comportamento para PCP)
+    let activities = includeInProgress
+      ? response.data.filter((x: any) =>
+          x.status === 'Concluídas' ||
+          x.status === 'Concluída' ||
+          x.status === 'Em andamento'
+        )
+      : response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Aplicar filtros antes da agregação
     if (obraId !== null && obraId !== undefined) {
@@ -218,10 +192,17 @@ export const dataProcess = async (obraId?: number | null, serviceOrderId?: numbe
   }
 };
 
-export const dataCollaborators = async (obraId?: number | null, serviceOrderId?: number | null) => {
+export const dataCollaborators = async (obraId?: number | null, serviceOrderId?: number | null, includeInProgress: boolean = true) => {
   try {
-    const response = await api.get('/activities');
-    let activities = response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
+    const response = await axios.get(`${API_URL}/activities`);
+    // Incluir atividades concluídas E em andamento por padrão (novo comportamento para PCP)
+    let activities = includeInProgress
+      ? response.data.filter((x: any) =>
+          x.status === 'Concluídas' ||
+          x.status === 'Concluída' ||
+          x.status === 'Em andamento'
+        )
+      : response.data.filter((x: any) => x.status === 'Concluídas' || x.status === 'Concluída');
 
     // Aplicar filtros antes da agregação
     if (obraId !== null && obraId !== undefined) {

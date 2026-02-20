@@ -26,6 +26,19 @@ interface AtividadeMetadataProps {
   calculatePercentage: (elapsedTime: number, estimatedTime: string) => number;
 }
 
+// Verifica se o início da atividade está atrasado
+const isStartDelayed = (atividade: AtividadeStatus): boolean => {
+  if (!atividade.plannedStartDate) return false;
+  const isPlanned = atividade.status === 'Planejadas' ||
+    atividade.status === 'Planejado' ||
+    atividade.status === 'Planejada';
+  if (!isPlanned) return false;
+  const planned = new Date(atividade.plannedStartDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return planned < today;
+};
+
 export const AtividadeMetadata = ({
   atividade,
   elapsedTime,
@@ -34,6 +47,8 @@ export const AtividadeMetadata = ({
   formatEstimatedTime,
   calculatePercentage,
 }: AtividadeMetadataProps) => {
+  const startDelayed = isStartDelayed(atividade);
+
   return (
     <CardContent className="px-3 py-2 space-y-1.5">
       <div className="space-y-1 text-xs">
@@ -66,6 +81,29 @@ export const AtividadeMetadata = ({
               value={calculateProgress()}
               className="h-1.5"
             />
+          </div>
+        )}
+
+        {/* Início atrasado */}
+        {startDelayed && (
+          <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded-md">
+            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+            <div>
+              <span className="text-red-700 dark:text-red-300 text-xs font-semibold">⚠️ Início Atrasado</span>
+              <span className="text-red-600 dark:text-red-400 text-xs ml-1">
+                — previsto para {format(parseISO(atividade.plannedStartDate!), 'dd/MM/yyyy')}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Data início prevista (quando definida e não atrasada) */}
+        {atividade.plannedStartDate && !startDelayed && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Calendar className="w-4 h-4" />
+            <span className="text-xs">
+              Início Previsto: {format(parseISO(atividade.plannedStartDate), 'dd/MM/yyyy')}
+            </span>
           </div>
         )}
 

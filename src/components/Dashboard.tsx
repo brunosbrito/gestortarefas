@@ -3,11 +3,12 @@ import { Building2, ClipboardList, Activity, ChevronDown, Filter, X } from 'luci
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useUnifiedFilters } from '@/hooks/useUnifiedFilters';
 import { StatsSummary } from './dashboard/StatsSummary';
-import { MacroTasksChart } from './dashboard/charts/MacroTasksChart';
-import { ProcessHoursChart } from './dashboard/charts/ProcessHoursChart';
+import { PerformanceChart } from './dashboard/charts/PerformanceChart';
 import { LoadingSpinner } from './dashboard/LoadingSpinner';
-import { DashboardKPIs } from './dashboard/DashboardKPIs';
+import { DashboardKPIsNew } from './dashboard/DashboardKPIsNew';
 import { ProductivityTrendsChart } from './dashboard/charts/ProductivityTrendsChart';
+import { TeamCapacityChart } from './dashboard/charts/TeamCapacityChart';
+import { Separator } from './ui/separator';
 import { PeriodFilter } from './dashboard/PeriodFilter';
 import { ActivityStatusCards } from './dashboard/ActivityStatusCards';
 import { SwotAnalysis } from './dashboard/SwotAnalysis';
@@ -54,6 +55,9 @@ const Dashboard = () => {
   } = useUnifiedFilters();
 
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [visaoGeralOpen, setVisaoGeralOpen] = useState(true);
+  const [statusOpen, setStatusOpen] = useState(true);
+  const [graficosOpen, setGraficosOpen] = useState(true);
   const [swotOpen, setSwotOpen] = useState(false);
 
   // Hook do tour (deve ser chamado ANTES de qualquer return)
@@ -197,35 +201,96 @@ const Dashboard = () => {
           </div>
         </Collapsible>
 
-        {/* Cards de Estatísticas Principais */}
-        <div data-tour="stats-summary">
-          <StatsSummary stats={stats} />
-        </div>
-
-        {/* Cards de Status das Atividades */}
-        <div data-tour="activity-status">
-          <ActivityStatusCards activitiesByStatus={activityStatus} />
-        </div>
-
-        {/* KPIs Agregados */}
-        <div data-tour="dashboard-kpis">
-          <DashboardKPIs />
-        </div>
-
-        {/* Gráficos de Estatísticas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div data-tour="macro-tasks-chart">
-            <MacroTasksChart macroTasks={statistics.macroTasks || []} />
+        {/* 1. Visão Geral */}
+        <Collapsible open={visaoGeralOpen} onOpenChange={setVisaoGeralOpen}>
+          <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden" data-tour="stats-summary">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-accent/50 transition-colors"
+              >
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold">Visão Geral</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Totais e indicadores de performance PCP</p>
+                </div>
+                <ChevronDown className={cn(
+                  "w-5 h-5 transition-transform duration-200",
+                  visaoGeralOpen && "rotate-180"
+                )} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 md:p-6 pt-0 border-t border-border/50 space-y-6">
+                <StatsSummary stats={stats} />
+                <div data-tour="dashboard-kpis">
+                  <DashboardKPIsNew />
+                </div>
+              </div>
+            </CollapsibleContent>
           </div>
-          <div data-tour="process-chart">
-            <ProcessHoursChart processes={statistics.processes || []} />
-          </div>
-        </div>
+        </Collapsible>
 
-        {/* Tendências de Produtividade */}
-        <div data-tour="productivity-trends">
-          <ProductivityTrendsChart />
-        </div>
+        {/* 2. Status das Atividades */}
+        <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
+          <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden" data-tour="activity-status">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-accent/50 transition-colors"
+              >
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold">Status das Atividades</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Distribuição por estado atual no período selecionado</p>
+                </div>
+                <ChevronDown className={cn(
+                  "w-5 h-5 transition-transform duration-200",
+                  statusOpen && "rotate-180"
+                )} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 md:p-6 pt-0 border-t border-border/50">
+                <ActivityStatusCards activitiesByStatus={activityStatus} compact />
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+
+        {/* 3. Análise de Performance - Gráficos */}
+        <Collapsible open={graficosOpen} onOpenChange={setGraficosOpen}>
+          <div className="bg-card rounded-xl shadow-elevation-2 border border-border/50 overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-accent/50 transition-colors"
+              >
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold">Análise de Performance</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Gráficos detalhados por macro, processo, tendências e carga da equipe</p>
+                </div>
+                <ChevronDown className={cn(
+                  "w-5 h-5 transition-transform duration-200",
+                  graficosOpen && "rotate-180"
+                )} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 md:p-6 pt-0 border-t border-border/50 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ minHeight: '520px' }}>
+                  <div data-tour="performance-chart" className="h-[520px]">
+                    <PerformanceChart />
+                  </div>
+                  <div data-tour="productivity-trends" className="h-[520px]">
+                    <ProductivityTrendsChart />
+                  </div>
+                </div>
+                <div data-tour="team-capacity">
+                  <TeamCapacityChart />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
 
         {/* Análise SWOT - Collapsible */}
         <Collapsible open={swotOpen} onOpenChange={setSwotOpen}>

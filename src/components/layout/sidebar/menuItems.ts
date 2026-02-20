@@ -15,13 +15,22 @@ import {
   Bot,
   Boxes,
   ShieldCheck,
-  Target,
-  ClipboardCheck,
-  FileCheck,
-  Award,
-  Gauge,
+  GanttChartSquare,
+  FileText,
+  DollarSign,
+  Receipt,
+  Package,
+  Paintbrush,
+  Wrench,
+  FolderOpen,
+  FilePlus,
+  FileStack,
+  Scissors,
+  FileBarChart,
+  Box,
+  Truck,
+  Palette,
   BarChart3,
-  BookOpen,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -84,43 +93,117 @@ export const navItems: MenuItem[] = [
         label: 'RNC',
         path: '/nao-conformidades',
       },
-      {
-        icon: Target,
-        label: 'Análise e Ações Corretivas',
-        path: '/qualidade/acoes-corretivas',
-      },
-      {
-        icon: ClipboardCheck,
-        label: 'Inspeções',
-        path: '/qualidade/inspecoes',
-      },
-      {
-        icon: FileCheck,
-        label: 'Planos de Inspeção',
-        path: '/qualidade/planos-inspecao',
-      },
-      {
-        icon: Award,
-        label: 'Certificados de Qualidade',
-        path: '/qualidade/certificados',
-      },
-      {
-        icon: Gauge,
-        label: 'Calibração',
-        path: '/qualidade/calibracao',
-      },
+      // FUTURO: Análise e Ações Corretivas
+      // FUTURO: Inspeções
+      // FUTURO: Planos de Inspeção
+      // FUTURO: Certificados de Qualidade
+      // FUTURO: Envio de Certificados
+      // FUTURO: Indicadores/Dashboard
+      // FUTURO: Databook
+    ],
+  },
+
+  // MÓDULO COMERCIAL
+  {
+    icon: Briefcase,
+    label: 'Comercial',
+    subItems: [
       {
         icon: BarChart3,
-        label: 'Indicadores/Dashboard',
-        path: '/qualidade/indicadores',
+        label: 'Dashboard',
+        path: '/comercial/dashboard',
       },
       {
-        icon: BookOpen,
-        label: 'Databook',
-        path: '/qualidade/databook',
+        icon: FolderOpen,
+        label: 'CADASTROS',
+        subItems: [
+          {
+            icon: Package,
+            label: 'Materiais',
+            path: '/comercial/cadastros/materiais',
+          },
+          {
+            icon: Palette,
+            label: 'Tintas',
+            path: '/comercial/cadastros/tintas',
+          },
+          {
+            icon: Wrench,
+            label: 'Fornecedores',
+            path: '/comercial/cadastros/fornecedores-servico',
+          },
+          {
+            icon: Users,
+            label: 'Cargos',
+            path: '/comercial/configuracao/cargos',
+          },
+          {
+            icon: DollarSign,
+            label: 'Configuração Salarial',
+            path: '/comercial/configuracao/salarial',
+          },
+          {
+            icon: Box,
+            label: 'Consumíveis',
+            path: '/comercial/cadastros/consumiveis',
+          },
+          {
+            icon: Truck,
+            label: 'Mobilização',
+            path: '/comercial/cadastros/mobilizacao',
+          },
+          {
+            icon: Truck,
+            label: 'Desmobilização',
+            path: '/comercial/cadastros/desmobilizacao',
+          },
+        ],
+      },
+      {
+        icon: FolderOpen,
+        label: 'ORÇAMENTOS',
+        subItems: [
+          {
+            icon: FileText,
+            label: 'Orçamentos',
+            path: '/comercial/orcamentos',
+          },
+          {
+            icon: FilePlus,
+            label: 'Propostas',
+            path: '/comercial/propostas',
+          },
+          {
+            icon: FileStack,
+            label: 'Templates',
+            path: '/comercial/orcamentos/templates',
+          },
+          {
+            icon: Scissors,
+            label: 'Lista de Corte',
+            path: '/comercial/orcamentos/lista-corte',
+          },
+          {
+            icon: Paintbrush,
+            label: 'Calculadora de Pintura',
+            path: '/comercial/calculadora-pintura',
+          },
+        ],
+      },
+      {
+        icon: FileBarChart,
+        label: 'Relatórios',
+        path: '/comercial/relatorios',
       },
     ],
   },
+
+  // MÓDULO CRONOGRAMAS (desabilitado nesta branch - existe apenas na branch Modulo_Cronograma)
+  // {
+  //   icon: GanttChartSquare,
+  //   label: 'Cronogramas',
+  //   path: '/cronograma',
+  // },
 
   // CONFIGURAÇÕES (renomeado de "Gerenciamento")
   {

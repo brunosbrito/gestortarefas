@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup - Sistema de Orçamento GMX</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 32px;
+        }
+
+        .header {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1::before {
+            content: '📋';
+            font-size: 32px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .form-section h2 {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-field label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-field input {
+            padding: 10px 12px;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-field input:focus {
+            outline: none;
+            border-color: #FF7F0E;
+        }
+
+        .composicoes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .composicao-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            transition: box-shadow 0.2s;
+        }
+
+        .composicao-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .composicao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .composicao-nome {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .composicao-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .composicao-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .value-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .value-label {
+            color: #666;
+        }
+
+        .value-amount {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .bdi-editor {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px dashed #ccc;
+        }
+
+        .bdi-editor label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .bdi-editor input[type="number"] {
+            width: 80px;
+            padding: 6px 10px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #FF7F0E;
+        }
+
+        .bdi-editor .arrow {
+            color: #999;
+        }
+
+        .bdi-editor .result {
+            font-weight: 600;
+            color: #4caf50;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
+        .tributos-section {
+            background: #fff9e6;
+            border: 2px solid #ffd54f;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .tributos-section h3 {
+            font-size: 16px;
+            color: #f57c00;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tributos-section h3::before {
+            content: '💰';
+            font-size: 20px;
+        }
+
+        .subtotal-display {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subtotal-display .label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .subtotal-display .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .checkbox-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-field input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-field label {
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .tax-input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .tax-input-group.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .tax-input-group label {
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 120px;
+        }
+
+        .tax-input-group input[type="number"] {
+            width: 80px;
+            padding: 6px 10px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .tax-input-group .arrow {
+            color: #999;
+        }
+
+        .tax-input-group .result {
+            font-weight: 600;
+            color: #f57c00;
+        }
+
+        .total-tributos {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .resumo-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+        }
+
+        .resumo-section h2 {
+            color: white;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .resumo-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .resumo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .resumo-item .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .resumo-item .value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .resumo-total {
+            border-top: 2px solid rgba(255,255,255,0.3);
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .resumo-total .label {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .resumo-total .value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .indicador-m2 {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .indicador-m2 .label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .indicador-m2 .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .dre-section {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .dre-section h2 {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dre-section h2::before {
+            content: '📈';
+            font-size: 24px;
+        }
+
+        .dre-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dre-table tr {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .dre-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .dre-table td {
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+
+        .dre-table td:first-child {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .dre-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+            color: #212529;
+            min-width: 150px;
+        }
+
+        .dre-subtotal {
+            background: #e9ecef;
+            font-weight: 700 !important;
+        }
+
+        .dre-subtotal td {
+            padding: 14px 16px;
+            font-size: 15px;
+        }
+
+        .dre-lucro-bruto {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+        }
+
+        .dre-lucro-bruto td {
+            color: #0c5460 !important;
+            font-weight: 700 !important;
+        }
+
+        .dre-lucro-liquido {
+            background: #d4edda;
+            border-left: 4px solid #155724;
+        }
+
+        .dre-lucro-liquido td {
+            color: #155724 !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+        }
+
+        .dre-negativo td:last-child {
+            color: #dc3545 !important;
+        }
+
+        .dre-margem {
+            font-size: 13px !important;
+            font-style: italic;
+            opacity: 0.9;
+        }
+
+        .dre-detalhe {
+            background: #f8f9fa;
+        }
+
+        .dre-detalhe td:first-child {
+            padding-left: 48px !important;
+            font-size: 13px !important;
+            color: #6c757d !important;
+            font-weight: 400 !important;
+        }
+
+        .dre-detalhe td:first-child::before {
+            content: '>>> ';
+            color: #adb5bd;
+            font-weight: 600;
+        }
+
+        .dre-detalhe td:last-child {
+            font-size: 13px !important;
+            color: #6c757d !important;
+        }
+
+        .alertas-section {
+            margin-top: 24px;
+        }
+
+        .alerta {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .alerta::before {
+            content: '⚠️ ';
+            margin-right: 6px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #FF7F0E;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e67200;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 127, 14, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .resumo-total .value {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Novo Orçamento</h1>
+            <p>Sistema de Orçamentos - GMX Soluções Industriais</p>
+        </div>
+
+        <!-- Dados Básicos -->
+        <div class="form-section">
+            <h2>📝 Dados do Projeto</h2>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Nome do Orçamento</label>
+                    <input type="text" value="Obra Mineração XPTO" id="nomeObra">
+                </div>
+                <div class="form-field">
+                    <label>Área (m²)</label>
+                    <input type="number" value="325" id="area">
+                </div>
+                <div class="form-field">
+                    <label>Metros Lineares</label>
+                    <input type="number" value="78.2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Composições -->
+        <div class="form-section">
+            <h2>📦 Composições de Custo</h2>
+            <div class="composicoes-list">
+                <!-- Composição 1: Mobilização -->
+                <div class="composicao-card">
+                    <div class="composicao-header">
+                        <span class="composicao-nome">1. Mobilização Padrão</span>
+                        <span class="composicao-badge">Mobilização</span>
+                    </div>
+                    <div class="composicao-values">
+                        <div class="value-item">
+                            <span class="value-label">Custo Direto:</span>
+                            <span class="value-amount" data-custo-direto="20000">R$ 20.000,00</span>
+                        </div>
+                    </div>
+                    <div class="bdi-editor">
+                        <label>BDI:</label>
+                        <input type="number" value="25" min="0" max="100" step="1"
+                               class="bdi-input" data-composicao="1">
+                        <span>%</span>
+                        <span class="arrow">→</span>
+                        <span class="result" data-bdi-valor="1">R$ 5.000,00</span>
+                    </div>
+                    <div class="hint">💡 Reduzir BDI se carteira cheia | Aumentar se carteira vazia</div>
+                </div>
+
+                <!-- Composição 2: MO Fabricação -->
+                <div class="composicao-card">
+                    <div class="composicao-header">
+                        <span class="composicao-nome">2. Mão de Obra - Fabricação</span>
+                        <span class="composicao-badge">MO Fabricação</span>
+                    </div>
+                    <div class="composicao-values">
+                        <div class="value-item">
+                            <span class="value-label">Custo Direto:</span>
+                            <span class="value-amount" data-custo-direto="35000">R$ 35.000,00</span>
+                        </div>
+                    </div>
+                    <div class="bdi-editor">
+                        <label>BDI:</label>
+                        <input type="number" value="25" min="0" max="100" step="1"
+                               class="bdi-input" data-composicao="2">
+                        <span>%</span>
+                        <span class="arrow">→</span>
+                        <span class="result" data-bdi-valor="2">R$ 8.750,00</span>
+                    </div>
+                    <div class="hint">💡 Reduzir BDI para ganhar volume em contratos grandes</div>
+                </div>
+
+                <!-- Composição 3: Ferramentas -->
+                <div class="composicao-card">
+                    <div class="composicao-header">
+                        <span class="composicao-nome">3. Ferramentas Manuais</span>
+                        <span class="composicao-badge">Ferramentas</span>
+                    </div>
+                    <div class="composicao-values">
+                        <div class="value-item">
+                            <span class="value-label">Custo Direto:</span>
+                            <span class="value-amount" data-custo-direto="5000">R$ 5.000,00</span>
+                        </div>
+                    </div>
+                    <div class="bdi-editor">
+                        <label>BDI:</label>
+                        <input type="number" value="10" min="0" max="100" step="1"
+                               class="bdi-input" data-composicao="3">
+                        <span>%</span>
+                        <span class="arrow">→</span>
+                        <span class="result" data-bdi-valor="3">R$ 500,00</span>
+                    </div>
+                    <div class="hint">💡 BDI padrão 10% para ferramentas</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tributos -->
+        <div class="form-section">
+            <div class="tributos-section">
+                <h3>Tributos (Editável)</h3>
+
+                <div class="subtotal-display">
+                    <span class="label">Subtotal (Custo Direto + BDI):</span>
+                    <span class="value" id="subtotalDisplay">R$ 74.250,00</span>
+                </div>
+
+                <div class="checkbox-field">
+                    <input type="checkbox" id="temISS" checked>
+                    <label for="temISS">☑️ Tem ISS?</label>
+                </div>
+
+                <div class="tax-input-group" id="issGroup">
+                    <label>ISS:</label>
+                    <input type="number" value="3" min="0" max="100" step="0.1" id="issAliquota">
+                    <span>%</span>
+                    <span class="arrow">→</span>
+                    <span class="result" id="issValor">R$ 2.227,50</span>
+                </div>
+
+                <div class="tax-input-group">
+                    <label>Simples Nacional:</label>
+                    <input type="number" value="11.8" min="0" max="100" step="0.1" id="simplesAliquota">
+                    <span>%</span>
+                    <span class="arrow">→</span>
+                    <span class="result" id="simplesValor">R$ 8.761,50</span>
+                </div>
+
+                <div class="total-tributos">
+                    <span>Total Tributos:</span>
+                    <span id="totalTributos">R$ 10.989,00 (14.8%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo Financeiro -->
+        <div class="form-section">
+            <div class="resumo-section">
+                <h2>📊 Resumo Financeiro</h2>
+                <div class="resumo-items">
+                    <div class="resumo-item">
+                        <span class="label">├─ Custo Direto:</span>
+                        <span class="value" id="resumoCustoDirecto">R$ 60.000,00</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="label">├─ BDI (média):</span>
+                        <span class="value" id="resumoBDI">R$ 14.250,00</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="label">├─ Subtotal:</span>
+                        <span class="value" id="resumoSubtotal">R$ 74.250,00</span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="label">├─ Tributos:</span>
+                        <span class="value" id="resumoTributos">R$ 10.989,00</span>
+                    </div>
+                    <div class="resumo-item resumo-total">
+                        <span class="label">└─ TOTAL VENDA:</span>
+                        <span class="value" id="resumoTotal">R$ 85.239,00</span>
+                    </div>
+                </div>
+
+                <div class="indicador-m2">
+                    <div class="label">💡 Custo por m²</div>
+                    <div class="value" id="custoM2">R$ 262,27/m²</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DRE - Demonstrativo de Resultado -->
+        <div class="form-section">
+            <div class="dre-section">
+                <h2>Demonstrativo de Resultado (DRE)</h2>
+                <table class="dre-table">
+                    <tbody>
+                        <tr>
+                            <td>Valor total dos produtos</td>
+                            <td id="dreValorTotal">R$ 85.239,00</td>
+                        </tr>
+                        <tr>
+                            <td>(-) Tributos a recolher</td>
+                            <td id="dreTributos">R$ 10.989,00</td>
+                        </tr>
+                        <tr class="dre-subtotal">
+                            <td>(=) Receita líquida</td>
+                            <td id="dreReceitaLiquida">R$ 74.250,00</td>
+                        </tr>
+                        <tr>
+                            <td>(-) Custos diretos de produção</td>
+                            <td id="dreCustosDirectos">R$ 60.000,00</td>
+                        </tr>
+                        <tr class="dre-detalhe">
+                            <td>Mobilização Padrão</td>
+                            <td id="dreDetalheMobilizacao">R$ 20.000,00 (33.3%)</td>
+                        </tr>
+                        <tr class="dre-detalhe">
+                            <td>Mão de Obra - Fabricação</td>
+                            <td id="dreDetalheMOFabricacao">R$ 35.000,00 (58.3%)</td>
+                        </tr>
+                        <tr class="dre-detalhe">
+                            <td>Ferramentas Manuais</td>
+                            <td id="dreDetalheFerramentas">R$ 5.000,00 (8.3%)</td>
+                        </tr>
+                        <tr class="dre-lucro-bruto">
+                            <td>(=) Lucro bruto</td>
+                            <td id="dreLucroBruto">R$ 14.250,00</td>
+                        </tr>
+                        <tr class="dre-margem">
+                            <td>Margem de lucro bruto</td>
+                            <td id="dreMargemBruta">19.2%</td>
+                        </tr>
+                        <tr>
+                            <td>(-) Despesas administrativas (BDI)</td>
+                            <td id="dreBDI">R$ 14.250,00</td>
+                        </tr>
+                        <tr class="dre-detalhe">
+                            <td id="dreBDIMobilizacaoLabel">BDI Mobilização (25%)</td>
+                            <td id="dreBDIMobilizacao">R$ 5.000,00 (35.1%)</td>
+                        </tr>
+                        <tr class="dre-detalhe">
+                            <td id="dreBDIMOFabricacaoLabel">BDI MO Fabricação (25%)</td>
+                            <td id="dreBDIMOFabricacao">R$ 8.750,00 (61.4%)</td>
+                        </tr>
+                        <tr class="dre-detalhe">
+                            <td id="dreBDIFerramentasLabel">BDI Ferramentas (10%)</td>
+                            <td id="dreBDIFerramentas">R$ 500,00 (3.5%)</td>
+                        </tr>
+                        <tr class="dre-lucro-liquido">
+                            <td>(=) Lucro líquido</td>
+                            <td id="dreLucroLiquido">R$ 0,00</td>
+                        </tr>
+                        <tr class="dre-margem">
+                            <td>Margem de lucro líquido</td>
+                            <td id="dreMargemLiquida">0.0%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div class="alertas-section" id="alertasSection">
+            <!-- Alertas serão inseridos dinamicamente -->
+        </div>
+
+        <!-- Ações -->
+        <div class="actions">
+            <button class="btn btn-secondary">💾 Salvar Rascunho</button>
+            <button class="btn btn-primary">📄 Gerar Proposta Comercial</button>
+        </div>
+    </div>
+
+    <script>
+        // Dados das composições
+        const composicoes = [
+            { id: 1, custoDirecto: 20000, bdiPadrao: 25 },
+            { id: 2, custoDirecto: 35000, bdiPadrao: 25 },
+            { id: 3, custoDirecto: 5000, bdiPadrao: 10 }
+        ];
+
+        function formatCurrency(value) {
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function calcularTudo() {
+            // 1. Calcular BDI de cada composição
+            let custoDirectoTotal = 0;
+            let bdiTotal = 0;
+
+            composicoes.forEach(comp => {
+                const bdiInput = document.querySelector(`input[data-composicao="${comp.id}"]`);
+                const bdiPercentual = parseFloat(bdiInput.value) / 100;
+                const valorBDI = comp.custoDirecto * bdiPercentual;
+
+                custoDirectoTotal += comp.custoDirecto;
+                bdiTotal += valorBDI;
+
+                // Atualizar display do BDI
+                const bdiValorSpan = document.querySelector(`span[data-bdi-valor="${comp.id}"]`);
+                bdiValorSpan.textContent = formatCurrency(valorBDI);
+            });
+
+            // 2. Calcular Subtotal (Custo Direto + BDI)
+            const subtotal = custoDirectoTotal + bdiTotal;
+            document.getElementById('subtotalDisplay').textContent = formatCurrency(subtotal);
+
+            // 3. Calcular Tributos
+            const temISS = document.getElementById('temISS').checked;
+            const issAliquota = parseFloat(document.getElementById('issAliquota').value) / 100;
+            const simplesAliquota = parseFloat(document.getElementById('simplesAliquota').value) / 100;
+
+            const valorISS = temISS ? subtotal * issAliquota : 0;
+            const valorSimples = subtotal * simplesAliquota;
+            const tributoTotal = valorISS + valorSimples;
+
+            document.getElementById('issValor').textContent = formatCurrency(valorISS);
+            document.getElementById('simplesValor').textContent = formatCurrency(valorSimples);
+
+            const aliquotaTotalPercentual = ((tributoTotal / subtotal) * 100).toFixed(1);
+            document.getElementById('totalTributos').textContent =
+                `${formatCurrency(tributoTotal)} (${aliquotaTotalPercentual}%)`;
+
+            // 4. Total Venda
+            const totalVenda = subtotal + tributoTotal;
+
+            // 5. Atualizar Resumo
+            document.getElementById('resumoCustoDirecto').textContent = formatCurrency(custoDirectoTotal);
+            document.getElementById('resumoBDI').textContent = formatCurrency(bdiTotal);
+            document.getElementById('resumoSubtotal').textContent = formatCurrency(subtotal);
+            document.getElementById('resumoTributos').textContent = formatCurrency(tributoTotal);
+            document.getElementById('resumoTotal').textContent = formatCurrency(totalVenda);
+
+            // 6. Custo por m²
+            const area = parseFloat(document.getElementById('area').value);
+            const custoM2 = totalVenda / area;
+            document.getElementById('custoM2').textContent = `${formatCurrency(custoM2)}/m²`;
+
+            // 7. Calcular DRE
+            calcularDRE(totalVenda, tributoTotal, custoDirectoTotal, bdiTotal);
+
+            // 8. Gerar Alertas
+            gerarAlertas(composicoes, bdiTotal, custoDirectoTotal);
+        }
+
+        function calcularDRE(valorTotal, tributos, custosDirectos, bdi) {
+            // 1. Valor total dos produtos
+            document.getElementById('dreValorTotal').textContent = formatCurrency(valorTotal);
+
+            // 2. Tributos
+            document.getElementById('dreTributos').textContent = formatCurrency(tributos);
+
+            // 3. Receita Líquida (Valor Total - Tributos)
+            const receitaLiquida = valorTotal - tributos;
+            document.getElementById('dreReceitaLiquida').textContent = formatCurrency(receitaLiquida);
+
+            // 4. Custos Diretos
+            document.getElementById('dreCustosDirectos').textContent = formatCurrency(custosDirectos);
+
+            // 4a. Detalhamento dos Custos Diretos por Composição
+            const custo1 = composicoes[0].custoDirecto;
+            const custo2 = composicoes[1].custoDirecto;
+            const custo3 = composicoes[2].custoDirecto;
+
+            const percentual1 = (custo1 / custosDirectos) * 100;
+            const percentual2 = (custo2 / custosDirectos) * 100;
+            const percentual3 = (custo3 / custosDirectos) * 100;
+
+            document.getElementById('dreDetalheMobilizacao').textContent =
+                `${formatCurrency(custo1)} (${percentual1.toFixed(1)}%)`;
+            document.getElementById('dreDetalheMOFabricacao').textContent =
+                `${formatCurrency(custo2)} (${percentual2.toFixed(1)}%)`;
+            document.getElementById('dreDetalheFerramentas').textContent =
+                `${formatCurrency(custo3)} (${percentual3.toFixed(1)}%)`;
+
+            // 5. Lucro Bruto (Receita Líquida - Custos Diretos)
+            const lucroBruto = receitaLiquida - custosDirectos;
+            document.getElementById('dreLucroBruto').textContent = formatCurrency(lucroBruto);
+
+            // 6. Margem Bruta (Lucro Bruto / Receita Líquida)
+            const margemBruta = (lucroBruto / receitaLiquida) * 100;
+            document.getElementById('dreMargemBruta').textContent = `${margemBruta.toFixed(1)}%`;
+
+            // 7. Despesas Administrativas (BDI)
+            document.getElementById('dreBDI').textContent = formatCurrency(bdi);
+
+            // 7a. Detalhamento do BDI por Composição
+            const bdiInput1 = document.querySelector(`input[data-composicao="1"]`);
+            const bdiInput2 = document.querySelector(`input[data-composicao="2"]`);
+            const bdiInput3 = document.querySelector(`input[data-composicao="3"]`);
+
+            const bdiPerc1 = parseFloat(bdiInput1.value);
+            const bdiPerc2 = parseFloat(bdiInput2.value);
+            const bdiPerc3 = parseFloat(bdiInput3.value);
+
+            const valorBDI1 = custo1 * (bdiPerc1 / 100);
+            const valorBDI2 = custo2 * (bdiPerc2 / 100);
+            const valorBDI3 = custo3 * (bdiPerc3 / 100);
+
+            const percBDI1 = (valorBDI1 / bdi) * 100;
+            const percBDI2 = (valorBDI2 / bdi) * 100;
+            const percBDI3 = (valorBDI3 / bdi) * 100;
+
+            // Atualizar labels com BDI atual
+            document.getElementById('dreBDIMobilizacaoLabel').textContent =
+                `BDI Mobilização (${bdiPerc1}%)`;
+            document.getElementById('dreBDIMOFabricacaoLabel').textContent =
+                `BDI MO Fabricação (${bdiPerc2}%)`;
+            document.getElementById('dreBDIFerramentasLabel').textContent =
+                `BDI Ferramentas (${bdiPerc3}%)`;
+
+            // Atualizar valores com percentual do total BDI
+            document.getElementById('dreBDIMobilizacao').textContent =
+                `${formatCurrency(valorBDI1)} (${percBDI1.toFixed(1)}%)`;
+            document.getElementById('dreBDIMOFabricacao').textContent =
+                `${formatCurrency(valorBDI2)} (${percBDI2.toFixed(1)}%)`;
+            document.getElementById('dreBDIFerramentas').textContent =
+                `${formatCurrency(valorBDI3)} (${percBDI3.toFixed(1)}%)`;
+
+            // 8. Lucro Líquido (Lucro Bruto - BDI)
+            const lucroLiquido = lucroBruto - bdi;
+            document.getElementById('dreLucroLiquido').textContent = formatCurrency(lucroLiquido);
+
+            // 9. Margem Líquida (Lucro Líquido / Valor Total)
+            const margemLiquida = (lucroLiquido / valorTotal) * 100;
+            document.getElementById('dreMargemLiquida').textContent = `${margemLiquida.toFixed(1)}%`;
+
+            // 10. Colorir linha de lucro líquido se negativo
+            const lucroLiquidoRow = document.querySelector('.dre-lucro-liquido');
+            if (lucroLiquido < 0) {
+                lucroLiquidoRow.classList.add('dre-negativo');
+            } else {
+                lucroLiquidoRow.classList.remove('dre-negativo');
+            }
+        }
+
+        function gerarAlertas(composicoes, bdiTotal, custoDirectoTotal) {
+            const alertasDiv = document.getElementById('alertasSection');
+            alertasDiv.innerHTML = '';
+
+            const bdiMedio = (bdiTotal / custoDirectoTotal) * 100;
+
+            // Calcular lucro líquido para alertas
+            const temISS = document.getElementById('temISS').checked;
+            const issAliquota = parseFloat(document.getElementById('issAliquota').value) / 100;
+            const simplesAliquota = parseFloat(document.getElementById('simplesAliquota').value) / 100;
+            const subtotal = custoDirectoTotal + bdiTotal;
+            const valorISS = temISS ? subtotal * issAliquota : 0;
+            const valorSimples = subtotal * simplesAliquota;
+            const tributoTotal = valorISS + valorSimples;
+            const totalVenda = subtotal + tributoTotal;
+            const receitaLiquida = totalVenda - tributoTotal;
+            const lucroBruto = receitaLiquida - custoDirectoTotal;
+            const lucroLiquido = lucroBruto - bdiTotal;
+            const margemLiquida = (lucroLiquido / totalVenda) * 100;
+
+            // Alerta 1: Lucro Líquido Negativo (CRÍTICO)
+            if (lucroLiquido < 0) {
+                const alerta = document.createElement('div');
+                alerta.className = 'alerta';
+                alerta.style.borderLeftColor = '#dc3545';
+                alerta.style.background = '#f8d7da';
+                alerta.style.color = '#721c24';
+                alerta.textContent = `PREJUÍZO! Lucro líquido negativo (${formatCurrency(lucroLiquido)}) - O orçamento resultará em PERDA financeira`;
+                alertasDiv.appendChild(alerta);
+            }
+
+            // Alerta 2: Margem Líquida Muito Baixa
+            if (lucroLiquido > 0 && margemLiquida < 5) {
+                const alerta = document.createElement('div');
+                alerta.className = 'alerta';
+                alerta.style.borderLeftColor = '#e67200';
+                alerta.style.background = '#fff3e0';
+                alerta.style.color = '#e65100';
+                alerta.textContent = `Margem líquida muito baixa (${margemLiquida.toFixed(1)}%) - Recomenda-se mínimo 5% para cobrir imprevistos`;
+                alertasDiv.appendChild(alerta);
+            }
+
+            // Alerta 3: BDI por Composição
+            composicoes.forEach(comp => {
+                const bdiInput = document.querySelector(`input[data-composicao="${comp.id}"]`);
+                const bdiAtual = parseFloat(bdiInput.value);
+                const desvio = bdiAtual - comp.bdiPadrao;
+
+                if (Math.abs(desvio) >= 3) {
+                    const alerta = document.createElement('div');
+                    alerta.className = 'alerta';
+
+                    if (desvio < 0) {
+                        alerta.textContent = `Composição ${comp.id}: BDI ${Math.abs(desvio).toFixed(0)}% abaixo do padrão (${comp.bdiPadrao}%) - Certifique-se de que a margem ainda é viável`;
+                    } else {
+                        alerta.textContent = `Composição ${comp.id}: BDI ${desvio.toFixed(0)}% acima do padrão (${comp.bdiPadrao}%) - Pode afetar competitividade`;
+                    }
+
+                    alertasDiv.appendChild(alerta);
+                }
+            });
+
+            // Alerta 4: BDI Médio Muito Baixo
+            if (bdiMedio < 15) {
+                const alerta = document.createElement('div');
+                alerta.className = 'alerta';
+                alerta.style.borderLeftColor = '#dc3545';
+                alerta.style.background = '#f8d7da';
+                alerta.style.color = '#721c24';
+                alerta.textContent = `BDI médio (${bdiMedio.toFixed(1)}%) abaixo do mínimo operacional (15%) - RISCO DE PREJUÍZO`;
+                alertasDiv.appendChild(alerta);
+            }
+        }
+
+        function toggleISS() {
+            const temISS = document.getElementById('temISS').checked;
+            const issGroup = document.getElementById('issGroup');
+
+            if (temISS) {
+                issGroup.classList.remove('disabled');
+            } else {
+                issGroup.classList.add('disabled');
+            }
+
+            calcularTudo();
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.bdi-input').forEach(input => {
+            input.addEventListener('input', calcularTudo);
+        });
+
+        document.getElementById('temISS').addEventListener('change', toggleISS);
+        document.getElementById('issAliquota').addEventListener('input', calcularTudo);
+        document.getElementById('simplesAliquota').addEventListener('input', calcularTudo);
+        document.getElementById('area').addEventListener('input', calcularTudo);
+
+        // Calcular na inicialização
+        calcularTudo();
+    </script>
+</body>
+</html>

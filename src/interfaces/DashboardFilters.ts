@@ -33,6 +33,8 @@ export interface FilteredActivity {
   processId?: number;
   serviceOrder: ServiceOrder;
   serviceOrderId?: number;
+  projectId?: number;
+  cod_sequencial?: number;
   projectName: string;
   totalTime?: number;
   estimatedTime?: number;

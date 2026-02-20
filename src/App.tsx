@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 
 // Login carregado imediatamente (página inicial)
@@ -16,13 +16,24 @@ const Colaboradores = lazy(() => import('./pages/gerenciamento/colaboradores'));
 const TarefasMacro = lazy(() => import('./pages/gerenciamento/tarefas-macro'));
 const Processos = lazy(() => import('./pages/gerenciamento/processos'));
 const ValorPorCargo = lazy(() => import('./pages/gerenciamento/valor-por-cargo'));
+const TabelaMateriais = lazy(() => import('./pages/comercial/cadastros/TabelaMateriais'));
+const TabelaTintas = lazy(() => import('./pages/comercial/cadastros/tintas'));
+const TabelaFornecedoresServico = lazy(() => import('./pages/comercial/cadastros/fornecedores-servico'));
+const CalculadoraPintura = lazy(() => import('./pages/comercial/calculadora-pintura'));
 const Fabricas = lazy(() => import('./pages/Fabricas'));
 const Mineradoras = lazy(() => import('./pages/Mineradoras'));
 const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
 const Atividade = lazy(() => import('./pages/Atividade'));
 const AtividadeDetalhe = lazy(() => import('./pages/AtividadeDetalhe'));
 const AssistenteIA = lazy(() => import('./pages/AssistenteIA'));
-const EmConstrucao = lazy(() => import('./pages/EmConstrucao'));
+
+// Módulo Cronogramas (desabilitado nesta branch - existe apenas na branch Modulo_Cronograma)
+// const DashboardCronogramas = lazy(() => import('./pages/cronograma'));
+// const GanttView = lazy(() => import('./pages/cronograma/gantt'));
+// const GanttTestVanilla = lazy(() => import('./pages/cronograma/gantt/GanttTestVanilla'));
+
+// Módulo Comercial
+const Comercial = lazy(() => import('./pages/comercial'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -50,14 +61,11 @@ function App() {
           <Route path="/fabricas" element={<Fabricas />} />
           <Route path="/mineradoras" element={<Mineradoras />} />
           <Route path="/nao-conformidades" element={<NaoConformidades />} />
-          <Route path="/qualidade/assistente-ia" element={<EmConstrucao />} />
-          <Route path="/qualidade/acoes-corretivas" element={<EmConstrucao />} />
-          <Route path="/qualidade/inspecoes" element={<EmConstrucao />} />
-          <Route path="/qualidade/planos-inspecao" element={<EmConstrucao />} />
-          <Route path="/qualidade/certificados" element={<EmConstrucao />} />
-          <Route path="/qualidade/calibracao" element={<EmConstrucao />} />
-          <Route path="/qualidade/indicadores" element={<EmConstrucao />} />
-          <Route path="/qualidade/databook" element={<EmConstrucao />} />
+          {/* Rotas de Cronograma desabilitadas nesta branch */}
+          {/* <Route path="/cronograma" element={<DashboardCronogramas />} /> */}
+          {/* <Route path="/cronograma/:id/gantt" element={<GanttView />} /> */}
+          {/* <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} /> */}
+          <Route path="/comercial/*" element={<Comercial />} />
           <Route path="/obras/:projectId/os" element={<OrdensServico />} />
           <Route
             path="/obras/:projectId/os/:serviceOrderId/atividades"
@@ -71,6 +79,17 @@ function App() {
           <Route path="/gerenciamento/tarefas-macro" element={<TarefasMacro />} />
           <Route path="/gerenciamento/processos" element={<Processos />} />
           <Route path="/gerenciamento/valor-por-cargo" element={<ValorPorCargo />} />
+
+          {/* Redirects de rotas antigas para novas */}
+          <Route path="/gerenciamento/materiais" element={<Navigate to="/comercial/cadastros/materiais" replace />} />
+          <Route path="/gerenciamento/tintas" element={<Navigate to="/comercial/cadastros/tintas" replace />} />
+          <Route path="/gerenciamento/fornecedores-servico" element={<Navigate to="/comercial/cadastros/fornecedores-servico" replace />} />
+
+          {/* Novas rotas do módulo Comercial > Cadastros */}
+          <Route path="/comercial/cadastros/materiais" element={<TabelaMateriais />} />
+          <Route path="/comercial/cadastros/tintas" element={<TabelaTintas />} />
+          <Route path="/comercial/cadastros/fornecedores-servico" element={<TabelaFornecedoresServico />} />
+          <Route path="/comercial/calculadora-pintura" element={<CalculadoraPintura />} />
         </Routes>
       </Suspense>
       <Toaster />

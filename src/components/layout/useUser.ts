@@ -12,18 +12,41 @@ export const useUser = () => {
     const getUser = async () => {
       try {
         const token = getStoredToken();
-        if (!token) {
-          setUser(null);
+        const userId = localStorage.getItem("userId");
+
+        // Se não houver token OU userId, limpar tudo e redirecionar
+        if (!token || !userId) {
+          // Limpar storage completamente
+          localStorage.removeItem('authToken');
+          sessionStorage.removeItem('authToken');
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+
+          // Redirecionar para login
+          window.location.href = '/';
           return;
         }
 
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-          const user: User = await UserService.getUserById(userId);
-          setUser(user);
-        }
-      } catch (error) {
+        // Buscar dados do usuário
+        const user: User = await UserService.getUserById(userId);
+        setUser(user);
+      } catch (error: any) {
         console.error("Erro ao buscar usuário:", error);
+
+        // Se for erro 401 (não autorizado), limpar token e redirecionar para login
+        if (error?.response?.status === 401) {
+          // Limpar TODOS os tokens possíveis (authToken é o correto)
+          localStorage.removeItem('authToken');
+          sessionStorage.removeItem('authToken');
+          localStorage.removeItem('token'); // Legacy, caso exista
+          localStorage.removeItem('userId');
+
+          // Usar window.location para forçar reload completo e limpar estado
+          window.location.href = '/';
+          return;
+        }
+
+        // Outros erros: mostrar toast e limpar user
         toast({
           variant: "destructive",
           title: "Erro ao carregar perfil",

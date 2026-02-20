@@ -34,17 +34,42 @@ export const Sidebar = ({ user }: SidebarProps) => {
       location.pathname.includes('/qualidade/indicadores') ||
       location.pathname.includes('/qualidade/databook');
 
+    const shouldExpandComercial =
+      location.pathname.includes('/comercial');
+
+    // Submenus aninhados do Comercial
+    const shouldExpandCadastros =
+      location.pathname.includes('/comercial/cadastros') ||
+      location.pathname.includes('/comercial/configuracao');
+
+    const shouldExpandOrcamentos =
+      location.pathname.includes('/comercial/orcamentos') ||
+      location.pathname.includes('/comercial/propostas') ||
+      location.pathname.includes('/comercial/calculadora-pintura');
+
     const shouldExpandConfiguracoes =
       location.pathname.includes('/gerenciamento');
 
+    // Expandir menus principais
     if (shouldExpandPCP && !expandedItems.includes('PCP')) {
       setExpandedItems(prev => [...prev, 'PCP']);
     }
     if (shouldExpandQualidade && !expandedItems.includes('Qualidade')) {
       setExpandedItems(prev => [...prev, 'Qualidade']);
     }
+    if (shouldExpandComercial && !expandedItems.includes('Comercial')) {
+      setExpandedItems(prev => [...prev, 'Comercial']);
+    }
     if (shouldExpandConfiguracoes && !expandedItems.includes('Configurações')) {
       setExpandedItems(prev => [...prev, 'Configurações']);
+    }
+
+    // Expandir submenus aninhados do Comercial
+    if (shouldExpandCadastros && !expandedItems.includes('CADASTROS')) {
+      setExpandedItems(prev => [...prev, 'CADASTROS']);
+    }
+    if (shouldExpandOrcamentos && !expandedItems.includes('ORÇAMENTOS')) {
+      setExpandedItems(prev => [...prev, 'ORÇAMENTOS']);
     }
   }, [location.pathname]);
 
@@ -74,6 +99,8 @@ export const Sidebar = ({ user }: SidebarProps) => {
             isExpanded={expandedItems.includes(item.label)}
             isActive={location.pathname === item.path}
             onToggle={() => toggleExpand(item.label)}
+            expandedItems={expandedItems}
+            onToggleNested={toggleExpand}
           />
         ))}
       </nav>
