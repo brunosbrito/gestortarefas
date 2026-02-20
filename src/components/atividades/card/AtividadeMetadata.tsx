@@ -27,16 +27,24 @@ interface AtividadeMetadataProps {
 }
 
 // Verifica se o início da atividade está atrasado
+// IMPORTANTE: Só considera atrasado se a data prevista for ANTES de hoje (não inclui hoje)
 const isStartDelayed = (atividade: AtividadeStatus): boolean => {
   if (!atividade.plannedStartDate) return false;
   const isPlanned = atividade.status === 'Planejadas' ||
     atividade.status === 'Planejado' ||
     atividade.status === 'Planejada';
   if (!isPlanned) return false;
+
+  // Normaliza a data planejada para meia-noite local
   const planned = new Date(atividade.plannedStartDate);
+  planned.setHours(0, 0, 0, 0);
+
+  // Normaliza hoje para meia-noite local
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return planned < today;
+
+  // Só está atrasado se a data planejada for ESTRITAMENTE ANTES de hoje
+  return planned.getTime() < today.getTime();
 };
 
 export const AtividadeMetadata = ({

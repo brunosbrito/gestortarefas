@@ -101,7 +101,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </Button>
         </div>
 
-        <div className="container mx-auto p-4 md:p-6 max-w-7xl min-h-0">{children}</div>
+        <div className="w-full px-4 md:px-6 lg:px-8 py-4 md:py-6 max-w-[1600px] mx-auto min-h-0">{children}</div>
       </main>
 
       {/* Modal de Atalhos */}

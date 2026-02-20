@@ -4,19 +4,22 @@ import { TrendingUp, BarChart3, Maximize2 } from 'lucide-react';
 import { InfoTooltip } from '@/components/tooltips/InfoTooltip';
 import { cn } from '@/lib/utils';
 import {
-  ChartComponent,
-  SeriesCollectionDirective,
-  SeriesDirective,
-  Inject,
-  Legend,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
   CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { startOfWeek, subWeeks, isWithinInterval, isAfter } from 'date-fns';
+import { startOfWeek, subWeeks, isWithinInterval } from 'date-fns';
 import { ActivityDrilldownDialog } from '../ActivityDrilldownDialog';
 import { FilteredActivity } from '@/interfaces/DashboardFilters';
 
@@ -188,92 +191,6 @@ export const ProductivityTrendsChart = () => {
     }
   };
 
-  // Calcular intervalo do eixo Y para atividades
-  const maxCompleted = useMemo(() => {
-    const max = Math.max(...trendData.map(d => d.completedCount), 1);
-    return max;
-  }, [trendData]);
-
-  const yAxisInterval = useMemo(() => {
-    if (maxCompleted <= 5) return 1;
-    if (maxCompleted <= 10) return 2;
-    if (maxCompleted <= 20) return 5;
-    if (maxCompleted <= 50) return 10;
-    return 20;
-  }, [maxCompleted]);
-
-  // Eixo X
-  const primaryXAxis = useMemo<AxisModel>(() => ({
-    valueType: 'Category',
-    labelStyle: {
-      color: isDark ? '#94a3b8' : '#64748b',
-      size: '10px',
-    },
-    majorGridLines: { width: 0 },
-    majorTickLines: { width: 0 },
-  }), [isDark]);
-
-  // Eixo Y primário (Atividades Concluídas - esquerda)
-  const primaryYAxis = useMemo<AxisModel>(() => ({
-    title: 'Atividades Concluídas',
-    titleStyle: {
-      color: isDark ? '#94a3b8' : '#64748b',
-      size: '11px',
-    },
-    labelStyle: {
-      color: isDark ? '#94a3b8' : '#64748b',
-      size: '10px',
-    },
-    majorGridLines: { width: 0 },
-    minorGridLines: { width: 0 },
-    majorTickLines: { width: 0 },
-    minorTickLines: { width: 0 },
-    lineStyle: { width: 0 },
-    minimum: 0,
-    interval: yAxisInterval,
-  }), [isDark, yAxisInterval]);
-
-  // Configuração dos eixos secundários
-  const axes = useMemo(() => [{
-    name: 'percentAxis',
-    opposedPosition: true,
-    title: 'Percentual (%)',
-    titleStyle: {
-      color: isDark ? '#94a3b8' : '#64748b',
-      size: '11px',
-    },
-    labelStyle: {
-      color: isDark ? '#94a3b8' : '#64748b',
-      size: '10px',
-    },
-    majorGridLines: { width: 0 },
-    minorGridLines: { width: 0 },
-    majorTickLines: { width: 0 },
-    minorTickLines: { width: 0 },
-    lineStyle: { width: 0 },
-    minimum: 0,
-    maximum: 120,
-    interval: 20,
-    labelFormat: '{value}%',
-  }], [isDark]);
-
-  const tooltipRender = (args: any) => {
-    if (args.point && args.series) {
-      const dataIndex = args.point.index;
-      const data = trendData[dataIndex];
-      if (data) {
-        const seriesName = args.series.name;
-        if (seriesName.includes('Atividades')) {
-          args.text = `<b>${data.period}</b><br/>Concluídas: ${data.completedCount}`;
-        } else if (seriesName.includes('Eficiência')) {
-          args.text = `<b>${data.period}</b><br/>Eficiência: ${data.efficiency}%`;
-        } else {
-          args.text = `<b>${data.period}</b><br/>Taxa No Prazo: ${data.onTimeRate}%`;
-        }
-      }
-    }
-  };
-
   const renderChart = (height: string = '320px') => (
     <div style={{ height }}>
       {!hasData ? (
@@ -389,10 +306,10 @@ export const ProductivityTrendsChart = () => {
               cursor="pointer"
             />
             {/* Linha: Eficiência Média */}
-            <SeriesDirective
-              dataSource={trendData}
-              xName="period"
-              yName="efficiency"
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="avgEfficiency"
               name="Eficiência Média (%)"
               stroke="#10B981"
               strokeWidth={2}
@@ -400,10 +317,10 @@ export const ProductivityTrendsChart = () => {
               cursor="pointer"
             />
             {/* Linha: Taxa No Prazo */}
-            <SeriesDirective
-              dataSource={trendData}
-              xName="period"
-              yName="onTimeRate"
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="onTimeRate"
               name="Taxa No Prazo (%)"
               stroke="#FF7F0E"
               strokeWidth={2}
@@ -411,8 +328,8 @@ export const ProductivityTrendsChart = () => {
               strokeDasharray="5 5"
               cursor="pointer"
             />
-          </SeriesCollectionDirective>
-        </ChartComponent>
+          </ComposedChart>
+        </ResponsiveContainer>
       )}
     </div>
   );

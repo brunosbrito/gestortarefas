@@ -17,7 +17,8 @@
       "Bash(npm uninstall:*)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\bruno\\Desktop\\dev\\gestor tarefas api\\gestor-tarefas-api\\src\\modules\\user"
+      "C:\\Users\\bruno\\Desktop\\dev\\gestor tarefas api\\gestor-tarefas-api\\src\\modules\\user",
+      "C:\\Users\\Yasmin\\Desktop\\dev\\front\\gestor-tarefas-api\\src\\modules\\activities\\dto"
     ]
   }
 }

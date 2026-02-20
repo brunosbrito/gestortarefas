@@ -176,6 +176,7 @@ const normalizeTeam = (team: any): Array<{ collaboratorId: number; name: string 
 
 /**
  * Verifica se o início está atrasado (status Planejado mas data início prevista já passou)
+ * Considera atrasado se a data prevista for ANTES do momento atual (mesma lógica do Kanban)
  */
 const checkIfStartDelayed = (activity: any, status: string): boolean => {
   if (status !== ACTIVITY_STATUS.PLANEJADO) return false;
@@ -183,9 +184,11 @@ const checkIfStartDelayed = (activity: any, status: string): boolean => {
   const plannedStartDate = parseDate(activity.plannedStartDate);
   if (!plannedStartDate) return false;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return plannedStartDate < today;
+  const now = new Date();
+
+  // Considera atrasado se a data prevista for antes do momento atual
+  // (mesma lógica usada no Kanban de atividades)
+  return plannedStartDate < now;
 };
 
 /**
@@ -230,6 +233,11 @@ const calculateProgress = (activity: any): number => {
  */
 export const countActivitiesByStatus = (activities: NormalizedActivity[]): ActivityStatistics => {
   const counts = activities.reduce((acc, activity) => {
+    // Contar atrasadas (início atrasado ou execução atrasada, exceto finalizadas)
+    if ((activity.isStartDelayed || activity.isDelayed) && !activity.isCompleted) {
+      acc.atrasadas++;
+    }
+
     switch (activity.status) {
       case ACTIVITY_STATUS.PLANEJADO:
         acc.planejadas++;
@@ -250,9 +258,10 @@ export const countActivitiesByStatus = (activities: NormalizedActivity[]): Activ
     planejadas: 0,
     emExecucao: 0,
     concluidas: 0,
-    paralizadas: 0
+    paralizadas: 0,
+    atrasadas: 0
   });
-  
+
   return counts;
 };
 

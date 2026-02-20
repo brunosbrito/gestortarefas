@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   AlertTriangle,
@@ -15,6 +15,7 @@ import { staggerContainer, staggerItem, hoverScale, tapScale } from '@/lib/anima
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { subDays, isAfter, isBefore } from 'date-fns';
 import { InfoTooltip } from '@/components/tooltips/InfoTooltip';
+import ColaboradorService from '@/services/ColaboradorService';
 
 interface KPICardData {
   title: string;
@@ -121,6 +122,24 @@ const KPISection = ({
  */
 export const DashboardKPIsNew = () => {
   const { filteredData, statistics } = useDashboardStore();
+  const [productionCollaboratorsCount, setProductionCollaboratorsCount] = useState<number>(0);
+
+  // Buscar colaboradores de Produção ativos para cálculo de capacidade
+  useEffect(() => {
+    ColaboradorService.getAllColaboradores()
+      .then((colaboradores) => {
+        const productionActive = colaboradores.filter((c) => {
+          if (!c.status) return false; // Apenas ativos
+          const setor = (c.sector || '').toUpperCase();
+          return setor.startsWith('PRODU'); // Apenas PRODUÇÃO
+        });
+        setProductionCollaboratorsCount(productionActive.length);
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar colaboradores para cálculo de capacidade:', error);
+        setProductionCollaboratorsCount(0);
+      });
+  }, []);
 
   // Calcular KPIs com useMemo para performance
   const kpis = useMemo(() => {
@@ -196,17 +215,33 @@ export const DashboardKPIsNew = () => {
     });
 
     // 3. SOBRECARGA PRÓXIMOS 7 DIAS (horas agendadas vs disponíveis)
+    // Considera: atividades dos próximos 7 dias + atrasadas pendentes
     const upcomingActivities = activities.filter(a => {
-      if (!a.startDate) return false;
-      const startDate = new Date(a.startDate);
-      return isAfter(startDate, now) && isBefore(startDate, next7Days);
+      // Excluir atividades finalizadas ou paralisadas
+      if (a.status === 'Concluída' || a.status === 'Paralizada' || a.isCompleted) {
+        return false;
+      }
+
+      const plannedStart = a.plannedStartDate ? new Date(a.plannedStartDate) : null;
+      const actualStart = a.startDate ? new Date(a.startDate) : null;
+
+      // Critério 1: Data de início nos próximos 7 dias
+      const plannedInRange = plannedStart && isBefore(plannedStart, next7Days);
+      const actualInRange = actualStart && isBefore(actualStart, next7Days);
+
+      // Critério 2: Atividade atrasada (início atrasado ou execução atrasada)
+      const isOverdue = a.isStartDelayed || a.isDelayed;
+
+      return plannedInRange || actualInRange || isOverdue;
     });
 
+    // Soma do tempo estimado (tempo previsto) das atividades da semana
     const scheduledHours = upcomingActivities.reduce((sum, a) =>
       sum + (Number(a.estimatedTime) || 0), 0
     );
 
-    const totalCollaborators = statistics.collaborators?.length || 1;
+    // Usa colaboradores de Produção ativos para cálculo de capacidade
+    const totalCollaborators = productionCollaboratorsCount || 1;
     // 44h/semana: Seg-Qui 9h líq. × 4 + Sex 8h líq. (alinhado com TeamCapacityChart)
     const WEEKLY_CAPACITY = 44;
     const availableHours = totalCollaborators * WEEKLY_CAPACITY;
@@ -322,10 +357,27 @@ export const DashboardKPIsNew = () => {
         meta: 'Meta: 70-90%',
         status: capacityRate > 95 ? 'critical' : capacityRate > 90 ? 'warning' : 'good',
         tooltip: (
-          <div className="space-y-1.5">
+          <div className="space-y-2 max-w-sm">
             <p className="font-semibold">Sobrecarga de Capacidade</p>
-            <p>Percentual da capacidade da equipe que será utilizada nos próximos 7 dias (horas agendadas ÷ horas disponíveis).</p>
-            <p>🟢 70-90%: Ideal &nbsp; 🟡 &gt;90%: Risco de sobrecarga &nbsp; 🔴 &gt;95%: Sobrecarga crítica</p>
+            <p className="text-xs">Percentual da capacidade da equipe que será utilizada nos próximos 7 dias.</p>
+            <p className="text-xs">🟢 &lt;70%: Ocioso &nbsp; ✅ 70-90%: Ideal &nbsp; 🟡 &gt;90%: Risco &nbsp; 🔴 &gt;95%: Crítico</p>
+
+            {upcomingActivities.length > 0 && (
+              <div className="border-t pt-2 mt-2">
+                <p className="font-semibold text-xs mb-1">Atividades agendadas ({upcomingActivities.length}):</p>
+                <ul className="text-xs space-y-1 max-h-40 overflow-y-auto">
+                  {upcomingActivities.slice(0, 10).map((a, idx) => (
+                    <li key={a.id || idx} className="flex justify-between gap-2">
+                      <span className="truncate flex-1">{a.description || `Atividade ${a.id}`}</span>
+                      <span className="text-muted-foreground whitespace-nowrap">{Number(a.estimatedTime || 0).toFixed(1)}h</span>
+                    </li>
+                  ))}
+                  {upcomingActivities.length > 10 && (
+                    <li className="text-muted-foreground italic">... e mais {upcomingActivities.length - 10} atividades</li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         )
       },
@@ -399,7 +451,7 @@ export const DashboardKPIsNew = () => {
 
     return kpiData;
   // Usar .length como dependência primitiva — evita re-cálculo por referência instável do array
-  }, [filteredData.activities, statistics.collaborators?.length]);
+  }, [filteredData.activities, productionCollaboratorsCount]);
 
   return (
     <div className="space-y-6">

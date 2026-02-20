@@ -55,6 +55,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Search } from 'lucide-react';
 
 type UnidadeTempo = 'minutos' | 'horas';
 
@@ -65,11 +74,10 @@ const formSchema = z.object({
   quantity: z.number().min(1, 'Unidade é obrigatória'),
   timePerUnit: z.number().min(1, 'Tempo por unidade é obrigatório'),
   unidadeTempo: z.enum(['minutos', 'horas'] as const),
-  plannedStartDate: z.string().optional(),
   collaborators: z
     .array(z.number())
     .min(1, 'Selecione pelo menos um colaborador'),
-  plannedStartDate: z.date().optional(),
+  plannedStartDate: z.date({ required_error: 'Data prevista para início é obrigatória' }),
   observation: z.string().optional(),
   imagem: z.any().optional(),
   imagemDescricao: z.string().optional(),
@@ -111,6 +119,9 @@ export function NovaAtividadeForm({
   const [processSelectedValue, setProcessSelectedValue] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
+  const [macroTaskOpen, setMacroTaskOpen] = useState(false);
+  const [processOpen, setProcessOpen] = useState(false);
+  const [colaboradoresOpen, setColaboradoresOpen] = useState(false);
 
   const determinarValorInicialTarefaMacro = () => {
     if (!atividadeInicial) return '';
@@ -184,11 +195,10 @@ export function NovaAtividadeForm({
       quantity: atividadeInicial?.quantity || 1,
       timePerUnit: 1,
       unidadeTempo: 'horas',
-      plannedStartDate: atividadeInicial?.plannedStartDate
-        ? atividadeInicial.plannedStartDate.substring(0, 10)
-        : '',
       collaborators: determinarColaboradoresIniciais(),
-      plannedStartDate: undefined,
+      plannedStartDate: atividadeInicial?.plannedStartDate
+        ? new Date(atividadeInicial.plannedStartDate)
+        : undefined,
       observation: atividadeInicial?.observation || '',
       projectId,
       orderServiceId,
@@ -223,8 +233,16 @@ export function NovaAtividadeForm({
   useEffect(() => {
     const loadColaboradores = async () => {
       try {
-        const response = await ColaboradorService.getAll();
-        setColaboradores(Array.isArray(response.data) ? response.data : []);
+        const data = await ColaboradorService.getAll();
+        // getAll() já retorna response.data, então usamos diretamente
+        // Filtrar apenas colaboradores ativos (status: true) e do setor Produção
+        const colaboradoresFiltrados = Array.isArray(data)
+          ? data.filter((c: Colaborador) => {
+              const setor = c.sector?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+              return c.status === true && setor === 'producao';
+            })
+          : [];
+        setColaboradores(colaboradoresFiltrados);
       } catch (error) {
         console.error('Erro ao carregar colaboradores:', error);
       }
@@ -368,13 +386,7 @@ export function NovaAtividadeForm({
       formData.append('orderServiceId', values.orderServiceId.toString());
       formData.append('createdBy', values.createdBy.toString());
       formData.append('collaboratorIds', JSON.stringify(collaboratorIds));
-      if (values.plannedStartDate) {
-        formData.append('plannedStartDate', values.plannedStartDate);
-      }
-
-      if (values.plannedStartDate) {
-        formData.append('plannedStartDate', values.plannedStartDate.toISOString());
-      }
+      formData.append('plannedStartDate', values.plannedStartDate.toISOString());
 
       // Debug: Log dos dados enviados
       console.log('Dados enviados:', {
@@ -454,29 +466,57 @@ export function NovaAtividadeForm({
                 <FormLabel className="text-xs font-medium">
                   Tarefa Macro <span className="text-destructive">*</span>
                 </FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    setMacroTaskSelectedValue(value);
-                  }}
-                  value={macroTaskSelectedValue || field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className={cn(
-                      "h-9",
-                      form.formState.errors.macroTask && "border-destructive"
-                    )}>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {tarefasMacro.map((tarefa) => (
-                      <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
-                        {tarefa.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={macroTaskOpen} onOpenChange={setMacroTaskOpen} modal={true}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={macroTaskOpen}
+                        className={cn(
+                          "w-full justify-between h-9 font-normal",
+                          !field.value && "text-muted-foreground",
+                          form.formState.errors.macroTask && "border-destructive"
+                        )}
+                      >
+                        {field.value
+                          ? tarefasMacro.find((t) => t.id.toString() === field.value)?.name || "Selecione"
+                          : "Selecione"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[250px] p-0 z-[100]" align="start">
+                    <Command>
+                      <CommandInput placeholder="Pesquisar tarefa..." className="h-9" />
+                      <CommandList>
+                        <CommandEmpty>Nenhuma tarefa encontrada.</CommandEmpty>
+                        <CommandGroup>
+                          {tarefasMacro.map((tarefa) => (
+                            <CommandItem
+                              key={tarefa.id}
+                              value={tarefa.name}
+                              onSelect={() => {
+                                field.onChange(tarefa.id.toString());
+                                setMacroTaskSelectedValue(tarefa.id.toString());
+                                setMacroTaskOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === tarefa.id.toString() ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {tarefa.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <FormMessage className="text-xs" />
               </FormItem>
             )}
@@ -490,76 +530,79 @@ export function NovaAtividadeForm({
                 <FormLabel className="text-xs font-medium">
                   Processo <span className="text-destructive">*</span>
                 </FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    setProcessSelectedValue(value);
-                  }}
-                  value={processSelectedValue || field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className={cn(
-                      "h-9",
-                      form.formState.errors.process && "border-destructive"
-                    )}>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {processos.map((processo) => (
-                      <SelectItem key={processo.id} value={processo.id.toString()}>
-                        {processo.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={processOpen} onOpenChange={setProcessOpen} modal={true}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={processOpen}
+                        className={cn(
+                          "w-full justify-between h-9 font-normal",
+                          !field.value && "text-muted-foreground",
+                          form.formState.errors.process && "border-destructive"
+                        )}
+                      >
+                        {field.value
+                          ? processos.find((p) => p.id.toString() === field.value)?.name || "Selecione"
+                          : "Selecione"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[250px] p-0 z-[100]" align="start">
+                    <Command>
+                      <CommandInput placeholder="Pesquisar processo..." className="h-9" />
+                      <CommandList>
+                        <CommandEmpty>Nenhum processo encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {processos.map((processo) => (
+                            <CommandItem
+                              key={processo.id}
+                              value={processo.name}
+                              onSelect={() => {
+                                field.onChange(processo.id.toString());
+                                setProcessSelectedValue(processo.id.toString());
+                                setProcessOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === processo.id.toString() ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {processo.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
         </div>
 
-        {/* Conteúdo */}
-        <div className="space-y-6 md:space-y-8 pb-4 mt-4">
-          {/* Seção: Informações Básicas */}
-          <div ref={setSectionRef(0)}>
-            <FormSection icon={FileText} title="Informações Básicas">
-            <FormField
-              control={form.control}
-              name="macroTask"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1.5 font-medium">
-                    Tarefa Macro <span className="text-destructive">*</span>
-                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_MACRO_TASK} />
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setMacroTaskSelectedValue(value);
-                    }}
-                    value={macroTaskSelectedValue || field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className={cn(
-                        form.formState.errors.macroTask && "border-destructive bg-destructive/5"
-                      )}>
-                        <SelectValue placeholder="Selecione a tarefa macro" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {tarefasMacro.map((tarefa) => (
-                        <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
-                          {tarefa.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.macroTask && (
-                    <FormMessage className="flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      {form.formState.errors.macroTask.message}
-                    </FormMessage>
+        {/* Linha 2: Descrição da Atividade */}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs font-medium">
+                Atividade <span className="text-destructive">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Descreva a atividade..."
+                  {...field}
+                  className={cn(
+                    "h-9",
+                    form.formState.errors.description && "border-destructive"
                   )}
                 />
               </FormControl>
@@ -653,12 +696,14 @@ export function NovaAtividadeForm({
               <FormLabel className="text-xs font-medium">
                 Colaboradores <span className="text-destructive">*</span>
               </FormLabel>
-              <Popover>
+              <Popover open={colaboradoresOpen} onOpenChange={setColaboradoresOpen} modal={true}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
+                      type="button"
                       variant="outline"
                       role="combobox"
+                      aria-expanded={colaboradoresOpen}
                       className={cn(
                         "w-full justify-between h-9 font-normal",
                         !field.value?.length && "text-muted-foreground",
@@ -672,38 +717,44 @@ export function NovaAtividadeForm({
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
-                  <div className="max-h-48 overflow-y-auto p-1">
-                    {colaboradores.map((colaborador) => {
-                      const isSelected = field.value?.includes(colaborador.id) ?? false;
-                      return (
-                        <div
-                          key={colaborador.id}
-                          className={cn(
-                            "flex items-center gap-2 px-2 py-1.5 cursor-pointer rounded-sm text-sm",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            isSelected && "bg-accent/50"
-                          )}
-                          onClick={() => {
-                            const currentValue = field.value || [];
-                            if (isSelected) {
-                              field.onChange(currentValue.filter((id) => id !== colaborador.id));
-                            } else {
-                              field.onChange([...currentValue, colaborador.id]);
-                            }
-                          }}
-                        >
-                          <div className={cn(
-                            "flex h-4 w-4 items-center justify-center rounded-sm border",
-                            isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"
-                          )}>
-                            {isSelected && <Check className="h-3 w-3" />}
-                          </div>
-                          <span>{colaborador.name}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <PopoverContent className="w-[300px] p-0 z-[100]" align="start" sideOffset={4}>
+                  <Command>
+                    <CommandInput placeholder="Pesquisar colaborador..." className="h-9" />
+                    <CommandList>
+                      <CommandEmpty>
+                        {colaboradores.length === 0
+                          ? "Carregando colaboradores..."
+                          : "Nenhum colaborador encontrado."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {colaboradores.map((colaborador) => {
+                          const isSelected = field.value?.includes(colaborador.id) ?? false;
+                          return (
+                            <CommandItem
+                              key={colaborador.id}
+                              value={colaborador.name}
+                              onSelect={() => {
+                                const currentValue = field.value || [];
+                                if (isSelected) {
+                                  field.onChange(currentValue.filter((id) => id !== colaborador.id));
+                                } else {
+                                  field.onChange([...currentValue, colaborador.id]);
+                                }
+                              }}
+                            >
+                              <div className={cn(
+                                "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
+                                isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"
+                              )}>
+                                {isSelected && <Check className="h-3 w-3" />}
+                              </div>
+                              {colaborador.name}
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
                 </PopoverContent>
               </Popover>
 
@@ -733,36 +784,14 @@ export function NovaAtividadeForm({
                     );
                   })}
                 </div>
-              </div>
-            )}
-
-            {/* Data Início Prevista */}
-            <FormField
-              control={form.control}
-              name="plannedStartDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1.5 font-medium">
-                    Data Início Prevista
-                    <span className="text-xs text-muted-foreground font-normal">(Opcional)</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      className="w-full"
-                    />
-                  </FormControl>
-                  <p className="text-xs text-muted-foreground">
-                    Data em que esta atividade deveria começar. Será sinalizada como "Em Atraso" se não iniciada até esta data.
-                  </p>
-                  <FormMessage />
-                </FormItem>
               )}
-            />
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
 
-            {/* Alterar Horas Trabalhadas — somente em edição */}
-            {editMode && (
+        {/* Alterar Horas Trabalhadas — somente em edição */}
+        {editMode && (
               <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20 space-y-2">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-amber-600" />
@@ -786,72 +815,6 @@ export function NovaAtividadeForm({
                 </p>
               </div>
             )}
-          </FormSection>
-          </div>
-
-          <Separator className="my-8" />
-
-          {/* Seção: Equipe */}
-          <div ref={setSectionRef(2)}>
-            <FormSection icon={Users} title="Equipe">
-            <FormField
-              control={form.control}
-              name="collaborators"
-              render={() => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1.5 font-medium">
-                    Colaboradores <span className="text-destructive">*</span>
-                    <HelpTooltip content={TOOLTIP_CONTENT.FORM_COLLABORATORS} />
-                  </FormLabel>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-lg border border-border/50 bg-muted/20 max-h-60 overflow-y-auto">
-                    {colaboradores.map((colaborador) => (
-                      <FormField
-                        key={colaborador.id}
-                        control={form.control}
-                        name="collaborators"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={colaborador.id}
-                              className="flex items-center space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <input
-                                  type="checkbox"
-                                  className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
-                                  checked={field.value?.includes(colaborador.id)}
-                                  onChange={(e) => {
-                                    return e.target.checked
-                                      ? field.onChange([...field.value, colaborador.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== colaborador.id
-                                          )
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal cursor-pointer">
-                                {colaborador.name}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
-                  </div>
-                  {form.formState.errors.collaborators && (
-                    <FormMessage className="flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      {form.formState.errors.collaborators.message}
-                    </FormMessage>
-                  )}
-                </FormItem>
-              )}
-              <FormMessage className="text-xs" />
-            </FormItem>
-          )}
-        />
 
         {/* Data Prevista para Início */}
         <FormField
@@ -860,7 +823,7 @@ export function NovaAtividadeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-xs font-medium">
-                Data Prevista para Início
+                Data Prevista para Início <span className="text-destructive">*</span>
               </FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
@@ -869,7 +832,8 @@ export function NovaAtividadeForm({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal h-9",
-                        !field.value && "text-muted-foreground"
+                        !field.value && "text-muted-foreground",
+                        form.formState.errors.plannedStartDate && "border-destructive"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -958,9 +922,8 @@ export function NovaAtividadeForm({
                 initialDescription={atividadeInicial?.fileDescription}
               />
             </div>
-          </FormSection>
-          </div>
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Footer Sticky */}
         <div className="sticky bottom-0 p-4 md:p-6 bg-card/95 backdrop-blur-xl border-t border-border/50 shadow-lg z-40">

@@ -8,6 +8,41 @@ import ColaboradorService from '@/services/ColaboradorService';
 import ProjectService from '@/services/ObrasService';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 
+/**
+ * Verifica se uma atividade está atrasada (início atrasado ou execução atrasada)
+ * Mesma lógica usada no Kanban de atividades
+ */
+const checkIfActivityIsDelayed = (atividade: AtividadeStatus): boolean => {
+  // Atividades concluídas não são consideradas atrasadas
+  if (atividade.status === 'Concluídas' || atividade.status === 'Concluída') {
+    return false;
+  }
+
+  const now = new Date();
+
+  // Verificar atraso no início (plannedStartDate passou mas ainda está Planejado)
+  if (atividade.status === 'Planejadas' || atividade.status === 'Planejado') {
+    if (atividade.plannedStartDate) {
+      const plannedStart = new Date(atividade.plannedStartDate);
+      if (plannedStart < now) {
+        return true;
+      }
+    }
+  }
+
+  // Verificar atraso na execução (endDate passou mas ainda em andamento)
+  if (atividade.status === 'Em andamento' || atividade.status === 'Em execução') {
+    if (atividade.endDate) {
+      const endDate = new Date(atividade.endDate);
+      if (endDate < now) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
 export interface AtividadeFiltros {
   tarefaMacroId: string[] | null;
   processoId: string[] | null;
@@ -63,7 +98,24 @@ export const useAtividadeData = () => {
 
   useEffect(() => {
     if (todasAtividades) {
-      let atividadesFiltradas = [...todasAtividades];
+      // Processar atividades atrasadas (mesma lógica do Kanban)
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      let atividadesFiltradas = todasAtividades.map((atividade: AtividadeStatus) => {
+        // Se a atividade está Planejada e tem data prevista de início que já passou
+        if (
+          (atividade.status === 'Planejadas' || atividade.status === 'Planejado') &&
+          atividade.plannedStartDate
+        ) {
+          const plannedStart = new Date(atividade.plannedStartDate);
+          plannedStart.setHours(0, 0, 0, 0);
+          if (plannedStart < now) {
+            return { ...atividade, status: 'Atrasadas' };
+          }
+        }
+        return atividade;
+      });
 
       // Filtro por tarefa macro (múltipla seleção)
       if (filtros.tarefaMacroId && filtros.tarefaMacroId.length > 0) {
@@ -104,9 +156,15 @@ export const useAtividadeData = () => {
 
       // Filtro por status (múltipla seleção)
       if (filtros.status && filtros.status.length > 0) {
-        atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) =>
-          filtros.status!.includes(atividade.status)
-        );
+        atividadesFiltradas = atividadesFiltradas.filter((atividade: AtividadeStatus) => {
+          // Verificar se está selecionado "Atrasadas"
+          if (filtros.status!.includes('Atrasadas')) {
+            const isDelayed = checkIfActivityIsDelayed(atividade);
+            if (isDelayed) return true;
+          }
+          // Verificar status normais
+          return filtros.status!.includes(atividade.status);
+        });
       }
 
       // Filtro por data

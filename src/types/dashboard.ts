@@ -19,6 +19,7 @@ export interface ActivityStatistics {
   emExecucao: number;
   concluidas: number;
   paralizadas: number;
+  atrasadas: number;
 }
 
 export interface DashboardState {

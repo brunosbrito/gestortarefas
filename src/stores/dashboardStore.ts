@@ -37,6 +37,7 @@ const initialState: DashboardState = {
     emExecucao: 0,
     concluidas: 0,
     paralizadas: 0,
+    atrasadas: 0,
   },
   loading: {
     data: false,

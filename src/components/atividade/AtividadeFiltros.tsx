@@ -26,6 +26,7 @@ const STATUS_OPTIONS = [
   { value: 'Em execução', label: 'Em execução' },
   { value: 'Concluídas', label: 'Concluídas' },
   { value: 'Paralizadas', label: 'Paralizadas' },
+  { value: 'Atrasadas', label: 'Atrasadas' },
 ];
 
 interface MultiSelectFilterProps {

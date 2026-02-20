@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, PlayCircle, CheckCircle, PauseCircle, ListChecks } from 'lucide-react';
+import { Calendar, PlayCircle, CheckCircle, PauseCircle, ListChecks, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem, hoverScale, tapScale } from '@/lib/animations';
@@ -11,6 +11,7 @@ interface ActivityStatusCardsProps {
     emExecucao: number;
     concluidas: number;
     paralizadas: number;
+    atrasadas: number;
   };
   /** Quando true, omite o Card/header externo (para uso dentro de accordions) */
   compact?: boolean;
@@ -61,12 +62,23 @@ export const ActivityStatusCards = ({ activitiesByStatus, compact = false }: Act
       iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
       iconColor: 'text-yellow-600 dark:text-yellow-400',
       tooltip: 'Atividades interrompidas por impedimentos externos (falta de material, aguardando aprovação, etc.). Requerem ação imediata para desbloqueio.'
+    },
+    {
+      title: 'Atrasadas',
+      value: activitiesByStatus.atrasadas,
+      icon: AlertTriangle,
+      borderColor: 'border-l-red-500',
+      bgTint: 'bg-red-50/50 dark:bg-red-950/20',
+      textColor: 'text-red-700 dark:text-red-300',
+      iconBg: 'bg-red-100 dark:bg-red-900/30',
+      iconColor: 'text-red-600 dark:text-red-400',
+      tooltip: 'Atividades com início ou execução atrasada. Inclui atividades planejadas que já deveriam ter começado e atividades em andamento que ultrapassaram a data de término prevista.'
     }
   ];
 
   const grid = (
     <motion.div
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
