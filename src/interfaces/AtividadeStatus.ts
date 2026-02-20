@@ -8,6 +8,7 @@ import { TarefaMacro } from './TarefaMacroInterface';
 export interface AtividadeStatus {
   id: number;
   description: string;
+  plannedStartDate?: string;
   startDate: string;
   endDate: string | null;
   macroTask: string | TarefaMacro;

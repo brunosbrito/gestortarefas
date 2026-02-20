@@ -19,6 +19,7 @@ export interface Activity {
   quantity?: number;
   estimatedTime?: string;
   actualTime?: number;
+  plannedStartDate?: string;
   startDate?: string;
   endDate?: string;
   pauseDate?: string;

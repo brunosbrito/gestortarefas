@@ -15,7 +15,10 @@ export const normalizeActivity = (activity: any): NormalizedActivity => {
   
   // Verificar se está atrasada
   const isDelayed = checkIfDelayed(activity, status);
-  
+
+  // Verificar se o início está atrasado (status Planejado mas data início prevista já passou)
+  const isStartDelayed = checkIfStartDelayed(activity, status);
+
   // Calcular progresso
   const progress = calculateProgress(activity);
   
@@ -26,7 +29,8 @@ export const normalizeActivity = (activity: any): NormalizedActivity => {
     observation: activity.observation,
     imageUrl: activity.imageUrl,
     fileUrl: activity.fileUrl,
-    
+    cod_sequencial: activity.cod_sequencial,
+
     // IDs normalizados
     macroTaskId: extractId(activity.macroTask),
     processId: extractId(activity.process),
@@ -41,6 +45,7 @@ export const normalizeActivity = (activity: any): NormalizedActivity => {
     totalTime,
     
     // Datas normalizadas
+    plannedStartDate: parseDate(activity.plannedStartDate),
     startDate: parseDate(activity.startDate),
     endDate: parseDate(activity.endDate),
     pauseDate: parseDate(activity.pauseDate),
@@ -63,6 +68,7 @@ export const normalizeActivity = (activity: any): NormalizedActivity => {
     // Métricas calculadas
     progress,
     isDelayed,
+    isStartDelayed,
     isCompleted: status === ACTIVITY_STATUS.CONCLUIDA
   };
 };
@@ -109,6 +115,20 @@ const normalizeTeam = (team: any): Array<{ collaboratorId: number; name: string 
   }
   
   return undefined;
+};
+
+/**
+ * Verifica se o início está atrasado (status Planejado mas data início prevista já passou)
+ */
+const checkIfStartDelayed = (activity: any, status: string): boolean => {
+  if (status !== ACTIVITY_STATUS.PLANEJADO) return false;
+
+  const plannedStartDate = parseDate(activity.plannedStartDate);
+  if (!plannedStartDate) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return plannedStartDate < today;
 };
 
 /**

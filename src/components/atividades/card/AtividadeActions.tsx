@@ -86,17 +86,19 @@ export const AtividadeActions = ({
             <Edit2 className="w-4 h-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
             <DialogTitle>Editar Atividade</DialogTitle>
           </DialogHeader>
-          <NovaAtividadeForm
-            editMode={true}
-            atividadeInicial={atividade}
-            projectId={Number(projectId)}
-            orderServiceId={Number(serviceOrderId)}
-            onSuccess={onEditSuccess}
-          />
+          <div className="flex-1 overflow-y-auto">
+            <NovaAtividadeForm
+              editMode={true}
+              atividadeInicial={atividade}
+              projectId={Number(projectId)}
+              orderServiceId={Number(serviceOrderId)}
+              onSuccess={onEditSuccess}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
