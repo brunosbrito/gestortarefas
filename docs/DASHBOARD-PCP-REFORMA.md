@@ -84,7 +84,7 @@ Este é o endpoint mais crítico para o dashboard. O front busca **todas as ativ
 | `actualTime` | `number` | ✅ | Horas reais já trabalhadas na atividade |
 | `totalTime` | `number` | ⚠️ | Horas totais ao concluir. Fallback de `actualTime` |
 | `progress` | `number` | ⚠️ | Percentual 0-100. Se não enviado, o front calcula pelo status |
-| `plannedStartDate` | `datetime` | ✅ | Data de início planejada. Usado para calcular **"início atrasado"** |
+| `plannedStartDate` | `datetime` | ⚠️ | Data de início planejada. Usado para calcular **"início atrasado"**. **Ver aviso na seção 2.1.1** |
 | `startDate` | `datetime` | ✅ | Data real de início. Usado para carga de colaboradores (últimos 7d) |
 | `endDate` | `datetime` | ✅ | Data de fim prevista/real. Usado para verificar **atraso** e carga |
 | `createdAt` | `datetime` | ✅ | Data de criação. Usado para filtros de período |
@@ -101,6 +101,27 @@ Este é o endpoint mais crítico para o dashboard. O front busca **todas as ativ
 | `cod_sequencial` | `number` | ⚠️ | Código sequencial exibido na tabela |
 | `timePerUnit` | `number` | ⚠️ | Tempo por unidade. Usado para calcular `totalTime` quando não informado |
 | `quantity` | `number` | ⚠️ | Quantidade de unidades. Idem ao anterior |
+
+---
+
+### 2.1.1 Aviso — Campo `plannedStartDate` (Decisão do Backend)
+
+> ⚠️ **Este campo é opcional e a equipe backend decide se irá implementá-lo ou não.**
+
+O frontend já possui o campo "Data Início Prevista" no formulário de criação/edição de atividades e toda a lógica de cálculo pronta. **Se o backend não implementar este campo, o sistema continua funcionando normalmente** — o único efeito é que o contador "Início Atrasado" dentro do KPI "Atividades em Risco" sempre exibirá zero.
+
+**Resumo do impacto por decisão**:
+
+| Decisão | Efeito no frontend |
+|---------|-------------------|
+| ✅ Backend implementa `plannedStartDate` | KPI "Atividades em Risco" exibe o contador "início atrasado"; card da atividade exibe data e aviso visual quando atrasado |
+| ❌ Backend não implementa | Tudo funciona normalmente; contador "início atrasado" fica zerado; campo fica visível no formulário mas sem efeito |
+
+**Arquivos impactados pela decisão** (apenas para referência interna):
+- `NovaAtividadeForm.tsx` — campo de input
+- `AtividadeMetadata.tsx` — exibição no card
+- `DashboardKPIsNew.tsx` — KPI de alertas
+- `activityHelpers.ts` — cálculo `isStartDelayed`
 
 ---
 
