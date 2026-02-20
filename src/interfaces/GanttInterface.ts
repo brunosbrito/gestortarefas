@@ -1,4 +1,5 @@
 export interface GanttTask {
+  Item?: number;
   TaskID: number;
   TaskName: string;
   StartDate: Date | null;
@@ -40,6 +41,7 @@ export interface GanttColumnConfig {
 }
 
 export const DEFAULT_GANTT_COLUMNS: GanttColumnConfig[] = [
+  { field: 'Item', headerText: 'Item', width: 60, textAlign: 'Center', visible: true, required: true },
   { field: 'TaskName', headerText: 'Atividade', width: 250, visible: true, required: true },
   { field: 'StartDate', headerText: 'Início', width: 120, visible: true },
   { field: 'EndDate', headerText: 'Fim', width: 120, visible: true },
@@ -57,7 +59,7 @@ export const DEFAULT_GANTT_COLUMNS: GanttColumnConfig[] = [
   { field: 'Observation', headerText: 'Observação', width: 200, visible: false },
   { field: 'CreatedBy', headerText: 'Criado por', width: 130, visible: false },
   { field: 'CreatedAt', headerText: 'Data Criação', width: 120, visible: false },
-  { field: 'CodSequencial', headerText: 'Código', width: 80, textAlign: 'Center', visible: false },
+  { field: 'CodSequencial', headerText: 'N. Atividade', width: 100, textAlign: 'Center', visible: false },
 ];
 
 export interface GanttTaskFields {

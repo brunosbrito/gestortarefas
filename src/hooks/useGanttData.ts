@@ -40,10 +40,10 @@ function getProjectName(activity: ActivityLike): string {
   return '';
 }
 
-function getServiceOrderName(activity: ActivityLike): string {
+function getServiceOrderNumber(activity: ActivityLike): string {
   if ('serviceOrder' in activity && typeof activity.serviceOrder === 'object' && activity.serviceOrder) {
-    const so = activity.serviceOrder as { name?: string; description?: string };
-    return so.name || so.description || '';
+    const so = activity.serviceOrder as { serviceOrderNumber?: string; description?: string };
+    return so.serviceOrderNumber || '';
   }
   return '';
 }
@@ -89,6 +89,14 @@ function normalizeDate(dateInput: string | Date | null | undefined): Date | null
 }
 
 function transformActivityToGantt(activity: ActivityLike, parentID?: number): GanttTask {
+  // Debug: verificar dados da atividade
+  console.log('Activity data:', {
+    id: activity.id,
+    project: 'project' in activity ? activity.project : undefined,
+    serviceOrder: 'serviceOrder' in activity ? activity.serviceOrder : undefined,
+    cod_sequencial: 'cod_sequencial' in activity ? activity.cod_sequencial : undefined,
+  });
+
   // Tentar obter data de início: startDate > originalStartDate > createdAt
   let startDate: Date | null = null;
   if (activity.startDate) {
@@ -146,7 +154,7 @@ function transformActivityToGantt(activity: ActivityLike, parentID?: number): Ga
     MacroTask: getMacroTaskName(activity),
     Process: getProcessName(activity),
     Project: getProjectName(activity),
-    ServiceOrder: getServiceOrderName(activity),
+    ServiceOrder: getServiceOrderNumber(activity),
     EstimatedTime: estimatedTimeFormatted,
     Quantity: 'quantity' in activity ? activity.quantity : undefined,
     CompletedQuantity: 'completedQuantity' in activity ? activity.completedQuantity : undefined,
@@ -269,7 +277,10 @@ export function useGanttData(
 
     // Sem agrupamento - lista plana
     if (!groupBy) {
-      return activities.map(activity => transformActivityToGantt(activity));
+      return activities.map((activity, index) => ({
+        ...transformActivityToGantt(activity),
+        Item: index + 1,
+      }));
     }
 
     // Com agrupamento - criar hierarquia
@@ -284,6 +295,7 @@ export function useGanttData(
     });
 
     const result: GanttTask[] = [];
+    let itemCounter = 1;
 
     // Ordenar grupos alfabeticamente
     const sortedKeys = Array.from(groups.keys()).sort();
@@ -293,11 +305,13 @@ export function useGanttData(
 
       // Criar tarefa pai (grupo)
       const parentTask = createGroupTask(groupKey, groupBy, groupActivities);
+      parentTask.Item = itemCounter++;
       result.push(parentTask);
 
       // Criar tarefas filhas
       groupActivities.forEach(activity => {
         const task = transformActivityToGantt(activity, parentTask.TaskID);
+        task.Item = itemCounter++;
         result.push(task);
       });
     });
@@ -313,7 +327,10 @@ export function transformActivitiesToGantt(
   if (!activities || activities.length === 0) return [];
 
   if (!groupBy) {
-    return activities.map(activity => transformActivityToGantt(activity));
+    return activities.map((activity, index) => ({
+      ...transformActivityToGantt(activity),
+      Item: index + 1,
+    }));
   }
 
   const groups = new Map<string, ActivityLike[]>();
@@ -328,14 +345,17 @@ export function transformActivitiesToGantt(
 
   const result: GanttTask[] = [];
   const sortedKeys = Array.from(groups.keys()).sort();
+  let itemCounter = 1;
 
   sortedKeys.forEach(groupKey => {
     const groupActivities = groups.get(groupKey)!;
     const parentTask = createGroupTask(groupKey, groupBy, groupActivities);
+    parentTask.Item = itemCounter++;
     result.push(parentTask);
 
     groupActivities.forEach(activity => {
       const task = transformActivityToGantt(activity, parentTask.TaskID);
+      task.Item = itemCounter++;
       result.push(task);
     });
   });

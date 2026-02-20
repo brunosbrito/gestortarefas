@@ -89,6 +89,47 @@ export function GanttChartDialog({
     hierarchyMode: 'Parent' as const,
   }), []);
 
+  const taskbarTooltipTemplate = (props: { taskData?: GanttTask } & GanttTask) => {
+    // Syncfusion pode passar os dados em taskData ou diretamente em props
+    const data = props.taskData || props;
+
+    const formatDate = (date: Date | null | undefined) => {
+      if (!date) return '-';
+      return new Date(date).toLocaleDateString('pt-BR');
+    };
+
+    const activityCode = data.CodSequencial || data.ActivityId;
+
+    return (
+      <div className="p-2 text-sm">
+        {activityCode && !data.isGroup && (
+          <div className="font-semibold text-base mb-1">
+            N. Atividade: {activityCode}
+          </div>
+        )}
+        <div className="font-medium mb-2">{data.TaskName}</div>
+        {data.Project && (
+          <div><span className="text-muted-foreground">Obra</span> : {data.Project}</div>
+        )}
+        {data.ServiceOrder && (
+          <div><span className="text-muted-foreground">OS</span> : {data.ServiceOrder}</div>
+        )}
+        <div><span className="text-muted-foreground">Data Início</span> : {formatDate(data.StartDate)}</div>
+        <div><span className="text-muted-foreground">Data Fim</span> : {formatDate(data.EndDate)}</div>
+        <div><span className="text-muted-foreground">Duração</span> : {data.Duration || '-'} dias</div>
+        <div><span className="text-muted-foreground">Progresso</span> : {data.Progress}%</div>
+        {data.Status && !data.isGroup && (
+          <div><span className="text-muted-foreground">Status</span> : {data.Status}</div>
+        )}
+      </div>
+    );
+  };
+
+  const tooltipSettings = useMemo(() => ({
+    showTooltip: true,
+    taskbar: taskbarTooltipTemplate,
+  }), []);
+
   const handleRecordClick = (args: { data?: GanttTask }) => {
     if (args.data && onTaskClick) {
       onTaskClick(args.data);
@@ -169,6 +210,7 @@ export function GanttChartDialog({
               toolbar={toolbarItems}
               dateFormat="dd/MM/yyyy"
               locale="pt-BR"
+              tooltipSettings={tooltipSettings}
             >
               <ColumnsDirective>
                 {visibleColumns.map((col) => (

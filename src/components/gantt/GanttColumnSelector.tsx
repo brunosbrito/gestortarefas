@@ -9,7 +9,7 @@ import {
 import { Columns3 } from 'lucide-react';
 import { GanttColumnConfig, DEFAULT_GANTT_COLUMNS } from '@/interfaces/GanttInterface';
 
-const STORAGE_KEY = 'gantt-visible-columns-v2';
+const STORAGE_KEY = 'gantt-visible-columns-v4';
 
 // Store global para sincronizar estado entre componentes
 let listeners: Array<() => void> = [];
@@ -108,7 +108,7 @@ export function GanttColumnSelector({
           </Button>
         )}
       </PopoverTrigger>
-      <PopoverContent className="w-56" align="end">
+      <PopoverContent className="w-56 z-[200]" align="end">
         <div className="space-y-2">
           <h4 className="font-medium text-sm mb-3">Colunas Visíveis</h4>
           {columns.map((column) => (
