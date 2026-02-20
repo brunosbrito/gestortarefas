@@ -18,11 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/card';
 import { DashboardFilters } from '@/types/dashboard';
 import ObrasService from '@/services/ObrasService';
 import { Obra } from '@/interfaces/ObrasInterface';
-import { Filter } from 'lucide-react';
 import { HelpTooltip } from '@/components/tooltips/HelpTooltip';
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent';
 
@@ -46,6 +44,12 @@ export const PeriodFilter = ({
   );
   const [obras, setObras] = useState<Obra[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Sincronizar estado local com filtros externos (ex: ao limpar filtros)
+  useEffect(() => {
+    setStartDate(currentFilters.startDate || undefined);
+    setEndDate(currentFilters.endDate || undefined);
+  }, [currentFilters.startDate, currentFilters.endDate]);
 
   useEffect(() => {
     const fetchObras = async () => {
@@ -114,13 +118,8 @@ export const PeriodFilter = ({
   };
 
   return (
-    <Card className="p-4 mb-4">
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="flex items-center gap-2 mb-2 sm:mb-0">
-          <Filter className="h-5 w-5 text-[#FF7F0E]" />
-          <h3 className="font-medium">Filtrar por:</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
           <div className="space-y-2">
             <label htmlFor="obra" className="flex items-center gap-1.5 text-sm font-medium">
               Obra
@@ -215,7 +214,6 @@ export const PeriodFilter = ({
             </Popover>
           </div>
         </div>
-      </div>
-    </Card>
+    </div>
   );
 };

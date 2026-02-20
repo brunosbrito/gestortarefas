@@ -3,13 +3,10 @@ import { Card } from '@/components/ui/card';
 import { HardDrive, BarChart3, Maximize2, AlertTriangle, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Text,
+  ChartComponent,
+  SeriesCollectionDirective,
+  SeriesDirective,
+  Inject,
   Legend,
   CartesianGrid,
   Cell
@@ -251,6 +248,7 @@ export const MacroTasksChart = () => {
             <Bar
               dataKey="estimatedHours"
               name="Horas Previstas"
+              type="Column"
               fill="#3B82F6"
               radius={[4, 4, 0, 0]}
               onClick={handleBarClick}

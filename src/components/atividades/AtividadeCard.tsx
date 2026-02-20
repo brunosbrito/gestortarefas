@@ -34,6 +34,7 @@ export const AtividadeCard = ({
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const isMobile = useIsMobile();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,8 +46,10 @@ export const AtividadeCard = ({
   };
 
   const handleImageUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || isUploading) return;
     const userId = localStorage.getItem('userId');
+
+    setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append('image', selectedFile);
@@ -71,19 +74,23 @@ export const AtividadeCard = ({
         description:
           'Ocorreu um erro ao fazer o upload da imagem. Tente novamente.',
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const calculateElapsedTime = (totalTime: number, startDate?: string) => {
-    if (!startDate) return totalTime / 3600;
+    // totalTime já vem em horas decimais da API
+    if (!startDate) return totalTime;
 
     const startDateTime = new Date(startDate);
     const now = new Date();
 
+    // Converte totalTime (horas) para segundos e soma com tempo decorrido desde startDate
     const elapsedSeconds = (now.getTime() - startDateTime.getTime()) / 1000;
-    console.log('total', totalTime, elapsedSeconds, 'ms');
+    const totalTimeInSeconds = totalTime * 3600;
 
-    const totalElapsedSeconds = totalTime * 3600 + elapsedSeconds;
+    const totalElapsedSeconds = totalTimeInSeconds + elapsedSeconds;
     const hours = Math.floor(totalElapsedSeconds / 3600);
     const minutes = Math.floor((totalElapsedSeconds % 3600) / 60);
     return hours + minutes / 60;
@@ -102,8 +109,15 @@ export const AtividadeCard = ({
 
   const formatEstimatedTime = (estimatedTime: string) => {
     if (!estimatedTime) return '00:00';
-    const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
-    return `${hours.padStart(2, '0')}:${minutes?.padStart(2, '0')}`;
+
+    // Extrair horas e minutos do formato "8h", "8h 30min", "30min"
+    const hoursMatch = estimatedTime.match(/(\d+)\s*h/);
+    const minutesMatch = estimatedTime.match(/(\d+)\s*min/);
+
+    const hours = hoursMatch ? hoursMatch[1] : '0';
+    const minutes = minutesMatch ? minutesMatch[1] : '0';
+
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
   };
 
   const calculateProgress = () => {
@@ -115,9 +129,16 @@ export const AtividadeCard = ({
   const calculatePercentage = (elapsedTime: number, estimatedTime: string) => {
     if (!estimatedTime) return 0;
 
-    const [hours, minutes] = estimatedTime.split(/[h|min]/).filter(Boolean);
-    const totalEstimatedSeconds =
-      parseInt(hours) * 3600 + parseInt(minutes) * 60;
+    // Extrair horas e minutos do formato "8h", "8h 30min", "30min"
+    const hoursMatch = estimatedTime.match(/(\d+)\s*h/);
+    const minutesMatch = estimatedTime.match(/(\d+)\s*min/);
+
+    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+
+    const totalEstimatedSeconds = hours * 3600 + minutes * 60;
+
+    if (totalEstimatedSeconds === 0) return 0;
 
     const elapsedTimeInSeconds = elapsedTime * 3600;
 
@@ -156,7 +177,7 @@ export const AtividadeCard = ({
               calculatePercentage={calculatePercentage}
             />
 
-            <CardFooter className="p-4 pt-0 flex flex-col gap-3">
+            <CardFooter className="px-3 pb-3 pt-0 flex flex-col gap-2">
               <AtividadeActions
                 atividade={atividade}
                 projectId={projectId}
@@ -175,13 +196,16 @@ export const AtividadeCard = ({
             imageDescription={imageDescription}
             onDescriptionChange={setImageDescription}
             onCancel={() => {
-              setIsUploadDialogOpen(false);
-              setSelectedFile(null);
-              setImageDescription('');
+              if (!isUploading) {
+                setIsUploadDialogOpen(false);
+                setSelectedFile(null);
+                setImageDescription('');
+              }
             }}
             onUpload={handleImageUpload}
             open={isUploadDialogOpen}
-            onOpenChange={setIsUploadDialogOpen}
+            onOpenChange={(open) => !isUploading && setIsUploadDialogOpen(open)}
+            isLoading={isUploading}
           />
 
           <MoverAtividadeDialog

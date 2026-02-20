@@ -1,15 +1,123 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Filter, X, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Filter, X, Calendar as CalendarIcon, Check, ChevronDown, Layers } from 'lucide-react';
 import { AtividadeFiltros } from '@/hooks/useAtividadeData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+
+export type GanttGroupBy = 'obra' | 'tarefaMacro' | 'colaborador' | null;
+
+const STATUS_OPTIONS = [
+  { value: 'Planejadas', label: 'Planejadas' },
+  { value: 'Em execução', label: 'Em execução' },
+  { value: 'Concluídas', label: 'Concluídas' },
+  { value: 'Paralizadas', label: 'Paralizadas' },
+];
+
+interface MultiSelectFilterProps {
+  label: string;
+  placeholder: string;
+  placeholderSelected: string;
+  options: { id: string | number; name: string }[];
+  selectedValues: string[] | null;
+  onSelectionChange: (values: string[] | null) => void;
+  disabled?: boolean;
+}
+
+const MultiSelectFilter = ({
+  label,
+  placeholder,
+  placeholderSelected,
+  options,
+  selectedValues,
+  onSelectionChange,
+  disabled = false
+}: MultiSelectFilterProps) => {
+  const toggleOption = (value: string) => {
+    const current = selectedValues || [];
+    const isSelected = current.includes(value);
+    const newValues = isSelected
+      ? current.filter(v => v !== value)
+      : [...current, value];
+    onSelectionChange(newValues.length > 0 ? newValues : null);
+  };
+
+  const getDisplayText = () => {
+    if (!selectedValues?.length) return placeholder;
+    if (selectedValues.length === 1) {
+      const selected = options.find(o => o.id.toString() === selectedValues[0]);
+      return selected?.name || selectedValues[0];
+    }
+    return `${selectedValues.length} ${placeholderSelected}`;
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">{label}</label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            disabled={disabled}
+            className={cn(
+              "w-full justify-between font-normal",
+              !selectedValues?.length && "text-muted-foreground"
+            )}
+          >
+            <span className="truncate">{getDisplayText()}</span>
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[250px] p-0" align="start">
+          <ScrollArea className="h-[200px]">
+            <div className="p-2 space-y-1">
+              {options.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-accent rounded p-2"
+                  onClick={() => toggleOption(option.id.toString())}
+                >
+                  <Checkbox
+                    checked={selectedValues?.includes(option.id.toString()) || false}
+                    className="pointer-events-none"
+                  />
+                  <span className="text-sm truncate">{option.name}</span>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          {selectedValues?.length ? (
+            <div className="border-t p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground"
+                onClick={() => onSelectionChange(null)}
+              >
+                Limpar seleção
+              </Button>
+            </div>
+          ) : null}
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
 
 interface AtividadeFiltrosProps {
   filtros: AtividadeFiltros;
@@ -20,6 +128,10 @@ interface AtividadeFiltrosProps {
   colaboradores?: any[];
   obras?: any[];
   isLoading?: boolean;
+  // Props para agrupamento do Gantt
+  showGroupingSelector?: boolean;
+  groupBy?: GanttGroupBy;
+  onGroupByChange?: (groupBy: GanttGroupBy) => void;
 }
 
 export const AtividadeFiltrosComponent = ({
@@ -30,7 +142,10 @@ export const AtividadeFiltrosComponent = ({
   processos = [],
   colaboradores = [],
   obras = [],
-  isLoading = false
+  isLoading = false,
+  showGroupingSelector = false,
+  groupBy = null,
+  onGroupByChange,
 }: AtividadeFiltrosProps) => {
   const [filtrosTemp, setFiltrosTemp] = useState<AtividadeFiltros>(filtros);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -77,117 +192,63 @@ export const AtividadeFiltrosComponent = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Filtro Tarefa Macro */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tarefa Macro</label>
-            <Select
-              value={filtrosTemp.tarefaMacroId || 'all'}
-              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, tarefaMacroId: value === 'all' ? null : value }))}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todas as tarefas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as tarefas</SelectItem>
-                {tarefasMacro.map((tarefa) => (
-                  <SelectItem key={tarefa.id} value={tarefa.id.toString()}>
-                    {tarefa.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtro Tarefa Macro - Múltipla Seleção */}
+          <MultiSelectFilter
+            label="Tarefa Macro"
+            placeholder="Todas as tarefas"
+            placeholderSelected="tarefas selecionadas"
+            options={tarefasMacro}
+            selectedValues={filtrosTemp.tarefaMacroId}
+            onSelectionChange={(values) => setFiltrosTemp(prev => ({ ...prev, tarefaMacroId: values }))}
+            disabled={isLoading}
+          />
 
-          {/* Filtro Processo */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Processo</label>
-            <Select
-              value={filtrosTemp.processoId || 'all'}
-              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, processoId: value === 'all' ? null : value }))}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os processos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os processos</SelectItem>
-                {processos.map((processo) => (
-                  <SelectItem key={processo.id} value={processo.id.toString()}>
-                    {processo.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtro Processo - Múltipla Seleção */}
+          <MultiSelectFilter
+            label="Processo"
+            placeholder="Todos os processos"
+            placeholderSelected="processos selecionados"
+            options={processos}
+            selectedValues={filtrosTemp.processoId}
+            onSelectionChange={(values) => setFiltrosTemp(prev => ({ ...prev, processoId: values }))}
+            disabled={isLoading}
+          />
 
-          {/* Filtro Colaborador */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Colaborador</label>
-            <Select
-              value={filtrosTemp.colaboradorId || 'all'}
-              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, colaboradorId: value === 'all' ? null : value }))}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os colaboradores" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os colaboradores</SelectItem>
-                {colaboradores.map((colaborador) => (
-                  <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
-                    {colaborador.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtro Colaborador - Múltipla Seleção */}
+          <MultiSelectFilter
+            label="Colaborador"
+            placeholder="Todos os colaboradores"
+            placeholderSelected="colaboradores selecionados"
+            options={colaboradores}
+            selectedValues={filtrosTemp.colaboradorId}
+            onSelectionChange={(values) => setFiltrosTemp(prev => ({ ...prev, colaboradorId: values }))}
+            disabled={isLoading}
+          />
 
-          {/* Filtro Obra */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Obra/Projeto</label>
-            <Select
-              value={filtrosTemp.obraId || 'all'}
-              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, obraId: value === 'all' ? null : value }))}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todas as obras" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as obras</SelectItem>
-                {obras.map((obra) => (
-                  <SelectItem key={obra.id} value={obra.id.toString()}>
-                    {obra.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtro Obra - Múltipla Seleção */}
+          <MultiSelectFilter
+            label="Obra/Projeto"
+            placeholder="Todas as obras"
+            placeholderSelected="obras selecionadas"
+            options={obras}
+            selectedValues={filtrosTemp.obraId}
+            onSelectionChange={(values) => setFiltrosTemp(prev => ({ ...prev, obraId: values }))}
+            disabled={isLoading}
+          />
 
-          {/* Filtro Status */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Status</label>
-            <Select
-              value={filtrosTemp.status || 'all'}
-              onValueChange={(value) => setFiltrosTemp(prev => ({ ...prev, status: value === 'all' ? null : value }))}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="Planejadas">Planejadas</SelectItem>
-                <SelectItem value="Em execução">Em execução</SelectItem>
-                <SelectItem value="Concluídas">Concluídas</SelectItem>
-                <SelectItem value="Paralizadas">Paralizadas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtro Status - Múltipla Seleção */}
+          <MultiSelectFilter
+            label="Status"
+            placeholder="Todos os status"
+            placeholderSelected="status selecionados"
+            options={STATUS_OPTIONS.map(s => ({ id: s.value, name: s.label }))}
+            selectedValues={filtrosTemp.status}
+            onSelectionChange={(values) => setFiltrosTemp(prev => ({ ...prev, status: values }))}
+            disabled={isLoading}
+          />
 
           {/* Filtro Data Range */}
-          <div className="space-y-2 md:col-span-3">
+          <div className="space-y-2 md:col-span-2">
             <label className="text-sm font-medium">Período</label>
             <Popover>
               <PopoverTrigger asChild>
@@ -226,6 +287,30 @@ export const AtividadeFiltrosComponent = ({
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Seletor de Agrupamento para Gantt */}
+          {showGroupingSelector && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Layers className="w-4 h-4 text-primary" />
+                Agrupar Gantt por
+              </label>
+              <Select
+                value={groupBy || 'none'}
+                onValueChange={(value) => onGroupByChange?.(value === 'none' ? null : value as GanttGroupBy)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sem agrupamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem agrupamento</SelectItem>
+                  <SelectItem value="obra">Obra/Projeto</SelectItem>
+                  <SelectItem value="tarefaMacro">Tarefa Macro</SelectItem>
+                  <SelectItem value="colaborador">Colaborador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-between">

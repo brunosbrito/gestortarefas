@@ -112,6 +112,7 @@ export const useUnifiedFilters = () => {
 
   // Limpar todos os filtros
   const clearAllFilters = () => {
+    console.log('🧹 Limpando todos os filtros...');
     updateFilters({
       macroTaskId: null,
       processId: null,
@@ -119,8 +120,8 @@ export const useUnifiedFilters = () => {
       obraId: null,
       collaboratorId: null,
       period: 'todos',
-      startDate: null,
-      endDate: null,
+      startDate: undefined,
+      endDate: undefined,
     });
   };
 

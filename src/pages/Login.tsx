@@ -5,24 +5,47 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { login, getStoredToken } from '@/services/AuthService';
+import { login, storeRefreshToken, validateAndRefreshToken } from '@/services/AuthService';
 import { Eye, EyeOff } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  // Pré-preencher email se "Lembrar de mim" estava ativo
+  const [email, setEmail] = useState(() => localStorage.getItem('userEmail') || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  // Pré-marcar checkbox se "Lembrar de mim" estava ativo
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('rememberMe') === 'true');
 
   useEffect(() => {
-    const token = getStoredToken();
-    if (token) {
-      navigate('/dashboard');
-    }
+    const checkAuth = async () => {
+      try {
+        const isValid = await validateAndRefreshToken();
+        if (isValid) {
+          navigate('/dashboard');
+        }
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
   }, [navigate]);
+
+  // Mostrar loading enquanto verifica autenticação
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Verificando autenticação...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +54,16 @@ const Login = () => {
       if (response.data.message == 'Credenciais inválidas') {
         setError('Falha no login. Verifique suas credenciais.');
         return;
+      }
+
+      // Limpar tokens antigos de ambos os storages antes de salvar o novo
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+
+      // Salvar refresh token (sempre no localStorage para persistir)
+      if (response.data.refresh_token) {
+        storeRefreshToken(response.data.refresh_token);
       }
 
       if (rememberMe) {

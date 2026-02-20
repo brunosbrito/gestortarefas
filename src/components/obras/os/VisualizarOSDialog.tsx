@@ -168,7 +168,7 @@ export const VisualizarOSDialog = ({
             <div>
               <h3 className="font-semibold mb-2 flex items-center">
                 <Weight className="w-4 h-4 mr-2" />
-                Peso (t)
+                Peso (kg)
               </h3>
               <p>{os.weight}</p>
             </div>

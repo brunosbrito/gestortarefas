@@ -1,3 +1,4 @@
+import api from '@/lib/axios';
 
 import API_URL from '@/config';
 import axios from 'axios';
@@ -42,9 +43,12 @@ export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: num
 
     // Agrupar por macroTaskId
     const groupedData = activities.reduce((acc: any, activity: any) => {
+      // Verificar se macroTask existe antes de acessar suas propriedades
+      if (!activity.macroTask) return acc;
+
       const macroTaskId = activity.macroTask.id;
-      const macroTaskName = activity.macroTask?.name || 'Não especificado';
-      
+      const macroTaskName = activity.macroTask.name || 'Não especificado';
+
       if (!macroTaskId) return acc;
       
       const key = macroTaskId.toString();
@@ -62,14 +66,19 @@ export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: num
       }
 
       const estimatedHours = parseTimeToHours(activity.estimatedTime);
-      const actualHours = activity.totalTime || 0;
+      const actualHours = getTotalTimeInHours(activity.totalTime);
 
       acc[key].activityCount += 1;
-      acc[key].estimatedHours += Math.round(estimatedHours);
-      acc[key].actualHours += Math.round(actualHours);
-      acc[key].hoursDifference = acc[key].estimatedHours > 0 
-  ? Math.round(((acc[key].actualHours - acc[key].estimatedHours) / acc[key].estimatedHours) * 100)
-  : 0;
+      acc[key].estimatedHours += estimatedHours;
+      acc[key].actualHours += actualHours;
+
+      // Calcular diferença percentual limitada entre -100% e 100%
+      if (acc[key].estimatedHours > 0) {
+        const diff = ((acc[key].actualHours - acc[key].estimatedHours) / acc[key].estimatedHours) * 100;
+        acc[key].hoursDifference = Math.max(-100, Math.min(100, Math.round(diff)));
+      } else {
+        acc[key].hoursDifference = 0;
+      }
       
       // Usa a data mais recente se existir múltiplas atividades
       if (activity.createdAt) {
@@ -128,9 +137,12 @@ export const dataProcess = async (obraId?: number | null, serviceOrderId?: numbe
 
     // Agrupar por processId
     const groupedData = activities.reduce((acc: any, activity: any) => {
+      // Verificar se process existe antes de acessar suas propriedades
+      if (!activity.process) return acc;
+
       const processId = activity.process.id;
-      const processName = activity.process?.name || 'Não especificado';
-      
+      const processName = activity.process.name || 'Não especificado';
+
       if (!processId) return acc;
       
       const key = processId.toString();
@@ -148,14 +160,19 @@ export const dataProcess = async (obraId?: number | null, serviceOrderId?: numbe
       }
 
       const estimatedHours = parseTimeToHours(activity.estimatedTime);
-      const actualHours = activity.totalTime || 0;
+      const actualHours = getTotalTimeInHours(activity.totalTime);
 
       acc[key].activityCount += 1;
-      acc[key].estimatedHours += Math.round(estimatedHours);
-      acc[key].actualHours += Math.round(actualHours);
-      acc[key].hoursDifference = acc[key].estimatedHours > 0 
-      ? Math.round(((acc[key].actualHours - acc[key].estimatedHours) / acc[key].estimatedHours) * 100)
-      : 0;
+      acc[key].estimatedHours += estimatedHours;
+      acc[key].actualHours += actualHours;
+
+      // Calcular diferença percentual limitada entre -100% e 100%
+      if (acc[key].estimatedHours > 0) {
+        const diff = ((acc[key].actualHours - acc[key].estimatedHours) / acc[key].estimatedHours) * 100;
+        acc[key].hoursDifference = Math.max(-100, Math.min(100, Math.round(diff)));
+      } else {
+        acc[key].hoursDifference = 0;
+      }
       
       // Usa a data mais recente se existir múltiplas atividades
       if (activity.createdAt) {
@@ -239,13 +256,13 @@ export const dataCollaborators = async (obraId?: number | null, serviceOrderId?:
         }
         
         acc[key].activityCount += 1;
-        
+
         // Calcula horas trabalhadas, considerando a distribuição por membro
-        const totalHours = activity.totalTime || 0;
+        const totalHours = getTotalTimeInHours(activity.totalTime);
         const teamSize = activity.team.length;
-        const hoursPerMember = teamSize > 0 ? totalHours / teamSize : 0;
-        
-        acc[key].hoursWorked += Math.round(hoursPerMember);
+        const hoursPerMember = teamSize > 0 ? totalHours / teamSize : totalHours;
+
+        acc[key].hoursWorked += hoursPerMember;
         
         // Atualiza a data mais recente
         if (activity.createdAt) {

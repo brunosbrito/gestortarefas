@@ -9,9 +9,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Edit2, MoveHorizontal, Trash2, Upload } from 'lucide-react';
+import { Edit2, MoveHorizontal, Trash2, Upload, FileEdit } from 'lucide-react';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { NovaAtividadeForm } from '../NovaAtividadeForm';
+import { EditarAtividadeConcluidaDialog } from '../EditarAtividadeConcluidaDialog';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { deleteActivity } from '@/services/ActivityService';
@@ -39,8 +40,11 @@ export const AtividadeActions = ({
 }: AtividadeActionsProps) => {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditConcluidaDialogOpen, setIsEditConcluidaDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const isConcluida = atividade.status === 'Concluídas';
 
   const handleDelete = async () => {
     try {
@@ -67,14 +71,14 @@ export const AtividadeActions = ({
   };
 
   return (
-    <div className="flex gap-2 w-full">
+    <div className="flex gap-1.5 w-full">
       <Button
         variant="outline"
         size="sm"
         onClick={onMoveClick}
-        className="flex-1"
+        className="flex-1 h-8"
       >
-        <MoveHorizontal className="w-4 h-4" />
+        <MoveHorizontal className="w-3.5 h-3.5" />
       </Button>
 
       <Dialog
@@ -82,8 +86,8 @@ export const AtividadeActions = ({
         onOpenChange={setIsEditDialogOpen}
       >
         <DialogTrigger asChild>
-          <Button variant="secondary" size="sm" className="flex-1">
-            <Edit2 className="w-4 h-4" />
+          <Button variant="secondary" size="sm" className="flex-1 h-8">
+            <Edit2 className="w-3.5 h-3.5" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
@@ -114,20 +118,33 @@ export const AtividadeActions = ({
           <Button
             variant="outline"
             size="sm"
-            className="w-full cursor-pointer"
+            className="w-full cursor-pointer h-8"
             asChild
           >
             <span>
-              <Upload className="w-4 h-4" />
+              <Upload className="w-3.5 h-3.5" />
             </span>
           </Button>
         </label>
       </div>
 
+      {/* Botão de editar dados de conclusão (apenas para atividades concluídas) */}
+      {isConcluida && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 h-8"
+          onClick={() => setIsEditConcluidaDialogOpen(true)}
+          title="Editar dados de conclusão"
+        >
+          <FileEdit className="w-3.5 h-3.5" />
+        </Button>
+      )}
+
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="destructive" size="sm" className="flex-1">
-            <Trash2 className="w-4 h-4" />
+          <Button variant="destructive" size="sm" className="flex-1 h-8">
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </DialogTrigger>
         <DialogContent>
@@ -154,6 +171,17 @@ export const AtividadeActions = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de edição de atividade concluída */}
+      <EditarAtividadeConcluidaDialog
+        open={isEditConcluidaDialogOpen}
+        onOpenChange={setIsEditConcluidaDialogOpen}
+        atividade={atividade}
+        onSuccess={() => {
+          setIsEditConcluidaDialogOpen(false);
+          if (onEditSuccess) onEditSuccess();
+        }}
+      />
     </div>
   );
 };

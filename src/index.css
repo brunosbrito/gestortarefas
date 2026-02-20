@@ -1,3 +1,18 @@
+/* Syncfusion Gantt Chart Styles */
+@import "../node_modules/@syncfusion/ej2-base/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-buttons/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-calendars/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-dropdowns/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-gantt/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-grids/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-inputs/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-layouts/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-lists/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-navigations/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-popups/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-richtexteditor/styles/tailwind3.css";
+@import "../node_modules/@syncfusion/ej2-treegrid/styles/tailwind3.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -377,4 +392,788 @@
   background-color: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
   font-weight: 700 !important;
+}
+
+/* ============================================
+   SYNCFUSION GANTT CHART STYLES
+   ============================================ */
+.gantt-chart-container {
+  @apply overflow-hidden rounded-lg;
+}
+
+/* Syncfusion CSS Variables Override for Dark Mode */
+.gantt-dark-mode,
+.dark {
+  --color-sf-border: #475569;
+  --color-sf-border-light: #334155;
+  --color-sf-content-bg: #0f172a;
+  --color-sf-content-bg-alt: #1e293b;
+  --color-sf-content-text-primary: #e2e8f0;
+  --color-sf-content-text-secondary: #94a3b8;
+}
+
+/* Dark mode overrides for Syncfusion Gantt */
+.gantt-dark-mode .e-gantt,
+.dark .e-gantt {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  --color-sf-border: #475569 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-grid,
+.dark .e-gantt .e-grid {
+  background-color: #0f172a !important;
+}
+
+.gantt-dark-mode .e-gantt .e-gridheader,
+.dark .e-gantt .e-gridheader {
+  background-color: #1e293b !important;
+}
+
+.gantt-dark-mode .e-gantt .e-headercell,
+.dark .e-gantt .e-headercell {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+  font-weight: 600 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-rowcell,
+.dark .e-gantt .e-rowcell {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-row:hover .e-rowcell,
+.dark .e-gantt .e-row:hover .e-rowcell {
+  background-color: #1e293b !important;
+}
+
+.gantt-dark-mode .e-gantt .e-altrow .e-rowcell,
+.dark .e-gantt .e-altrow .e-rowcell {
+  background-color: #0c1222 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-gantt-chart,
+.dark .e-gantt .e-gantt-chart {
+  background-color: #0f172a !important;
+}
+
+/* Chart pane - área do gráfico à direita */
+.gantt-dark-mode .e-gantt .e-chart-pane,
+.dark .e-gantt .e-chart-pane {
+  background-color: #0f172a !important;
+}
+
+/* Chart scroll container */
+.gantt-dark-mode .e-gantt .e-chart-scroll-container,
+.dark .e-gantt .e-chart-scroll-container {
+  background-color: #0f172a !important;
+}
+
+/* Content do chart */
+.gantt-dark-mode .e-gantt .e-content,
+.dark .e-gantt .e-content {
+  background-color: #0f172a !important;
+}
+
+/* Body content */
+.gantt-dark-mode .e-gantt .e-gantt-chart .e-body-content,
+.dark .e-gantt .e-gantt-chart .e-body-content {
+  background-color: #0f172a !important;
+}
+
+/* Timeline e Chart area - Fundo transparente para preservar linhas nativas */
+.gantt-dark-mode .e-gantt .e-chart-rows-container,
+.dark .e-gantt .e-chart-rows-container {
+  background-color: transparent !important;
+}
+
+.gantt-dark-mode .e-gantt .e-chart-row,
+.dark .e-gantt .e-chart-row {
+  background-color: transparent !important;
+}
+
+.gantt-dark-mode .e-gantt .e-chart-row-border,
+.dark .e-gantt .e-chart-row-border {
+  border-color: #334155 !important;
+}
+
+/* Timeline header - cores mais claras */
+.gantt-dark-mode .e-gantt .e-timeline-header-container,
+.dark .e-gantt .e-timeline-header-container {
+  background-color: #1e293b !important;
+}
+
+.gantt-dark-mode .e-gantt .e-timeline-top-header-cell,
+.dark .e-gantt .e-timeline-top-header-cell {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+.gantt-dark-mode .e-gantt .e-timeline-header-cell,
+.dark .e-gantt .e-timeline-header-cell {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-header-cell-label,
+.dark .e-gantt .e-header-cell-label {
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+}
+
+/* Weekend e Non-working days - tom azul mais escuro */
+.gantt-dark-mode .e-gantt .e-weekend,
+.dark .e-gantt .e-weekend {
+  background-color: #0a1220 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-nonworking-day,
+.dark .e-gantt .e-nonworking-day {
+  background-color: #0a1220 !important;
+}
+
+/* Chart root container - garantir fundo escuro */
+.gantt-dark-mode .e-gantt .e-chart-root-container,
+.dark .e-gantt .e-chart-root-container {
+  background-color: #0f172a !important;
+}
+
+/* Splitter pane - área entre grid e chart */
+.gantt-dark-mode .e-gantt .e-pane,
+.dark .e-gantt .e-pane {
+  background-color: #0f172a !important;
+}
+
+/* Grid content area */
+.gantt-dark-mode .e-gantt .e-gridcontent,
+.dark .e-gantt .e-gridcontent {
+  background-color: #0f172a !important;
+}
+
+/* Table dentro do chart */
+.gantt-dark-mode .e-gantt .e-gantt-chart table,
+.dark .e-gantt .e-gantt-chart table {
+  background-color: #0f172a !important;
+}
+
+/* Célula do chart quando vazia */
+.gantt-dark-mode .e-gantt .e-chart-row-cell,
+.dark .e-gantt .e-chart-row-cell {
+  background-color: transparent !important;
+}
+
+/* Connector lines */
+.gantt-dark-mode .e-gantt .e-line,
+.dark .e-gantt .e-line {
+  background-color: #64748b !important;
+}
+
+/* Taskbar - cores vibrantes e modernas */
+.gantt-dark-mode .e-gantt .e-taskbar-main-container,
+.dark .e-gantt .e-taskbar-main-container {
+  border-radius: 4px;
+}
+
+/* Tarefas normais - laranja vibrante (cor primária do sistema) */
+.gantt-dark-mode .e-gantt .e-gantt-child-taskbar,
+.dark .e-gantt .e-gantt-child-taskbar {
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 100%) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3) !important;
+}
+
+.gantt-dark-mode .e-gantt .e-gantt-child-progressbar,
+.dark .e-gantt .e-gantt-child-progressbar {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+}
+
+/* Parent taskbar (grupos) - azul elegante */
+.gantt-dark-mode .e-gantt .e-gantt-parent-taskbar,
+.dark .e-gantt .e-gantt-parent-taskbar {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3) !important;
+}
+
+.gantt-dark-mode .e-gantt .e-gantt-parent-progressbar,
+.dark .e-gantt .e-gantt-parent-progressbar {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+}
+
+/* Milestone - roxo */
+.gantt-dark-mode .e-gantt .e-gantt-milestone,
+.dark .e-gantt .e-gantt-milestone {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%) !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Labels do taskbar - mais contraste */
+.gantt-dark-mode .e-gantt .e-label,
+.dark .e-gantt .e-label {
+  color: #f8fafc !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8) !important;
+}
+
+.gantt-dark-mode .e-gantt .e-left-label,
+.dark .e-gantt .e-left-label {
+  color: #e2e8f0 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-right-label,
+.dark .e-gantt .e-right-label {
+  color: #cbd5e1 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-task-label,
+.dark .e-gantt .e-task-label {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+/* Toolbar dark mode */
+.gantt-dark-mode .e-gantt .e-toolbar,
+.dark .e-gantt .e-toolbar {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-toolbar .e-tbar-btn,
+.dark .e-gantt .e-toolbar .e-tbar-btn {
+  color: #e2e8f0 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-toolbar .e-tbar-btn:hover,
+.dark .e-gantt .e-toolbar .e-tbar-btn:hover {
+  background-color: #334155 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-toolbar .e-icons,
+.dark .e-gantt .e-toolbar .e-icons {
+  color: #e2e8f0 !important;
+}
+
+/* Splitter */
+.gantt-dark-mode .e-gantt .e-split-bar,
+.dark .e-gantt .e-split-bar {
+  background-color: #475569 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-split-bar:hover,
+.dark .e-gantt .e-split-bar:hover {
+  background-color: #64748b !important;
+}
+
+/* Scrollbars */
+.gantt-dark-mode .e-gantt ::-webkit-scrollbar-thumb,
+.dark .e-gantt ::-webkit-scrollbar-thumb {
+  background-color: #475569 !important;
+}
+
+.gantt-dark-mode .e-gantt ::-webkit-scrollbar-track,
+.dark .e-gantt ::-webkit-scrollbar-track {
+  background-color: #1e293b !important;
+}
+
+/* Selection */
+.gantt-dark-mode .e-gantt .e-row.e-active .e-rowcell,
+.dark .e-gantt .e-row.e-active .e-rowcell {
+  background-color: #334155 !important;
+}
+
+/* Treegrid expand/collapse icons */
+.gantt-dark-mode .e-gantt .e-treegridexpand,
+.gantt-dark-mode .e-gantt .e-treegridcollapse,
+.dark .e-gantt .e-treegridexpand,
+.dark .e-gantt .e-treegridcollapse {
+  color: #94a3b8 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-treegridexpand:hover,
+.gantt-dark-mode .e-gantt .e-treegridcollapse:hover,
+.dark .e-gantt .e-treegridexpand:hover,
+.dark .e-gantt .e-treegridcollapse:hover {
+  color: #f8fafc !important;
+}
+
+/* Grid vertical lines - azul escuro sutil */
+.gantt-dark-mode .e-gantt .e-chart-row-cell,
+.dark .e-gantt .e-chart-row-cell {
+  border-color: rgba(59, 130, 246, 0.2) !important;
+  border-right-width: 1px !important;
+  border-right-style: solid !important;
+}
+
+/* SVG grid lines stroke color - sutil */
+.gantt-dark-mode .e-gantt .e-gantt-chart svg line,
+.dark .e-gantt .e-gantt-chart svg line {
+  stroke: rgba(71, 85, 105, 0.3) !important;
+}
+
+.gantt-dark-mode .e-gantt .e-gantt-chart svg path,
+.dark .e-gantt .e-gantt-chart svg path {
+  stroke: rgba(71, 85, 105, 0.3) !important;
+}
+
+/* Vertical line container */
+.gantt-dark-mode .e-gantt .e-line-container-cell,
+.dark .e-gantt .e-line-container-cell {
+  border-right: 1px solid rgba(71, 85, 105, 0.4) !important;
+}
+
+.gantt-dark-mode .e-gantt .e-chart-row-cell.e-border-cell,
+.dark .e-gantt .e-chart-row-cell.e-border-cell {
+  border-right: 1px solid rgba(71, 85, 105, 0.4) !important;
+}
+
+/* Timeline vertical lines */
+.gantt-dark-mode .e-gantt .e-timeline-header-cell,
+.dark .e-gantt .e-timeline-header-cell {
+  border-right: 1px solid rgba(71, 85, 105, 0.5) !important;
+}
+
+/* Vertical grid lines container */
+.gantt-dark-mode .e-gantt .e-verticalline-container,
+.dark .e-gantt .e-verticalline-container {
+  opacity: 0.4 !important;
+}
+
+.gantt-dark-mode .e-gantt .e-vertical-line,
+.dark .e-gantt .e-vertical-line {
+  background-color: rgba(71, 85, 105, 0.4) !important;
+  width: 1px !important;
+}
+
+/* Remover background-image que pode esconder as linhas nativas */
+
+/* Bordas horizontais das linhas - sutis */
+.gantt-dark-mode .e-gantt .e-gantt-chart .e-chart-row,
+.dark .e-gantt .e-gantt-chart .e-chart-row {
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Grid lines visibility - e-grid-both mode */
+.gantt-dark-mode .e-gantt.e-grid-both .e-chart-row-cell,
+.dark .e-gantt.e-grid-both .e-chart-row-cell {
+  border-right: 1px solid rgba(71, 85, 105, 0.4) !important;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Bordas nas células do chart - sutis */
+.gantt-dark-mode .e-gantt .e-chartgrid-container td,
+.dark .e-gantt .e-chartgrid-container td {
+  border-right: 1px solid rgba(71, 85, 105, 0.4) !important;
+}
+
+/* Canvas/table based grid lines */
+.gantt-dark-mode .e-gantt .e-chart-root-container table td,
+.dark .e-gantt .e-chart-root-container table td {
+  border-right: 1px solid rgba(71, 85, 105, 0.4) !important;
+}
+
+/* Gantt grid lines table */
+.gantt-dark-mode .e-gantt .e-gantt-chart .e-gantt-grid-lines,
+.dark .e-gantt .e-gantt-chart .e-gantt-grid-lines {
+  border-color: rgba(71, 85, 105, 0.4) !important;
+}
+
+.gantt-dark-mode .e-gantt .e-gantt-chart .e-gantt-grid-lines td,
+.dark .e-gantt .e-gantt-chart .e-gantt-grid-lines td {
+  border-right: 1px solid rgba(71, 85, 105, 0.4) !important;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Override nas células do grid de chart */
+.gantt-dark-mode .e-gantt .e-chart-row-border td,
+.dark .e-gantt .e-chart-row-border td {
+  border-right: 1px solid rgba(71, 85, 105, 0.4) !important;
+}
+
+/* Não forçar border-collapse para não interferir nas linhas nativas */
+
+/* Today marker */
+.gantt-dark-mode .e-gantt .e-gantt-today-line,
+.dark .e-gantt .e-gantt-today-line {
+  background-color: #ef4444 !important;
+}
+
+/* Dialog/Popup overrides */
+.gantt-dark-mode .e-popup,
+.dark .e-popup {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Syncfusion filter popup z-index fix */
+.e-filter-popup,
+.e-popup.e-popup-open,
+.e-excelfilter,
+.e-menu-wrapper,
+.e-contextmenu-wrapper,
+.e-menu-wrapper.e-popup,
+.e-menu-popup,
+.e-ul.e-menu {
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
+/* Submenu popup fix - must be higher than dialog */
+.e-menu-wrapper .e-ul,
+.e-menu-wrapper.e-popup .e-ul,
+.e-contextmenu-wrapper .e-ul {
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+  position: relative;
+}
+
+/* Excel Filter Dialog - Dark Mode */
+.dark .e-excelfilter,
+.dark .e-filter-popup,
+.dark .e-checkboxfilter {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .e-excelfilter .e-dlg-header,
+.dark .e-excelfilter .e-dlg-header-content {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.dark .e-excelfilter .e-dlg-content {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .e-excelfilter .e-footer-content {
+  background-color: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+
+.dark .e-excelfilter .e-btn,
+.dark .e-filter-popup .e-btn {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+
+.dark .e-excelfilter .e-btn:hover,
+.dark .e-filter-popup .e-btn:hover {
+  background-color: #475569 !important;
+}
+
+.dark .e-excelfilter .e-btn.e-primary,
+.dark .e-filter-popup .e-btn.e-primary {
+  background-color: #f97316 !important;
+  border-color: #f97316 !important;
+  color: #fff !important;
+}
+
+.dark .e-excelfilter .e-input-group,
+.dark .e-filter-popup .e-input-group {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+.dark .e-excelfilter .e-input-group input,
+.dark .e-filter-popup .e-input-group input {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .e-excelfilter .e-ftrchk,
+.dark .e-checkboxfilter .e-ftrchk {
+  background-color: #1e293b !important;
+}
+
+.dark .e-excelfilter .e-checkbox-wrapper .e-label,
+.dark .e-checkboxfilter .e-checkbox-wrapper .e-label {
+  color: #e2e8f0 !important;
+}
+
+.dark .e-excelfilter .e-selectall,
+.dark .e-checkboxfilter .e-selectall {
+  border-bottom-color: #334155 !important;
+}
+
+.dark .e-excelfilter .e-ul,
+.dark .e-checkboxfilter .e-ul {
+  background-color: #1e293b !important;
+}
+
+.dark .e-excelfilter .e-list-item,
+.dark .e-checkboxfilter .e-list-item {
+  color: #e2e8f0 !important;
+}
+
+.dark .e-excelfilter .e-list-item:hover,
+.dark .e-checkboxfilter .e-list-item:hover {
+  background-color: #334155 !important;
+}
+
+.dark .e-excelfilter .e-contextmenu-wrapper .e-ul,
+.dark .e-excelfilter .e-menu-wrapper .e-ul,
+.dark .e-menu-wrapper .e-ul,
+.dark .e-contextmenu-wrapper .e-ul {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .e-excelfilter .e-menu-item,
+.dark .e-menu-wrapper .e-menu-item,
+.dark .e-contextmenu-wrapper .e-menu-item {
+  color: #e2e8f0 !important;
+  background-color: #1e293b !important;
+}
+
+.dark .e-excelfilter .e-menu-item:hover,
+.dark .e-menu-wrapper .e-menu-item:hover,
+.dark .e-contextmenu-wrapper .e-menu-item:hover,
+.dark .e-menu-item.e-focused {
+  background-color: #334155 !important;
+}
+
+.dark .e-excelfilter .e-separator,
+.dark .e-menu-wrapper .e-separator {
+  border-bottom-color: #334155 !important;
+}
+
+/* Menu icons */
+.dark .e-menu-item .e-menu-icon,
+.dark .e-menu-item .e-caret {
+  color: #94a3b8 !important;
+}
+
+/* Submenu */
+.dark .e-menu-wrapper.e-popup,
+.dark .e-contextmenu-wrapper.e-popup {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Filter menu header */
+.dark .e-excelfilter .e-xlfl-dlghdr,
+.dark .e-excelfilter .e-dlg-header {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* Excel filter specific menu */
+.dark .e-xlflmenu {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .e-xlflmenu .e-xlfl-ul {
+  background-color: #1e293b !important;
+}
+
+.dark .e-xlflmenu .e-xlfl-li {
+  color: #e2e8f0 !important;
+  background-color: #1e293b !important;
+}
+
+.dark .e-xlflmenu .e-xlfl-li:hover {
+  background-color: #334155 !important;
+}
+
+/* Dropdown in filter */
+.dark .e-dropdownbase .e-list-item {
+  color: #e2e8f0 !important;
+  background-color: #1e293b !important;
+}
+
+.dark .e-dropdownbase .e-list-item:hover,
+.dark .e-dropdownbase .e-list-item.e-hover {
+  background-color: #334155 !important;
+}
+
+.dark .e-dropdown-popup {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.gantt-dark-mode .e-popup .e-list-item,
+.dark .e-popup .e-list-item {
+  color: #e2e8f0 !important;
+}
+
+.gantt-dark-mode .e-popup .e-list-item:hover,
+.dark .e-popup .e-list-item:hover {
+  background-color: #334155 !important;
+}
+
+/* Filter and sort icons */
+.gantt-dark-mode .e-gantt .e-icon-filter,
+.gantt-dark-mode .e-gantt .e-sortfilterdiv,
+.dark .e-gantt .e-icon-filter,
+.dark .e-gantt .e-sortfilterdiv {
+  color: #94a3b8 !important;
+}
+
+/* Resize handle */
+.gantt-dark-mode .e-gantt .e-rte-resize-handle,
+.dark .e-gantt .e-rte-resize-handle {
+  background-color: #64748b !important;
+}
+
+/* Baseline bar */
+.gantt-dark-mode .e-gantt .e-baseline-bar,
+.dark .e-gantt .e-baseline-bar {
+  background-color: #64748b !important;
+}
+
+/* ============================================
+   SYNCFUSION CHARTS STYLES
+   ============================================ */
+
+/* Chart container */
+.dark .e-chart,
+.dark .e-control.e-chart {
+  background-color: #0f172a !important;
+}
+
+/* Chart title */
+.dark .e-chart .e-chart-title {
+  color: #f8fafc !important;
+}
+
+/* Chart area background */
+.dark .e-chart .e-chart-svg {
+  background-color: transparent !important;
+}
+
+/* Axis labels */
+.dark .e-chart .e-axis-label {
+  fill: #94a3b8 !important;
+}
+
+/* Axis title */
+.dark .e-chart .e-axis-title {
+  fill: #94a3b8 !important;
+}
+
+/* Axis lines */
+.dark .e-chart .e-axis-line {
+  stroke: #334155 !important;
+}
+
+/* Grid lines */
+.dark .e-chart .e-grid-line {
+  stroke: rgba(71, 85, 105, 0.3) !important;
+}
+
+/* Major grid lines */
+.dark .e-chart .e-major-grid-line {
+  stroke: rgba(71, 85, 105, 0.3) !important;
+}
+
+/* Minor grid lines */
+.dark .e-chart .e-minor-grid-line {
+  stroke: rgba(71, 85, 105, 0.2) !important;
+}
+
+/* Legend text */
+.dark .e-chart .e-chart-legend-text,
+.dark .e-chart .e-legend-text {
+  fill: #e2e8f0 !important;
+}
+
+/* Legend icon border */
+.dark .e-chart .e-legend-icon {
+  stroke: transparent !important;
+}
+
+/* Tooltip */
+.dark .e-chart-tooltip,
+.dark .e-tooltip-wrap {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .e-chart-tooltip .e-tooltip-header {
+  color: #f8fafc !important;
+  border-bottom-color: #334155 !important;
+}
+
+.dark .e-chart-tooltip .e-tooltip-text {
+  color: #e2e8f0 !important;
+}
+
+/* Crosshair */
+.dark .e-chart .e-crosshair-line {
+  stroke: #64748b !important;
+}
+
+/* Data labels */
+.dark .e-chart .e-data-label {
+  fill: #e2e8f0 !important;
+}
+
+/* Selection highlight */
+.dark .e-chart .e-selection-highlight {
+  opacity: 0.8;
+}
+
+/* Zoom toolkit */
+.dark .e-chart .e-zoomtoolkit {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .e-chart .e-zoomtoolkit .e-icons {
+  color: #e2e8f0 !important;
+}
+
+.dark .e-chart .e-zoomtoolkit .e-icons:hover {
+  background-color: #334155 !important;
+}
+
+/* Strip line */
+.dark .e-chart .e-stripline {
+  fill: rgba(71, 85, 105, 0.2) !important;
+}
+
+/* Annotation */
+.dark .e-chart .e-annotation {
+  color: #e2e8f0 !important;
+}
+
+/* Scrollbar */
+.dark .e-chart .e-scrollbar {
+  background-color: #1e293b !important;
+}
+
+.dark .e-chart .e-scrollbar-thumb {
+  background-color: #475569 !important;
+}
+
+.dark .e-chart .e-scrollbar-thumb:hover {
+  background-color: #64748b !important;
+}
+
+/* Period selector */
+.dark .e-chart .e-period-selector {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .e-chart .e-period-selector .e-btn {
+  color: #e2e8f0 !important;
+  background-color: transparent !important;
+}
+
+.dark .e-chart .e-period-selector .e-btn:hover {
+  background-color: #334155 !important;
+}
+
+.dark .e-chart .e-period-selector .e-btn.e-active {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
 }

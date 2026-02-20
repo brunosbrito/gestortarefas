@@ -50,36 +50,36 @@ export const AtividadeMetadata = ({
   const startDelayed = isStartDelayed(atividade);
 
   return (
-    <CardContent className="p-4 pt-2 space-y-3">
-      <div className="space-y-2 text-sm">
-        {/* Projeto e OS */}
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Building2 className="w-4 h-4" />
-          <span className="font-medium">{atividade.project.name}</span>
+    <CardContent className="px-3 py-2 space-y-1.5">
+      <div className="space-y-1 text-xs">
+        {/* Projeto e OS na mesma linha */}
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Building2 className="w-3 h-3 shrink-0" />
+          <span className="truncate">{atividade.project.name}</span>
         </div>
-        
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <FileText className="w-4 h-4" />
+
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <FileText className="w-3 h-3 shrink-0" />
           <span>OS N°: {atividade.serviceOrder.serviceOrderNumber}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Calendar className="w-4 h-4" />
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Calendar className="w-3 h-3 shrink-0" />
           <span>Data Criação: {format(parseISO(atividade.createdAt), 'dd/MM/yyyy')}</span>
         </div>
 
         {/* Progresso */}
         {typeof atividade.quantity === 'number' && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="w-3 h-3 text-primary shrink-0" />
               <span className="font-medium text-primary">
                 Progresso: {calculateProgress().toFixed(0)}% ({atividade.completedQuantity || 0} de {atividade.quantity})
               </span>
             </div>
-            <Progress 
-              value={calculateProgress()} 
-              className="h-2"
+            <Progress
+              value={calculateProgress()}
+              className="h-1.5"
             />
           </div>
         )}
@@ -109,73 +109,60 @@ export const AtividadeMetadata = ({
 
         {/* Status específico com data */}
         {atividade.status === 'Paralizadas' && atividade.pauseDate && (
-          <div className="flex items-center gap-2 p-2 bg-warning/10 border border-warning/20 rounded-md">
-            <AlertCircle className="w-4 h-4 text-warning" />
-            <span className="text-warning text-xs">
+          <div className="flex items-center gap-1.5 px-1.5 py-1 bg-warning/10 border border-warning/20 rounded">
+            <AlertCircle className="w-3 h-3 text-warning shrink-0" />
+            <span className="text-warning">
               Data Paralisação: {format(parseISO(atividade.pauseDate), 'dd/MM/yyyy')}
             </span>
           </div>
         )}
 
         {atividade.status === 'Em execução' && atividade.startDate && (
-          <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/20 rounded-md">
-            <PlayCircle className="w-4 h-4 text-success" />
-            <span className="text-success text-xs">
+          <div className="flex items-center gap-1.5 px-1.5 py-1 bg-success/10 border border-success/20 rounded">
+            <PlayCircle className="w-3 h-3 text-success shrink-0" />
+            <span className="text-success">
               Data Início: {format(parseISO(atividade.startDate), 'dd/MM/yyyy')}
             </span>
           </div>
         )}
 
         {atividade.status === 'Concluídas' && atividade.endDate && (
-          <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/20 rounded-md">
-            <CheckCircle className="w-4 h-4 text-success" />
-            <span className="text-success text-xs">
+          <div className="flex items-center gap-1.5 px-1.5 py-1 bg-success/10 border border-success/20 rounded">
+            <CheckCircle className="w-3 h-3 text-success shrink-0" />
+            <span className="text-success">
               Data Conclusão: {format(parseISO(atividade.endDate), 'dd/MM/yyyy')}
             </span>
           </div>
         )}
 
         {/* Tempo */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" />
-            <span className="text-primary text-xs">
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3 text-primary shrink-0" />
+            <span className="text-primary">
               Tempo Previsto: {formatEstimatedTime(atividade.estimatedTime)}
             </span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Timer className="w-4 h-4 text-secondary" />
-            <div className="flex items-center gap-1">
-              <span className="text-secondary text-xs">
-                {formatTime(elapsedTime)}
-              </span>
-              <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                calculatePercentage(elapsedTime, atividade.estimatedTime) > 100 
-                  ? 'bg-destructive/10 text-destructive border border-destructive/20' 
-                  : 'bg-success/10 text-success border border-success/20'
-              }`}>
-                {calculatePercentage(elapsedTime, atividade.estimatedTime)}%
-              </span>
-            </div>
+
+          <div className="flex items-center gap-1">
+            <Timer className="w-3 h-3 text-secondary shrink-0" />
+            <span className="text-secondary">
+              {formatTime(elapsedTime)}
+            </span>
+            <span className={`text-[10px] font-bold px-1 py-0.5 rounded ${
+              calculatePercentage(elapsedTime, atividade.estimatedTime) > 100
+                ? 'bg-destructive/10 text-destructive'
+                : 'bg-success/10 text-success'
+            }`}>
+              {calculatePercentage(elapsedTime, atividade.estimatedTime)}%
+            </span>
           </div>
         </div>
 
-        {/* Equipe e Criador */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-accent" />
-            <span className="text-accent text-xs font-medium">
-              Equipe: {atividade.collaborators.map((c) => c.name).join(', ')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground text-xs">
-              Criado por: {atividade.createdBy.username}
-            </span>
-          </div>
+        {/* Criador */}
+        <div className="flex items-center gap-1.5 text-muted-foreground pt-1">
+          <User className="w-3 h-3 shrink-0" />
+          <span>Criado por: {atividade.createdBy.username}</span>
         </div>
       </div>
     </CardContent>

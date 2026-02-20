@@ -77,6 +77,8 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
         projects: projectsData?.length || 0,
         serviceOrders: serviceOrdersData?.length || 0,
       });
+      console.log('📋 Projetos raw:', projectsData);
+      console.log('📋 Ordens de Serviço raw:', serviceOrdersData);
 
       // Normalizar atividades
       const normalizedActivities = (activitiesData || []).map(normalizeActivity);
@@ -230,7 +232,11 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
       if (state.filters.obraId) {
         filteredProjects = filteredProjects.filter(p => p.id === state.filters.obraId);
         // Filtrar ordens de serviço para mostrar apenas as dessa obra
-        filteredServiceOrders = filteredServiceOrders.filter(os => os.projectId === state.filters.obraId);
+        // projectId pode ser um objeto {id, name, ...} ou um número
+        filteredServiceOrders = filteredServiceOrders.filter(os => {
+          const osProjectId = typeof os.projectId === 'object' ? os.projectId?.id : os.projectId;
+          return osProjectId === state.filters.obraId;
+        });
       }
 
       // Quando uma ordem de serviço específica é selecionada, mostrar apenas essa OS (1)
@@ -245,9 +251,9 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
       set(prevState => ({
         ...prevState,
         filteredData: {
-          activities: filteredActivities,
-          projects: filteredProjects,
-          serviceOrders: filteredServiceOrders,
+          activities: [...filteredActivities],
+          projects: [...filteredProjects],
+          serviceOrders: [...filteredServiceOrders],
         },
         activityStatus,
         totals: {

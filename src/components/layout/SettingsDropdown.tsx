@@ -13,6 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { showInfo, showActionSuccess } from '@/lib/feedback';
 import { cn } from '@/lib/utils';
+import { logout } from '@/services/AuthService';
 
 export const SettingsDropdown = () => {
   const { theme, toggleTheme } = useTheme();
@@ -37,11 +38,8 @@ export const SettingsDropdown = () => {
     showActionSuccess(message);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('rememberMe');
-    localStorage.removeItem('userEmail');
-    sessionStorage.removeItem('authToken');
+  const handleLogout = async () => {
+    await logout();
 
     showInfo({
       description: 'Você foi desconectado com sucesso.',

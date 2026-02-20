@@ -1,28 +1,27 @@
-import API_URL from '@/config';
+import api from '@/lib/axios';
 import { CreateProcesso } from '@/interfaces/ProcessoInterface';
-import axios from 'axios';
 
-const URL = `${API_URL}/process`;
+const URL = '/process';
 
 class ProcessService {
   getAll() {
-    return axios.get(URL);
+    return api.get(URL);
   }
 
   get(id: number) {
-    return axios.get(`${URL}/${id}`);
+    return api.get(`${URL}/${id}`);
   }
 
   create(data: CreateProcesso) {
-    return axios.post(URL, data);
+    return api.post(URL, data);
   }
 
   update(id: number, data: CreateProcesso) {
-    return axios.put(`${URL}/${id}`, data);
+    return api.put(`${URL}/${id}`, data);
   }
 
   delete(id: number) {
-    return axios.delete(`${URL}/${id}`);
+    return api.delete(`${URL}/${id}`);
   }
 }
 

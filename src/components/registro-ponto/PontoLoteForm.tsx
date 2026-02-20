@@ -12,6 +12,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import {
   Search,
   Building,
   ArrowLeft,
@@ -22,6 +29,9 @@ import {
   Info,
   CheckCircle2,
   AlertCircle,
+  X,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { Obra } from '@/interfaces/ObrasInterface';
@@ -104,6 +114,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
   const [obraGlobal, setObraGlobal] = useState<string>('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openMultiselect, setOpenMultiselect] = useState(false);
+  const [motivoGlobal, setMotivoGlobal] = useState<string>('');
 
   // Obter setores únicos dos colaboradores (normalizados para evitar duplicatas)
   const setores = Array.from(
@@ -248,6 +260,41 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         return reg;
       })
     );
+  };
+
+  // Toggle seleção do colaborador no multiselect mobile
+  const toggleColaborador = (id: number) => {
+    const field = etapa === 'presentes' ? 'presente' : 'faltou';
+    const registro = registros.find((r) => r.id === id);
+    if (registro) {
+      updateRegistro(id, field, !registro[field]);
+    }
+  };
+
+  // Remover colaborador da seleção
+  const removerColaborador = (id: number) => {
+    const field = etapa === 'presentes' ? 'presente' : 'faltou';
+    updateRegistro(id, field, false);
+  };
+
+  // Obter colaboradores selecionados na etapa atual
+  const selecionados = etapa === 'presentes'
+    ? registros.filter((r) => r.presente)
+    : registros.filter((r) => r.faltou);
+
+  // Aplicar motivo global a todas as faltas
+  const aplicarMotivoGlobal = () => {
+    if (motivoGlobal.trim()) {
+      setRegistros((prev) =>
+        prev.map((reg) => {
+          if (reg.faltou) {
+            return { ...reg, reason: motivoGlobal };
+          }
+          return reg;
+        })
+      );
+      toast({ title: 'Motivo aplicado a todos os colaboradores com falta' });
+    }
   };
 
   const handleSubmit = async () => {
@@ -409,20 +456,22 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
         </Card>
       )}
 
-      {/* Filtros */}
-      <Card>
+      {/* Filtros - No mobile mostra apenas seleção de obra */}
+      <Card className={cn(isMobile && etapa !== 'presentes' && "hidden")}>
         <CardContent className="p-3 sm:p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {/* Filtro por nome */}
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome..."
-                value={filtroNome}
-                onChange={(e) => setFiltroNome(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            {/* Filtro por nome - apenas desktop */}
+            {!isMobile && (
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome..."
+                  value={filtroNome}
+                  onChange={(e) => setFiltroNome(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            )}
 
             {/* Seleção de obra global (apenas na etapa de presentes) */}
             {etapa === 'presentes' && (
@@ -467,7 +516,8 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
               </div>
             )}
 
-            {/* Filtro por setor */}
+            {/* Filtro por setor - apenas desktop */}
+            {!isMobile && (
             <Select value={filtroSetor} onValueChange={setFiltroSetor}>
               <SelectTrigger>
                 <SelectValue placeholder="Filtrar por setor" />
@@ -481,6 +531,7 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            )}
           </div>
 
           {/* Indicador de obra global selecionada */}
@@ -510,98 +561,201 @@ export const PontoLoteForm: React.FC<PontoLoteFormProps> = ({
 
       {/* Lista de Colaboradores - Responsiva */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-3 sm:p-0">
           {isMobile ? (
-            // Layout de Cards para Mobile
-            <div className="max-h-96 overflow-y-auto p-3 space-y-3">
-              {colaboradoresFiltrados.map((registro) => (
-                <Card
-                  key={registro.id}
-                  className={`${
-                    etapa === 'presentes'
-                      ? registro.presente
-                        ? 'bg-[#FFA500]/10 border-[#FFA500]'
-                        : 'bg-background'
-                      : registro.faltou
-                      ? 'bg-destructive/10 border-destructive'
-                      : 'bg-muted/20'
-                  }`}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 pt-1">
-                        <Checkbox
-                          checked={etapa === 'presentes' ? registro.presente : registro.faltou}
-                          onCheckedChange={(checked) =>
-                            updateRegistro(
-                              registro.id,
-                              etapa === 'presentes' ? 'presente' : 'faltou',
-                              checked
-                            )
-                          }
-                          className={etapa === 'presentes' ? "data-[state=checked]:bg-[#FFA500] data-[state=checked]:border-[#FFA500]" : ""}
-                        />
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="flex flex-col gap-1">
-                          <h3 className="font-medium text-sm">{registro.name}</h3>
-                          <p className="text-xs text-muted-foreground">{registro.role}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {getSetorLabel(registro.sector)}
-                          </Badge>
-                        </div>
-                        {etapa === 'presentes' && registro.presente && (
-                          <div className="text-xs">
-                            {isProducao(registro.sector) ? (
-                              registro.project ? (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-[#FFA500]/20 text-[#003366] text-xs"
-                                >
-                                  {registro.project}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground">
-                                  Aguardando obra...
-                                </span>
-                              )
-                            ) : (
-                              <Badge
-                                variant="secondary"
-                                className="bg-green-100 text-green-800 text-xs"
+            // Layout de Multiselect para Mobile usando Drawer
+            <div className="space-y-4">
+              {/* Botão que abre o Drawer */}
+              <Drawer open={openMultiselect} onOpenChange={setOpenMultiselect}>
+                <DrawerTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between h-auto min-h-[44px] py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>
+                        {etapa === 'presentes' ? 'Selecionar Presentes' : 'Selecionar Faltas'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={selecionados.length > 0 ? 'default' : 'secondary'}
+                        className={selecionados.length > 0 ? 'bg-[#FFA500]' : ''}
+                      >
+                        {selecionados.length}
+                      </Badge>
+                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                    </div>
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="max-h-[85vh]">
+                  <DrawerHeader className="border-b pb-2">
+                    <DrawerTitle>
+                      {etapa === 'presentes' ? 'Selecionar Presentes' : 'Selecionar Faltas'}
+                    </DrawerTitle>
+                  </DrawerHeader>
+                  <div className="p-4 flex-1 overflow-hidden flex flex-col">
+                    {/* Campo de busca */}
+                    <div className="relative mb-3">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar colaborador..."
+                        value={filtroNome}
+                        onChange={(e) => setFiltroNome(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    {/* Lista de colaboradores com scroll */}
+                    <div className="flex-1 overflow-y-auto -mx-4 px-4" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+                      <div className="space-y-1">
+                        {colaboradoresFiltrados.length === 0 ? (
+                          <p className="text-center text-muted-foreground py-4">
+                            Nenhum colaborador encontrado.
+                          </p>
+                        ) : (
+                          colaboradoresFiltrados.map((registro) => {
+                            const isSelected = etapa === 'presentes' ? registro.presente : registro.faltou;
+                            return (
+                              <button
+                                key={registro.id}
+                                type="button"
+                                onClick={() => toggleColaborador(registro.id)}
+                                className={cn(
+                                  "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors",
+                                  isSelected
+                                    ? etapa === 'presentes'
+                                      ? "bg-[#FFA500]/10 border border-[#FFA500]"
+                                      : "bg-destructive/10 border border-destructive"
+                                    : "hover:bg-muted/50 border border-transparent"
+                                )}
                               >
-                                Obra não obrigatória
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                        {etapa === 'faltas' && registro.faltou && (
-                          <Input
-                            value={registro.reason || ''}
-                            onChange={(e) =>
-                              updateRegistro(
-                                registro.id,
-                                'reason',
-                                e.target.value
-                              )
-                            }
-                            className={`h-8 text-xs ${
-                              registro.faltou &&
-                              (!registro.reason ||
-                                registro.reason.trim() === '')
-                                ? 'border-destructive'
-                                : ''
-                            }`}
-                            placeholder="Motivo obrigatório"
-                          />
+                                <div className={cn(
+                                  "flex h-5 w-5 items-center justify-center rounded-sm border shrink-0",
+                                  isSelected
+                                    ? etapa === 'presentes'
+                                      ? "bg-[#FFA500] border-[#FFA500] text-white"
+                                      : "bg-destructive border-destructive text-white"
+                                    : "border-muted-foreground"
+                                )}>
+                                  {isSelected && <Check className="h-4 w-4" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate">{registro.name}</p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {registro.role} • {getSetorLabel(registro.sector)}
+                                  </p>
+                                </div>
+                              </button>
+                            );
+                          })
                         )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    {/* Botão de fechar */}
+                    <div className="pt-3 border-t mt-3">
+                      <Button
+                        onClick={() => setOpenMultiselect(false)}
+                        className="w-full bg-[#FFA500] hover:bg-[#FFA500]/90"
+                      >
+                        Confirmar ({selecionados.length} selecionados)
+                      </Button>
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+
+              {/* Lista dos selecionados com badges */}
+              {selecionados.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {etapa === 'presentes' ? 'Presentes selecionados:' : 'Faltas selecionadas:'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selecionados.map((col) => (
+                      <Badge
+                        key={col.id}
+                        variant="secondary"
+                        className={cn(
+                          "pl-2 pr-1 py-1 flex items-center gap-1",
+                          etapa === 'presentes'
+                            ? "bg-[#FFA500]/20 text-[#003366]"
+                            : "bg-destructive/20 text-destructive"
+                        )}
+                      >
+                        <span className="text-xs">{col.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removerColaborador(col.id)}
+                          className="ml-1 rounded-full p-0.5 hover:bg-black/10"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Para presentes: mostrar info da obra */}
+                  {etapa === 'presentes' && obraGlobal && obraGlobal !== 'none' && (
+                    <div className="p-2 bg-[#FFA500]/10 border border-[#FFA500]/20 rounded-md">
+                      <p className="text-xs text-[#003366]">
+                        <Building className="inline w-3 h-3 mr-1" />
+                        Obra: <strong>{obraGlobalNome}</strong>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Para faltas: input de motivo global */}
+                  {etapa === 'faltas' && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          value={motivoGlobal}
+                          onChange={(e) => setMotivoGlobal(e.target.value)}
+                          placeholder="Motivo da falta (aplicar a todos)"
+                          className="flex-1 text-sm"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={aplicarMotivoGlobal}
+                          disabled={!motivoGlobal.trim()}
+                        >
+                          Aplicar
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Ou edite individualmente abaixo:
+                      </p>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {selecionados.map((col) => (
+                          <div key={col.id} className="flex items-center gap-2">
+                            <span className="text-xs font-medium truncate w-24">{col.name}</span>
+                            <Input
+                              value={col.reason || ''}
+                              onChange={(e) => updateRegistro(col.id, 'reason', e.target.value)}
+                              placeholder="Motivo"
+                              className={cn(
+                                "flex-1 h-8 text-xs",
+                                !col.reason?.trim() && "border-destructive"
+                              )}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selecionados.length === 0 && (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Nenhum colaborador selecionado</p>
+                  <p className="text-xs">Clique no botão acima para selecionar</p>
+                </div>
+              )}
             </div>
           ) : (
             // Layout de Tabela para Desktop

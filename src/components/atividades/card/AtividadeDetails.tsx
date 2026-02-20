@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,32 +8,62 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, FileDown, Loader2 } from 'lucide-react';
 import { AtividadeStatus } from '@/interfaces/AtividadeStatus';
 import { Separator } from '@/components/ui/separator';
 import { AtividadeImageCarousel } from '../AtividadeImageCarousel';
 import { AtividadeInfoBasica } from '../AtividadeInfoBasica';
 import { AtividadeEquipe } from '../AtividadeEquipe';
 import { AtividadeHistoricoList } from '../AtividadeHistoricoList';
+import AtividadeDetailPdfService from '@/services/AtividadeDetailPdfService';
 
 interface AtividadeDetailsProps {
   atividade: AtividadeStatus;
 }
 
 export const AtividadeDetails = ({ atividade }: AtividadeDetailsProps) => {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleGeneratePdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      await AtividadeDetailPdfService.generatePdf(atividade);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full">
-          <Eye className="w-4 h-4 mr-1" />
+        <Button variant="outline" size="sm" className="w-full h-8 text-xs">
+          <Eye className="w-3.5 h-3.5 mr-1" />
           Detalhes
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
-            Detalhes da Atividade
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl font-bold">
+              Detalhes da Atividade
+            </DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGeneratePdf}
+              disabled={isGeneratingPdf}
+              className="flex items-center gap-2"
+            >
+              {isGeneratingPdf ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4" />
+              )}
+              {isGeneratingPdf ? 'Gerando...' : 'Exportar PDF'}
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

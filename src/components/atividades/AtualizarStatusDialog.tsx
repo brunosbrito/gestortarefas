@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
+  DraggableDialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -63,11 +63,15 @@ const paralizadaSchema = z.object({
   ),
 });
 
+// Schema vazio para status que não precisam de campos adicionais
+const simpleStatusSchema = z.object({});
+
 type EmExecucaoForm = z.infer<typeof emExecucaoSchema>;
 type ConcluidaForm = z.infer<typeof concluidaSchema>;
 type ParalizadaForm = z.infer<typeof paralizadaSchema>;
+type SimpleStatusForm = z.infer<typeof simpleStatusSchema>;
 
-type FormValues = EmExecucaoForm | ConcluidaForm | ParalizadaForm;
+type FormValues = EmExecucaoForm | ConcluidaForm | ParalizadaForm | SimpleStatusForm;
 
 const motivosParalizacao = [
   'Falta de material',
@@ -111,14 +115,21 @@ export function AtualizarStatusDialog({
     return {};
   };
 
+  const getSchema = () => {
+    switch (novoStatus) {
+      case 'Em execução':
+        return emExecucaoSchema;
+      case 'Concluídas':
+        return concluidaSchema;
+      case 'Paralizadas':
+        return paralizadaSchema;
+      default:
+        return simpleStatusSchema;
+    }
+  };
+
   const form = useForm<FormValues>({
-    resolver: zodResolver(
-      novoStatus === 'Em execução'
-        ? emExecucaoSchema
-        : novoStatus === 'Concluídas'
-        ? concluidaSchema
-        : paralizadaSchema
-    ),
+    resolver: zodResolver(getSchema()),
     defaultValues: getDefaultValues(),
   });
 
@@ -169,12 +180,14 @@ export function AtualizarStatusDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90%] sm:max-w-[600px]">
+      <DraggableDialogContent className="max-w-[90%] sm:max-w-[600px] pt-10">
         <DialogHeader>
           <DialogTitle>
             {novoStatus === 'Em execução' && 'Iniciar Atividade'}
             {novoStatus === 'Concluídas' && 'Concluir Atividade'}
             {novoStatus === 'Paralizadas' && 'Paralizar Atividade'}
+            {novoStatus === 'Planejadas' && 'Mover para Planejadas'}
+            {novoStatus === 'Atrasadas' && 'Mover para Atrasadas'}
           </DialogTitle>
         </DialogHeader>
 
@@ -408,6 +421,12 @@ export function AtualizarStatusDialog({
               </>
             )}
 
+            {(novoStatus === 'Planejadas' || novoStatus === 'Atrasadas') && (
+              <p className="text-sm text-muted-foreground">
+                Confirma a alteração do status para <strong>{novoStatus}</strong>?
+              </p>
+            )}
+
             <Button
               type="submit"
               className="w-full bg-[#FF7F0E] hover:bg-[#FF7F0E]/90"
@@ -416,7 +435,7 @@ export function AtualizarStatusDialog({
             </Button>
           </form>
         </Form>
-      </DialogContent>
+      </DraggableDialogContent>
     </Dialog>
   );
 }

@@ -1,4 +1,3 @@
-
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,9 +20,12 @@ import ObrasService from '@/services/ObrasService';
 import { Obra } from '@/interfaces/ObrasInterface';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import { useToast } from '@/hooks/use-toast';
+import { ViewToggle, ViewMode } from '@/components/atividades/ViewToggle';
+import { AtividadesOSTable } from '@/components/atividades/AtividadesOSTable';
 
 const statusListas = [
   'Planejadas',
+  'Atrasadas',
   'Em execução',
   'Paralizadas',
   'Concluídas',
@@ -34,6 +36,7 @@ const Atividades = () => {
   const [atividades, setAtividades] = useState<AtividadeStatus[]>([]);
   const [openNovaAtividade, setOpenNovaAtividade] = useState(false);
   const [obra, setObra] = useState<Obra | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [dialogStatus, setDialogStatus] = useState<{
     open: boolean;
     atividade: { id: string; collaborators?: Colaborador[] } | null;
@@ -55,9 +58,24 @@ const Atividades = () => {
         });
         return;
       }
-      
+
       const data = await getActivitiesByServiceOrderId(serviceOrderId);
-      setAtividades(data);
+
+      // Verificar atividades atrasadas
+      const now = new Date();
+      const processedData = data.map((atividade: AtividadeStatus) => {
+        // Se a atividade está Planejada e tem data prevista de início que já passou
+        if (
+          atividade.status === 'Planejadas' &&
+          atividade.plannedStartDate &&
+          new Date(atividade.plannedStartDate) < now
+        ) {
+          return { ...atividade, status: 'Atrasadas' };
+        }
+        return atividade;
+      });
+
+      setAtividades(processedData);
     } catch (error) {
       console.error("Erro ao carregar atividades:", error);
       toast({
@@ -129,11 +147,14 @@ const Atividades = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-construction-800">
-            Atividades
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-construction-800">
+              Atividades
+            </h1>
+            <ViewToggle view={viewMode} onViewChange={setViewMode} />
+          </div>
           {obra?.status !== 'finalizado' && (
             <Dialog open={openNovaAtividade} onOpenChange={setOpenNovaAtividade}>
               <DialogTrigger asChild>
@@ -142,7 +163,7 @@ const Atividades = () => {
                   Nova Atividade
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Nova Atividade</DialogTitle>
                 </DialogHeader>
@@ -159,20 +180,29 @@ const Atividades = () => {
           )}
         </div>
 
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-6 overflow-x-auto pb-4">
-            {statusListas.map((status) => (
-              <StatusList
-                key={status}
-                status={status}
-                atividades={atividades}
-                droppableId={status}
-                onMoveAtividade={handleMoveAtividade}
-                onDelete={getByServiceOrderId}
-              />
-            ))}
-          </div>
-        </DragDropContext>
+        {viewMode === 'kanban' ? (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-3 overflow-x-auto pb-4">
+              {statusListas.map((status) => (
+                <StatusList
+                  key={status}
+                  status={status}
+                  atividades={atividades}
+                  droppableId={status}
+                  onMoveAtividade={handleMoveAtividade}
+                  onDelete={getByServiceOrderId}
+                />
+              ))}
+            </div>
+          </DragDropContext>
+        ) : (
+          <AtividadesOSTable
+            atividades={atividades}
+            onMoveAtividade={handleMoveAtividade}
+            onDelete={getByServiceOrderId}
+            obra={obra}
+          />
+        )}
 
         <AtualizarStatusDialog
           open={dialogStatus.open}

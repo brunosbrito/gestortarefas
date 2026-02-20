@@ -11,33 +11,13 @@
       "Bash(ls:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run build:dev:*)",
-      "Bash(mkdir:*)",
-      "Bash(npx eslint:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(dir \"C:\\\\Users\\\\User\\\\OneDrive - gmlestruturas.com.br\\\\Documentos\\\\GitHub\\\\gestortarefas\" /B)",
-      "Bash(curl:*)",
-      "Bash(git diff:*)",
-      "Bash(cd c:UsersUserOneDrive - gmlestruturas.com.brDocumentosGitHubgestortarefas)",
-      "Bash(npm run lint)",
-      "WebFetch(domain:gsn.gerdau.com)",
-      "WebFetch(domain:www.fabricadoprojeto.com.br)",
-      "WebFetch(domain:www.scribd.com)",
-      "WebFetch(domain:api.aecweb.com.br)",
-      "WebFetch(domain:calculistadeaco.com.br)",
-      "WebFetch(domain:www.aciva.com.br)",
-      "WebFetch(domain:acotel.com.br)",
-      "WebFetch(domain:www.novacaledonia.com.br)",
-      "WebFetch(domain:kiferro.com.br)",
-      "WebFetch(domain:ciadoferro.com.br)",
-      "WebFetch(domain:jefer.com.br)",
-      "WebFetch(domain:regionaltelhas.com.br)",
-      "WebFetch(domain:bellaco.com.br)",
-      "WebFetch(domain:www.ouroaco.com.br)",
-      "WebFetch(domain:www.acomixltda.com.br)",
-      "Bash(node -e:*)",
-      "Bash(dir:*)",
-      "Bash(copy:*)"
+      "Bash(grep:*)",
+      "Bash(git grep:*)",
+      "Bash(findstr:*)",
+      "Bash(npm uninstall:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\bruno\\Desktop\\dev\\gestor tarefas api\\gestor-tarefas-api\\src\\modules\\user"
     ]
   }
 }

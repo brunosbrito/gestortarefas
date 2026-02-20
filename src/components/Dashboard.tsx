@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, ClipboardList, Activity, ChevronDown } from 'lucide-react';
+import { Building2, ClipboardList, Activity, ChevronDown, Filter, X } from 'lucide-react';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useUnifiedFilters } from '@/hooks/useUnifiedFilters';
 import { StatsSummary } from './dashboard/StatsSummary';
@@ -50,7 +50,8 @@ const Dashboard = () => {
     updatePeriodFilter,
     updateFilters,
     hasActiveFilters,
-    activeFiltersCount
+    activeFiltersCount,
+    clearAllFilters
   } = useUnifiedFilters();
 
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -145,7 +146,27 @@ const Dashboard = () => {
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="p-4 md:p-6 pt-0 border-t border-border/50">
+              <div className="p-4 md:p-6 pt-0 border-t border-border/50 space-y-6">
+                {/* Título e botão limpar */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-5 w-5 text-[#FF7F0E]" />
+                    <h3 className="font-medium">Filtrar por:</h3>
+                  </div>
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Limpar Filtros
+                    </Button>
+                  )}
+                </div>
+
+                {/* Filtros de Obra e Período */}
                 <PeriodFilter
                   onFilterChange={(filterData) => {
                     if (filterData.period || filterData.startDate || filterData.endDate) {
@@ -167,7 +188,8 @@ const Dashboard = () => {
                     obraId: filters.obraId,
                   }}
                 />
-                <Separator className="my-6" />
+
+                {/* Filtros de Tarefa Macro, Processo e Colaborador */}
                 <TaskProcessFilter
                   onFilterChange={(newFilters) => {
                     updateFilters(newFilters);
