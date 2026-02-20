@@ -25,6 +25,7 @@ export interface GanttTask {
   CreatedBy?: string;
   CreatedAt?: string;
   CodSequencial?: number;
+  PlannedStartDate?: string;
 }
 
 export type GanttGroupBy = 'obra' | 'tarefaMacro' | 'colaborador' | null;
@@ -45,6 +46,7 @@ export const DEFAULT_GANTT_COLUMNS: GanttColumnConfig[] = [
   { field: 'TaskName', headerText: 'Atividade', width: 250, visible: true, required: true },
   { field: 'StartDate', headerText: 'Início', width: 120, visible: true },
   { field: 'EndDate', headerText: 'Fim', width: 120, visible: true },
+  { field: 'PlannedStartDate', headerText: 'Data Prevista', width: 120, visible: false },
   { field: 'Duration', headerText: 'Dias', width: 70, textAlign: 'Center', visible: true },
   { field: 'Progress', headerText: '%', width: 60, textAlign: 'Center', visible: true },
   { field: 'Status', headerText: 'Status', width: 120, visible: true },

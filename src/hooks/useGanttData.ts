@@ -138,6 +138,12 @@ function transformActivityToGantt(activity: ActivityLike, parentID?: number): Ga
     createdAtFormatted = new Date(activity.createdAt).toLocaleDateString('pt-BR');
   }
 
+  // Formatar data prevista
+  let plannedStartDateFormatted = '';
+  if ('plannedStartDate' in activity && activity.plannedStartDate) {
+    plannedStartDateFormatted = new Date(activity.plannedStartDate).toLocaleDateString('pt-BR');
+  }
+
   return {
     TaskID: activity.id,
     TaskName: activity.description,
@@ -162,6 +168,7 @@ function transformActivityToGantt(activity: ActivityLike, parentID?: number): Ga
     CreatedBy: getCreatedByName(activity),
     CreatedAt: createdAtFormatted,
     CodSequencial: 'cod_sequencial' in activity ? activity.cod_sequencial : undefined,
+    PlannedStartDate: plannedStartDateFormatted || undefined,
   };
 }
 
