@@ -108,10 +108,6 @@ export function NovaAtividadeForm({
 }: NovaAtividadeFormProps) {
   const { toast } = useToast();
   const [tempoPrevisto, setTempoPrevisto] = useState<string>('');
-  const [showHorasColaboradores, setShowHorasColaboradores] = useState(false);
-  const [totalTimeOverride, setTotalTimeOverride] = useState<string>(
-    atividadeInicial?.totalTime ? String(atividadeInicial.totalTime) : ''
-  );
   const [tarefasMacro, setTarefasMacro] = useState<TarefaMacro[]>([]);
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -348,6 +344,20 @@ export function NovaAtividadeForm({
     return `${horas}h ${minutos}min`;
   };
 
+  // Calcular tempo previsto inicial ao montar o componente
+  useEffect(() => {
+    const values = form.getValues();
+    const tempo = calcularTempoPrevisto(
+      values.quantity || 0,
+      values.timePerUnit || 0,
+      (values.unidadeTempo || 'horas') as UnidadeTempo
+    );
+    setTempoPrevisto(tempo);
+    form.setValue('estimatedTime', tempo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Recalcular tempo previsto quando campos mudam
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (
@@ -376,61 +386,55 @@ export function NovaAtividadeForm({
       const collaboratorIds = values.collaborators.map((id) => Number(id));
       const estimatedTimeValue = values.estimatedTime || tempoPrevisto || '1h';
 
-      const formData = new FormData();
-      formData.append('macroTaskId', values.macroTask);
-      formData.append('processId', values.process);
-      formData.append('description', values.description);
-      formData.append('quantity', values.quantity.toString());
-      formData.append('estimatedTime', estimatedTimeValue);
-      formData.append('projectId', values.projectId.toString());
-      formData.append('orderServiceId', values.orderServiceId.toString());
-      formData.append('createdBy', values.createdBy.toString());
-      formData.append('collaboratorIds', JSON.stringify(collaboratorIds));
-      formData.append('plannedStartDate', values.plannedStartDate.toISOString());
-
-      // Debug: Log dos dados enviados
-      console.log('Dados enviados:', {
-        macroTaskId: values.macroTask,
-        processId: values.process,
-        description: values.description,
-        quantity: values.quantity,
-        estimatedTime: estimatedTimeValue,
-        projectId: values.projectId,
-        orderServiceId: values.orderServiceId,
-        createdBy: values.createdBy,
-        collaboratorIds: collaboratorIds,
-        plannedStartDate: values.plannedStartDate?.toISOString(),
-      });
-
-      if (values.observation) {
-        formData.append('observation', values.observation);
-      }
-      if (values.imagem) {
-        formData.append('image', values.imagem);
-      }
-      if (values.imagemDescricao) {
-        formData.append('imageDescription', values.imagemDescricao);
-      }
-      if (values.arquivo) {
-        formData.append('file', values.arquivo);
-      }
-      if (values.arquivoDescricao) {
-        formData.append('fileDescription', values.arquivoDescricao);
-      }
-
       if (editMode && atividadeInicial?.id) {
-        if (totalTimeOverride !== '') {
-          const parsed = parseFloat(totalTimeOverride);
-          if (!isNaN(parsed) && parsed >= 0) {
-            formData.append('totalTime', parsed.toString());
-          }
-        }
-        await updateActivity(atividadeInicial.id, formData);
+        // Modo edição: enviar JSON
+        const updateData = {
+          macroTask: Number(values.macroTask),
+          process: Number(values.process),
+          description: values.description,
+          quantity: values.quantity,
+          estimatedTime: estimatedTimeValue,
+          collaborators: collaboratorIds,
+          plannedStartDate: values.plannedStartDate.toISOString(),
+          observation: values.observation || '',
+          changedBy: Number(localStorage.getItem('userId')) || 1,
+        };
+
+        await updateActivity(atividadeInicial.id, updateData);
         toast({
           title: 'Sucesso!',
           description: 'Atividade atualizada com sucesso.',
         });
       } else {
+        // Modo criação: usar FormData para suportar upload de arquivos
+        const formData = new FormData();
+        formData.append('macroTaskId', values.macroTask);
+        formData.append('processId', values.process);
+        formData.append('description', values.description);
+        formData.append('quantity', values.quantity.toString());
+        formData.append('estimatedTime', estimatedTimeValue);
+        formData.append('projectId', values.projectId.toString());
+        formData.append('orderServiceId', values.orderServiceId.toString());
+        formData.append('createdBy', values.createdBy.toString());
+        formData.append('collaboratorIds', JSON.stringify(collaboratorIds));
+        formData.append('plannedStartDate', values.plannedStartDate.toISOString());
+
+        if (values.observation) {
+          formData.append('observation', values.observation);
+        }
+        if (values.imagem) {
+          formData.append('image', values.imagem);
+        }
+        if (values.imagemDescricao) {
+          formData.append('imageDescription', values.imagemDescricao);
+        }
+        if (values.arquivo) {
+          formData.append('file', values.arquivo);
+        }
+        if (values.arquivoDescricao) {
+          formData.append('fileDescription', values.arquivoDescricao);
+        }
+
         await createActivity(formData);
         toast({
           title: 'Sucesso!',
@@ -455,9 +459,9 @@ export function NovaAtividadeForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-4 space-y-4">
         {/* Linha 1: Tarefa Macro e Processo lado a lado */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="macroTask"
@@ -612,7 +616,7 @@ export function NovaAtividadeForm({
         />
 
         {/* Linha 3: Quantidade, Tempo e Tempo Previsto */}
-        <div className="grid grid-cols-4 gap-3 items-end">
+        <div className="grid grid-cols-4 gap-2 items-end">
           <FormField
             control={form.control}
             name="quantity"
@@ -790,32 +794,6 @@ export function NovaAtividadeForm({
           )}
         />
 
-        {/* Alterar Horas Trabalhadas — somente em edição */}
-        {editMode && (
-              <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-600" />
-                  <label htmlFor="totalTimeOverride" className="text-sm font-medium">
-                    Alterar Horas
-                    <span className="ml-1 text-xs text-muted-foreground font-normal">(Opcional — sobrescreve o total atual)</span>
-                  </label>
-                </div>
-                <Input
-                  id="totalTimeOverride"
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  placeholder={`Atual: ${atividadeInicial?.totalTime ?? 0}h`}
-                  value={totalTimeOverride}
-                  onChange={e => setTotalTimeOverride(e.target.value)}
-                  className="w-full"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Informe o total de horas trabalhadas correto. Deixe em branco para manter o valor atual.
-                </p>
-              </div>
-            )}
-
         {/* Data Prevista para Início */}
         <FormField
           control={form.control}
@@ -925,31 +903,25 @@ export function NovaAtividadeForm({
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Footer Sticky */}
-        <div className="sticky bottom-0 p-4 md:p-6 bg-card/95 backdrop-blur-xl border-t border-border/50 shadow-lg z-40">
-          <div className="max-w-4xl mx-auto flex items-center justify-end gap-3">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className={cn(
-                "min-w-[200px] h-11 font-semibold shadow-lg transition-all",
-                "bg-primary hover:bg-primary/90",
-                isSubmitting && "opacity-70"
-              )}
-            >
-              {isSubmitting ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Salvando...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span>{editMode ? 'Salvar Alterações' : 'Criar Atividade'}</span>
-                </div>
-              )}
-            </Button>
-          </div>
+        {/* Footer */}
+        <div className="pt-4 border-t border-border/50">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-10 font-semibold"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Salvando...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{editMode ? 'Salvar Alterações' : 'Criar Atividade'}</span>
+              </div>
+            )}
+          </Button>
         </div>
       </form>
     </Form>

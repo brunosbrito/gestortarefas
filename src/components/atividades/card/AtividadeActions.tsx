@@ -90,7 +90,7 @@ export const AtividadeActions = ({
             <Edit2 className="w-3.5 h-3.5" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
             <DialogTitle>Editar Atividade</DialogTitle>
           </DialogHeader>
@@ -100,7 +100,10 @@ export const AtividadeActions = ({
               atividadeInicial={atividade}
               projectId={Number(projectId)}
               orderServiceId={Number(serviceOrderId)}
-              onSuccess={onEditSuccess}
+              onSuccess={() => {
+                setIsEditDialogOpen(false);
+                onEditSuccess();
+              }}
             />
           </div>
         </DialogContent>
