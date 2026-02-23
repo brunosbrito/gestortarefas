@@ -107,7 +107,7 @@ export function TrocarEquipeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent className="max-w-[90%] sm:max-w-[500px] pt-10">
+      <DraggableDialogContent className="sm:max-w-[500px] sm:pt-10">
         <DialogHeader>
           <DialogTitle>Trocar Equipe</DialogTitle>
         </DialogHeader>

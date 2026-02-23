@@ -180,7 +180,7 @@ export function AtualizarStatusDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent className="max-w-[90%] sm:max-w-[600px] pt-10">
+      <DraggableDialogContent className="sm:max-w-[600px] sm:pt-10">
         <DialogHeader>
           <DialogTitle>
             {novoStatus === 'Em execução' && 'Iniciar Atividade'}

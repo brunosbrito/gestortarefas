@@ -116,7 +116,7 @@ export function UploadImageDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DraggableDialogContent className="max-w-[90%] sm:max-w-[450px] pt-10">
+      <DraggableDialogContent className="sm:max-w-[450px] sm:pt-10">
         <DialogHeader>
           <DialogTitle>Upload de Foto</DialogTitle>
         </DialogHeader>

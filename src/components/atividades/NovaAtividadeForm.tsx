@@ -388,7 +388,7 @@ export function NovaAtividadeForm({
 
       if (editMode && atividadeInicial?.id) {
         // Modo edição: enviar JSON
-        const updateData = {
+        const updateData: Record<string, unknown> = {
           macroTask: Number(values.macroTask),
           process: Number(values.process),
           description: values.description,
@@ -399,6 +399,19 @@ export function NovaAtividadeForm({
           observation: values.observation || '',
           changedBy: Number(localStorage.getItem('userId')) || 1,
         };
+
+        // Se a atividade está "Atrasadas" e a nova data de início é hoje ou futura,
+        // automaticamente mudar o status para "Planejadas"
+        if (atividadeInicial.status === 'Atrasadas') {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const newPlannedDate = new Date(values.plannedStartDate);
+          newPlannedDate.setHours(0, 0, 0, 0);
+
+          if (newPlannedDate >= today) {
+            updateData.status = 'Planejadas';
+          }
+        }
 
         await updateActivity(atividadeInicial.id, updateData);
         toast({

@@ -92,7 +92,7 @@ export const AtividadesTableContent = ({
   }, []);
 
   const handleRowClick = useCallback((atividade: AtividadeStatus) => {
-    navigate(`/obras/${atividade.project.id}/os/${atividade.serviceOrder.id}/atividades`);
+    navigate(`/atividade/${atividade.id}`);
   }, [navigate]);
 
   const formatTime = useCallback((timeString?: string) => {

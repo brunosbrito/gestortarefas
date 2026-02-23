@@ -60,22 +60,12 @@ export const FilteredActivitiesTable = ({
   const [filterCollaborator, setFilterCollaborator] = useState('all');
   const [filterProject, setFilterProject] = useState('all');
 
-  const getActivityUrl = (activity: FilteredActivity): string | null => {
-    // NormalizedActivity guarda projectId diretamente; FilteredActivity via serviceOrder.projectId.id
-    const projectId =
-      activity.projectId ??
-      (activity.serviceOrder as any)?.projectId?.id;
-    const serviceOrderId =
-      activity.serviceOrderId ??
-      activity.serviceOrder?.id;
-    if (!projectId || !serviceOrderId) return null;
-    return `/obras/${projectId}/os/${serviceOrderId}/atividades`;
+  const getActivityUrl = (activity: FilteredActivity): string => {
+    return `/atividade/${activity.id}`;
   };
 
   const handleRowClick = (activity: FilteredActivity) => {
-    const url = getActivityUrl(activity);
-    if (!url) return;
-    navigate(url);
+    navigate(`/atividade/${activity.id}`);
     onNavigate?.();
   };
 
@@ -402,8 +392,7 @@ export const FilteredActivitiesTable = ({
                       className={cn(
                         'transition-all duration-200 border-b',
                         index % 2 === 0 ? 'bg-background' : 'bg-muted/20',
-                        'hover:bg-accent/50 hover:shadow-sm',
-                        activityUrl && 'cursor-pointer'
+                        'hover:bg-accent/50 hover:shadow-sm cursor-pointer'
                       )}
                     >
                       <TableCell className="text-center text-xs py-4 font-mono font-medium border-r border-border/30">
@@ -416,18 +405,14 @@ export const FilteredActivitiesTable = ({
                               <span className="truncate font-semibold text-foreground">
                                 {activity.description}
                               </span>
-                              {activityUrl && (
-                                <ExternalLink className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" />
-                              )}
+                              <ExternalLink className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{activity.description}</p>
-                            {activityUrl && (
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                Clique para abrir na OS
-                              </p>
-                            )}
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Clique para ver detalhes
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>

@@ -195,7 +195,7 @@ export function EditarAtividadeConcluidaDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DraggableDialogContent className="max-w-[90%] sm:max-w-[500px] pt-10">
+      <DraggableDialogContent className="sm:max-w-[500px] sm:pt-10">
         <DialogHeader>
           <DialogTitle>Editar Atividade Concluída</DialogTitle>
         </DialogHeader>
