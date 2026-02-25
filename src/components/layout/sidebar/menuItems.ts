@@ -15,6 +15,7 @@ import {
   Bot,
   Boxes,
   ShieldCheck,
+  Shield,
   GanttChartSquare,
   FileText,
   DollarSign,
@@ -141,6 +142,11 @@ export const navItems: MenuItem[] = [
             icon: DollarSign,
             label: 'Configuração Salarial',
             path: '/comercial/configuracao/salarial',
+          },
+          {
+            icon: Shield,
+            label: 'EPI / EPC',
+            path: '/comercial/configuracao/epis',
           },
           {
             icon: Box,

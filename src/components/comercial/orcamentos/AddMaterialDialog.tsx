@@ -1,7 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -29,12 +26,6 @@ import { ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
 
-const formSchema = z.object({
-  materialId: z.string().min(1, 'Selecione um material'),
-  quantidade: z.string().min(1, 'Quantidade é obrigatória'),
-});
-
-type FormData = z.infer<typeof formSchema>;
 
 interface AddMaterialDialogProps {
   open: boolean;
@@ -63,7 +54,8 @@ export default function AddMaterialDialog({
   }, [open]);
 
   useEffect(() => {
-    if (materialSelecionado && quantidade) {
+    // Usa `quantidade !== ''` para que "0" seja tratado como valor válido (não falsy)
+    if (materialSelecionado && quantidade !== '') {
       const qtd = parseFloat(quantidade) || 0;
       setSubtotal(materialSelecionado.precoUnitario * qtd);
     } else {
@@ -74,9 +66,8 @@ export default function AddMaterialDialog({
   const carregarMateriais = async () => {
     try {
       setLoading(true);
-      const data = await MaterialCatalogoService.getAll();
-      const ativos = data.filter((m) => m.ativo);
-      setMateriais(ativos);
+      const data = await MaterialCatalogoService.listar({ ativo: true });
+      setMateriais(data);
     } catch (error) {
       console.error('Erro ao carregar materiais:', error);
       toast({
@@ -90,7 +81,7 @@ export default function AddMaterialDialog({
   };
 
   const handleMaterialChange = (materialId: string) => {
-    const material = materiais.find((m) => m.id.toString() === materialId);
+    const material = materiais.find((m) => m.id?.toString() === materialId);
     setMaterialSelecionado(material || null);
   };
 
@@ -114,23 +105,20 @@ export default function AddMaterialDialog({
       return;
     }
 
-    const pesoTotal = materialSelecionado.pesoPorUnidade
-      ? materialSelecionado.pesoPorUnidade * qtd
+    const pesoTotal = materialSelecionado.pesoNominal
+      ? materialSelecionado.pesoNominal * qtd
       : undefined;
 
     const novoItem: Omit<ItemComposicao, 'id' | 'composicaoId' | 'ordem'> = {
       codigo: materialSelecionado.codigo,
-      descricao: materialSelecionado.nome,
+      descricao: materialSelecionado.descricao,
       quantidade: qtd,
       unidade: materialSelecionado.unidade,
       peso: pesoTotal,
-      material: materialSelecionado.material,
-      especificacao: materialSelecionado.especificacao,
       valorUnitario: materialSelecionado.precoUnitario,
       subtotal: subtotal,
-      percentual: 0, // Será calculado no backend
+      percentual: 0,
       tipoItem: 'material',
-      tipoCalculo: materialSelecionado.tipoCalculo,
     };
 
     onAdd(novoItem);
@@ -145,7 +133,7 @@ export default function AddMaterialDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -162,7 +150,7 @@ export default function AddMaterialDialog({
           <div className="space-y-2">
             <Label>Material *</Label>
             <Select
-              value={materialSelecionado?.id.toString() || ''}
+              value={materialSelecionado?.id?.toString() || ''}
               onValueChange={handleMaterialChange}
               disabled={loading}
             >
@@ -171,16 +159,16 @@ export default function AddMaterialDialog({
               </SelectTrigger>
               <SelectContent>
                 {materiais.map((material) => (
-                  <SelectItem key={material.id} value={material.id.toString()}>
+                  <SelectItem key={material.id} value={material.id!.toString()}>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-muted-foreground">
                         {material.codigo}
                       </span>
                       <span>-</span>
-                      <span>{material.nome}</span>
-                      {material.especificacao && (
+                      <span>{material.descricao}</span>
+                      {material.fornecedor && (
                         <span className="text-xs text-muted-foreground">
-                          ({material.especificacao})
+                          ({material.fornecedor})
                         </span>
                       )}
                     </div>
@@ -203,11 +191,11 @@ export default function AddMaterialDialog({
                         {materialSelecionado.categoria}
                       </Badge>
                     </div>
-                    {materialSelecionado.material && (
+                    {materialSelecionado.fornecedor && (
                       <div>
-                        <span className="text-xs text-muted-foreground">Material:</span>
+                        <span className="text-xs text-muted-foreground">Fornecedor:</span>
                         <span className="ml-2 text-sm font-medium">
-                          {materialSelecionado.material}
+                          {materialSelecionado.fornecedor}
                         </span>
                       </div>
                     )}
@@ -223,11 +211,11 @@ export default function AddMaterialDialog({
                         {formatCurrency(materialSelecionado.precoUnitario)}
                       </span>
                     </div>
-                    {materialSelecionado.pesoPorUnidade && (
+                    {materialSelecionado.pesoNominal && (
                       <div>
                         <span className="text-xs text-muted-foreground">Peso/un.:</span>
                         <span className="ml-2 text-sm font-bold">
-                          {materialSelecionado.pesoPorUnidade.toFixed(3)} kg
+                          {materialSelecionado.pesoNominal.toFixed(3)} kg
                         </span>
                       </div>
                     )}
@@ -263,12 +251,12 @@ export default function AddMaterialDialog({
           </div>
 
           {/* Preview do Peso Total */}
-          {materialSelecionado?.pesoPorUnidade && quantidade && (
+          {materialSelecionado?.pesoNominal && quantidade && (
             <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Peso Total:</span>
                 <span className="font-bold text-blue-600">
-                  {(materialSelecionado.pesoPorUnidade * parseFloat(quantidade)).toFixed(2)} kg
+                  {(materialSelecionado.pesoNominal! * parseFloat(quantidade)).toFixed(2)} kg
                 </span>
               </div>
             </div>

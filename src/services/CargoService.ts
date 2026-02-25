@@ -4,6 +4,7 @@ import {
   UpdateCargo,
   ConfiguracaoSalarial,
   CustosDiversos,
+  CustoCompostoRateado,
   CALCULOS_MO,
 } from '@/interfaces/CargoInterface';
 
@@ -105,7 +106,29 @@ class CargoServiceClass {
   }
 
   /**
-   * Calcula o total de custos diversos
+   * Soma os itens de um CustoCompostoRateado e retorna o valor mensal rateado
+   */
+  private custoMensalRateado(custo: CustoCompostoRateado): number {
+    const total = custo.itens.reduce(
+      (sum, item) => sum + item.quantidade * item.valorUnitario,
+      0
+    );
+    const periodo = Math.max(custo.periodoMeses, 1);
+    return total / periodo;
+  }
+
+  /**
+   * Calcula o custo mensal das despesas admissionais
+   * Eventos: 2 (< 12 meses de vínculo) ou 3 (>= 12 meses, inclui periódico)
+   */
+  private custoMensalAdmissional(custos: CustosDiversos['despesasAdmissionais']): number {
+    const periodo = Math.max(custos.periodoMeses, 1);
+    const numEventos = periodo >= 12 ? 3 : 2;
+    return (custos.valorPorEvento * numEventos) / periodo;
+  }
+
+  /**
+   * Calcula o total de custos diversos (retorna valor mensal)
    */
   private calcularTotalCustosDiversos(custos: CustosDiversos): number {
     const { alimentacao, transporte, uniforme, despesasAdmissionais,
@@ -120,12 +143,50 @@ class CargoServiceClass {
     return (
       totalAlimentacao +
       transporte +
-      uniforme +
-      despesasAdmissionais +
+      this.custoMensalRateado(uniforme) +
+      this.custoMensalAdmissional(despesasAdmissionais) +
       assistenciaMedica +
-      epiEpc +
+      this.custoMensalRateado(epiEpc) +
       outros
     );
+  }
+
+  /**
+   * Migra dados de cargos antigos (formato flat) para o novo formato estruturado.
+   * Chamado no list() para garantir retrocompatibilidade com dados no localStorage.
+   */
+  private migrarCustos(custos: any): CustosDiversos {
+    // Se já está no novo formato (uniforme é objeto), retornar como está
+    if (custos.uniforme && typeof custos.uniforme === 'object') {
+      return custos as CustosDiversos;
+    }
+
+    // Migrar formato antigo (uniforme: number, epiEpc: number, despesasAdmissionais: number)
+    const uniformeAntigo = typeof custos.uniforme === 'number' ? custos.uniforme : 0;
+    const epiAntigo = typeof custos.epiEpc === 'number' ? custos.epiEpc : 0;
+
+    return {
+      alimentacao: custos.alimentacao ?? { cafeManha: 0, almoco: 0, janta: 0, cestaBasica: 0 },
+      transporte: custos.transporte ?? 0,
+      uniforme: {
+        itens: uniformeAntigo > 0
+          ? [{ descricao: 'Uniforme', quantidade: 1, valorUnitario: uniformeAntigo }]
+          : [],
+        periodoMeses: 1, // valor antigo já era mensal → período 1 preserva o mesmo custo
+      },
+      despesasAdmissionais: {
+        valorPorEvento: 500,  // padrão produção
+        periodoMeses: 24,     // 2 anos de vínculo médio
+      },
+      assistenciaMedica: custos.assistenciaMedica ?? 0,
+      epiEpc: {
+        itens: epiAntigo > 0
+          ? [{ descricao: 'EPI/EPC', quantidade: 1, valorUnitario: epiAntigo }]
+          : [],
+        periodoMeses: 1, // valor antigo já era mensal → período 1 preserva o mesmo custo
+      },
+      outros: custos.outros ?? 0,
+    };
   }
 
   /**
@@ -164,6 +225,7 @@ class CargoServiceClass {
     return {
       id: '', // Será preenchido no create
       nome: data.nome,
+      nivel: data.nivel,
       salarioBase: data.salarioBase,
       temPericulosidade: data.temPericulosidade,
       grauInsalubridade: data.grauInsalubridade,
@@ -204,6 +266,7 @@ class CargoServiceClass {
       ...c,
       criadoEm: new Date(c.criadoEm),
       atualizadoEm: new Date(c.atualizadoEm),
+      custos: this.migrarCustos(c.custos ?? {}),
     }));
   }
 
@@ -244,6 +307,7 @@ class CargoServiceClass {
     const cargoAtual = cargos[index];
     const dadosAtualizados: CreateCargo = {
       nome: data.nome ?? cargoAtual.nome,
+      nivel: data.nivel !== undefined ? data.nivel : cargoAtual.nivel,
       salarioBase: data.salarioBase ?? cargoAtual.salarioBase,
       temPericulosidade: data.temPericulosidade ?? cargoAtual.temPericulosidade,
       grauInsalubridade: data.grauInsalubridade ?? cargoAtual.grauInsalubridade,
@@ -301,6 +365,7 @@ class CargoServiceClass {
       cargos.map(async (cargo) => {
         const dadosBase: CreateCargo = {
           nome: cargo.nome,
+          nivel: cargo.nivel,
           salarioBase: cargo.salarioBase,
           temPericulosidade: cargo.temPericulosidade,
           grauInsalubridade: cargo.grauInsalubridade,
@@ -331,6 +396,44 @@ class CargoServiceClass {
   async listAtivos(): Promise<Cargo[]> {
     const cargos = await this.list();
     return cargos.filter((c) => c.ativo);
+  }
+
+  /**
+   * Padroniza os custos diversos de todos os cargos com os valores fornecidos.
+   * Útil para sincronizar alimentação, EPI, uniforme, etc. em toda a equipe.
+   * Retorna a quantidade de cargos atualizados.
+   */
+  async padronizarCustos(custos: CustosDiversos): Promise<number> {
+    const cargos = await this.list(); // todos, incluindo inativos
+
+    const atualizados = await Promise.all(
+      cargos.map(async (cargo) => {
+        const dadosBase: CreateCargo = {
+          nome: cargo.nome,
+          nivel: cargo.nivel,
+          salarioBase: cargo.salarioBase,
+          temPericulosidade: cargo.temPericulosidade,
+          grauInsalubridade: cargo.grauInsalubridade,
+          custos, // ← custos padronizados
+          horasMes: cargo.horasMes,
+          tipoContrato: cargo.tipoContrato,
+          categoria: cargo.categoria,
+          observacoes: cargo.observacoes,
+        };
+
+        const recalculado = await this.calcularValoresCargo(dadosBase);
+        return {
+          ...recalculado,
+          id: cargo.id,
+          ativo: cargo.ativo,
+          criadoEm: cargo.criadoEm,
+          atualizadoEm: new Date(),
+        };
+      })
+    );
+
+    localStorage.setItem(STORAGE_KEY_CARGOS, JSON.stringify(atualizados));
+    return atualizados.length;
   }
 
   /**

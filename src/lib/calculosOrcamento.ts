@@ -216,23 +216,34 @@ export const verificarAlertas = (orcamento: Partial<Orcamento>): {
     });
   }
 
-  // BDI médio muito baixo
-  if (valores.bdiMedio < 15) {
+  // BDI médio muito baixo (mínimo aceitável: 25%)
+  if (valores.bdiMedio < 25) {
     alertas.push({
       tipo: 'alerta',
-      mensagem: `BDI médio abaixo do mínimo recomendado (${valores.bdiMedio.toFixed(1)}%)`,
+      mensagem: `BDI médio abaixo do mínimo recomendado (${valores.bdiMedio.toFixed(1)}% / mínimo: 25%)`,
     });
   }
 
-  // BDI fora do padrão (verifica composições individuais)
+  // BDI fora do padrão por composição — usa os padrões definidos por tipo
+  const BDI_PADRAO_POR_TIPO: Record<string, number> = {
+    mobilizacao: 10,
+    desmobilizacao: 10,
+    mo_fabricacao: 25,
+    mo_montagem: 25,
+    jato_pintura: 12,
+    ferramentas: 10,
+    consumiveis: 10,
+    materiais: 25,
+  };
+
   const composicoes = orcamento.composicoes || [];
   composicoes.forEach(comp => {
-    if (!comp.bdi) return; // Pula se BDI não estiver inicializado
+    if (!comp.bdi || comp.custoDirecto === 0) return; // Pula composições sem itens
 
-    const bdiPadrao = comp.tipo === 'ferramentas' ? 10 : 25;
+    const bdiPadrao = BDI_PADRAO_POR_TIPO[comp.tipo] ?? 25;
     const desvio = Math.abs(comp.bdi.percentual - bdiPadrao);
 
-    if (desvio > 3) {
+    if (desvio > 5) {
       alertas.push({
         tipo: 'alerta',
         mensagem: `BDI de "${comp.nome}" (${comp.bdi.percentual}%) diverge do padrão (${bdiPadrao}%)`,
@@ -249,4 +260,38 @@ export const verificarAlertas = (orcamento: Partial<Orcamento>): {
  */
 export const calcularEncargos = (valorBase: number, percentual: number = 50.72): number => {
   return valorBase * (percentual / 100);
+};
+
+/**
+ * Recalcula os valores de uma composição a partir dos seus itens.
+ * Atualiza: custoDirecto, bdi.valor, subtotal.
+ * percentualDoTotal requer o total entre todas as composições — calculado em recalcularTodasComposicoes.
+ */
+export const recalcularComposicao = (composicao: ComposicaoCustos): ComposicaoCustos => {
+  const custoDirecto = composicao.itens.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+  // Aceita tanto bdi.percentual (interface correta) quanto bdiPercentual (legado/mock)
+  const percentualBDI = composicao.bdi?.percentual ?? (composicao as unknown as { bdiPercentual?: number }).bdiPercentual ?? 0;
+  const bdiValor = custoDirecto * (percentualBDI / 100);
+  const subtotal = custoDirecto + bdiValor;
+
+  return {
+    ...composicao,
+    custoDirecto,
+    bdi: { percentual: percentualBDI, valor: bdiValor },
+    subtotal,
+  };
+};
+
+/**
+ * Recalcula todas as composições de um orçamento e atualiza percentualDoTotal.
+ * Deve ser chamado antes de salvar para garantir consistência dos dados.
+ */
+export const recalcularTodasComposicoes = (composicoes: ComposicaoCustos[]): ComposicaoCustos[] => {
+  const recalculadas = composicoes.map(recalcularComposicao);
+  const custoDirectoTotal = recalculadas.reduce((sum, c) => sum + c.custoDirecto, 0);
+
+  return recalculadas.map((c) => ({
+    ...c,
+    percentualDoTotal: custoDirectoTotal > 0 ? (c.custoDirecto / custoDirectoTotal) * 100 : 0,
+  }));
 };

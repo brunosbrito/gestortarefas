@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
-import { Paintbrush, Plus, Info, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { Paintbrush, Plus, Info, Edit, Trash2, MoreVertical, Check, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -18,6 +19,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Orcamento, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
@@ -35,23 +46,53 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
   const [dialogAddAberto, setDialogAddAberto] = useState(false);
   const [dialogEditAberto, setDialogEditAberto] = useState(false);
   const [itemParaEditar, setItemParaEditar] = useState<ItemComposicao | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<string | null>(null);
 
-  // Calcular área total AUTOMATICAMENTE dos materiais do orçamento
-  const areaTotal = useMemo(() => {
-    const composicaoMateriais = orcamento.composicoes.find((c) => c.tipo === 'materiais');
-    if (!composicaoMateriais) return 0;
-
-    return composicaoMateriais.itens.reduce((total, item) => {
-      // Assumindo que o material tem campo areaM2PorMetroLinear (da interface MaterialCatalogo)
-      const area = (item as any).areaM2PorMetroLinear || 0;
-      const quantidade = item.quantidade || 0;
-      return total + area * quantidade;
-    }, 0);
-  }, [orcamento]);
-
-  // Buscar composição de pintura
   const composicaoPintura = orcamento.composicoes.find((c) => c.tipo === 'jato_pintura');
   const composicaoMateriais = orcamento.composicoes.find((c) => c.tipo === 'materiais');
+
+  // BDI editável por composição
+  const [editandoBDI, setEditandoBDI] = useState(false);
+  const [bdiInput, setBdiInput] = useState(composicaoPintura?.bdi?.percentual ?? 0);
+  const [salvandoBDI, setSalvandoBDI] = useState(false);
+
+  useEffect(() => {
+    if (!editandoBDI) setBdiInput(composicaoPintura?.bdi?.percentual ?? 0);
+  }, [composicaoPintura?.bdi?.percentual, editandoBDI]);
+
+  const handleSalvarBDI = async () => {
+    if (!composicaoPintura) return;
+    try {
+      setSalvandoBDI(true);
+      const updatedOrcamento = {
+        ...orcamento,
+        composicoes: orcamento.composicoes.map((c) =>
+          c.id === composicaoPintura.id
+            ? { ...c, bdi: { ...c.bdi, percentual: bdiInput } }
+            : c
+        ),
+      };
+      await OrcamentoService.update(orcamento.id, updatedOrcamento);
+      setEditandoBDI(false);
+      toast({ title: 'Sucesso', description: 'BDI atualizado com sucesso' });
+      onUpdate();
+    } catch {
+      toast({ title: 'Erro', description: 'Erro ao atualizar BDI', variant: 'destructive' });
+    } finally {
+      setSalvandoBDI(false);
+    }
+  };
+
+  // Calcula peso total dos materiais — usado como base para estimar área de pintura.
+  // O campo areaM2PorMetroLinear não é persistido em ItemComposicao,
+  // por isso o peso total é o melhor proxy disponível no momento.
+  const areaTotal = useMemo(() => {
+    if (!composicaoMateriais) return 0;
+    return composicaoMateriais.itens.reduce(
+      (total, item) => total + (item.peso ?? 0),
+      0
+    );
+  }, [composicaoMateriais]);
 
   const handleAdicionarItem = async (novoItem: Omit<ItemComposicao, 'id' | 'composicaoId' | 'ordem'>) => {
     if (!composicaoPintura) return;
@@ -64,21 +105,21 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
         ordem: composicaoPintura.itens.length + 1,
       };
 
-      composicaoPintura.itens.push(itemCompleto);
-      await OrcamentoService.update(orcamento.id, orcamento);
+      const updatedOrcamento = {
+        ...orcamento,
+        composicoes: orcamento.composicoes.map((c) =>
+          c.id === composicaoPintura.id
+            ? { ...c, itens: [...c.itens, itemCompleto] }
+            : c
+        ),
+      };
 
-      toast({
-        title: 'Sucesso',
-        description: 'Item de pintura adicionado com sucesso',
-      });
+      await OrcamentoService.update(orcamento.id, updatedOrcamento);
 
+      toast({ title: 'Sucesso', description: 'Item de pintura adicionado com sucesso' });
       onUpdate();
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao adicionar item de pintura',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Erro', description: 'Erro ao adicionar item de pintura', variant: 'destructive' });
     }
   };
 
@@ -91,48 +132,45 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
     if (!composicaoPintura) return;
 
     try {
-      const index = composicaoPintura.itens.findIndex((i) => i.id === itemAtualizado.id);
-      if (index !== -1) {
-        composicaoPintura.itens[index] = itemAtualizado;
-        await OrcamentoService.update(orcamento.id, orcamento);
+      const updatedOrcamento = {
+        ...orcamento,
+        composicoes: orcamento.composicoes.map((c) =>
+          c.id === composicaoPintura.id
+            ? { ...c, itens: c.itens.map((i) => (i.id === itemAtualizado.id ? itemAtualizado : i)) }
+            : c
+        ),
+      };
 
-        toast({
-          title: 'Sucesso',
-          description: 'Item atualizado com sucesso',
-        });
+      await OrcamentoService.update(orcamento.id, updatedOrcamento);
 
-        onUpdate();
-      }
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao atualizar item',
-        variant: 'destructive',
-      });
+      toast({ title: 'Sucesso', description: 'Item atualizado com sucesso' });
+      onUpdate();
+    } catch {
+      toast({ title: 'Erro', description: 'Erro ao atualizar item', variant: 'destructive' });
     }
   };
 
-  const handleExcluirItem = async (itemId: string) => {
-    if (!composicaoPintura) return;
-
-    if (!confirm('Tem certeza que deseja excluir este item?')) return;
+  const handleConfirmarExclusao = async () => {
+    if (!composicaoPintura || !itemParaExcluir) return;
 
     try {
-      composicaoPintura.itens = composicaoPintura.itens.filter((i) => i.id !== itemId);
-      await OrcamentoService.update(orcamento.id, orcamento);
+      const updatedOrcamento = {
+        ...orcamento,
+        composicoes: orcamento.composicoes.map((c) =>
+          c.id === composicaoPintura.id
+            ? { ...c, itens: c.itens.filter((i) => i.id !== itemParaExcluir) }
+            : c
+        ),
+      };
 
-      toast({
-        title: 'Sucesso',
-        description: 'Item excluído com sucesso',
-      });
+      await OrcamentoService.update(orcamento.id, updatedOrcamento);
 
+      toast({ title: 'Sucesso', description: 'Item excluído com sucesso' });
       onUpdate();
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao excluir item',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Erro', description: 'Erro ao excluir item', variant: 'destructive' });
+    } finally {
+      setItemParaExcluir(null);
     }
   };
 
@@ -142,8 +180,8 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
       <Alert className="border-green-500 bg-green-50 dark:bg-green-950/50">
         <Info className="h-4 w-4 text-green-600" />
         <AlertDescription>
-          <strong>Área calculada automaticamente:</strong> A área total de pintura é calculada
-          somando (área m²/m × quantidade) de cada material cadastrado neste orçamento.
+          <strong>Área estimada automaticamente:</strong> O peso total dos materiais cadastrados
+          é usado como base para estimar a área de pintura do projeto.
         </AlertDescription>
       </Alert>
 
@@ -152,25 +190,25 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Paintbrush className="h-5 w-5 text-green-600" />
-            Cálculo Automático de Área
+            Base para Cálculo de Pintura
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <Label className="text-muted-foreground">Área Total a Pintar</Label>
-              <p className="text-4xl font-bold text-green-600 mt-2">{areaTotal.toFixed(2)} m²</p>
+              <Label className="text-muted-foreground">Peso Total dos Materiais</Label>
+              <p className="text-4xl font-bold text-green-600 mt-2">{areaTotal.toFixed(2)} kg</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Calculada dos {composicaoMateriais?.itens.length || 0} materiais do orçamento
+                Calculado dos {composicaoMateriais?.itens.length ?? 0} materiais do orçamento
               </p>
             </div>
 
             <div>
-              <Label className="text-muted-foreground">Perímetro Total Estimado</Label>
+              <Label className="text-muted-foreground">Área Estimada</Label>
               <p className="text-2xl font-bold text-blue-600 mt-2">
-                {(areaTotal * 2).toFixed(2)} m
+                {(areaTotal / 100).toFixed(2)} m²
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Estimativa: área × 2</p>
+              <p className="text-xs text-muted-foreground mt-1">Estimativa: peso ÷ 100 kg/m²</p>
             </div>
 
             <div>
@@ -208,7 +246,6 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                   <TableRow>
                     <TableHead className="border-r w-12">#</TableHead>
                     <TableHead className="border-r">Descrição</TableHead>
-                    <TableHead className="border-r text-right">Área (m²)</TableHead>
                     <TableHead className="border-r text-right">Qtd</TableHead>
                     <TableHead className="border-r">Unidade</TableHead>
                     <TableHead className="border-r text-right">Preço Unit.</TableHead>
@@ -227,9 +264,6 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                             <p className="text-xs text-muted-foreground">{item.codigo}</p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="border-r text-right font-mono">
-                        {areaTotal.toFixed(2)}
                       </TableCell>
                       <TableCell className="border-r text-right font-medium">
                         {item.quantidade}
@@ -254,7 +288,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                               Editar
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleExcluirItem(item.id)}
+                              onClick={() => setItemParaExcluir(item.id)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -289,10 +323,38 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">BDI ({composicaoPintura.bdi?.percentual || 0}%)</Label>
-                  <p className="text-xl font-bold text-blue-600">
-                    {formatCurrency(composicaoPintura.bdi?.valor || 0)}
-                  </p>
+                  <Label className="text-muted-foreground">BDI</Label>
+                  {editandoBDI ? (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Input
+                        type="number" min={0} max={100} step={0.5}
+                        value={bdiInput}
+                        onChange={(e) => setBdiInput(parseFloat(e.target.value) || 0)}
+                        className="w-20 h-8 text-sm"
+                        disabled={salvandoBDI} autoFocus
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0"
+                        onClick={() => { setEditandoBDI(false); setBdiInput(composicaoPintura.bdi?.percentual ?? 0); }}
+                        disabled={salvandoBDI}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" className="h-8 w-8 p-0" onClick={handleSalvarBDI} disabled={salvandoBDI}>
+                        <Check className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xl font-bold text-blue-600">
+                        {formatCurrency(composicaoPintura.bdi?.valor ?? 0)}
+                      </p>
+                      <span className="text-sm text-muted-foreground">({composicaoPintura.bdi?.percentual ?? 0}%)</span>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => setEditandoBDI(true)} title="Editar BDI">
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Subtotal</Label>
@@ -317,7 +379,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
         open={dialogAddAberto}
         onOpenChange={setDialogAddAberto}
         onAdd={handleAdicionarItem}
-        composicaoId={composicaoPintura?.id || ''}
+        composicaoId={composicaoPintura?.id ?? ''}
         areaTotal={areaTotal}
       />
 
@@ -327,6 +389,30 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
         onUpdate={handleAtualizarItem}
         item={itemParaEditar}
       />
+
+      {/* Confirmação de Exclusão */}
+      <AlertDialog
+        open={!!itemParaExcluir}
+        onOpenChange={(open) => { if (!open) setItemParaExcluir(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este item de pintura? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmarExclusao}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

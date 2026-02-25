@@ -14,6 +14,7 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  GitBranch,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import { CargoService } from '@/services/CargoService';
 import { Cargo } from '@/interfaces/CargoInterface';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
 import CargoFormDialog from './CargoFormDialog';
+import CriarVariacoesDialog from './CriarVariacoesDialog';
 import PopularCargosButton from './PopularCargosButton';
 import Layout from '@/components/Layout';
 import {
@@ -65,6 +67,7 @@ const TabelaCargos = () => {
   const [dialogAberto, setDialogAberto] = useState(false);
   const [cargoParaDeletar, setCargoParaDeletar] = useState<Cargo | null>(null);
   const [cargoParaVisualizar, setCargoParaVisualizar] = useState<Cargo | null>(null);
+  const [cargoParaVariacoes, setCargoParaVariacoes] = useState<Cargo | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     // Recuperar preferência do localStorage
     const saved = localStorage.getItem('tabela_cargos_view_mode');
@@ -334,10 +337,15 @@ const TabelaCargos = () => {
                     )}
                     {cargo.nome}
                   </CardTitle>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <Badge className={getCategoriaCor(cargo.categoria)}>
                       {getCategoriaNome(cargo.categoria)}
                     </Badge>
+                    {cargo.nivel && (
+                      <Badge variant="outline" className="text-violet-600 border-violet-300">
+                        {cargo.nivel}
+                      </Badge>
+                    )}
                     {cargo.temPericulosidade && (
                       <Badge variant="outline" className="text-orange-600 border-orange-300">
                         Periculosidade
@@ -368,6 +376,15 @@ const TabelaCargos = () => {
                     title="Editar"
                   >
                     <Edit className="h-4 w-4 text-blue-600" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setCargoParaVariacoes(cargo)}
+                    className="hover:bg-violet-100 dark:hover:bg-violet-900"
+                    title="Criar variações por nível"
+                  >
+                    <GitBranch className="h-4 w-4 text-violet-600" />
                   </Button>
                   <Button
                     size="sm"
@@ -449,6 +466,7 @@ const TabelaCargos = () => {
                       {renderSortIcon('categoria')}
                     </button>
                   </TableHead>
+                  <TableHead className="w-[90px] text-center">Nível</TableHead>
                   <TableHead className="w-[100px]">Adicionais</TableHead>
                   <TableHead className="text-right w-[120px]">
                     <button
@@ -525,6 +543,15 @@ const TabelaCargos = () => {
                         {getCategoriaNome(cargo.categoria)}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-center">
+                      {cargo.nivel ? (
+                        <Badge variant="outline" className="text-violet-600 border-violet-300 text-xs">
+                          {cargo.nivel}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         {cargo.temPericulosidade && (
@@ -588,6 +615,15 @@ const TabelaCargos = () => {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => setCargoParaVariacoes(cargo)}
+                          className="hover:bg-violet-100 dark:hover:bg-violet-900 h-8 w-8 p-0"
+                          title="Criar variações por nível"
+                        >
+                          <GitBranch className="h-4 w-4 text-violet-600" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           onClick={() => setCargoParaDeletar(cargo)}
                           className="hover:bg-red-100 dark:hover:bg-red-900 h-8 w-8 p-0"
                           title="Deletar"
@@ -633,13 +669,23 @@ const TabelaCargos = () => {
                 </p>
               </div>
 
-              {/* Categoria e Tipo de Contrato */}
-              <div className="grid grid-cols-2 gap-4 py-3 border-b border-gray-200 dark:border-gray-800">
+              {/* Categoria, Nível e Tipo de Contrato */}
+              <div className="grid grid-cols-3 gap-4 py-3 border-b border-gray-200 dark:border-gray-800">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Categoria</p>
                   <Badge className={getCategoriaCor(cargoParaVisualizar.categoria)} variant="outline">
                     {getCategoriaNome(cargoParaVisualizar.categoria)}
                   </Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Nível</p>
+                  {cargoParaVisualizar.nivel ? (
+                    <Badge variant="outline" className="text-violet-600 border-violet-300">
+                      {cargoParaVisualizar.nivel}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Tipo de Contrato</p>
@@ -768,6 +814,14 @@ const TabelaCargos = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Variações por Nível */}
+      <CriarVariacoesDialog
+        open={!!cargoParaVariacoes}
+        onOpenChange={(v) => { if (!v) setCargoParaVariacoes(null); }}
+        cargo={cargoParaVariacoes}
+        onCriado={carregarCargos}
+      />
 
       {/* Dialog de Formulário */}
       <CargoFormDialog

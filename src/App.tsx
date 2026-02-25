@@ -20,6 +20,8 @@ const TabelaMateriais = lazy(() => import('./pages/comercial/cadastros/TabelaMat
 const TabelaTintas = lazy(() => import('./pages/comercial/cadastros/tintas'));
 const TabelaFornecedoresServico = lazy(() => import('./pages/comercial/cadastros/fornecedores-servico'));
 const CalculadoraPintura = lazy(() => import('./pages/comercial/calculadora-pintura'));
+const TabelaCargos = lazy(() => import('./pages/comercial/configuracao/TabelaCargos'));
+const ConfiguracaoSalarial = lazy(() => import('./pages/comercial/configuracao/ConfiguracaoSalarial'));
 const Fabricas = lazy(() => import('./pages/Fabricas'));
 const Mineradoras = lazy(() => import('./pages/Mineradoras'));
 const NaoConformidades = lazy(() => import('./pages/nao-conformidades'));
@@ -88,6 +90,8 @@ function App() {
           <Route path="/comercial/cadastros/tintas" element={<TabelaTintas />} />
           <Route path="/comercial/cadastros/fornecedores-servico" element={<TabelaFornecedoresServico />} />
           <Route path="/comercial/calculadora-pintura" element={<CalculadoraPintura />} />
+          <Route path="/comercial/configuracao/cargos" element={<TabelaCargos />} />
+          <Route path="/comercial/configuracao/salarial" element={<ConfiguracaoSalarial />} />
         </Routes>
       </Suspense>
       <Toaster />

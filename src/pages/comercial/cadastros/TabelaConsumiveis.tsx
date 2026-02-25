@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Plus,
@@ -7,6 +7,7 @@ import {
   RefreshCw,
   Eye,
   Download,
+  Upload,
   Printer,
   Search,
   ArrowUpDown,
@@ -14,6 +15,10 @@ import {
   ArrowDown,
   ChevronLeft,
   ChevronRight,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,10 +45,9 @@ import { useToast } from '@/hooks/use-toast';
 import ConsumivelService from '@/services/ConsumivelService';
 import {
   ConsumivelInterface,
+  ConsumivelCreateDTO,
   ConsumivelCategoria,
   ConsumivelCategoriaLabels,
-  GrupoABC,
-  GrupoABCLabels,
 } from '@/interfaces/ConsumivelInterface';
 import { formatCurrency } from '@/lib/currency';
 import Layout from '@/components/Layout';
@@ -61,6 +65,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -79,10 +84,9 @@ const TabelaConsumiveis = () => {
   const [busca, setBusca] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todos');
   const [fornecedorFiltro, setFornecedorFiltro] = useState<string>('todos');
-  const [grupoABCFiltro, setGrupoABCFiltro] = useState<string>('todos');
 
   // Ordenação
-  type SortField = 'codigo' | 'descricao' | 'categoria' | 'fornecedor' | 'precoUnitario' | 'grupoABC';
+  type SortField = 'codigo' | 'descricao' | 'categoria' | 'fornecedor' | 'precoUnitario';
   type SortDirection = 'asc' | 'desc' | null;
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -91,6 +95,23 @@ const TabelaConsumiveis = () => {
   const [itensPorPagina, setItensPorPagina] = useState<number>(25);
   const [paginaAtual, setPaginaAtual] = useState<number>(1);
 
+  // Import planilha
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importDialogAberto, setImportDialogAberto] = useState(false);
+  const [importModo, setImportModo] = useState<'acrescentar' | 'substituir'>('acrescentar');
+  const [importLendo, setImportLendo] = useState(false);
+  const [importImportando, setImportImportando] = useState(false);
+  const [importDados, setImportDados] = useState<ConsumivelCreateDTO[]>([]);
+  const [importErros, setImportErros] = useState<string[]>([]);
+
+  // Reajuste de preços
+  const [reajusteDialogAberto, setReajusteDialogAberto] = useState(false);
+  const [reajusteTipo, setReajusteTipo] = useState<'percentual' | 'fixo'>('percentual');
+  const [reajusteValor, setReajusteValor] = useState<number>(0);
+  const [reajusteEscopo, setReajusteEscopo] = useState<'ativos' | 'todos'>('ativos');
+  const [reajusteCategoria, setReajusteCategoria] = useState<string>('todos');
+  const [reajustando, setReajustando] = useState(false);
+
   useEffect(() => {
     carregarConsumiveis();
   }, []);
@@ -98,7 +119,7 @@ const TabelaConsumiveis = () => {
   useEffect(() => {
     aplicarFiltros();
     setPaginaAtual(1); // Volta para primeira página ao alterar filtros
-  }, [busca, categoriaFiltro, fornecedorFiltro, grupoABCFiltro, consumiveis, sortField, sortDirection]);
+  }, [busca, categoriaFiltro, fornecedorFiltro, consumiveis, sortField, sortDirection]);
 
   // Calcular itens da página atual
   const totalPaginas = Math.ceil(consumiveisFiltrados.length / itensPorPagina);
@@ -151,11 +172,6 @@ const TabelaConsumiveis = () => {
       resultado = resultado.filter((c) => c.fornecedor === fornecedorFiltro);
     }
 
-    // Filtro de grupo ABC
-    if (grupoABCFiltro !== 'todos') {
-      resultado = resultado.filter((c) => c.grupoABC === grupoABCFiltro);
-    }
-
     // Ordenação
     if (sortField && sortDirection) {
       resultado.sort((a, b) => {
@@ -182,10 +198,6 @@ const TabelaConsumiveis = () => {
           case 'precoUnitario':
             aValue = a.precoUnitario || 0;
             bValue = b.precoUnitario || 0;
-            break;
-          case 'grupoABC':
-            aValue = a.grupoABC || 'Z';
-            bValue = b.grupoABC || 'Z';
             break;
           default:
             return 0;
@@ -255,12 +267,82 @@ const TabelaConsumiveis = () => {
     window.print();
   };
 
-  const handleExportar = () => {
-    // TODO: Implementar exportação Excel/PDF
-    toast({
-      title: 'Em desenvolvimento',
-      description: 'Funcionalidade de exportação em breve',
+  const handleBaixarModelo = () => {
+    ConsumivelService.exportarModelo(consumiveis);
+  };
+
+  const handleArquivoSelecionado = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImportLendo(true);
+    try {
+      const resultado = await ConsumivelService.lerArquivo(file);
+      setImportDados(resultado.validos);
+      setImportErros(resultado.erros);
+      setImportDialogAberto(true);
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível ler o arquivo', variant: 'destructive' });
+    } finally {
+      setImportLendo(false);
+    }
+  };
+
+  const handleConfirmarImport = async () => {
+    if (importDados.length === 0) return;
+    setImportImportando(true);
+    try {
+      const total = await ConsumivelService.importar(importDados, importModo);
+      toast({ title: 'Importação concluída', description: `${total} consumíveis importados com sucesso` });
+      setImportDialogAberto(false);
+      setImportDados([]);
+      setImportErros([]);
+      carregarConsumiveis();
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível importar os dados', variant: 'destructive' });
+    } finally {
+      setImportImportando(false);
+    }
+  };
+
+  const reajustePreviewItens = consumiveis
+    .filter((c) => {
+      if (reajusteEscopo === 'ativos' && !c.ativo) return false;
+      if (reajusteCategoria !== 'todos' && c.categoria !== reajusteCategoria) return false;
+      return true;
+    })
+    .slice(0, 8)
+    .map((c) => {
+      const novoPreco =
+        reajusteTipo === 'percentual'
+          ? c.precoUnitario * (1 + reajusteValor / 100)
+          : c.precoUnitario + reajusteValor;
+      const precoFinal = Math.max(0, Math.round(novoPreco * 100) / 100);
+      const variacao = precoFinal - c.precoUnitario;
+      return { ...c, precoFinal, variacao };
     });
+
+  const handleConfirmarReajuste = async () => {
+    if (reajusteValor === 0) {
+      toast({ title: 'Atenção', description: 'Informe um valor para o reajuste', variant: 'destructive' });
+      return;
+    }
+    setReajustando(true);
+    try {
+      const total = await ConsumivelService.reajustarPrecos(
+        reajusteTipo,
+        reajusteValor,
+        reajusteEscopo,
+        reajusteCategoria !== 'todos' ? reajusteCategoria : undefined
+      );
+      toast({ title: 'Reajuste aplicado', description: `${total} consumíveis atualizados com sucesso` });
+      setReajusteDialogAberto(false);
+      carregarConsumiveis();
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível aplicar o reajuste', variant: 'destructive' });
+    } finally {
+      setReajustando(false);
+    }
   };
 
   const getCategoriaColor = (categoria: ConsumivelCategoria): string => {
@@ -276,21 +358,6 @@ const TabelaConsumiveis = () => {
       case ConsumivelCategoria.FERRAMENTAS:
         return 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300';
       case ConsumivelCategoria.OUTROS:
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300';
-    }
-  };
-
-  const getGrupoABCColor = (grupo?: GrupoABC): string => {
-    if (!grupo) return 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300';
-
-    switch (grupo) {
-      case GrupoABC.A:
-        return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
-      case GrupoABC.B:
-        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300';
-      case GrupoABC.C:
-        return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300';
     }
@@ -321,14 +388,43 @@ const TabelaConsumiveis = () => {
                 <Box className="h-6 w-6 text-blue-600" />
                 <CardTitle>Cadastro de Consumíveis</CardTitle>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button variant="outline" size="sm" onClick={handleImprimir}>
                   <Printer className="h-4 w-4 mr-2" />
                   Imprimir
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleExportar}>
+                <Button variant="outline" size="sm" onClick={handleBaixarModelo}>
                   <Download className="h-4 w-4 mr-2" />
-                  Exportar
+                  Baixar Modelo
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importLendo}
+                >
+                  {importLendo ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  Importar Planilha
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.csv"
+                  className="hidden"
+                  onChange={handleArquivoSelecionado}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950"
+                  onClick={() => setReajusteDialogAberto(true)}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Reajustar Preços
                 </Button>
                 <Button onClick={() => { setConsumivelSelecionado(null); setDialogAberto(true); }}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -339,7 +435,7 @@ const TabelaConsumiveis = () => {
           </CardHeader>
           <CardContent className="p-4">
             {/* Filtros */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
               <div>
                 <Label>Buscar</Label>
                 <div className="relative">
@@ -384,22 +480,6 @@ const TabelaConsumiveis = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Grupo ABC</Label>
-                <Select value={grupoABCFiltro} onValueChange={setGrupoABCFiltro}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    {Object.entries(GrupoABC).map(([key, value]) => (
-                      <SelectItem key={value} value={value}>
-                        {GrupoABCLabels[value]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="flex items-end">
                 <Button
                   variant="outline"
@@ -407,7 +487,6 @@ const TabelaConsumiveis = () => {
                     setBusca('');
                     setCategoriaFiltro('todos');
                     setFornecedorFiltro('todos');
-                    setGrupoABCFiltro('todos');
                   }}
                 >
                   Limpar Filtros
@@ -467,22 +546,13 @@ const TabelaConsumiveis = () => {
                         {getSortIcon('fornecedor')}
                       </div>
                     </TableHead>
-                    <TableHead
-                      className="border-r cursor-pointer hover:bg-muted/50 text-xs"
-                      onClick={() => handleSort('grupoABC')}
-                    >
-                      <div className="flex items-center justify-center">
-                        Grupo ABC
-                        {getSortIcon('grupoABC')}
-                      </div>
-                    </TableHead>
                     <TableHead className="text-xs text-center w-28">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {consumiveisFiltrados.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         Nenhum consumível encontrado
                       </TableCell>
                     </TableRow>
@@ -510,15 +580,6 @@ const TabelaConsumiveis = () => {
                           {formatCurrency(consumivel.precoUnitario)}
                         </TableCell>
                         <TableCell className="border-r text-xs py-2">{consumivel.fornecedor}</TableCell>
-                        <TableCell className="border-r text-center py-2">
-                          {consumivel.grupoABC ? (
-                            <Badge className={`${getGrupoABCColor(consumivel.grupoABC)} text-xs px-1.5 py-0 font-bold`}>
-                              {consumivel.grupoABC}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">-</span>
-                          )}
-                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-2 justify-end">
                             <Button
@@ -658,16 +719,6 @@ const TabelaConsumiveis = () => {
                     <Label className="text-muted-foreground">Fornecedor</Label>
                     <p className="font-medium">{consumivelParaVisualizar.fornecedor}</p>
                   </div>
-                  {consumivelParaVisualizar.grupoABC && (
-                    <div>
-                      <Label className="text-muted-foreground">Grupo ABC (Curva ABC)</Label>
-                      <p className="font-medium text-lg">
-                        <Badge className={`${getGrupoABCColor(consumivelParaVisualizar.grupoABC)} font-bold`}>
-                          {GrupoABCLabels[consumivelParaVisualizar.grupoABC]}
-                        </Badge>
-                      </p>
-                    </div>
-                  )}
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Descrição</Label>
@@ -691,6 +742,302 @@ const TabelaConsumiveis = () => {
           consumivel={consumivelSelecionado}
           onSalvar={() => { setDialogAberto(false); carregarConsumiveis(); }}
         />
+
+        {/* Dialog de Importação */}
+        <Dialog open={importDialogAberto} onOpenChange={setImportDialogAberto}>
+          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5 text-blue-600" />
+                Importar Consumíveis
+              </DialogTitle>
+              <DialogDescription>
+                Revise os dados lidos do arquivo antes de confirmar a importação.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Erros */}
+            {importErros.length > 0 && (
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3 space-y-1 max-h-32 overflow-y-auto">
+                <p className="text-sm font-medium text-red-700 dark:text-red-300 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  {importErros.length} linha(s) com erro (ignoradas):
+                </p>
+                {importErros.map((e, i) => (
+                  <p key={i} className="text-xs text-red-600 dark:text-red-400 pl-5">{e}</p>
+                ))}
+              </div>
+            )}
+
+            {/* Resumo */}
+            <div className="flex items-center gap-4 text-sm">
+              <span className="flex items-center gap-1 text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                {importDados.length} válidos
+              </span>
+              {importErros.length > 0 && (
+                <span className="flex items-center gap-1 text-red-600">
+                  <XCircle className="h-4 w-4" />
+                  {importErros.length} inválidos
+                </span>
+              )}
+            </div>
+
+            {/* Modo */}
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Modo de importação:</Label>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={importModo === 'acrescentar' ? 'default' : 'outline'}
+                  onClick={() => setImportModo('acrescentar')}
+                >
+                  Acrescentar
+                </Button>
+                <Button
+                  size="sm"
+                  variant={importModo === 'substituir' ? 'destructive' : 'outline'}
+                  onClick={() => setImportModo('substituir')}
+                >
+                  Substituir tudo
+                </Button>
+              </div>
+              {importModo === 'substituir' && (
+                <span className="text-xs text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Todos os consumíveis existentes serão excluídos
+                </span>
+              )}
+            </div>
+
+            {/* Preview */}
+            {importDados.length > 0 ? (
+              <div className="flex-1 overflow-auto border rounded-lg">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="border-r px-2 py-1.5 text-left font-medium">Código</th>
+                      <th className="border-r px-2 py-1.5 text-left font-medium">Descrição</th>
+                      <th className="border-r px-2 py-1.5 text-left font-medium">Categoria</th>
+                      <th className="border-r px-2 py-1.5 text-center font-medium">Unid.</th>
+                      <th className="border-r px-2 py-1.5 text-right font-medium">Preço (R$)</th>
+                      <th className="px-2 py-1.5 text-left font-medium">Fornecedor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importDados.map((d, i) => (
+                      <tr key={i} className="border-t hover:bg-muted/30">
+                        <td className="border-r px-2 py-1 font-mono">{d.codigo}</td>
+                        <td className="border-r px-2 py-1 max-w-[200px] truncate">{d.descricao}</td>
+                        <td className="border-r px-2 py-1">{ConsumivelCategoriaLabels[d.categoria]}</td>
+                        <td className="border-r px-2 py-1 text-center">{d.unidade}</td>
+                        <td className="border-r px-2 py-1 text-right">{formatCurrency(d.precoUnitario)}</td>
+                        <td className="px-2 py-1">{d.fornecedor || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                Nenhum dado válido para importar
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImportDialogAberto(false)} disabled={importImportando}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmarImport}
+                disabled={importDados.length === 0 || importImportando}
+              >
+                {importImportando ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importar {importDados.length} consumíveis
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Reajuste de Preços */}
+        <Dialog open={reajusteDialogAberto} onOpenChange={setReajusteDialogAberto}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-amber-600" />
+                Reajuste de Preços em Lote
+              </DialogTitle>
+              <DialogDescription>
+                Aplique um reajuste percentual ou valor fixo a um grupo de consumíveis.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Tipo de reajuste */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Tipo de reajuste</Label>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={reajusteTipo === 'percentual' ? 'default' : 'outline'}
+                    onClick={() => setReajusteTipo('percentual')}
+                  >
+                    Percentual (%)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={reajusteTipo === 'fixo' ? 'default' : 'outline'}
+                    onClick={() => setReajusteTipo('fixo')}
+                  >
+                    Valor fixo (R$)
+                  </Button>
+                </div>
+              </div>
+
+              {/* Valor */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  Valor do reajuste {reajusteTipo === 'percentual' ? '(%)' : '(R$)'}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    step={reajusteTipo === 'percentual' ? '0.1' : '0.01'}
+                    placeholder={reajusteTipo === 'percentual' ? 'Ex: 5 para +5%' : 'Ex: 2.50 para +R$2,50'}
+                    value={reajusteValor || ''}
+                    onChange={(e) => setReajusteValor(parseFloat(e.target.value) || 0)}
+                    className="max-w-[200px]"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {reajusteValor > 0 ? '▲ aumento' : reajusteValor < 0 ? '▼ redução' : ''}
+                  </span>
+                </div>
+              </div>
+
+              {/* Escopo */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Aplicar em</Label>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={reajusteEscopo === 'ativos' ? 'default' : 'outline'}
+                    onClick={() => setReajusteEscopo('ativos')}
+                  >
+                    Somente ativos
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={reajusteEscopo === 'todos' ? 'default' : 'outline'}
+                    onClick={() => setReajusteEscopo('todos')}
+                  >
+                    Todos
+                  </Button>
+                </div>
+              </div>
+
+              {/* Categoria */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Filtrar por categoria</Label>
+                <Select value={reajusteCategoria} onValueChange={setReajusteCategoria}>
+                  <SelectTrigger className="max-w-[260px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas as categorias</SelectItem>
+                    {Object.entries(ConsumivelCategoria).map(([, value]) => (
+                      <SelectItem key={value} value={value}>
+                        {ConsumivelCategoriaLabels[value]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Preview */}
+              {reajustePreviewItens.length > 0 && reajusteValor !== 0 && (
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Preview (primeiros {reajustePreviewItens.length} itens afetados)
+                  </Label>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="border-r px-2 py-1.5 text-left font-medium">Código</th>
+                          <th className="border-r px-2 py-1.5 text-left font-medium">Descrição</th>
+                          <th className="border-r px-2 py-1.5 text-right font-medium">Antes</th>
+                          <th className="border-r px-2 py-1.5 text-right font-medium">Depois</th>
+                          <th className="px-2 py-1.5 text-right font-medium">Variação</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reajustePreviewItens.map((item) => (
+                          <tr key={item.id} className="border-t hover:bg-muted/30">
+                            <td className="border-r px-2 py-1 font-mono">{item.codigo}</td>
+                            <td className="border-r px-2 py-1 max-w-[180px] truncate">{item.descricao}</td>
+                            <td className="border-r px-2 py-1 text-right text-muted-foreground">
+                              {formatCurrency(item.precoUnitario)}
+                            </td>
+                            <td className="border-r px-2 py-1 text-right font-medium">
+                              {formatCurrency(item.precoFinal)}
+                            </td>
+                            <td className="px-2 py-1 text-right">
+                              {item.variacao > 0 ? (
+                                <span className="text-green-600 flex items-center justify-end gap-0.5">
+                                  <ArrowUp className="h-3 w-3" />
+                                  {formatCurrency(item.variacao)}
+                                </span>
+                              ) : item.variacao < 0 ? (
+                                <span className="text-red-600 flex items-center justify-end gap-0.5">
+                                  <ArrowDown className="h-3 w-3" />
+                                  {formatCurrency(Math.abs(item.variacao))}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReajusteDialogAberto(false)} disabled={reajustando}>
+                Cancelar
+              </Button>
+              <Button
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={handleConfirmarReajuste}
+                disabled={reajustando || reajusteValor === 0}
+              >
+                {reajustando ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Aplicando...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Aplicar Reajuste
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

@@ -276,6 +276,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                       id="bdi-lucro"
                       checked={bdiDetalhado.lucro.habilitado}
                       onCheckedChange={() => handleToggleBDI('lucro')}
+                      disabled={salvando}
                     />
                     <label
                       htmlFor="bdi-lucro"
@@ -291,7 +292,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                         max="100"
                         value={bdiDetalhado.lucro.percentual}
                         onChange={(e) => handleChangeBDIPercentual('lucro', e.target.value)}
-                        disabled={!bdiDetalhado.lucro.habilitado}
+                        disabled={!bdiDetalhado.lucro.habilitado || salvando}
                         className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.lucro.habilitado ? 'line-through' : ''}`}
                       />
                       <span className="text-sm font-bold">%</span>
@@ -306,6 +307,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                       id="bdi-admCentral"
                       checked={bdiDetalhado.admCentral.habilitado}
                       onCheckedChange={() => handleToggleBDI('admCentral')}
+                      disabled={salvando}
                     />
                     <label
                       htmlFor="bdi-admCentral"
@@ -321,7 +323,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                         max="100"
                         value={bdiDetalhado.admCentral.percentual}
                         onChange={(e) => handleChangeBDIPercentual('admCentral', e.target.value)}
-                        disabled={!bdiDetalhado.admCentral.habilitado}
+                        disabled={!bdiDetalhado.admCentral.habilitado || salvando}
                         className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.admCentral.habilitado ? 'line-through' : ''}`}
                       />
                       <span className="text-sm font-bold">%</span>
@@ -336,6 +338,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                       id="bdi-admLocal"
                       checked={bdiDetalhado.admLocal.habilitado}
                       onCheckedChange={() => handleToggleBDI('admLocal')}
+                      disabled={salvando}
                     />
                     <label
                       htmlFor="bdi-admLocal"
@@ -351,7 +354,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                         max="100"
                         value={bdiDetalhado.admLocal.percentual}
                         onChange={(e) => handleChangeBDIPercentual('admLocal', e.target.value)}
-                        disabled={!bdiDetalhado.admLocal.habilitado}
+                        disabled={!bdiDetalhado.admLocal.habilitado || salvando}
                         className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.admLocal.habilitado ? 'line-through' : ''}`}
                       />
                       <span className="text-sm font-bold">%</span>
@@ -366,6 +369,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                       id="bdi-seguro"
                       checked={bdiDetalhado.seguro.habilitado}
                       onCheckedChange={() => handleToggleBDI('seguro')}
+                      disabled={salvando}
                     />
                     <label
                       htmlFor="bdi-seguro"
@@ -381,7 +385,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                         max="100"
                         value={bdiDetalhado.seguro.percentual}
                         onChange={(e) => handleChangeBDIPercentual('seguro', e.target.value)}
-                        disabled={!bdiDetalhado.seguro.habilitado}
+                        disabled={!bdiDetalhado.seguro.habilitado || salvando}
                         className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.seguro.habilitado ? 'line-through' : ''}`}
                       />
                       <span className="text-sm font-bold">%</span>
@@ -396,6 +400,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                       id="bdi-despesasGerais"
                       checked={bdiDetalhado.despesasGerais.habilitado}
                       onCheckedChange={() => handleToggleBDI('despesasGerais')}
+                      disabled={salvando}
                     />
                     <label
                       htmlFor="bdi-despesasGerais"
@@ -411,7 +416,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                         max="100"
                         value={bdiDetalhado.despesasGerais.percentual}
                         onChange={(e) => handleChangeBDIPercentual('despesasGerais', e.target.value)}
-                        disabled={!bdiDetalhado.despesasGerais.habilitado}
+                        disabled={!bdiDetalhado.despesasGerais.habilitado || salvando}
                         className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.despesasGerais.habilitado ? 'line-through' : ''}`}
                       />
                       <span className="text-sm font-bold">%</span>
@@ -434,7 +439,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
               </div>
               <div>
                 <Label className="text-sm">Faixa Simples Nacional</Label>
-                <Select value={faixaSelecionada.toString()} onValueChange={(v) => setFaixaSelecionada(Number(v))}>
+                <Select value={faixaSelecionada.toString()} onValueChange={(v) => setFaixaSelecionada(Number(v))} disabled={salvando}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -522,6 +527,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                                 id={`encargo-a-${key}`}
                                 checked={item.habilitado}
                                 onCheckedChange={() => handleToggleEncargo('grupoA', key)}
+                                disabled={salvando}
                               />
                               <label htmlFor={`encargo-a-${key}`} className={`text-xs cursor-pointer ${!item.habilitado ? 'line-through' : ''}`}>
                                 {item.nome}
@@ -550,6 +556,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                                 id={`encargo-b-${key}`}
                                 checked={item.habilitado}
                                 onCheckedChange={() => handleToggleEncargo('grupoB', key)}
+                                disabled={salvando}
                               />
                               <label htmlFor={`encargo-b-${key}`} className={`text-xs cursor-pointer ${!item.habilitado ? 'line-through' : ''}`}>
                                 {item.nome}
@@ -581,6 +588,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                                 id={`encargo-c-${key}`}
                                 checked={item.habilitado}
                                 onCheckedChange={() => handleToggleEncargo('grupoC', key)}
+                                disabled={salvando}
                               />
                               <label htmlFor={`encargo-c-${key}`} className={`text-xs cursor-pointer ${!item.habilitado ? 'line-through' : ''}`}>
                                 {item.nome}
@@ -609,6 +617,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
                                 id={`encargo-d-${key}`}
                                 checked={item.habilitado}
                                 onCheckedChange={() => handleToggleEncargo('grupoD', key)}
+                                disabled={salvando}
                               />
                               <label htmlFor={`encargo-d-${key}`} className={`text-xs cursor-pointer ${!item.habilitado ? 'line-through' : ''}`}>
                                 {item.nome}

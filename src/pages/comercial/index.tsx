@@ -10,6 +10,7 @@ const OrcamentoDetalhes = lazy(() => import('./orcamentos/[id]'));
 const PropostasList = lazy(() => import('./propostas'));
 const ConfiguracaoSalarial = lazy(() => import('./configuracao/ConfiguracaoSalarial'));
 const TabelaCargos = lazy(() => import('./configuracao/TabelaCargos'));
+const TabelaEpis = lazy(() => import('./configuracao/TabelaEpis'));
 
 // Cadastros - FASE 3
 const TabelaConsumiveis = lazy(() => import('./cadastros/TabelaConsumiveis'));
@@ -55,6 +56,7 @@ const Comercial = () => {
           <Route path="configuracao">
             <Route path="salarial" element={<ConfiguracaoSalarial />} />
             <Route path="cargos" element={<TabelaCargos />} />
+            <Route path="epis" element={<TabelaEpis />} />
           </Route>
 
           {/* Submódulo CADASTROS - Novos (FASE 3) */}

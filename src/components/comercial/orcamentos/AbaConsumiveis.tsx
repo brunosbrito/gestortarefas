@@ -1,6 +1,7 @@
 import { Box } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Orcamento } from '@/interfaces/OrcamentoInterface';
+import { Orcamento, ComposicaoCustos } from '@/interfaces/OrcamentoInterface';
+import OrcamentoService from '@/services/OrcamentoService';
 import ComposicaoGenericaTable from './ComposicaoGenericaTable';
 
 interface AbaConsumiveisProps {
@@ -11,6 +12,18 @@ interface AbaConsumiveisProps {
 export default function AbaConsumiveis({ orcamento, onUpdate }: AbaConsumiveisProps) {
   const composicaoConsumiveis = orcamento.composicoes.find((c) => c.tipo === 'consumiveis');
 
+  const handleAtualizarComposicao = async (composicaoAtualizada: ComposicaoCustos) => {
+    const updatedOrcamento = {
+      ...orcamento,
+      composicoes: orcamento.composicoes.map((c) =>
+        c.id === composicaoAtualizada.id ? composicaoAtualizada : c
+      ),
+    };
+
+    await OrcamentoService.update(orcamento.id, updatedOrcamento);
+    onUpdate();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -20,7 +33,12 @@ export default function AbaConsumiveis({ orcamento, onUpdate }: AbaConsumiveisPr
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ComposicaoGenericaTable composicao={composicaoConsumiveis} tipo="Consumíveis" />
+        <ComposicaoGenericaTable
+          composicao={composicaoConsumiveis}
+          tipo="Consumíveis"
+          tipoItemPadrao="consumivel"
+          onUpdate={handleAtualizarComposicao}
+        />
       </CardContent>
     </Card>
   );

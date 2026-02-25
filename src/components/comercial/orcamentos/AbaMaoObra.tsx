@@ -1,7 +1,8 @@
 import { Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Orcamento } from '@/interfaces/OrcamentoInterface';
-import ComposicaoGenericaTable from './ComposicaoGenericaTable';
+import { Orcamento, ComposicaoCustos } from '@/interfaces/OrcamentoInterface';
+import OrcamentoService from '@/services/OrcamentoService';
+import AbaMaoObraGrid from './AbaMaoObraGrid';
 
 interface AbaMaoObraProps {
   orcamento: Orcamento;
@@ -11,6 +12,18 @@ interface AbaMaoObraProps {
 export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
   const moFabricacao = orcamento.composicoes.find((c) => c.tipo === 'mo_fabricacao');
   const moMontagem = orcamento.composicoes.find((c) => c.tipo === 'mo_montagem');
+
+  const handleAtualizarComposicao = async (composicaoAtualizada: ComposicaoCustos) => {
+    const updatedOrcamento = {
+      ...orcamento,
+      composicoes: orcamento.composicoes.map((c) =>
+        c.id === composicaoAtualizada.id ? composicaoAtualizada : c
+      ),
+    };
+
+    await OrcamentoService.update(orcamento.id, updatedOrcamento);
+    onUpdate();
+  };
 
   return (
     <div className="space-y-6">
@@ -22,7 +35,12 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ComposicaoGenericaTable composicao={moFabricacao} tipo="Fabricação" />
+          <AbaMaoObraGrid
+            composicao={moFabricacao}
+            tipo="Fabricação"
+            categoria="fabricacao"
+            onUpdate={handleAtualizarComposicao}
+          />
         </CardContent>
       </Card>
 
@@ -34,7 +52,12 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ComposicaoGenericaTable composicao={moMontagem} tipo="Montagem" />
+          <AbaMaoObraGrid
+            composicao={moMontagem}
+            tipo="Montagem"
+            categoria="montagem"
+            onUpdate={handleAtualizarComposicao}
+          />
         </CardContent>
       </Card>
     </div>

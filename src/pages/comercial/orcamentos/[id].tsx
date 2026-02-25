@@ -18,6 +18,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import OrcamentoService from '@/services/OrcamentoService';
@@ -31,6 +41,7 @@ import AbaFerramentas from '@/components/comercial/orcamentos/AbaFerramentas';
 import AbaConsumiveis from '@/components/comercial/orcamentos/AbaConsumiveis';
 import AbaMobDesmob from '@/components/comercial/orcamentos/AbaMobDesmob';
 import AbaQQP from '@/components/comercial/orcamentos/AbaQQP';
+import AbaResumo from '@/components/comercial/orcamentos/AbaResumo';
 
 const statusColors: Record<string, string> = {
   rascunho: 'bg-gray-500',
@@ -50,7 +61,8 @@ export default function OrcamentoDetalhes() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [abaAtiva, setAbaAtiva] = useState('dados-gerais');
+  const [abaAtiva, setAbaAtiva] = useState('resumo');
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
   // Buscar dados do orçamento
   const { data: orcamento, isLoading, refetch } = useQuery({
@@ -97,10 +109,13 @@ export default function OrcamentoDetalhes() {
     }
   };
 
-  const handleExcluir = async () => {
+  const handleExcluir = () => {
     if (!id) return;
-    if (!confirm('Tem certeza que deseja excluir este orçamento?')) return;
+    setConfirmarExclusao(true);
+  };
 
+  const handleConfirmarExclusao = async () => {
+    if (!id) return;
     try {
       await OrcamentoService.delete(id);
       toast({
@@ -114,6 +129,8 @@ export default function OrcamentoDetalhes() {
         description: 'Não foi possível excluir o orçamento.',
         variant: 'destructive',
       });
+    } finally {
+      setConfirmarExclusao(false);
     }
   };
 
@@ -213,7 +230,8 @@ export default function OrcamentoDetalhes() {
 
         {/* Tabs */}
         <Tabs value={abaAtiva} onValueChange={setAbaAtiva} className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
+            <TabsTrigger value="resumo">Resumo</TabsTrigger>
             <TabsTrigger value="dados-gerais">Dados Gerais</TabsTrigger>
             <TabsTrigger value="materiais">Materiais</TabsTrigger>
             <TabsTrigger value="pintura">Pintura</TabsTrigger>
@@ -223,6 +241,10 @@ export default function OrcamentoDetalhes() {
             <TabsTrigger value="mob-desmob">Mob/Desmob</TabsTrigger>
             <TabsTrigger value="qqp">QQP</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="resumo" className="mt-6">
+            <AbaResumo orcamento={orcamento} onUpdate={refetch} />
+          </TabsContent>
 
           <TabsContent value="dados-gerais" className="mt-6">
             <AbaDadosGerais orcamento={orcamento} onUpdate={refetch} />
@@ -257,6 +279,25 @@ export default function OrcamentoDetalhes() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Confirmação de Exclusão */}
+      <AlertDialog open={confirmarExclusao} onOpenChange={setConfirmarExclusao}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o orçamento <strong>"{orcamento.nome}"</strong>?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmarExclusao} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }
