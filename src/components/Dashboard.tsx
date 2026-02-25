@@ -169,11 +169,11 @@ const Dashboard = () => {
                 {/* Filtros de Obra e Período */}
                 <PeriodFilter
                   onFilterChange={(filterData) => {
-                    if (filterData.period || filterData.startDate || filterData.endDate) {
+                    if (filterData.period !== undefined || filterData.startDate !== undefined || filterData.endDate !== undefined) {
                       updatePeriodFilter(
-                        filterData.period || 'todos',
-                        filterData.startDate,
-                        filterData.endDate
+                        filterData.period ?? filters.period ?? 'todos',
+                        filterData.startDate !== undefined ? filterData.startDate : filters.startDate,
+                        filterData.endDate !== undefined ? filterData.endDate : filters.endDate
                       );
                     }
 

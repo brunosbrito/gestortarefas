@@ -434,7 +434,7 @@ export const ProductivityTrendsChart = () => {
 
         {/* Content */}
         <div className="px-6 pt-4 pb-2 flex-1 flex flex-col min-h-0">
-          {renderChart("h-full")}
+          {renderChart("100%")}
         </div>
       </Card>
 
