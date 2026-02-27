@@ -270,11 +270,11 @@ export const calcularEncargos = (valorBase: number, percentual: number = 50.72):
  * percentualDoTotal requer o total entre todas as composições — calculado em recalcularTodasComposicoes.
  */
 export const recalcularComposicao = (composicao: ComposicaoCustos): ComposicaoCustos => {
-  const custoDirecto = composicao.itens.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+  const custoDirecto = Math.round(composicao.itens.reduce((sum, item) => sum + (item.subtotal || 0), 0) * 100) / 100;
   // Aceita tanto bdi.percentual (interface correta) quanto bdiPercentual (legado/mock)
   const percentualBDI = composicao.bdi?.percentual ?? (composicao as unknown as { bdiPercentual?: number }).bdiPercentual ?? 0;
-  const bdiValor = custoDirecto * (percentualBDI / 100);
-  const subtotal = custoDirecto + bdiValor;
+  const bdiValor = Math.round(custoDirecto * (percentualBDI / 100) * 100) / 100;
+  const subtotal = Math.round((custoDirecto + bdiValor) * 100) / 100;
 
   return {
     ...composicao,

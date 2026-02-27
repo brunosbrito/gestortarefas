@@ -107,7 +107,8 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
   // Catálogo de fornecedores
   const catalogoFornecedores = useMemo((): FornecedorServicoInterface[] => {
     try {
-      const locais = JSON.parse(localStorage.getItem('fornecedores_locais') || '[]') as FornecedorServicoInterface[];
+      const parsed = JSON.parse(localStorage.getItem('fornecedores_locais') || '[]');
+      const locais = Array.isArray(parsed) ? parsed as FornecedorServicoInterface[] : [];
       return [...mockFornecedores, ...locais.filter((f) => f.ativo !== false)];
     } catch { return [...mockFornecedores]; }
   // eslint-disable-next-line react-hooks/exhaustive-deps

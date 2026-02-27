@@ -657,6 +657,7 @@ export default function ComposicaoGenericaTable({
                 type="file"
                 accept=".xlsx,.csv"
                 className="hidden"
+                disabled={importLendo}
                 onChange={handleArquivoSelecionado}
               />
               {rows.length > 0 && (

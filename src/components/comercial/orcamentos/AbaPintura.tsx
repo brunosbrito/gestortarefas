@@ -214,7 +214,8 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
   // Catálogo de tintas: mock + localStorage
   const catalogoTintas = useMemo((): TintaInterface[] => {
     try {
-      const locais = JSON.parse(localStorage.getItem('tintas_locais') || '[]') as TintaInterface[];
+      const parsed = JSON.parse(localStorage.getItem('tintas_locais') || '[]');
+      const locais = Array.isArray(parsed) ? parsed as TintaInterface[] : [];
       const ativas = locais.filter((t) => t.ativo !== false);
       return [...mockTintas, ...ativas];
     } catch {
