@@ -231,7 +231,9 @@ export const verificarAlertas = (orcamento: Partial<Orcamento>): {
     mo_fabricacao: 25,
     mo_montagem: 25,
     jato_pintura: 12,
+    tintas: 12,
     ferramentas: 10,
+    ferramentas_eletricas: 15,
     consumiveis: 10,
     materiais: 25,
   };

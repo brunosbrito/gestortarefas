@@ -32,7 +32,18 @@ const TEMPLATE_HEADERS = [
 
 function lerStorage(): ConsumivelInterface[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const items: ConsumivelInterface[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    // Migração: gases devem usar unidade 'cil'
+    let houveMudanca = false;
+    const migrados = items.map((item) => {
+      if (item.categoria === ConsumivelCategoria.GASES && item.unidade !== 'cil') {
+        houveMudanca = true;
+        return { ...item, unidade: 'cil' };
+      }
+      return item;
+    });
+    if (houveMudanca) salvarStorage(migrados);
+    return migrados;
   } catch {
     return [];
   }

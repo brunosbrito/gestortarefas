@@ -379,7 +379,19 @@ const TabelaEpis = () => {
                 <TableBody>
                   {episFiltrados.map((epi) => (
                     <TableRow key={epi.id} className={!epi.ativo ? 'opacity-50' : ''}>
-                      <TableCell className="font-medium text-sm">{epi.descricao}</TableCell>
+                      <TableCell className="font-medium text-sm max-w-[260px]">
+                        <span
+                          className="block truncate"
+                          title={epi.descricao}
+                        >
+                          {epi.nomeResumido || epi.descricao}
+                        </span>
+                        {epi.nomeResumido && (
+                          <span className="block truncate text-xs text-muted-foreground font-normal" title={epi.descricao}>
+                            {epi.descricao}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline" className="font-mono text-xs">{epi.unidade}</Badge>
                       </TableCell>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Package, Plus, Scissors, Edit2, Save, X, Trash2, Upload, Download,
   TrendingUp, Check, Edit, AlertCircle, ArrowUp, ArrowDown,
@@ -19,9 +19,14 @@ import {
 } from '@/components/ui/select';
 import { Orcamento, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency } from '@/lib/currency';
+import { normalizarDescricao } from '@/lib/textUtils';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import OrcamentoService from '@/services/OrcamentoService';
+import { getTodosOsMateriais } from '@/data/catalogoMateriais';
+import { MaterialCategoria } from '@/interfaces/MaterialCatalogoInterface';
+import { useTableSort, SortableTableHeader } from '@/components/tables/SortableTableHeader';
+import ExportarComposicaoButton from './ExportarComposicaoButton';
 
 interface AbaMateriaisProps {
   orcamento: Orcamento;
@@ -42,8 +47,16 @@ interface RowMaterial {
 }
 
 // ---- helpers ----
-const calcSubtotalMat = (r: RowMaterial): number =>
-  Math.round((Number(r.quantidade) || 0) * (Number(r.valorUnitario) || 0) * 100) / 100;
+const calcSubtotalMat = (r: RowMaterial): number => {
+  const qty = Number(r.quantidade) || 0;
+  const preco = Number(r.valorUnitario) || 0;
+  const peso = Number(r.peso) || 0;
+  if ((r.unidade === 'm' || r.unidade === 'ml') && peso > 0) {
+    // qty(m) × peso(kg/m) × preço(R$/kg) = subtotal
+    return Math.round(qty * peso * preco * 100) / 100;
+  }
+  return Math.round(qty * preco * 100) / 100;
+};
 
 const parseItemMaterial = (item: ItemComposicao): RowMaterial => ({
   _localId: item.id,
@@ -93,6 +106,9 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
   const [importDados, setImportDados] = useState<RowMaterial[]>([]);
   const [importErros, setImportErros] = useState<string[]>([]);
 
+  // Catálogo local (dado estático, sempre disponível sem API)
+  const catalogoLocal = useMemo(() => getTodosOsMateriais(), []);
+
   // Reajuste
   const [reajusteDialogAberto, setReajusteDialogAberto] = useState(false);
   const [reajusteTipo, setReajusteTipo] = useState<'percentual' | 'fixo'>('percentual');
@@ -109,6 +125,66 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
     if (!composicaoMateriais) { setRows([]); return; }
     setRows(composicaoMateriais.itens.map(parseItemMaterial));
   }, [composicaoMateriais]);
+
+  // ---- lookup catálogo por código ----
+  const getNormaMaterial = (categoria: MaterialCategoria): string => {
+    switch (categoria) {
+      case MaterialCategoria.PARAFUSO_A307: return 'ASTM A 307';
+      case MaterialCategoria.PARAFUSO_A325: return 'ASTM A 325';
+      case MaterialCategoria.PARAFUSO_A489: return 'ASTM A 489';
+      case MaterialCategoria.TUBO_QUADRADO:
+      case MaterialCategoria.TUBO_RETANGULAR:
+      case MaterialCategoria.TUBO_REDONDO: return 'ASTM A 500';
+      case MaterialCategoria.PERFIL_HP: return 'ASTM A 572';
+      default: return 'ASTM A 36';
+    }
+  };
+
+  const handleCodigoBlur = (localId: string, codigo: string) => {
+    if (!codigo.trim()) return;
+    const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '').replace(',', '.');
+    const match = catalogoLocal.find((m) => normalize(m.codigo) === normalize(codigo));
+    if (!match) return;
+    const isMetro = match.unidade === 'm' || match.unidade === 'ml';
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r._localId !== localId) return r;
+        return {
+          ...r,
+          descricao: r.descricao || match.descricao,
+          material: r.material || getNormaMaterial(match.categoria),
+          unidade: match.unidade || r.unidade,
+          peso: (r.peso === '' || Number(r.peso) === 0) ? (match.pesoNominal ?? '') : r.peso,
+          valorUnitario: (r.valorUnitario === '' || Number(r.valorUnitario) === 0)
+            ? (isMetro ? (match.precoKg ?? match.precoUnitario) : match.precoUnitario)
+            : r.valorUnitario,
+        };
+      })
+    );
+  };
+
+  const handleDescricaoBlur = (localId: string, descricao: string) => {
+    if (!descricao.trim()) return;
+    const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+    const match = catalogoLocal.find((m) => normalize(m.descricao) === normalize(descricao));
+    if (!match) return;
+    const isMetro = match.unidade === 'm' || match.unidade === 'ml';
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r._localId !== localId) return r;
+        return {
+          ...r,
+          codigo: r.codigo || match.codigo,
+          material: r.material || getNormaMaterial(match.categoria),
+          unidade: match.unidade || r.unidade,
+          peso: (r.peso === '' || Number(r.peso) === 0) ? (match.pesoNominal ?? '') : r.peso,
+          valorUnitario: (r.valorUnitario === '' || Number(r.valorUnitario) === 0)
+            ? (isMetro ? (match.precoKg ?? match.precoUnitario) : match.precoUnitario)
+            : r.valorUnitario,
+        };
+      })
+    );
+  };
 
   // ---- field handlers ----
   const handleField = <K extends keyof RowMaterial>(localId: string, field: K, value: RowMaterial[K]) =>
@@ -149,7 +225,7 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
       const novosItens: ItemComposicao[] = rows.map((r, index) => ({
         id: r.itemId ?? `mat-${Date.now()}-${index}`,
         composicaoId: composicaoMateriais.id,
-        descricao: r.descricao,
+        descricao: normalizarDescricao(r.descricao),
         codigo: r.codigo || undefined,
         material: r.material || undefined,
         quantidade: Number(r.quantidade),
@@ -287,7 +363,7 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
       const novosItens: ItemComposicao[] = importDados.map((r, index) => ({
         id: `import-${Date.now()}-${index}`,
         composicaoId: composicaoMateriais.id,
-        descricao: r.descricao,
+        descricao: normalizarDescricao(r.descricao),
         codigo: r.codigo || undefined,
         material: r.material || undefined,
         quantidade: Number(r.quantidade),
@@ -362,7 +438,21 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
 
   // ---- totais ----
   const totalSubtotal = rows.reduce((acc, r) => acc + calcSubtotalMat(r), 0);
-  const totalPeso = rows.reduce((acc, r) => acc + (Number(r.peso) || 0) * (Number(r.quantidade) || 0), 0);
+
+  // ---- sort (view mode) ----
+  const rowsComSubtotal = useMemo(
+    () => rows.map((r) => ({ ...r, _subtotal: calcSubtotalMat(r) })),
+    [rows]
+  );
+  const { sortedData: sortedRows, sortKey, sortDirection, handleSort } = useTableSort(rowsComSubtotal);
+
+  const totalPeso = rows.reduce((acc, r) => {
+    const qty = Number(r.quantidade) || 0;
+    const peso = Number(r.peso) || 0;
+    if (r.unidade === 'kg') return acc + qty;          // quantidade já é kg
+    if (peso > 0) return acc + qty * peso;              // qty(m) × pesoNominal(kg/m)
+    return acc;
+  }, 0);
 
   // ==========================================
   // VIEW MODE
@@ -388,18 +478,18 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="border-r w-10 text-center">#</TableHead>
-              <TableHead className="border-r w-28">Código</TableHead>
-              <TableHead className="border-r">Descrição</TableHead>
-              <TableHead className="border-r w-28">Material</TableHead>
-              <TableHead className="border-r text-center w-20">Qtd</TableHead>
+              <SortableTableHeader label="Código" sortKey="codigo" currentSortKey={sortKey} currentSortDirection={sortDirection} onSort={handleSort} className="border-r w-28" />
+              <SortableTableHeader label="Descrição" sortKey="descricao" currentSortKey={sortKey} currentSortDirection={sortDirection} onSort={handleSort} className="border-r" />
+              <SortableTableHeader label="Material" sortKey="material" currentSortKey={sortKey} currentSortDirection={sortDirection} onSort={handleSort} className="border-r w-28" />
+              <SortableTableHeader label="Qtd" sortKey="quantidade" currentSortKey={sortKey} currentSortDirection={sortDirection} onSort={handleSort} className="border-r w-20" align="center" />
               <TableHead className="border-r w-16">Unid.</TableHead>
-              <TableHead className="border-r text-right w-24">Peso (kg)</TableHead>
-              <TableHead className="border-r text-right w-32">Preço Unit.</TableHead>
-              <TableHead className="text-right w-36">Subtotal</TableHead>
+              <SortableTableHeader label="Peso (kg)" sortKey="peso" currentSortKey={sortKey} currentSortDirection={sortDirection} onSort={handleSort} className="border-r w-24" align="right" />
+              <SortableTableHeader label="Preço Unit." sortKey="valorUnitario" currentSortKey={sortKey} currentSortDirection={sortDirection} onSort={handleSort} className="border-r w-32" align="right" />
+              <SortableTableHeader label="Subtotal" sortKey="_subtotal" currentSortKey={sortKey} currentSortDirection={sortDirection} onSort={handleSort} className="w-36" align="right" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((r, idx) => (
+            {sortedRows.map((r, idx) => (
               <TableRow key={r._localId} className="hover:bg-muted/30">
                 <TableCell className="border-r text-center font-medium">{idx + 1}</TableCell>
                 <TableCell className="border-r font-mono text-xs">{r.codigo || '—'}</TableCell>
@@ -411,7 +501,7 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
                   {r.peso !== '' ? Number(r.peso).toFixed(2) : '—'}
                 </TableCell>
                 <TableCell className="border-r text-right font-mono">{formatCurrency(Number(r.valorUnitario))}</TableCell>
-                <TableCell className="text-right font-bold text-green-600">{formatCurrency(calcSubtotalMat(r))}</TableCell>
+                <TableCell className="text-right font-bold text-green-600">{formatCurrency(r._subtotal)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -425,6 +515,17 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
   // ==========================================
   const renderEdit = () => (
     <div className="border rounded-lg overflow-x-auto">
+      {/* Datalists para autocomplete nativo */}
+      <datalist id="mat-catalogo-codigos">
+        {catalogoLocal.map((m) => (
+          <option key={m.codigo} value={m.codigo}>{m.descricao}</option>
+        ))}
+      </datalist>
+      <datalist id="mat-catalogo-descricoes">
+        {catalogoLocal.map((m, i) => (
+          <option key={i} value={m.descricao} />
+        ))}
+      </datalist>
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
@@ -451,8 +552,11 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
                   className="h-8 text-sm font-mono"
                   value={r.codigo}
                   onChange={(e) => handleField(r._localId, 'codigo', e.target.value)}
+                  onBlur={(e) => handleCodigoBlur(r._localId, e.target.value)}
                   placeholder="MAT-001"
                   disabled={salvando}
+                  title="Digite o código e saia do campo para buscar no catálogo"
+                  list="mat-catalogo-codigos"
                 />
               </TableCell>
 
@@ -462,8 +566,10 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
                   className="h-8 text-sm"
                   value={r.descricao}
                   onChange={(e) => handleField(r._localId, 'descricao', e.target.value)}
+                  onBlur={(e) => handleDescricaoBlur(r._localId, e.target.value)}
                   placeholder="Descrição..."
                   disabled={salvando}
+                  list="mat-catalogo-descricoes"
                 />
               </TableCell>
 
@@ -591,6 +697,19 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
 
               {!editMode && (
                 <>
+                  {rows.length > 0 && (
+                    <ExportarComposicaoButton
+                      titulo="Materiais"
+                      rows={rowsComSubtotal.map((r) => ({
+                        codigo: r.codigo,
+                        descricao: r.descricao,
+                        quantidade: r.quantidade,
+                        unidade: r.unidade,
+                        valorUnitario: r.valorUnitario,
+                        subtotal: r._subtotal,
+                      }))}
+                    />
+                  )}
                   <Button size="sm" variant="outline" onClick={handleBaixarModelo} title="Baixar planilha modelo">
                     <Download className="mr-2 h-4 w-4" />
                     Modelo
@@ -673,7 +792,20 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
 
                 {/* BDI */}
                 <div>
-                  <Label className="text-muted-foreground">BDI</Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-muted-foreground">BDI</Label>
+                    {!editandoBDI && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => setEditandoBDI(true)}
+                        title="Editar BDI"
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                   {editandoBDI ? (
                     <div className="flex items-center gap-1 mt-1">
                       <Input
@@ -707,15 +839,6 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
                         {formatCurrency(composicaoMateriais?.bdi?.valor ?? 0)}
                       </p>
                       <span className="text-sm text-muted-foreground">({composicaoMateriais?.bdi?.percentual ?? 0}%)</span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                        onClick={() => setEditandoBDI(true)}
-                        title="Editar BDI"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
                     </div>
                   )}
                 </div>

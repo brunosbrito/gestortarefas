@@ -7,24 +7,28 @@ import {
   Users,
   AlertTriangle,
   CheckCircle2,
+  ArrowRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Orcamento } from '@/interfaces/OrcamentoInterface';
+import { Orcamento, ComposicaoCustos } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency } from '@/lib/currency';
 import { useOrcamentoCalculos } from '@/hooks/useOrcamentoCalculos';
 
 interface AbaQQPProps {
   orcamento: Orcamento;
   onUpdate: () => void;
+  onNavigateToAba?: (aba: string) => void;
 }
 
 const NOME_COMPOSICAO: Record<string, string> = {
   materiais: 'Materiais',
   jato_pintura: 'Jateamento e Pintura',
-  ferramentas: 'Ferramentas',
+  tintas: 'Tintas e Solventes',
+  ferramentas: 'Ferramentas Manuais',
+  ferramentas_eletricas: 'Ferramentas Elétricas / Equipamentos',
   consumiveis: 'Consumíveis',
   mo_fabricacao: 'MO Fabricação',
   mo_montagem: 'MO Montagem',
@@ -32,19 +36,96 @@ const NOME_COMPOSICAO: Record<string, string> = {
   desmobilizacao: 'Desmobilização',
 };
 
-const TIPOS_SUPRIMENTOS = ['materiais', 'jato_pintura', 'ferramentas', 'consumiveis'];
+const TIPOS_SUPRIMENTOS = ['materiais', 'jato_pintura', 'tintas', 'ferramentas', 'ferramentas_eletricas', 'consumiveis'];
 const TIPOS_MO = ['mo_fabricacao', 'mo_montagem', 'mobilizacao', 'desmobilizacao'];
 
-export default function AbaQQP({ orcamento }: AbaQQPProps) {
+// Mapeamento tipo de composição → id da aba correspondente
+const TIPO_PARA_ABA: Record<string, string> = {
+  materiais: 'materiais',
+  jato_pintura: 'pintura',
+  tintas: 'pintura',
+  ferramentas: 'ferramentas',
+  ferramentas_eletricas: 'ferramentas',
+  consumiveis: 'consumiveis',
+  mo_fabricacao: 'mao-obra',
+  mo_montagem: 'mao-obra',
+  mobilizacao: 'mob-desmob',
+  desmobilizacao: 'mob-desmob',
+};
+
+export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
   const { valores, dre, alertas, statusViabilidade } = useOrcamentoCalculos(orcamento);
 
-  const composicoesSuprimentos = useMemo(
-    () => orcamento.composicoes.filter((c) => TIPOS_SUPRIMENTOS.includes(c.tipo)),
-    [orcamento.composicoes]
-  );
+  const composicoesSuprimentos = useMemo(() => {
+    const temTintasSeparadas = orcamento.composicoes.some((c) => c.tipo === 'tintas');
+    const jatoPintura = orcamento.composicoes.find((c) => c.tipo === 'jato_pintura');
+
+    // Base: todas as composições de suprimento, exceto jato_pintura (tratado separadamente)
+    const base: ComposicaoCustos[] = orcamento.composicoes.filter(
+      (c) => TIPOS_SUPRIMENTOS.includes(c.tipo) && c.tipo !== 'jato_pintura'
+    );
+
+    if (jatoPintura) {
+      if (!temTintasSeparadas) {
+        // Retrocompat: tintas ainda estão dentro de jato_pintura como tipoItem='material'
+        // Separa visualmente serviços de tintas para exibição no QQP
+        const servicoItens = jatoPintura.itens.filter((i) => i.tipoItem !== 'material');
+        const tintaItens   = jatoPintura.itens.filter((i) => i.tipoItem === 'material');
+        const bdiPct = jatoPintura.bdi?.percentual ?? 12;
+
+        // Entrada de jateamento (só serviços)
+        if (servicoItens.length > 0) {
+          const cd = servicoItens.reduce((s, i) => s + i.subtotal, 0);
+          const bdiValor = Math.round(cd * bdiPct / 100 * 100) / 100;
+          base.push({ ...jatoPintura, itens: servicoItens, custoDirecto: cd,
+            bdi: { percentual: bdiPct, valor: bdiValor },
+            subtotal: Math.round(cd * (1 + bdiPct / 100) * 100) / 100 });
+        } else {
+          base.push(jatoPintura);
+        }
+
+        // Entrada virtual de Tintas e Solventes (materiais dentro de jato_pintura)
+        if (tintaItens.length > 0) {
+          const cd = tintaItens.reduce((s, i) => s + i.subtotal, 0);
+          const bdiT = 12;
+          const bdiValor = Math.round(cd * bdiT / 100 * 100) / 100;
+          base.push({
+            id: `virtual-tintas-${orcamento.id}`,
+            orcamentoId: orcamento.id,
+            nome: 'Tintas e Solventes',
+            tipo: 'tintas' as ComposicaoCustos['tipo'],
+            itens: tintaItens,
+            bdi: { percentual: bdiT, valor: bdiValor },
+            custoDirecto: cd,
+            subtotal: Math.round(cd * (1 + bdiT / 100) * 100) / 100,
+            percentualDoTotal: 0,
+            ordem: 99,
+          });
+        }
+      } else {
+        // Caso normal (tintas já migradas para composição própria)
+        base.push(jatoPintura);
+      }
+    }
+
+    return base.sort((a, b) =>
+      (NOME_COMPOSICAO[a.tipo] || a.nome).localeCompare(
+        NOME_COMPOSICAO[b.tipo] || b.nome,
+        'pt-BR'
+      )
+    );
+  }, [orcamento.composicoes, orcamento.id]);
 
   const composicoesMO = useMemo(
-    () => orcamento.composicoes.filter((c) => TIPOS_MO.includes(c.tipo)),
+    () =>
+      orcamento.composicoes
+        .filter((c) => TIPOS_MO.includes(c.tipo))
+        .sort((a, b) =>
+          (NOME_COMPOSICAO[a.tipo] || a.nome).localeCompare(
+            NOME_COMPOSICAO[b.tipo] || b.nome,
+            'pt-BR'
+          )
+        ),
     [orcamento.composicoes]
   );
 
@@ -124,30 +205,37 @@ export default function AbaQQP({ orcamento }: AbaQQPProps) {
         <CardContent className="pt-4">
           {composicoesSuprimentos.length > 0 ? (
             <div className="space-y-1">
-              {composicoesSuprimentos.map((comp) => (
-                <div
-                  key={comp.id}
-                  className="flex justify-between items-center py-2 border-b last:border-0"
-                >
-                  <div>
-                    <p className="font-medium text-sm">
-                      {NOME_COMPOSICAO[comp.tipo] || comp.nome}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Custo: {formatCurrency(comp.custoDirecto)} · BDI (
-                      {comp.bdi?.percentual ?? 0}%): {formatCurrency(comp.bdi?.valor ?? 0)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">{formatCurrency(comp.subtotal)}</p>
-                    {valores.subtotal > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {((comp.subtotal / valores.subtotal) * 100).toFixed(1)}% do total
+              {composicoesSuprimentos.map((comp) => {
+                const abaDestino = TIPO_PARA_ABA[comp.tipo];
+                const clicavel = !!onNavigateToAba && !!abaDestino;
+                return (
+                  <div
+                    key={comp.id}
+                    onClick={clicavel ? () => onNavigateToAba!(abaDestino) : undefined}
+                    className={`flex justify-between items-center py-2 border-b last:border-0 rounded-md px-2 -mx-2 transition-colors ${clicavel ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/30 group' : ''}`}
+                    title={clicavel ? `Ir para aba ${abaDestino}` : undefined}
+                  >
+                    <div>
+                      <p className="font-medium text-sm flex items-center gap-1.5">
+                        {NOME_COMPOSICAO[comp.tipo] || comp.nome}
+                        {clicavel && <ArrowRight className="h-3.5 w-3.5 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                       </p>
-                    )}
+                      <p className="text-xs text-muted-foreground">
+                        Custo: {formatCurrency(comp.custoDirecto)} · BDI (
+                        {comp.bdi?.percentual ?? 0}%): {formatCurrency(comp.bdi?.valor ?? 0)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">{formatCurrency(comp.subtotal)}</p>
+                      {valores.subtotal > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {((comp.subtotal / valores.subtotal) * 100).toFixed(1)}% do total
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="flex justify-between items-center pt-3 font-bold text-blue-600">
                 <span>Total Suprimentos</span>
                 <span>{formatCurrency(totalSuprimentos)}</span>
@@ -172,30 +260,37 @@ export default function AbaQQP({ orcamento }: AbaQQPProps) {
         <CardContent className="pt-4">
           {composicoesMO.length > 0 ? (
             <div className="space-y-1">
-              {composicoesMO.map((comp) => (
-                <div
-                  key={comp.id}
-                  className="flex justify-between items-center py-2 border-b last:border-0"
-                >
-                  <div>
-                    <p className="font-medium text-sm">
-                      {NOME_COMPOSICAO[comp.tipo] || comp.nome}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Custo: {formatCurrency(comp.custoDirecto)} · BDI (
-                      {comp.bdi?.percentual ?? 0}%): {formatCurrency(comp.bdi?.valor ?? 0)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">{formatCurrency(comp.subtotal)}</p>
-                    {valores.subtotal > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {((comp.subtotal / valores.subtotal) * 100).toFixed(1)}% do total
+              {composicoesMO.map((comp) => {
+                const abaDestino = TIPO_PARA_ABA[comp.tipo];
+                const clicavel = !!onNavigateToAba && !!abaDestino;
+                return (
+                  <div
+                    key={comp.id}
+                    onClick={clicavel ? () => onNavigateToAba!(abaDestino) : undefined}
+                    className={`flex justify-between items-center py-2 border-b last:border-0 rounded-md px-2 -mx-2 transition-colors ${clicavel ? 'cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-950/30 group' : ''}`}
+                    title={clicavel ? `Ir para aba ${abaDestino}` : undefined}
+                  >
+                    <div>
+                      <p className="font-medium text-sm flex items-center gap-1.5">
+                        {NOME_COMPOSICAO[comp.tipo] || comp.nome}
+                        {clicavel && <ArrowRight className="h-3.5 w-3.5 text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                       </p>
-                    )}
+                      <p className="text-xs text-muted-foreground">
+                        Custo: {formatCurrency(comp.custoDirecto)} · BDI (
+                        {comp.bdi?.percentual ?? 0}%): {formatCurrency(comp.bdi?.valor ?? 0)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">{formatCurrency(comp.subtotal)}</p>
+                      {valores.subtotal > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {((comp.subtotal / valores.subtotal) * 100).toFixed(1)}% do total
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="flex justify-between items-center pt-3 font-bold text-orange-600">
                 <span>Total Mão de Obra</span>
                 <span>{formatCurrency(totalMO)}</span>

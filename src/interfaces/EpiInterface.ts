@@ -3,6 +3,7 @@
 export interface EpiCatalogo {
   id: string;
   descricao: string;
+  nomeResumido?: string;    // Apelido curto exibido na tabela (ex: "Botina Bico Aço - Tam. 42")
   unidade: string;          // 'un', 'par', 'cx', etc.
   ca: string;               // Certificado de Aprovação (ex: "45579")
   fabricante?: string;
@@ -14,6 +15,7 @@ export interface EpiCatalogo {
 
 export interface CreateEpiCatalogo {
   descricao: string;
+  nomeResumido?: string;
   unidade: string;
   ca: string;
   fabricante?: string;

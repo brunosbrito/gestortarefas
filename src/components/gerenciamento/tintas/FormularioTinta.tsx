@@ -83,7 +83,7 @@ const FormularioTinta = ({ open, onOpenChange, tinta, onSuccess }: FormularioTin
     const sv = parseFloat(solidosVolume);
     const preco = parseFloat(precoLitro);
 
-    if (sv <= 0 || sv > 100) {
+    if (sv < 0 || sv > 100) {
       toast({
         title: 'Erro',
         description: 'Sólidos por Volume deve estar entre 0 e 100%',
@@ -180,6 +180,9 @@ const FormularioTinta = ({ open, onOpenChange, tinta, onSuccess }: FormularioTin
                   </SelectItem>
                   <SelectItem value={TipoTinta.ACABAMENTO}>
                     {TipoTintaLabels[TipoTinta.ACABAMENTO]}
+                  </SelectItem>
+                  <SelectItem value={TipoTinta.SOLVENTE}>
+                    {TipoTintaLabels[TipoTinta.SOLVENTE]}
                   </SelectItem>
                 </SelectContent>
               </Select>

@@ -57,7 +57,7 @@ const ConsumivelFormDialog = ({
   const [observacoes, setObservacoes] = useState('');
 
   const fornecedores = ['Diversos', 'Nacional', 'Importado'];
-  const unidades = ['un', 'kg', 'cx', 'pc', 'm', 'L'];
+  const unidades = ['un', 'kg', 'cx', 'pc', 'm', 'L', 'cil'];
 
   useEffect(() => {
     if (open) {
@@ -202,7 +202,14 @@ const ConsumivelFormDialog = ({
               <Label htmlFor="categoria">
                 Categoria <span className="text-red-500">*</span>
               </Label>
-              <Select value={categoria} onValueChange={(value) => setCategoria(value as ConsumivelCategoria)}>
+              <Select
+                value={categoria}
+                onValueChange={(value) => {
+                  const cat = value as ConsumivelCategoria;
+                  setCategoria(cat);
+                  if (cat === ConsumivelCategoria.GASES) setUnidade('cil');
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -265,12 +272,15 @@ const ConsumivelFormDialog = ({
             </div>
             <div>
               <Label htmlFor="grupoABC">Grupo ABC (Curva ABC)</Label>
-              <Select value={grupoABC} onValueChange={(value) => setGrupoABC(value as GrupoABC | '')}>
+              <Select
+                value={grupoABC || 'none'}
+                onValueChange={(value) => setGrupoABC(value === 'none' ? '' : value as GrupoABC)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {Object.entries(GrupoABC).map(([key, value]) => (
                     <SelectItem key={value} value={value}>
                       {GrupoABCLabels[value]}

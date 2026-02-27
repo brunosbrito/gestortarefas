@@ -6,18 +6,10 @@ import {
   Save,
   Copy,
   Trash2,
-  FileDown,
-  ChevronDown,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -134,13 +126,6 @@ export default function OrcamentoDetalhes() {
     }
   };
 
-  const handleExportar = (formato: 'pdf' | 'excel') => {
-    toast({
-      title: 'Exportação em desenvolvimento',
-      description: `Exportação para ${formato.toUpperCase()} será implementada em breve.`,
-    });
-  };
-
   if (isLoading) {
     return (
       <Layout>
@@ -203,24 +188,6 @@ export default function OrcamentoDetalhes() {
               Clonar
             </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <FileDown className="mr-2 h-4 w-4" />
-                  Exportar
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleExportar('pdf')}>
-                  Exportar PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExportar('excel')}>
-                  Exportar Excel
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <Button variant="destructive" onClick={handleExcluir}>
               <Trash2 className="mr-2 h-4 w-4" />
               Excluir
@@ -275,7 +242,7 @@ export default function OrcamentoDetalhes() {
           </TabsContent>
 
           <TabsContent value="qqp" className="mt-6">
-            <AbaQQP orcamento={orcamento} onUpdate={refetch} />
+            <AbaQQP orcamento={orcamento} onUpdate={refetch} onNavigateToAba={setAbaAtiva} />
           </TabsContent>
         </Tabs>
       </div>

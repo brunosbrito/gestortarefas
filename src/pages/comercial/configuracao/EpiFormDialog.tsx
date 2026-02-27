@@ -34,6 +34,7 @@ const EpiFormDialog = ({ open, onOpenChange, epi, onSalvar }: EpiFormDialogProps
   const [saving, setSaving] = useState(false);
 
   const [descricao, setDescricao] = useState('');
+  const [nomeResumido, setNomeResumido] = useState('');
   const [unidade, setUnidade] = useState('un');
   const [ca, setCa] = useState('');
   const [fabricante, setFabricante] = useState('');
@@ -43,12 +44,14 @@ const EpiFormDialog = ({ open, onOpenChange, epi, onSalvar }: EpiFormDialogProps
     if (open) {
       if (epi) {
         setDescricao(epi.descricao);
+        setNomeResumido(epi.nomeResumido || '');
         setUnidade(epi.unidade);
         setCa(epi.ca);
         setFabricante(epi.fabricante || '');
         setValorReferencia(epi.valorReferencia.toFixed(2));
       } else {
         setDescricao('');
+        setNomeResumido('');
         setUnidade('un');
         setCa('');
         setFabricante('');
@@ -72,6 +75,7 @@ const EpiFormDialog = ({ open, onOpenChange, epi, onSalvar }: EpiFormDialogProps
       setSaving(true);
       const data = {
         descricao: descricao.trim(),
+        nomeResumido: nomeResumido.trim() || undefined,
         unidade,
         ca: ca.trim(),
         fabricante: fabricante.trim() || undefined,
@@ -104,16 +108,29 @@ const EpiFormDialog = ({ open, onOpenChange, epi, onSalvar }: EpiFormDialogProps
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Descrição */}
+          {/* Descrição técnica completa */}
           <div className="space-y-1.5">
-            <Label>Descrição *</Label>
+            <Label>Descrição técnica *</Label>
             <Input
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Ex: LUVA DE VAQUETA MISTA CANO CURTO"
+              placeholder="Ex: BOT FORTLINE ELAST PU BI PLUS PALM RTPR C/BICO..."
               className="bg-green-50 dark:bg-green-950 uppercase"
               onBlur={(e) => setDescricao(e.target.value.toUpperCase())}
             />
+            <p className="text-xs text-muted-foreground">Nome completo do produto conforme fabricante / CA</p>
+          </div>
+
+          {/* Nome resumido */}
+          <div className="space-y-1.5">
+            <Label>Nome Resumido <span className="text-muted-foreground font-normal">(exibido na tabela)</span></Label>
+            <Input
+              value={nomeResumido}
+              onChange={(e) => setNomeResumido(e.target.value)}
+              placeholder="Ex: Botina Bico Aço - Fortline - Tam. 42"
+              className="bg-green-50 dark:bg-green-950"
+            />
+            <p className="text-xs text-muted-foreground">Opcional. Se preenchido, substitui a descrição técnica na listagem</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

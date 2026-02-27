@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Plus, Edit2, Save, X, Trash2, Upload, Download, TrendingUp, Check, Edit,
   AlertCircle, ArrowUp, ArrowDown,
@@ -18,7 +18,10 @@ import {
 } from '@/components/ui/select';
 import { ComposicaoCustos, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency } from '@/lib/currency';
+import { normalizarDescricao } from '@/lib/textUtils';
 import { useToast } from '@/hooks/use-toast';
+import { useTableSort, SortableTableHeader } from '@/components/tables/SortableTableHeader';
+import ExportarComposicaoButton from './ExportarComposicaoButton';
 
 // ---- tipos locais ----
 interface RowGenerico {
@@ -27,13 +30,18 @@ interface RowGenerico {
   codigo: string;
   descricao: string;
   quantidade: number | '';
+  qtdPeriodo: number;          // Qtd de períodos (default 1; usado quando mostrarQtdPeriodo=true)
   unidade: string;
   valorUnitario: number | '';
 }
 
 // ---- helpers ----
 const calcSubtotalRow = (r: RowGenerico): number =>
-  Math.round((Number(r.quantidade) || 0) * (Number(r.valorUnitario) || 0) * 100) / 100;
+  Math.round((Number(r.quantidade) || 0) * r.qtdPeriodo * (Number(r.valorUnitario) || 0) * 100) / 100;
+
+const getQtdPeriodoFromItem = (item: ItemComposicao): number => {
+  try { return JSON.parse(item.especificacao || '{}').qtdPeriodo ?? 1; } catch { return 1; }
+};
 
 const parseItemGenerico = (item: ItemComposicao): RowGenerico => ({
   _localId: item.id,
@@ -41,16 +49,18 @@ const parseItemGenerico = (item: ItemComposicao): RowGenerico => ({
   codigo: item.codigo ?? '',
   descricao: item.descricao ?? '',
   quantidade: item.quantidade,
+  qtdPeriodo: getQtdPeriodoFromItem(item),
   unidade: item.unidade || 'un',
   valorUnitario: item.valorUnitario,
 });
 
-const newRowGenerico = (): RowGenerico => ({
+const newRowGenerico = (defaultUnidade = 'un'): RowGenerico => ({
   _localId: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   codigo: '',
   descricao: '',
   quantidade: '',
-  unidade: 'un',
+  qtdPeriodo: 1,
+  unidade: defaultUnidade,
   valorUnitario: '',
 });
 
@@ -60,6 +70,18 @@ interface ComposicaoGenericaTableProps {
   tipo: string;
   tipoItemPadrao?: ItemComposicao['tipoItem'];
   onUpdate?: (composicao: ComposicaoCustos) => Promise<void>;
+  /** Quando definido, a coluna Unidade vira Select com estas opções */
+  unidadeOptions?: string[];
+  /** Rótulo da coluna de unidade (padrão: "Unid.") */
+  labelUnidade?: string;
+  /** Unidade padrão para novas linhas (padrão: "un") */
+  defaultUnidade?: string;
+  /** Se true, QTD aceita apenas inteiros (sem decimais) */
+  quantidadeInteira?: boolean;
+  /** Se true, exibe coluna "Qtd Período" (qtdPeriodo) — fórmula: Qtd × Qtd Período × Valor Unit. */
+  mostrarQtdPeriodo?: boolean;
+  /** Rótulo da coluna de quantidade quando mostrarQtdPeriodo=true (padrão: "Qtd") */
+  labelQuantidade?: string;
 }
 
 export default function ComposicaoGenericaTable({
@@ -67,6 +89,12 @@ export default function ComposicaoGenericaTable({
   tipo,
   tipoItemPadrao = 'outros',
   onUpdate,
+  unidadeOptions,
+  labelUnidade = 'Unid.',
+  defaultUnidade = 'un',
+  quantidadeInteira = false,
+  mostrarQtdPeriodo = false,
+  labelQuantidade,
 }: ComposicaoGenericaTableProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,7 +138,7 @@ export default function ComposicaoGenericaTable({
   const handleField = <K extends keyof RowGenerico>(localId: string, field: K, value: RowGenerico[K]) =>
     setRows((prev) => prev.map((r) => (r._localId === localId ? { ...r, [field]: value } : r)));
 
-  const handleAddRow = () => setRows((prev) => [...prev, newRowGenerico()]);
+  const handleAddRow = () => setRows((prev) => [...prev, newRowGenerico(defaultUnidade)]);
   const handleRemoveRow = (localId: string) => setRows((prev) => prev.filter((r) => r._localId !== localId));
 
   const handleCancel = () => {
@@ -145,7 +173,7 @@ export default function ComposicaoGenericaTable({
       const novosItens: ItemComposicao[] = rows.map((r, index) => ({
         id: r.itemId ?? `item-${Date.now()}-${index}`,
         composicaoId: composicao.id,
-        descricao: r.descricao,
+        descricao: normalizarDescricao(r.descricao),
         codigo: r.codigo || undefined,
         quantidade: Number(r.quantidade),
         unidade: r.unidade,
@@ -154,6 +182,9 @@ export default function ComposicaoGenericaTable({
         percentual: 0,
         tipoItem: tipoItemPadrao,
         ordem: index + 1,
+        especificacao: mostrarQtdPeriodo && r.qtdPeriodo !== 1
+          ? JSON.stringify({ qtdPeriodo: r.qtdPeriodo })
+          : undefined,
       }));
 
       await onUpdate({ ...composicao, itens: novosItens });
@@ -228,6 +259,7 @@ export default function ComposicaoGenericaTable({
           codigo,
           descricao,
           quantidade: qtd,
+          qtdPeriodo: 1,
           unidade: unidade || 'un',
           valorUnitario: preco,
         });
@@ -251,7 +283,7 @@ export default function ComposicaoGenericaTable({
       const novosItens: ItemComposicao[] = importDados.map((r, index) => ({
         id: `import-${Date.now()}-${index}`,
         composicaoId: composicao.id,
-        descricao: r.descricao,
+        descricao: normalizarDescricao(r.descricao),
         codigo: r.codigo || undefined,
         quantidade: Number(r.quantidade),
         unidade: r.unidade,
@@ -292,7 +324,8 @@ export default function ComposicaoGenericaTable({
           reajusteTipo === 'percentual'
             ? Math.max(0, Math.round(item.valorUnitario * (1 + reajusteValor / 100) * 100) / 100)
             : Math.max(0, Math.round((item.valorUnitario + reajusteValor) * 100) / 100);
-        return { ...item, valorUnitario: novo, subtotal: item.quantidade * novo };
+        const qtdPer = getQtdPeriodoFromItem(item);
+        return { ...item, valorUnitario: novo, subtotal: item.quantidade * qtdPer * novo };
       });
       await onUpdate({ ...composicao, itens: novosItens });
       toast({ title: 'Sucesso', description: 'Preços reajustados com sucesso' });
@@ -307,6 +340,13 @@ export default function ComposicaoGenericaTable({
 
   // ---- totais ----
   const totalSubtotal = rows.reduce((acc, r) => acc + calcSubtotalRow(r), 0);
+
+  // ---- sort (view mode) ----
+  const rowsComSubtotal = useMemo(
+    () => rows.map((r) => ({ ...r, _subtotal: calcSubtotalRow(r) })),
+    [rows]
+  );
+  const { sortedData: sortedRows, sortKey, sortDirection, handleSort } = useTableSort(rowsComSubtotal);
 
   // ==========================================
   // VIEW MODE
@@ -333,24 +373,74 @@ export default function ComposicaoGenericaTable({
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="border-r w-10 text-center">#</TableHead>
-              <TableHead className="border-r w-32">Código</TableHead>
-              <TableHead className="border-r">Descrição</TableHead>
-              <TableHead className="border-r text-center w-20">Qtd</TableHead>
-              <TableHead className="border-r w-20">Unid.</TableHead>
-              <TableHead className="border-r text-right w-32">Valor Unit.</TableHead>
-              <TableHead className="text-right w-36">Subtotal</TableHead>
+              <SortableTableHeader
+                label="Código"
+                sortKey="codigo"
+                currentSortKey={sortKey}
+                currentSortDirection={sortDirection}
+                onSort={handleSort}
+                className="border-r w-32"
+              />
+              <SortableTableHeader
+                label="Descrição"
+                sortKey="descricao"
+                currentSortKey={sortKey}
+                currentSortDirection={sortDirection}
+                onSort={handleSort}
+                className="border-r"
+              />
+              <SortableTableHeader
+                label={labelQuantidade ?? 'Qtd'}
+                sortKey="quantidade"
+                currentSortKey={sortKey}
+                currentSortDirection={sortDirection}
+                onSort={handleSort}
+                className="border-r w-20"
+                align="center"
+              />
+              {mostrarQtdPeriodo && (
+                <SortableTableHeader
+                  label="Qtd Período"
+                  sortKey="qtdPeriodo"
+                  currentSortKey={sortKey}
+                  currentSortDirection={sortDirection}
+                  onSort={handleSort}
+                  className="border-r w-16"
+                  align="center"
+                />
+              )}
+              <TableHead className="border-r w-24">{labelUnidade}</TableHead>
+              <SortableTableHeader
+                label="Valor Unit."
+                sortKey="valorUnitario"
+                currentSortKey={sortKey}
+                currentSortDirection={sortDirection}
+                onSort={handleSort}
+                className="border-r w-32"
+                align="right"
+              />
+              <SortableTableHeader
+                label="Subtotal"
+                sortKey="_subtotal"
+                currentSortKey={sortKey}
+                currentSortDirection={sortDirection}
+                onSort={handleSort}
+                className="w-36"
+                align="right"
+              />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((r, idx) => (
+            {sortedRows.map((r, idx) => (
               <TableRow key={r._localId} className="hover:bg-muted/30">
                 <TableCell className="border-r text-center font-medium">{idx + 1}</TableCell>
                 <TableCell className="border-r font-mono text-xs">{r.codigo || '—'}</TableCell>
                 <TableCell className="border-r font-medium">{r.descricao}</TableCell>
                 <TableCell className="border-r text-center">{r.quantidade !== '' ? r.quantidade : '—'}</TableCell>
+                {mostrarQtdPeriodo && <TableCell className="border-r text-center">{r.qtdPeriodo}</TableCell>}
                 <TableCell className="border-r">{r.unidade}</TableCell>
                 <TableCell className="border-r text-right font-mono">{formatCurrency(Number(r.valorUnitario))}</TableCell>
-                <TableCell className="text-right font-bold text-green-600">{formatCurrency(calcSubtotalRow(r))}</TableCell>
+                <TableCell className="text-right font-bold text-green-600">{formatCurrency(r._subtotal)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -370,8 +460,9 @@ export default function ComposicaoGenericaTable({
             <TableHead className="border-r w-10 text-center">#</TableHead>
             <TableHead className="border-r w-32">Código</TableHead>
             <TableHead className="border-r min-w-[200px]">Descrição</TableHead>
-            <TableHead className="border-r w-24 text-center">Qtd</TableHead>
-            <TableHead className="border-r w-24">Unid.</TableHead>
+            <TableHead className="border-r w-24 text-center">{labelQuantidade ?? 'Qtd'}</TableHead>
+            {mostrarQtdPeriodo && <TableHead className="border-r w-20 text-center">Qtd Período</TableHead>}
+            <TableHead className="border-r w-28">{labelUnidade}</TableHead>
             <TableHead className="border-r w-36 text-center">Valor Unit.</TableHead>
             <TableHead className="border-r w-36 text-center">Subtotal</TableHead>
             <TableHead className="w-10" />
@@ -408,27 +499,63 @@ export default function ComposicaoGenericaTable({
               <TableCell className="border-r p-1">
                 <Input
                   type="number"
-                  min={0}
-                  step={0.01}
+                  min={quantidadeInteira ? 1 : 0}
+                  step={quantidadeInteira ? 1 : 0.01}
                   className="h-8 text-sm text-center"
                   value={r.quantidade}
-                  onChange={(e) =>
-                    handleField(r._localId, 'quantidade', e.target.value === '' ? '' : Number(e.target.value))
-                  }
+                  onChange={(e) => {
+                    const raw = e.target.value === '' ? '' : Number(e.target.value);
+                    handleField(r._localId, 'quantidade', quantidadeInteira && raw !== '' ? Math.round(raw as number) : raw);
+                  }}
                   placeholder="0"
                   disabled={salvando}
                 />
               </TableCell>
 
-              {/* Unidade */}
+              {/* Qtd Período */}
+              {mostrarQtdPeriodo && (
+                <TableCell className="border-r p-1">
+                  <Input
+                    type="number"
+                    min={0.5}
+                    step={0.5}
+                    className="h-8 text-sm text-center"
+                    value={r.qtdPeriodo}
+                    onChange={(e) => {
+                      const raw = Math.max(0.5, Number(e.target.value) || 0.5);
+                      handleField(r._localId, 'qtdPeriodo', raw);
+                    }}
+                    disabled={salvando}
+                  />
+                </TableCell>
+              )}
+
+              {/* Unidade / Período */}
               <TableCell className="border-r p-1">
-                <Input
-                  className="h-8 text-sm"
-                  value={r.unidade}
-                  onChange={(e) => handleField(r._localId, 'unidade', e.target.value)}
-                  placeholder="un"
-                  disabled={salvando}
-                />
+                {unidadeOptions ? (
+                  <Select
+                    value={r.unidade || unidadeOptions[0]}
+                    onValueChange={(v) => handleField(r._localId, 'unidade', v)}
+                    disabled={salvando}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unidadeOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    className="h-8 text-sm"
+                    value={r.unidade}
+                    onChange={(e) => handleField(r._localId, 'unidade', e.target.value)}
+                    placeholder="un"
+                    disabled={salvando}
+                  />
+                )}
               </TableCell>
 
               {/* Valor Unit */}
@@ -470,7 +597,7 @@ export default function ComposicaoGenericaTable({
 
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+              <TableCell colSpan={mostrarQtdPeriodo ? 9 : 8} className="text-center py-6 text-muted-foreground">
                 Nenhuma linha. Clique em "+ Linha" para adicionar.
               </TableCell>
             </TableRow>
@@ -494,6 +621,23 @@ export default function ComposicaoGenericaTable({
         <div className="flex gap-2 flex-wrap">
           {!editMode && onUpdate && (
             <>
+              {rows.length > 0 && (
+                <ExportarComposicaoButton
+                  titulo={tipo}
+                  rows={rowsComSubtotal.map((r) => ({
+                    codigo: r.codigo,
+                    descricao: r.descricao,
+                    quantidade: r.quantidade,
+                    qtdPeriodo: mostrarQtdPeriodo ? r.qtdPeriodo : undefined,
+                    unidade: r.unidade,
+                    valorUnitario: r.valorUnitario,
+                    subtotal: r._subtotal,
+                  }))}
+                  mostrarQtdPeriodo={mostrarQtdPeriodo}
+                  labelQuantidade={labelQuantidade}
+                  labelUnidade={labelUnidade}
+                />
+              )}
               <Button size="sm" variant="outline" onClick={handleBaixarModelo} title="Baixar planilha modelo">
                 <Download className="mr-2 h-4 w-4" />
                 Modelo
@@ -572,7 +716,20 @@ export default function ComposicaoGenericaTable({
 
             {/* BDI */}
             <div>
-              <Label className="text-muted-foreground">BDI</Label>
+              <div className="flex items-center gap-1">
+                <Label className="text-muted-foreground">BDI</Label>
+                {onUpdate && !editandoBDI && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => setEditandoBDI(true)}
+                    title="Editar BDI desta composição"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
               {onUpdate && editandoBDI ? (
                 <div className="flex items-center gap-1 mt-1">
                   <Input
@@ -606,17 +763,6 @@ export default function ComposicaoGenericaTable({
                     {formatCurrency(composicao?.bdi?.valor ?? 0)}
                   </p>
                   <span className="text-sm text-muted-foreground">({composicao?.bdi?.percentual ?? 0}%)</span>
-                  {onUpdate && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                      onClick={() => setEditandoBDI(true)}
-                      title="Editar BDI desta composição"
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                  )}
                 </div>
               )}
             </div>

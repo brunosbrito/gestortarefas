@@ -39,6 +39,7 @@ class EpiServiceClass {
     const novo: EpiCatalogo = {
       id: `epi-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       descricao: data.descricao.trim(),
+      nomeResumido: data.nomeResumido?.trim() || undefined,
       unidade: data.unidade,
       ca: data.ca.trim(),
       fabricante: data.fabricante?.trim() || undefined,
@@ -59,6 +60,9 @@ class EpiServiceClass {
     const updated: EpiCatalogo = {
       ...all[idx],
       descricao: data.descricao?.trim() ?? all[idx].descricao,
+      nomeResumido: data.nomeResumido !== undefined
+        ? (data.nomeResumido.trim() || undefined)
+        : all[idx].nomeResumido,
       unidade: data.unidade ?? all[idx].unidade,
       ca: data.ca?.trim() ?? all[idx].ca,
       fabricante: data.fabricante?.trim() ?? all[idx].fabricante,

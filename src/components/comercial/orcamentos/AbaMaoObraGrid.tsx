@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Save, X, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Save, X, Trash2, ExternalLink, Check, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,7 @@ import { Cargo } from '@/interfaces/CargoInterface';
 import { CargoService } from '@/services/CargoService';
 import { formatCurrency } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
+import ExportarComposicaoButton from './ExportarComposicaoButton';
 
 // 44h semanais ÷ 5 dias = 8,8 h/dia (CLT)
 const HH_DIA_PADRAO = 8.8;
@@ -119,6 +120,16 @@ export default function AbaMaoObraGrid({
   const [rows, setRows] = useState<RowMO[]>([]);
   const [salvando, setSalvando] = useState(false);
 
+  // BDI
+  const [editandoBDI, setEditandoBDI] = useState(false);
+  const [bdiInput, setBdiInput] = useState(composicao?.bdi?.percentual ?? 0);
+  const [salvandoBDI, setSalvandoBDI] = useState(false);
+
+  // Sync BDI
+  useEffect(() => {
+    if (!editandoBDI) setBdiInput(composicao?.bdi?.percentual ?? 0);
+  }, [composicao?.bdi?.percentual, editandoBDI]);
+
   // Carrega todos os cargos ativos do catálogo
   useEffect(() => {
     CargoService.listAtivos().then(setCargos).catch(() => {});
@@ -169,6 +180,20 @@ export default function AbaMaoObraGrid({
       setRows(moItems.map(parseItem));
     }
     setEditMode(false);
+  };
+
+  const handleSalvarBDI = async () => {
+    if (!composicao || !onUpdate) return;
+    try {
+      setSalvandoBDI(true);
+      await onUpdate({ ...composicao, bdi: { ...composicao.bdi, percentual: bdiInput } });
+      setEditandoBDI(false);
+      toast({ title: 'Sucesso', description: 'BDI atualizado com sucesso' });
+    } catch {
+      toast({ title: 'Erro', description: 'Erro ao atualizar BDI', variant: 'destructive' });
+    } finally {
+      setSalvandoBDI(false);
+    }
   };
 
   const handleSave = async () => {
@@ -533,10 +558,25 @@ export default function AbaMaoObraGrid({
 
         <div className="flex gap-2">
           {!editMode && onUpdate && rows.length > 0 && (
-            <Button size="sm" variant="outline" onClick={() => setEditMode(true)}>
-              <Edit2 className="mr-2 h-4 w-4" />
-              Editar Grid
-            </Button>
+            <>
+              <ExportarComposicaoButton
+                titulo={`MO ${tipo}`}
+                rows={rows.map((r) => ({
+                  codigo: r.nivel || '',
+                  descricao: `${r.cargo} — ${makeBreakdown(r)}`,
+                  quantidade: calcHH(r),
+                  unidade: 'hh',
+                  valorUnitario: Number(r.rsHH) || 0,
+                  subtotal: calcSubtotal(r),
+                }))}
+                labelQuantidade="QTD/HH"
+                labelUnidade="Unid."
+              />
+              <Button size="sm" variant="outline" onClick={() => setEditMode(true)}>
+                <Edit2 className="mr-2 h-4 w-4" />
+                Editar Grid
+              </Button>
+            </>
           )}
 
           {editMode && (
@@ -564,7 +604,7 @@ export default function AbaMaoObraGrid({
       {/* Totais */}
       {rows.length > 0 && (
         <div className="mt-4 pt-4 border-t">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             <div>
               <Label className="text-muted-foreground">Cargos</Label>
               <p className="text-xl font-bold">{rows.length}</p>
@@ -581,16 +621,63 @@ export default function AbaMaoObraGrid({
               <Label className="text-muted-foreground">Custo Direto MO</Label>
               <p className="text-xl font-bold text-green-600">{formatCurrency(totalSubtotal)}</p>
             </div>
-            {composicao && (
-              <div>
-                <Label className="text-muted-foreground">
-                  BDI ({composicao.bdi?.percentual ?? 0}%)
-                </Label>
-                <p className="text-xl font-bold text-blue-600">
-                  {formatCurrency(composicao.bdi?.valor ?? 0)}
-                </p>
+            <div>
+              <div className="flex items-center gap-1">
+                <Label className="text-muted-foreground">BDI</Label>
+                {onUpdate && !editandoBDI && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => setEditandoBDI(true)}
+                    title="Editar BDI desta composição"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
-            )}
+              {onUpdate && editandoBDI ? (
+                <div className="flex items-center gap-1 mt-1">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    value={bdiInput}
+                    onChange={(e) => setBdiInput(parseFloat(e.target.value) || 0)}
+                    className="w-20 h-8 text-sm"
+                    disabled={salvandoBDI}
+                    autoFocus
+                  />
+                  <span className="text-sm text-muted-foreground">%</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={() => { setEditandoBDI(false); setBdiInput(composicao?.bdi?.percentual ?? 0); }}
+                    disabled={salvandoBDI}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" className="h-8 w-8 p-0" onClick={handleSalvarBDI} disabled={salvandoBDI}>
+                    <Check className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xl font-bold text-blue-600">
+                    {formatCurrency(composicao?.bdi?.valor ?? 0)}
+                  </p>
+                  <span className="text-sm text-muted-foreground">({composicao?.bdi?.percentual ?? 0}%)</span>
+                </div>
+              )}
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Total c/ BDI</Label>
+              <p className="text-xl font-bold text-amber-600">
+                {formatCurrency(composicao?.subtotal ?? totalSubtotal)}
+              </p>
+            </div>
           </div>
         </div>
       )}

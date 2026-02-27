@@ -178,9 +178,11 @@ const TabelaTintas = () => {
   const getTipoColor = (tipo: TipoTinta): string => {
     switch (tipo) {
       case TipoTinta.PRIMER:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+        return 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300';
       case TipoTinta.ACABAMENTO:
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
+      case TipoTinta.SOLVENTE:
+        return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -241,6 +243,7 @@ const TabelaTintas = () => {
                     <SelectItem value="todos">Todos</SelectItem>
                     <SelectItem value={TipoTinta.PRIMER}>{TipoTintaLabels[TipoTinta.PRIMER]}</SelectItem>
                     <SelectItem value={TipoTinta.ACABAMENTO}>{TipoTintaLabels[TipoTinta.ACABAMENTO]}</SelectItem>
+                    <SelectItem value={TipoTinta.SOLVENTE}>{TipoTintaLabels[TipoTinta.SOLVENTE]}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

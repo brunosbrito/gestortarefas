@@ -119,8 +119,8 @@ export interface ComposicaoCustos {
   id: string;
   orcamentoId: string;
   nome: string;                      // "Mobilização Padrão", "MO Fabricação"
-  tipo: 'mobilizacao' | 'desmobilizacao' | 'mo_fabricacao' | 'mo_montagem' |
-        'jato_pintura' | 'ferramentas' | 'consumiveis' | 'materiais';
+  tipo: 'mobilizacao' | 'desmobilizacao' | 'mo_fabricacao' | 'mo_montagem' | 'mo_terceirizados' |
+        'jato_pintura' | 'ferramentas' | 'ferramentas_eletricas' | 'consumiveis' | 'materiais';
 
   // Itens da composição (materiais, mão de obra, etc.)
   itens: ItemComposicao[];

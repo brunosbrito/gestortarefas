@@ -6,6 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table as TableComponent,
   TableBody,
   TableCell,
@@ -15,7 +22,12 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import FornecedorServicoService from '@/services/FornecedorServicoService';
-import { FornecedorServicoInterface } from '@/interfaces/FornecedorServicoInterface';
+import {
+  FornecedorServicoInterface,
+  CategoriaFornecedor,
+  CategoriaFornecedorLabels,
+  CategoriaFornecedorColors,
+} from '@/interfaces/FornecedorServicoInterface';
 import { formatCurrency } from '@/lib/currency';
 import Layout from '@/components/Layout';
 import { mockFornecedores } from '@/data/mockTintas';
@@ -50,6 +62,7 @@ const TabelaFornecedoresServico = () => {
 
   // Filtros
   const [busca, setBusca] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todas');
 
   useEffect(() => {
     carregarFornecedores();
@@ -57,7 +70,7 @@ const TabelaFornecedoresServico = () => {
 
   useEffect(() => {
     aplicarFiltros();
-  }, [busca, fornecedores]);
+  }, [busca, categoriaFiltro, fornecedores]);
 
   const carregarFornecedores = async () => {
     try {
@@ -112,6 +125,12 @@ const TabelaFornecedoresServico = () => {
           f.nome.toLowerCase().includes(buscaLower) ||
           (f.contato && f.contato.toLowerCase().includes(buscaLower)) ||
           (f.email && f.email.toLowerCase().includes(buscaLower))
+      );
+    }
+
+    if (categoriaFiltro !== 'todas') {
+      resultado = resultado.filter(
+        (f) => (f.categorias || []).includes(categoriaFiltro as CategoriaFornecedor)
       );
     }
 
@@ -193,7 +212,7 @@ const TabelaFornecedoresServico = () => {
           <CardContent>
             {/* Filtros */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="md:col-span-2">
+              <div>
                 <Label>Buscar</Label>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -205,11 +224,22 @@ const TabelaFornecedoresServico = () => {
                   />
                 </div>
               </div>
+              <div>
+                <Label>Categoria</Label>
+                <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    {(Object.keys(CategoriaFornecedorLabels) as CategoriaFornecedor[]).map((cat) => (
+                      <SelectItem key={cat} value={cat}>{CategoriaFornecedorLabels[cat]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setBusca('')}
-                >
+                <Button variant="outline" onClick={() => { setBusca(''); setCategoriaFiltro('todas'); }}>
                   Limpar Filtros
                 </Button>
               </div>
@@ -221,9 +251,8 @@ const TabelaFornecedoresServico = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    <TableHead>Categorias</TableHead>
                     <TableHead>Contato</TableHead>
-                    <TableHead className="text-right">Jateamento (R$/m²)</TableHead>
-                    <TableHead className="text-right">Pintura (R$/m²)</TableHead>
                     <TableHead>Telefone</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -248,13 +277,19 @@ const TabelaFornecedoresServico = () => {
                               )}
                             </div>
                           </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {(fornecedor.categorias || []).map((cat) => (
+                                <Badge key={cat} className={`text-xs ${CategoriaFornecedorColors[cat]}`}>
+                                  {CategoriaFornecedorLabels[cat]}
+                                </Badge>
+                              ))}
+                              {(fornecedor.categorias || []).length === 0 && (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>{fornecedor.contato || '-'}</TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatCurrency(fornecedor.valorJateamentoM2)}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatCurrency(fornecedor.valorPinturaM2)}
-                          </TableCell>
                           <TableCell>{fornecedor.telefone || '-'}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
@@ -344,19 +379,33 @@ const TabelaFornecedoresServico = () => {
                     <Label className="text-muted-foreground">Email</Label>
                     <p className="font-medium">{fornecedorParaVisualizar.email || '-'}</p>
                   </div>
-                  <div>
-                    <Label className="text-muted-foreground">Valor Jateamento</Label>
-                    <p className="font-medium text-lg text-blue-600">
-                      {formatCurrency(fornecedorParaVisualizar.valorJateamentoM2)}/m²
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Valor Pintura</Label>
-                    <p className="font-medium text-lg text-green-600">
-                      {formatCurrency(fornecedorParaVisualizar.valorPinturaM2)}/m²
-                    </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Categorias</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {(fornecedorParaVisualizar.categorias || []).map((cat) => (
+                      <Badge key={cat} className={`text-xs ${CategoriaFornecedorColors[cat]}`}>
+                        {CategoriaFornecedorLabels[cat]}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
+                {(fornecedorParaVisualizar.categorias || []).includes('jateamento_pintura') && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Valor Jateamento</Label>
+                      <p className="font-medium text-lg text-blue-600">
+                        {formatCurrency(fornecedorParaVisualizar.valorJateamentoM2)}/m²
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Valor Pintura</Label>
+                      <p className="font-medium text-lg text-green-600">
+                        {formatCurrency(fornecedorParaVisualizar.valorPinturaM2)}/m²
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {fornecedorParaVisualizar.observacoes && (
                   <div>
                     <Label className="text-muted-foreground">Observações</Label>

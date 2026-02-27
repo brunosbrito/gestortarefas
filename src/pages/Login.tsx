@@ -16,11 +16,21 @@ const Login = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [senhaSalva, setSenhaSalva] = useState(false);
 
   useEffect(() => {
     const token = getStoredToken();
     if (token) {
       navigate('/dashboard');
+      return;
+    }
+    const savedEmail = localStorage.getItem('userEmail');
+    const savedPassword = localStorage.getItem('userPassword');
+    if (savedEmail) setEmail(savedEmail);
+    if (savedPassword) {
+      setPassword(savedPassword);
+      setSenhaSalva(true);
+      setRememberMe(true);
     }
   }, [navigate]);
 
@@ -37,12 +47,14 @@ const Login = () => {
         localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('authToken', response.data.access_token);
         localStorage.setItem('userEmail', email);
+        localStorage.setItem('userPassword', password);
         localStorage.setItem('userId', response.data.userId);
       } else {
         sessionStorage.setItem('authToken', response.data.access_token);
         localStorage.setItem('userId', response.data.userId);
         localStorage.removeItem('rememberMe');
         localStorage.removeItem('userEmail');
+        localStorage.removeItem('userPassword');
       }
 
       navigate('/dashboard');
@@ -76,44 +88,59 @@ const Login = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Digite sua senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pr-10"
-                  required
-                />
+            {senhaSalva ? (
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Senha salva</span>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="text-primary underline hover:opacity-80"
+                  onClick={() => { setPassword(''); setSenhaSalva(false); setRememberMe(false); localStorage.removeItem('userPassword'); localStorage.removeItem('userEmail'); localStorage.removeItem('rememberMe'); }}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  Usar outra conta
                 </button>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <Label
-                htmlFor="rememberMe"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Lembrar de mim
-              </Label>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+            {!senhaSalva && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                />
+                <Label
+                  htmlFor="rememberMe"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Lembrar de mim
+                </Label>
+              </div>
+            )}
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
