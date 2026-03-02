@@ -37,6 +37,7 @@ interface ColDef {
 interface ExportarComposicaoButtonProps {
   titulo: string;
   rows: ExportRowGenerico[];
+  bdi?: { percentual: number; valor: number };
   mostrarQtdPeriodo?: boolean;
   labelQuantidade?: string;
   labelUnidade?: string;
@@ -63,6 +64,7 @@ type Formato = 'excel' | 'pdf';
 export default function ExportarComposicaoButton({
   titulo,
   rows,
+  bdi,
   mostrarQtdPeriodo = false,
   labelQuantidade = 'Qtd',
   labelUnidade = 'Unid.',
@@ -90,8 +92,21 @@ export default function ExportarComposicaoButton({
   const selecionarTodas = () => setColunas((prev) => prev.map((c) => ({ ...c, checked: true })));
   const desmarcarTodas = () => setColunas((prev) => prev.map((c) => ({ ...c, checked: false })));
 
+  const [orientacao, setOrientacao] = useState<'auto' | 'retrato' | 'paisagem'>('auto');
+
   const colSelecionadas = colunas.filter((c) => c.checked);
   const podaExportar = colSelecionadas.length > 0 && rows.length > 0;
+
+  // Largura mínima por coluna (mm)
+  const MIN_WIDTHS: Record<string, number> = {
+    item: 8, codigo: 14, descricao: 52, quantidade: 14,
+    qtdPeriodo: 14, unidade: 12, valorUnitario: 26, subtotal: 26,
+  };
+  const minWidthTotal = colSelecionadas.reduce((s, c) => s + (MIN_WIDTHS[c.key] ?? 16), 0);
+  const orientacaoResolvida: 'portrait' | 'landscape' =
+    orientacao === 'retrato' ? 'portrait'
+    : orientacao === 'paisagem' ? 'landscape'
+    : minWidthTotal <= 175 ? 'portrait' : 'landscape';  // auto
 
   // ---- getCellValue ----
   const getCellValue = (row: ExportRowGenerico, key: string, idx: number): string | number => {
@@ -126,10 +141,15 @@ export default function ExportarComposicaoButton({
 
     // Resumo
     const totalSubtotal = rows.reduce((s, r) => s + r.subtotal, 0);
-    const resumo = [
+    const resumo: (string | number)[][] = [
       ['Composição', titulo],
       ['Total de Itens', rows.length],
       ['Custo Direto (R$)', totalSubtotal],
+      ...(bdi ? [
+        ['BDI (%)', bdi.percentual],
+        ['BDI (R$)', bdi.valor],
+        ['Total c/ BDI (R$)', totalSubtotal + bdi.valor],
+      ] : []),
       ['Gerado em', new Date().toLocaleString('pt-BR')],
     ];
     const wsResumo = XLSX.utils.aoa_to_sheet(resumo);
@@ -143,7 +163,11 @@ export default function ExportarComposicaoButton({
 
   // ---- PDF ----
   const exportarPDF = () => {
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const orient = orientacaoResolvida;
+    const doc = new jsPDF({ orientation: orient, unit: 'mm', format: 'a4' });
+    // Largura útil: portrait=182mm, landscape=269mm (A4 - 2×14mm margem)
+    const pageUsableW = orient === 'portrait' ? 182 : 269;
+    const pageH = orient === 'portrait' ? 297 : 210;
 
     // Cabeçalho
     doc.setFontSize(14);
@@ -165,13 +189,21 @@ export default function ExportarComposicaoButton({
       })
     );
 
-    // Larguras dinâmicas
+    // Larguras dinâmicas — se ajustam à orientação
     const descIdx = colSelecionadas.findIndex((c) => c.key === 'descricao');
+    const itemW = 8;
+    const descW = orient === 'portrait' ? 55 : 70;
+    const fixedW = (descIdx >= 0 ? descW : 0) + (colSelecionadas.some((c) => c.key === 'item') ? itemW : 0);
+    const varCols = colSelecionadas.length
+      - (descIdx >= 0 ? 1 : 0)
+      - (colSelecionadas.some((c) => c.key === 'item') ? 1 : 0);
+    const varW = Math.max(18, (pageUsableW - fixedW) / Math.max(varCols, 1));
+
     const colStyles: Record<number, { cellWidth: number }> = {};
     colSelecionadas.forEach((c, i) => {
-      if (c.key === 'descricao') colStyles[i] = { cellWidth: 70 };
-      else if (c.key === 'item') colStyles[i] = { cellWidth: 10 };
-      else colStyles[i] = { cellWidth: Math.max(18, (257 - (descIdx >= 0 ? 70 : 0) - 10) / (colSelecionadas.length - (descIdx >= 0 ? 1 : 0) - 1)) };
+      if (c.key === 'descricao') colStyles[i] = { cellWidth: descW };
+      else if (c.key === 'item') colStyles[i] = { cellWidth: itemW };
+      else colStyles[i] = { cellWidth: varW };
     });
 
     autoTable(doc, {
@@ -190,12 +222,46 @@ export default function ExportarComposicaoButton({
       columnStyles: colStyles,
     });
 
-    // Rodapé com total
+    // Rodapé com totais — tabela estilizada
     const totalSubtotal = rows.reduce((s, r) => s + r.subtotal, 0);
-    const finalY = (doc as any).lastAutoTable.finalY + 4;
-    doc.setFontSize(9);
-    doc.setTextColor(30, 30, 30);
-    doc.text(`Custo Direto Total: ${formatCurrency(totalSubtotal)}`, 14, finalY);
+    const startY = (doc as any).lastAutoTable.finalY + 4;
+
+    const rodapeBody: (string | number)[][] = [
+      ['Custo Direto', formatCurrency(totalSubtotal)],
+      ...(bdi ? [
+        [`+ BDI (${bdi.percentual}%)`, formatCurrency(bdi.valor)],
+        ['= Total c/ BDI', formatCurrency(totalSubtotal + bdi.valor)],
+      ] : []),
+    ];
+
+    autoTable(doc, {
+      startY,
+      body: rodapeBody,
+      theme: 'plain',
+      tableWidth: 100,
+      margin: { left: 14 },
+      styles: { fontSize: 8, cellPadding: { top: 2, bottom: 2, left: 4, right: 4 } },
+      columnStyles: {
+        0: { cellWidth: 55, fontStyle: 'normal' },
+        1: { cellWidth: 45, halign: 'right', fontStyle: 'bold' },
+      },
+      didParseCell: (data) => {
+        if (data.row.index === 0) {
+          data.cell.styles.fillColor = [243, 244, 246];
+          data.cell.styles.textColor = [55, 65, 81];
+        }
+        if (bdi && data.row.index === 1) {
+          data.cell.styles.fillColor = [239, 246, 255];
+          data.cell.styles.textColor = [37, 99, 235];
+        }
+        if (bdi && data.row.index === 2) {
+          data.cell.styles.fillColor = [220, 252, 231];
+          data.cell.styles.textColor = [22, 101, 52];
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 9;
+        }
+      },
+    });
 
     // Paginação
     const pageCount = (doc as any).internal.getNumberOfPages();
@@ -204,7 +270,7 @@ export default function ExportarComposicaoButton({
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
       const pw = doc.internal.pageSize.getWidth();
-      doc.text(`Página ${i} de ${pageCount}`, pw / 2, 205, { align: 'center' });
+      doc.text(`Página ${i} de ${pageCount}`, pw / 2, pageH - 8, { align: 'center' });
     }
 
     doc.save(`${titulo.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -288,6 +354,31 @@ export default function ExportarComposicaoButton({
                 ))}
               </div>
             </div>
+
+            {/* Orientação — somente PDF */}
+            {formato === 'pdf' && (
+              <>
+                <Separator />
+                <div>
+                  <p className="text-sm font-medium mb-2">Orientação</p>
+                  <div className="flex gap-2">
+                    {(['auto', 'retrato', 'paisagem'] as const).map((opt) => (
+                      <Button
+                        key={opt}
+                        size="sm"
+                        variant={orientacao === opt ? 'default' : 'outline'}
+                        onClick={() => setOrientacao(opt)}
+                        className="text-xs flex-1"
+                      >
+                        {opt === 'auto'
+                          ? `Automático (${orientacaoResolvida === 'portrait' ? '↕ Retrato' : '↔ Paisagem'})`
+                          : opt === 'retrato' ? '↕ Retrato' : '↔ Paisagem'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter>

@@ -488,6 +488,7 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
                       valorUnitario: item.valorUnitario,
                       subtotal: item.subtotal,
                     })),
+                  bdi: { percentual: moFabricacao?.bdi?.percentual ?? 0, valor: moFabricacao?.bdi?.valor ?? 0 },
                   labelQuantidade: 'QTD/HH',
                   labelUnidade: 'Unid.',
                 },
@@ -503,6 +504,7 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
                       valorUnitario: item.valorUnitario,
                       subtotal: item.subtotal,
                     })),
+                  bdi: { percentual: moMontagem?.bdi?.percentual ?? 0, valor: moMontagem?.bdi?.valor ?? 0 },
                   labelQuantidade: 'QTD/HH',
                   labelUnidade: 'Unid.',
                 },
@@ -516,6 +518,7 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
                     valorUnitario: r.valorUnitario,
                     subtotal: calcSubtotalTerceirizado(r),
                   })),
+                  bdi: { percentual: moTerceirizados?.bdi?.percentual ?? 0, valor: moTerceirizados?.bdi?.valor ?? 0 },
                 },
               ]}
             />
@@ -573,6 +576,7 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
                       valorUnitario: r.valorUnitario,
                       subtotal: calcSubtotalTerceirizado(r),
                     }))}
+                    bdi={{ percentual: moTerceirizados?.bdi?.percentual ?? 0, valor: moTerceirizados?.bdi?.valor ?? 0 }}
                   />
                   <Button size="sm" variant="outline" onClick={() => setEditMode(true)}>
                     <Edit2 className="mr-2 h-4 w-4" />

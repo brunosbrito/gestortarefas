@@ -19,6 +19,7 @@ import { ExportRowGenerico } from './ExportarComposicaoButton';
 export interface SecaoExportavel {
   titulo: string;
   rows: ExportRowGenerico[];
+  bdi?: { percentual: number; valor: number };
   labelQuantidade?: string;
   labelUnidade?: string;
 }
@@ -54,6 +55,7 @@ export default function ExportarAbaCompletaButton({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [formato, setFormato] = useState<Formato>('excel');
+  const [orientacao, setOrientacao] = useState<'auto' | 'retrato' | 'paisagem'>('auto');
 
   const secoesComDados = secoes.filter((s) => s.rows.length > 0);
   const totalItens = secoesComDados.reduce((sum, s) => sum + s.rows.length, 0);
@@ -61,6 +63,14 @@ export default function ExportarAbaCompletaButton({
     (sum, s) => sum + s.rows.reduce((ss, r) => ss + r.subtotal, 0),
     0,
   );
+  const totalBDI = secoesComDados.reduce((sum, s) => sum + (s.bdi?.valor ?? 0), 0);
+  const totalComBDI = totalGeral + totalBDI;
+
+  // Auto: portrait se totalItens ≤ 25 (portrait tem mais altura → mais linhas por pág)
+  const orientacaoResolvida: 'portrait' | 'landscape' =
+    orientacao === 'retrato' ? 'portrait'
+    : orientacao === 'paisagem' ? 'landscape'
+    : totalItens <= 25 ? 'portrait' : 'landscape';
 
   const abrirDialog = (fmt: Formato) => {
     setFormato(fmt);
@@ -94,21 +104,29 @@ export default function ExportarAbaCompletaButton({
     });
 
     // Aba Resumo Geral
+    const hasBDI = secoesComDados.some((s) => s.bdi);
     const resumoRows: (string | number)[][] = [
       ['Relatório:', tituloAba],
       ['Gerado em:', new Date().toLocaleString('pt-BR')],
       [''],
-      ['Seção', 'Itens', 'Custo Direto (R$)'],
-      ...secoesComDados.map((s) => [
-        s.titulo,
-        s.rows.length,
-        s.rows.reduce((sum, r) => sum + r.subtotal, 0),
-      ]),
+      hasBDI
+        ? ['Seção', 'Itens', 'Custo Direto (R$)', 'BDI%', 'BDI (R$)', 'Total c/ BDI (R$)']
+        : ['Seção', 'Itens', 'Custo Direto (R$)'],
+      ...secoesComDados.map((s) => {
+        const custoDir = s.rows.reduce((sum, r) => sum + r.subtotal, 0);
+        return hasBDI
+          ? [s.titulo, s.rows.length, custoDir, s.bdi?.percentual ?? 0, s.bdi?.valor ?? 0, custoDir + (s.bdi?.valor ?? 0)]
+          : [s.titulo, s.rows.length, custoDir];
+      }),
       [''],
-      ['TOTAL GERAL', totalItens, totalGeral],
+      hasBDI
+        ? ['TOTAL GERAL', totalItens, totalGeral, '', totalBDI, totalComBDI]
+        : ['TOTAL GERAL', totalItens, totalGeral],
     ];
     const wsResumo = XLSX.utils.aoa_to_sheet(resumoRows);
-    wsResumo['!cols'] = [{ wch: 30 }, { wch: 12 }, { wch: 22 }];
+    wsResumo['!cols'] = hasBDI
+      ? [{ wch: 30 }, { wch: 12 }, { wch: 22 }, { wch: 10 }, { wch: 18 }, { wch: 22 }]
+      : [{ wch: 30 }, { wch: 12 }, { wch: 22 }];
     XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo Geral');
 
     XLSX.writeFile(wb, `${tituloAba.toLowerCase().replace(/\s+/g, '_')}_${dataStr}.xlsx`);
@@ -118,7 +136,13 @@ export default function ExportarAbaCompletaButton({
 
   // ---- PDF ----
   const exportarPDF = () => {
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const orient = orientacaoResolvida;
+    const doc = new jsPDF({ orientation: orient, unit: 'mm', format: 'a4' });
+    const pageH = orient === 'portrait' ? 297 : 210;
+    // Widths das 7 colunas fixas — compactadas para portrait
+    const colWidths = orient === 'portrait'
+      ? { item: 6, codigo: 16, descricao: 62, qtd: 18, unid: 12, valUnit: 28, subtotal: 28 }
+      : { item: 8, codigo: 20, descricao: 75, qtd: 20, unid: 14, valUnit: 30, subtotal: 30 };
     let currentY = 14;
 
     // Título geral
@@ -170,21 +194,53 @@ export default function ExportarAbaCompletaButton({
         },
         bodyStyles: { fontSize: 7, cellPadding: 2 },
         columnStyles: {
-          0: { cellWidth: 8 },
-          1: { cellWidth: 20 },
-          2: { cellWidth: 75 },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 14 },
-          5: { cellWidth: 30 },
-          6: { cellWidth: 30 },
+          0: { cellWidth: colWidths.item },
+          1: { cellWidth: colWidths.codigo },
+          2: { cellWidth: colWidths.descricao },
+          3: { cellWidth: colWidths.qtd },
+          4: { cellWidth: colWidths.unid },
+          5: { cellWidth: colWidths.valUnit },
+          6: { cellWidth: colWidths.subtotal },
         },
       });
 
-      const lastY = (doc as any).lastAutoTable.finalY;
-      doc.setFontSize(8);
-      doc.setTextColor(50, 50, 50);
-      doc.text(`Subtotal ${secao.titulo}: ${formatCurrency(secaoTotal)}`, 14, lastY + 5);
-      currentY = lastY + 13;
+      // Rodapé da seção — tabela estilizada
+      const secaoStartY = (doc as any).lastAutoTable.finalY + 4;
+      const secaoRodapeBody: (string | number)[][] = [
+        [`Custo Direto ${secao.titulo}`, formatCurrency(secaoTotal)],
+        ...(secao.bdi ? [
+          [`+ BDI (${secao.bdi.percentual}%)`, formatCurrency(secao.bdi.valor)],
+          ['= Total c/ BDI', formatCurrency(secaoTotal + secao.bdi.valor)],
+        ] : []),
+      ];
+      autoTable(doc, {
+        startY: secaoStartY,
+        body: secaoRodapeBody,
+        theme: 'plain',
+        tableWidth: 120,
+        margin: { left: 14 },
+        styles: { fontSize: 8, cellPadding: { top: 2, bottom: 2, left: 4, right: 4 } },
+        columnStyles: {
+          0: { cellWidth: 75, fontStyle: 'normal' },
+          1: { cellWidth: 45, halign: 'right', fontStyle: 'bold' },
+        },
+        didParseCell: (data) => {
+          if (data.row.index === 0) {
+            data.cell.styles.fillColor = [243, 244, 246];
+            data.cell.styles.textColor = [55, 65, 81];
+          }
+          if (secao.bdi && data.row.index === 1) {
+            data.cell.styles.fillColor = [239, 246, 255];
+            data.cell.styles.textColor = [37, 99, 235];
+          }
+          if (secao.bdi && data.row.index === 2) {
+            data.cell.styles.fillColor = [220, 252, 231];
+            data.cell.styles.textColor = [22, 101, 52];
+            data.cell.styles.fontStyle = 'bold';
+          }
+        },
+      });
+      currentY = (doc as any).lastAutoTable.finalY + 8;
 
       // Nova página se próxima seção não couber
       if (sIdx < secoesComDados.length - 1 && currentY > 175) {
@@ -193,10 +249,44 @@ export default function ExportarAbaCompletaButton({
       }
     });
 
-    // Total geral no final
-    doc.setFontSize(10);
-    doc.setTextColor(30, 30, 30);
-    doc.text(`CUSTO DIRETO TOTAL: ${formatCurrency(totalGeral)}`, 14, currentY);
+    // Totais globais — tabela estilizada
+    const globalRodapeBody: (string | number)[][] = [
+      ['CUSTO DIRETO TOTAL', formatCurrency(totalGeral)],
+      ...(totalBDI > 0 ? [
+        ['+ BDI TOTAL', formatCurrency(totalBDI)],
+        ['= TOTAL c/ BDI', formatCurrency(totalComBDI)],
+      ] : []),
+    ];
+    autoTable(doc, {
+      startY: currentY,
+      body: globalRodapeBody,
+      theme: 'plain',
+      tableWidth: 130,
+      margin: { left: 14 },
+      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 5, right: 5 } },
+      columnStyles: {
+        0: { cellWidth: 85, fontStyle: 'bold' },
+        1: { cellWidth: 45, halign: 'right', fontStyle: 'bold' },
+      },
+      didParseCell: (data) => {
+        if (data.row.index === 0) {
+          data.cell.styles.fillColor = [229, 231, 235];
+          data.cell.styles.textColor = [31, 41, 55];
+          data.cell.styles.fontSize = 9;
+        }
+        if (totalBDI > 0 && data.row.index === 1) {
+          data.cell.styles.fillColor = [219, 234, 254];
+          data.cell.styles.textColor = [29, 78, 216];
+          data.cell.styles.fontSize = 9;
+        }
+        if (totalBDI > 0 && data.row.index === 2) {
+          data.cell.styles.fillColor = [187, 247, 208];
+          data.cell.styles.textColor = [20, 83, 45];
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 10;
+        }
+      },
+    });
 
     // Paginação
     const pageCount = (doc as any).internal.getNumberOfPages();
@@ -205,7 +295,7 @@ export default function ExportarAbaCompletaButton({
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
       const pw = doc.internal.pageSize.getWidth();
-      doc.text(`Página ${i} de ${pageCount}`, pw / 2, 205, { align: 'center' });
+      doc.text(`Página ${i} de ${pageCount}`, pw / 2, pageH - 8, { align: 'center' });
     }
 
     doc.save(`${tituloAba.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -271,6 +361,12 @@ export default function ExportarAbaCompletaButton({
                 <span className="text-muted-foreground">Custo direto total:</span>{' '}
                 <strong>{formatCurrency(totalGeral)}</strong>
               </p>
+              {totalBDI > 0 && (
+                <p>
+                  <span className="text-muted-foreground">Total c/ BDI:</span>{' '}
+                  <strong className="text-green-600">{formatCurrency(totalComBDI)}</strong>
+                </p>
+              )}
             </div>
 
             <Separator />
@@ -295,6 +391,31 @@ export default function ExportarAbaCompletaButton({
                 ? `Excel: ${secoesComDados.length} aba(s) de dados + aba "Resumo Geral"`
                 : 'PDF: documento único com seções separadas por blocos'}
             </p>
+
+            {/* Orientação — somente PDF */}
+            {formato === 'pdf' && (
+              <>
+                <Separator />
+                <div>
+                  <p className="text-sm font-medium mb-2">Orientação</p>
+                  <div className="flex gap-2">
+                    {(['auto', 'retrato', 'paisagem'] as const).map((opt) => (
+                      <Button
+                        key={opt}
+                        size="sm"
+                        variant={orientacao === opt ? 'default' : 'outline'}
+                        onClick={() => setOrientacao(opt)}
+                        className="text-xs flex-1"
+                      >
+                        {opt === 'auto'
+                          ? `Automático (${orientacaoResolvida === 'portrait' ? '↕ Retrato' : '↔ Paisagem'})`
+                          : opt === 'retrato' ? '↕ Retrato' : '↔ Paisagem'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter>

@@ -9,6 +9,9 @@ import {
   Clock,
   XCircle,
   ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,6 +87,26 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
   const statusInfo = STATUS_CONFIG[statusAtual] ?? STATUS_CONFIG.rascunho;
   const proximosStatus = PROXIMOS_STATUS[statusAtual] ?? [];
 
+  type SortKey = 'nome' | 'custoDirecto' | 'bdi' | 'subtotal' | 'percentual';
+  const [sortKey, setSortKey] = useState<SortKey>('subtotal');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'nome' ? 'asc' : 'desc');
+    }
+  };
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return <ArrowUpDown className="h-3 w-3 ml-1 text-muted-foreground/50" />;
+    return sortDir === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1 text-primary" />
+      : <ArrowDown className="h-3 w-3 ml-1 text-primary" />;
+  };
+
   const handleMudarStatus = async (novoStatus: string) => {
     try {
       setSalvandoStatus(true);
@@ -99,7 +122,17 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
   };
 
   // Composições com custoDirecto > 0 para a tabela
-  const composicoesAtivas = (orcamento.composicoes || []).filter((c) => c.custoDirecto > 0);
+  const composicoesAtivas = [...(orcamento.composicoes || []).filter((c) => c.custoDirecto > 0)].sort((a, b) => {
+    let diff = 0;
+    switch (sortKey) {
+      case 'nome':       diff = a.nome.localeCompare(b.nome, 'pt-BR'); break;
+      case 'custoDirecto': diff = a.custoDirecto - b.custoDirecto; break;
+      case 'bdi':        diff = (a.bdi?.valor ?? 0) - (b.bdi?.valor ?? 0); break;
+      case 'subtotal':   diff = a.subtotal - b.subtotal; break;
+      case 'percentual': diff = a.percentualDoTotal - b.percentualDoTotal; break;
+    }
+    return sortDir === 'asc' ? diff : -diff;
+  });
 
   return (
     <div className="space-y-6">
@@ -230,9 +263,9 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* --- Composições --- */}
-        <Card>
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -246,16 +279,38 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead>Composição</TableHead>
-                    <TableHead className="text-right">Custo Direto</TableHead>
-                    <TableHead className="text-right">BDI</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                    <TableHead className="text-right">%</TableHead>
+                    <TableHead className="w-10 text-center text-muted-foreground">#</TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort('nome')} className="flex items-center text-left hover:text-foreground transition-colors">
+                        Composição <SortIcon col="nome" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button onClick={() => handleSort('custoDirecto')} className="flex items-center ml-auto hover:text-foreground transition-colors">
+                        Custo Direto <SortIcon col="custoDirecto" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button onClick={() => handleSort('bdi')} className="flex items-center ml-auto hover:text-foreground transition-colors">
+                        BDI <SortIcon col="bdi" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button onClick={() => handleSort('subtotal')} className="flex items-center ml-auto hover:text-foreground transition-colors">
+                        Subtotal <SortIcon col="subtotal" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button onClick={() => handleSort('percentual')} className="flex items-center ml-auto hover:text-foreground transition-colors">
+                        % <SortIcon col="percentual" />
+                      </button>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {composicoesAtivas.map((comp) => (
+                  {composicoesAtivas.map((comp, idx) => (
                     <TableRow key={comp.id}>
+                      <TableCell className="text-center text-xs text-muted-foreground w-10">{idx + 1}</TableCell>
                       <TableCell className="font-medium text-sm">{comp.nome}</TableCell>
                       <TableCell className="text-right text-sm">{formatCurrency(comp.custoDirecto)}</TableCell>
                       <TableCell className="text-right text-sm text-blue-600">
@@ -275,7 +330,7 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
         </Card>
 
         {/* --- DRE + Precificação --- */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:col-span-2">
           {/* Waterfall de Preços */}
           <Card>
             <CardHeader>

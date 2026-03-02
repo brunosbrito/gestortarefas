@@ -569,6 +569,7 @@ export default function AbaMaoObraGrid({
                   valorUnitario: Number(r.rsHH) || 0,
                   subtotal: calcSubtotal(r),
                 }))}
+                bdi={{ percentual: composicao?.bdi?.percentual ?? 0, valor: composicao?.bdi?.valor ?? 0 }}
                 labelQuantidade="QTD/HH"
                 labelUnidade="Unid."
               />

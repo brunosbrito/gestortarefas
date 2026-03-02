@@ -1298,6 +1298,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                           valorUnitario: r.valorUnitario,
                           subtotal: r._subtotal,
                         })),
+                        bdi: { percentual: composicaoPintura?.bdi?.percentual ?? 0, valor: composicaoPintura?.bdi?.valor ?? 0 },
                       },
                       {
                         titulo: 'Tintas e Solventes',
@@ -1311,6 +1312,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                           valorUnitario: Number(r.precoLitro) || 0,
                           subtotal: r._subtotal,
                         })),
+                        bdi: { percentual: composicaoTintasOuPadrao.bdi?.percentual ?? 12, valor: composicaoTintasOuPadrao.bdi?.valor ?? 0 },
                         labelQuantidade: 'Litros',
                         labelUnidade: 'Unid.',
                       },
@@ -1327,6 +1329,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                         valorUnitario: r.valorUnitario,
                         subtotal: r._subtotal,
                       }))}
+                      bdi={{ percentual: composicaoPintura?.bdi?.percentual ?? 0, valor: composicaoPintura?.bdi?.valor ?? 0 }}
                     />
                   )}
                   <Button size="sm" variant="outline" onClick={handleBaixarModelo} title="Baixar planilha modelo">
@@ -1486,6 +1489,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                       valorUnitario: Number(r.precoLitro) || 0,
                       subtotal: r._subtotal,
                     }))}
+                    bdi={{ percentual: composicaoTintasOuPadrao.bdi?.percentual ?? 12, valor: composicaoTintasOuPadrao.bdi?.valor ?? 0 }}
                     labelQuantidade="Litros"
                     labelUnidade="Unid."
                   />

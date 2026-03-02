@@ -633,6 +633,7 @@ export default function ComposicaoGenericaTable({
                     valorUnitario: r.valorUnitario,
                     subtotal: r._subtotal,
                   }))}
+                  bdi={composicao ? { percentual: composicao.bdi?.percentual ?? 0, valor: composicao.bdi?.valor ?? 0 } : undefined}
                   mostrarQtdPeriodo={mostrarQtdPeriodo}
                   labelQuantidade={labelQuantidade}
                   labelUnidade={labelUnidade}

@@ -708,6 +708,7 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
                         valorUnitario: r.valorUnitario,
                         subtotal: r._subtotal,
                       }))}
+                      bdi={{ percentual: composicaoMateriais?.bdi?.percentual ?? 0, valor: composicaoMateriais?.bdi?.valor ?? 0 }}
                     />
                   )}
                   <Button size="sm" variant="outline" onClick={handleBaixarModelo} title="Baixar planilha modelo">
