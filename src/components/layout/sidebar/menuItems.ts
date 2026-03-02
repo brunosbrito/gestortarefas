@@ -116,7 +116,7 @@ export const navItems: MenuItem[] = [
       },
       {
         icon: FolderOpen,
-        label: 'CADASTROS',
+        label: 'Cadastros',
         subItems: [
           {
             icon: Package,
@@ -167,7 +167,7 @@ export const navItems: MenuItem[] = [
       },
       {
         icon: FolderOpen,
-        label: 'ORÇAMENTOS',
+        label: 'Orçamentos',
         subItems: [
           {
             icon: FileText,
@@ -200,6 +200,11 @@ export const navItems: MenuItem[] = [
         icon: FileBarChart,
         label: 'Relatórios',
         path: '/comercial/relatorios',
+      },
+      {
+        icon: Bot,
+        label: 'Assistente IA',
+        path: '/comercial/assistente-ia',
       },
     ],
   },

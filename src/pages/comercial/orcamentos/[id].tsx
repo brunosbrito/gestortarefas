@@ -6,6 +6,7 @@ import {
   Save,
   Copy,
   Trash2,
+  Bot,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -178,6 +179,11 @@ export default function OrcamentoDetalhes() {
 
           {/* Ações */}
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate(`/comercial/assistente-ia?orcamento=${orcamento.id}`)}>
+              <Bot className="mr-2 h-4 w-4" />
+              Analisar com IA
+            </Button>
+
             <Button variant="outline" onClick={handleSalvar}>
               <Save className="mr-2 h-4 w-4" />
               Salvar

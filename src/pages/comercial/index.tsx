@@ -25,6 +25,9 @@ const ListaCortePage = lazy(() => import('./orcamentos/lista-corte'));
 // Relatórios - FASE 9
 const RelatoriosPage = lazy(() => import('./Relatorios'));
 
+// Assistente IA Comercial
+const AssistenteIAComercial = lazy(() => import('./AssistenteIAComercial'));
+
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="flex flex-col items-center gap-4">
@@ -68,6 +71,9 @@ const Comercial = () => {
 
           {/* Relatórios (FASE 9) */}
           <Route path="relatorios" element={<RelatoriosPage />} />
+
+          {/* Assistente IA Comercial */}
+          <Route path="assistente-ia" element={<AssistenteIAComercial />} />
 
           <Route path="*" element={<Navigate to="/comercial" replace />} />
         </Routes>
