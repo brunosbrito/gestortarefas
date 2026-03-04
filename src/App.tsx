@@ -19,6 +19,7 @@ const Colaboradores = lazy(() => import('./pages/gerenciamento/colaboradores'));
 const TarefasMacro = lazy(() => import('./pages/gerenciamento/tarefas-macro'));
 const Processos = lazy(() => import('./pages/gerenciamento/processos'));
 const ValorPorCargo = lazy(() => import('./pages/gerenciamento/valor-por-cargo'));
+const ApiKeys = lazy(() => import('./pages/gerenciamento/api-keys'));
 const TabelaMateriais = lazy(() => import('./pages/comercial/cadastros/TabelaMateriais'));
 const TabelaTintas = lazy(() => import('./pages/comercial/cadastros/tintas'));
 const TabelaFornecedoresServico = lazy(() => import('./pages/comercial/cadastros/fornecedores-servico'));
@@ -91,6 +92,7 @@ function App() {
             <Route path="/gerenciamento/tarefas-macro" element={<TarefasMacro />} />
             <Route path="/gerenciamento/processos" element={<Processos />} />
             <Route path="/gerenciamento/valor-por-cargo" element={<ValorPorCargo />} />
+            <Route path="/gerenciamento/api-keys" element={<ApiKeys />} />
 
             {/* Redirects de rotas antigas para novas */}
             <Route path="/gerenciamento/materiais" element={<Navigate to="/comercial/cadastros/materiais" replace />} />

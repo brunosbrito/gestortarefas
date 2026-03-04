@@ -33,6 +33,7 @@ import {
   Palette,
   BarChart3,
   TrendingUp,
+  Key,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -246,7 +247,12 @@ export const navItems: MenuItem[] = [
         icon: Briefcase,
         label: 'Valor por Cargo',
         path: '/gerenciamento/valor-por-cargo',
-      }
+      },
+      {
+        icon: Key,
+        label: 'API Keys',
+        path: '/gerenciamento/api-keys',
+      },
     ],
   },
 
