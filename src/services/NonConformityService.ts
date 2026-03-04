@@ -1,17 +1,16 @@
-import API_URL from '@/config';
+import api from '@/lib/axios';
 import {
   CreateNonConformity,
   CreateWorkforce,
   NonConformity,
 } from '@/interfaces/RncInterface';
-import axios from 'axios';
 
-const URL = `${API_URL}/non-conformities/`;
+const URL = '/non-conformities/';
 
 class RncService {
   async createRnc(data: CreateNonConformity) {
     try {
-      const response = await axios.post(URL, data);
+      const response = await api.post(URL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar RNC:', error);
@@ -21,7 +20,7 @@ class RncService {
 
   async update(id: string, data: Partial<NonConformity>) {
     try {
-      const response = await axios.put(`${URL}${id}`, data);
+      const response = await api.put(`${URL}${id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar RNC:', error);
@@ -31,7 +30,7 @@ class RncService {
 
   async updateRnc(id: string, data: Partial<NonConformity>) {
     try {
-      const response = await axios.put(`${URL}${id}`, data);
+      const response = await api.put(`${URL}${id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar RNC:', error);
@@ -41,7 +40,7 @@ class RncService {
 
   async getAllRnc() {
     try {
-      const response = await axios.get(URL);
+      const response = await api.get(URL);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar RNCs:', error);
@@ -51,7 +50,7 @@ class RncService {
 
   async workforce(data: CreateWorkforce) {
     try {
-      const response = await axios.post(`${API_URL}/workforce`, data);
+      const response = await api.post('/workforce', data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar mao de obra:', error);
@@ -60,12 +59,12 @@ class RncService {
   }
 
   async getRncWithWorkforce(rncId: string) {
-    const response = await axios.get(`${API_URL}/workforce/rnc/${rncId}`);
+    const response = await api.get(`/workforce/rnc/${rncId}`);
     return response.data;
   }
 
   async deleteWorkforce(id: string) {
-    await axios.delete(`${API_URL}/workforce/${id}`);
+    await api.delete(`/workforce/${id}`);
   }
 }
 

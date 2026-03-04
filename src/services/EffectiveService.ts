@@ -1,15 +1,15 @@
+import api from '@/lib/axios';
 import axios from 'axios';
 import {
   CreateEffectiveDto,
   UpdateEffectiveDto,
 } from '@/interfaces/EffectiveInterface';
-import API_URL from '@/config';
 
-const URL = `${API_URL}/effectives`;
+const URL = '/effectives';
 
 export const createEffective = async (data: CreateEffectiveDto) => {
   try {
-    const response = await axios.post(URL, data);
+    const response = await api.post(URL, data);
     return response.data;
   } catch (error) {
     console.error('Erro ao criar registro:', error);
@@ -19,7 +19,7 @@ export const createEffective = async (data: CreateEffectiveDto) => {
 
 export const updateEffective = async (data: UpdateEffectiveDto, id: number) => {
   try {
-    const response = await axios.put(`${URL}/${id}`, data);
+    const response = await api.put(`${URL}/${id}`, data);
     return response.data;
   } catch (error) {
     console.error('Erro ao atualizar registro:', error);
@@ -29,7 +29,7 @@ export const updateEffective = async (data: UpdateEffectiveDto, id: number) => {
 
 export const getEffectivesByShiftAndDate = async (shift: string) => {
   try {
-    const response = await axios.get(`${URL}/by-shift-and-date/${shift}`);
+    const response = await api.get(`${URL}/by-shift-and-date/${shift}`);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar registros:', error);
@@ -39,7 +39,7 @@ export const getEffectivesByShiftAndDate = async (shift: string) => {
 
 export const deleteEffectives = async (id: number) => {
   try {
-    const response = await axios.delete(`${URL}/${id}`);
+    const response = await api.delete(`${URL}/${id}`);
     return response.data;
   } catch (error) {
     console.error('Erro ao deletar registros:', error);
@@ -47,7 +47,7 @@ export const deleteEffectives = async (id: number) => {
   }
 };
 
-
+// Webhook externo - usa axios direto pois não é a API principal
 export const enviarEfetivo = async (registro: any) => {
   try {
     const response = await axios.post(
@@ -62,7 +62,7 @@ export const enviarEfetivo = async (registro: any) => {
 
     return response.data;
   } catch (error) {
-    console.error('Erro ao deletar registros:', error);
+    console.error('Erro ao enviar efetivo:', error);
     throw error;
   }
 };

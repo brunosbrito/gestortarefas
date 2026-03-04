@@ -1,14 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import { TarefaMacro } from '@/interfaces/TarefaMacroInterface';
 import { Processo } from '@/interfaces/ProcessoInterface';
 import { Colaborador } from '@/interfaces/ColaboradorInterface';
 import TarefaMacroService from '@/services/TarefaMacroService';
 import ProcessService from '@/services/ProcessService';
 import ColaboradorService from '@/services/ColaboradorService';
-import { Filter } from 'lucide-react';
 import { DashboardFilters } from '@/types/dashboard';
 import { HelpTooltip } from '@/components/tooltips/HelpTooltip';
 import { TOOLTIP_CONTENT } from '@/constants/tooltipContent';
@@ -63,14 +61,8 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
   };
 
   return (
-    <Card className="p-4 mb-4">
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="flex items-center gap-2 mb-2 sm:mb-0">
-          <Filter className="h-5 w-5 text-[#FF7F0E]" />
-          <h3 className="font-medium">Filtrar por:</h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
           <div className="space-y-2">
             <label htmlFor="macroTask" className="flex items-center gap-1.5 text-sm font-medium">
               Tarefa Macro
@@ -143,7 +135,6 @@ export const TaskProcessFilter = ({ onFilterChange, currentFilters }: TaskProces
             </Select>
           </div>
         </div>
-      </div>
-    </Card>
+    </div>
   );
 };

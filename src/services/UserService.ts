@@ -1,18 +1,12 @@
-import API_URL from '@/config';
+import api from '@/lib/axios';
 import { User } from '@/interfaces/UserInterface';
-import axios from 'axios';
 
-const URL = `${API_URL}/users/`;
-const token = localStorage.getItem('authToken');
+const URL = '/users/';
 
 class UserService {
   async getAllUsers() {
     try {
-      const response = await axios.get(URL, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(URL);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
@@ -22,11 +16,7 @@ class UserService {
 
   async getUserById(id: string) {
     try {
-      const response = await axios.get(`${URL}${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`${URL}${id}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar o usuário com ID ${id}:`, error);
@@ -36,12 +26,7 @@ class UserService {
 
   async updateUser(id: string, user: User) {
     try {
-      const response = await axios.put(`${URL}${id}`, user, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await api.put(`${URL}${id}`, user);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar o usuário com ID ${id}:`, error);
@@ -51,11 +36,7 @@ class UserService {
 
   async deleteUser(id: string) {
     try {
-      const response = await axios.delete(`${URL}${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.delete(`${URL}${id}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao excluir o usuário com ID ${id}:`, error);

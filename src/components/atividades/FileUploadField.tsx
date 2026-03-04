@@ -1,9 +1,10 @@
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { File, Image, Upload } from "lucide-react";
+import { File, Image, Upload, X } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 interface FileUploadFieldProps {
   form: UseFormReturn<any>;
@@ -14,23 +15,20 @@ interface FileUploadFieldProps {
   initialDescription?: string;
 }
 
-export function FileUploadField({ 
-  form, 
-  fileType, 
-  accept, 
+export function FileUploadField({
+  form,
+  fileType,
   activityId,
   initialPreview,
-  initialDescription 
+  initialDescription
 }: FileUploadFieldProps) {
   const { toast } = useToast();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  
+
   const isImage = fileType === "imagem";
   const fieldName = isImage ? "imagem" : "arquivo";
   const descriptionField = isImage ? "imagemDescricao" : "arquivoDescricao";
-  const label = isImage ? "Upload de Imagem (opcional)" : "Upload de Arquivo (opcional)";
-  const placeholder = isImage ? "Descrição da imagem (opcional)" : "Descrição do arquivo (opcional)";
 
   useEffect(() => {
     if (initialPreview) {
@@ -49,7 +47,7 @@ export function FileUploadField({
         toast({
           variant: "destructive",
           title: "Formato inválido",
-          description: "Por favor, selecione apenas arquivos de imagem (jpg, png, etc).",
+          description: "Por favor, selecione apenas arquivos de imagem.",
         });
         return false;
       }
@@ -81,7 +79,7 @@ export function FileUploadField({
     try {
       form.setValue(fieldName, file);
       setFileName(file.name);
-      
+
       if (isImage) {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -89,83 +87,111 @@ export function FileUploadField({
         };
         reader.readAsDataURL(file);
       }
-      
+
     } catch (error) {
       console.error('Erro no upload:', error);
       toast({
         variant: "destructive",
         title: "Erro no upload",
-        description: "Ocorreu um erro ao fazer o upload do arquivo. Tente novamente.",
+        description: "Ocorreu um erro ao fazer o upload do arquivo.",
       });
     }
   };
 
+  const clearFile = () => {
+    setFileName(null);
+    setPreviewUrl(null);
+    form.setValue(fieldName, null);
+    form.setValue(descriptionField, '');
+    const input = document.getElementById(fieldName) as HTMLInputElement;
+    if (input) input.value = '';
+  };
+
+  const hasFile = fileName || previewUrl;
+
   return (
-    <div className="space-y-4">
-      <FormLabel>{label}</FormLabel>
-      <div className="flex gap-4">
-        <div className="w-48">
-          <Input
-            type="file"
-            accept={isImage ? "image/*" : ".pdf"}
-            capture={isImage ? "environment" : undefined}
-            onChange={handleFileChange}
-            className="hidden"
-            id={fieldName}
-          />
-          <label
-            htmlFor={fieldName}
-            className="flex items-center justify-center h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none relative"
-          >
+    <div className="space-y-2">
+      <p className="text-xs font-medium text-muted-foreground">
+        {isImage ? "Imagem" : "Arquivo PDF"}
+      </p>
+
+      <Input
+        type="file"
+        accept={isImage ? "image/*" : ".pdf"}
+        capture={isImage ? "environment" : undefined}
+        onChange={handleFileChange}
+        className="hidden"
+        id={fieldName}
+      />
+
+      {hasFile ? (
+        <div className="relative group">
+          <div className={cn(
+            "flex items-center gap-2 p-2 rounded-md border bg-muted/50",
+            "text-xs"
+          )}>
             {isImage && previewUrl ? (
-              <div className="relative w-full h-full">
-                <img 
-                  src={previewUrl} 
-                  alt="Preview" 
-                  className="w-full h-full object-contain"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                  <Image className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            ) : fileName ? (
-              <div className="flex flex-col items-center gap-2">
-                {isImage ? (
-                  <Image className="w-6 h-6 text-gray-600" />
-                ) : (
-                  <File className="w-6 h-6 text-gray-600" />
-                )}
-                <span className="text-sm text-gray-600 truncate max-w-[160px] text-center">
-                  {fileName}
-                </span>
-              </div>
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-8 h-8 object-cover rounded"
+              />
             ) : (
-              <span className="flex flex-col items-center space-y-2">
-                <Upload className="w-6 h-6 text-gray-600" />
-                <span className="text-sm text-gray-600 text-center">
-                  Clique para fazer upload {isImage ? "de imagem" : "de arquivo"}
-                </span>
-              </span>
+              <File className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             )}
-          </label>
-        </div>
-        
-        <div className="flex-1">
+            <span className="truncate flex-1 text-muted-foreground">
+              {fileName || "Arquivo selecionado"}
+            </span>
+            <button
+              type="button"
+              onClick={clearFile}
+              className="p-1 hover:bg-destructive/10 rounded text-destructive"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+
           <FormField
             control={form.control}
             name={descriptionField}
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Descrição {isImage ? "da imagem" : "do arquivo"}</FormLabel>
+              <FormItem className="mt-2">
                 <FormControl>
-                  <Input placeholder={placeholder} {...field} />
+                  <Input
+                    placeholder="Descrição (opcional)"
+                    className="h-8 text-xs"
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
         </div>
-      </div>
+      ) : (
+        <label
+          htmlFor={fieldName}
+          className={cn(
+            "flex flex-col items-center justify-center gap-1 p-3",
+            "border border-dashed rounded-md cursor-pointer",
+            "hover:border-primary/50 hover:bg-muted/30 transition-colors",
+            "text-muted-foreground"
+          )}
+        >
+          {isImage ? (
+            <Image className="w-5 h-5" />
+          ) : (
+            <Upload className="w-5 h-5" />
+          )}
+          <span className="text-xs text-center">
+            {isImage ? "Adicionar imagem" : "Adicionar PDF"}
+          </span>
+        </label>
+      )}
     </div>
   );
 }

@@ -19,6 +19,7 @@ export interface ActivityStatistics {
   emExecucao: number;
   concluidas: number;
   paralizadas: number;
+  atrasadas: number;
 }
 
 export interface DashboardState {
@@ -78,6 +79,7 @@ export interface NormalizedActivity {
   processId?: number;
   projectId: number;
   serviceOrderId: number;
+  cod_sequencial?: number;
   
   // Dados de tempo
   timePerUnit?: number;
@@ -87,6 +89,7 @@ export interface NormalizedActivity {
   totalTime?: number;
   
   // Datas
+  plannedStartDate?: Date;
   startDate?: Date;
   endDate?: Date;
   pauseDate?: Date;
@@ -112,6 +115,7 @@ export interface NormalizedActivity {
   // Métricas calculadas
   progress?: number;
   isDelayed?: boolean;
+  isStartDelayed?: boolean;
   isCompleted?: boolean;
 }
 

@@ -1,16 +1,15 @@
-import API_URL from '@/config';
+import api from '@/lib/axios';
 import {
   Colaborador,
   CreateColaborador,
 } from '@/interfaces/ColaboradorInterface';
-import axios from 'axios';
 
-const URL = `${API_URL}/collaborators/`;
+const URL = '/collaborators/';
 
 class ColaboradorService {
   async createColaborador(colaboradorData: CreateColaborador) {
     try {
-      const response = await axios.post(URL, colaboradorData);
+      const response = await api.post(URL, colaboradorData);
       return response;
     } catch (error) {
       console.error('Erro ao criar colaborador:', error);
@@ -20,7 +19,7 @@ class ColaboradorService {
 
   async getAllColaboradores() {
     try {
-      const response = await axios.get(URL);
+      const response = await api.get(URL);
       return response.data as Colaborador[];
     } catch (error) {
       console.error('Erro ao buscar colaboradores:', error);
@@ -30,7 +29,7 @@ class ColaboradorService {
 
   async getAll() {
     try {
-      const response = await axios.get(URL);
+      const response = await api.get(URL);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar colaboradores:', error);
@@ -40,7 +39,7 @@ class ColaboradorService {
 
   async getColaboradorById(id: number) {
     try {
-      const response = await axios.get(`${URL}:${id}`);
+      const response = await api.get(`${URL}${id}`);
       return response;
     } catch (error) {
       console.error('Erro ao buscar colaborador:', error);
@@ -50,7 +49,7 @@ class ColaboradorService {
 
   async updateColaborador(id: number, colaboradorData: Partial<Colaborador>) {
     try {
-      const response = await axios.put(`${URL}${id}`, colaboradorData);
+      const response = await api.put(`${URL}${id}`, colaboradorData);
       return response;
     } catch (error) {
       console.error('Erro ao atualizar colaborador:', error);
@@ -60,7 +59,7 @@ class ColaboradorService {
 
   async deleteColaborador(id: number) {
     try {
-      await axios.delete(`${URL}${id}`);
+      await api.delete(`${URL}${id}`);
     } catch (error) {
       console.error('Erro ao deletar colaborador:', error);
       throw error;
@@ -69,7 +68,7 @@ class ColaboradorService {
 
   async desativarColaborador(id: number, status: boolean) {
     try {
-      const response = await axios.patch(`${URL}${id}/status`, {
+      const response = await api.patch(`${URL}${id}/status`, {
         status,
       });
 
