@@ -32,6 +32,7 @@ import {
   Truck,
   Palette,
   BarChart3,
+  TrendingUp,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -113,6 +114,11 @@ export const navItems: MenuItem[] = [
         icon: BarChart3,
         label: 'Dashboard',
         path: '/comercial/dashboard',
+      },
+      {
+        icon: TrendingUp,
+        label: 'KPIs',
+        path: '/comercial/kpis',
       },
       {
         icon: FolderOpen,

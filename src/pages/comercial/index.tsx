@@ -28,6 +28,9 @@ const RelatoriosPage = lazy(() => import('./Relatorios'));
 // Assistente IA Comercial
 const AssistenteIAComercial = lazy(() => import('./AssistenteIAComercial'));
 
+// KPIs Comercial
+const KpisComercialPage = lazy(() => import('./KpisComercialPage'));
+
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="flex flex-col items-center gap-4">
@@ -74,6 +77,9 @@ const Comercial = () => {
 
           {/* Assistente IA Comercial */}
           <Route path="assistente-ia" element={<AssistenteIAComercial />} />
+
+          {/* KPIs Comercial */}
+          <Route path="kpis" element={<KpisComercialPage />} />
 
           <Route path="*" element={<Navigate to="/comercial" replace />} />
         </Routes>
