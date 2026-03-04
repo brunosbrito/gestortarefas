@@ -436,6 +436,90 @@ class OrcamentoService {
       throw error;
     }
   }
+
+  // ==========================================
+  // KPIs COMERCIAIS
+  // ==========================================
+
+  async getKpis(mesAno?: string): Promise<KpisResponse> {
+    try {
+      const params = mesAno ? `?mesAno=${mesAno}` : '';
+      const response = await api.get(`${URL}/kpis${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar KPIs:', error);
+      throw error;
+    }
+  }
+
+  // ==========================================
+  // AÇÕES 5S
+  // ==========================================
+
+  async getAcoes5S(mesAno?: string): Promise<Acao5S[]> {
+    try {
+      const params = mesAno ? `?mesAno=${mesAno}` : '';
+      const response = await api.get(`${URL}/acoes-5s${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar ações 5S:', error);
+      throw error;
+    }
+  }
+
+  async createAcao5S(data: CreateAcao5SDto): Promise<Acao5S> {
+    try {
+      const response = await api.post(`${URL}/acoes-5s`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar ação 5S:', error);
+      throw error;
+    }
+  }
+
+  async deleteAcao5S(id: string): Promise<void> {
+    try {
+      await api.delete(`${URL}/acoes-5s/${id}`);
+    } catch (error) {
+      console.error('Erro ao deletar ação 5S:', error);
+      throw error;
+    }
+  }
+}
+
+// Interfaces para KPIs e Ações 5S
+export interface KpisResponse {
+  mesAno: string;
+  qtdOrcamentos: number;
+  valorOrcamentos: number;
+  taxaConversao: number | null;
+  margemBruta: number | null;
+  margemLiquida: number | null;
+  acoes5S: number;
+  qtdAprovados: number;
+  qtdRejeitados: number;
+  qtdEmAnalise: number;
+  qtdRascunho: number;
+  valorAprovados: number;
+  tendencia: Array<{
+    mesAno: string;
+    label: string;
+    qtdOrcamentos: number;
+    valorOrcamentos: number;
+  }>;
+}
+
+export interface Acao5S {
+  id: string;
+  data: string;
+  descricao: string;
+  mes: string;
+  createdAt: Date;
+}
+
+export interface CreateAcao5SDto {
+  data: string;
+  descricao: string;
 }
 
 export default new OrcamentoService();

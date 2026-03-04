@@ -60,27 +60,31 @@ const Dashboard = () => {
 
   // Estatísticas memoizadas para melhor performance
   const stats = useMemo(() => ({
+    // Orçamentos
     totalOrcamentos: orcamentos.length,
+    orcamentosAprovados: orcamentos.filter(o => o.status === 'aprovado').length,
+    orcamentosEmAnalise: orcamentos.filter(o => o.status === 'em_analise').length,
+    valorTotalOrcamentos: orcamentos.reduce((sum, o) => sum + Number(o.totalVenda || 0), 0),
+    valorOrcamentosAprovados: orcamentos
+      .filter(o => o.status === 'aprovado')
+      .reduce((sum, o) => sum + Number(o.totalVenda || 0), 0),
+    // Propostas (mantido para compatibilidade)
     totalPropostas: propostas.length,
     propostasEmAnalise: propostas.filter(p => p.status === 'em_analise').length,
     propostasAprovadas: propostas.filter(p => p.status === 'aprovada').length,
     valorTotalPropostas: propostas.reduce((sum, p) => sum + p.valorTotal, 0),
-    valorPropostasAprovadas: propostas
-      .filter(p => p.status === 'aprovada')
-      .reduce((sum, p) => sum + p.valorTotal, 0),
   }), [orcamentos, propostas]);
 
   return (
-    <PageContainer
+      <PageContainer
         loading={loading}
         error={error}
         onRetry={handleRetry}
       >
-        <div className="space-y-8 pb-24 min-h-[150vh]">
+        <div className="space-y-8 pb-8">
         {/* Header Moderno */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl opacity-10 dark:opacity-20"></div>
-          <div className="relative p-8">
+        <div className="rounded-3xl">
+          <div className="p-8">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent mb-2">
@@ -107,7 +111,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1 - Total Orçamentos */}
           <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-500 opacity-0 group-hover:opacity-5 dark:group-hover:opacity-10 transition-opacity"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -127,9 +130,8 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Card 2 - Propostas Aprovadas */}
+          {/* Card 2 - Orçamentos Aprovados */}
           <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-600 to-green-500 opacity-0 group-hover:opacity-5 dark:group-hover:opacity-10 transition-opacity"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-950/40 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -140,13 +142,13 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Propostas Aprovadas</p>
+                <p className="text-sm font-medium text-muted-foreground">Orçamentos Aprovados</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.propostasAprovadas}</p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.orcamentosAprovados}</p>
                   <Badge variant="outline" className="text-xs text-green-600 dark:text-green-400">Sucesso</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formatCurrency(stats.valorPropostasAprovadas)}
+                  {formatCurrency(stats.valorOrcamentosAprovados)}
                 </p>
               </div>
             </CardContent>
@@ -154,7 +156,6 @@ const Dashboard = () => {
 
           {/* Card 3 - Em Análise */}
           <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 to-yellow-500 opacity-0 group-hover:opacity-5 dark:group-hover:opacity-10 transition-opacity"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-950/40 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -167,7 +168,7 @@ const Dashboard = () => {
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Em Análise</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.propostasEmAnalise}</p>
+                  <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{stats.orcamentosEmAnalise}</p>
                   <Badge variant="outline" className="text-xs text-yellow-600 dark:text-yellow-400">Aguardando</Badge>
                 </div>
               </div>
@@ -176,7 +177,6 @@ const Dashboard = () => {
 
           {/* Card 4 - Valor Total */}
           <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-500 opacity-0 group-hover:opacity-5 dark:group-hover:opacity-10 transition-opacity"></div>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-950/40 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -190,9 +190,9 @@ const Dashboard = () => {
                 <p className="text-sm font-medium text-muted-foreground">Valor Total</p>
                 <div className="flex flex-col gap-1">
                   <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {formatCurrency(stats.valorTotalPropostas)}
+                    {formatCurrency(stats.valorTotalOrcamentos)}
                   </p>
-                  <p className="text-xs text-muted-foreground">Todas as propostas</p>
+                  <p className="text-xs text-muted-foreground">Todos os orçamentos</p>
                 </div>
               </div>
             </CardContent>
@@ -252,8 +252,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Card Orçamentos */}
           <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-blue-400/5 pointer-events-none"></div>
-            <CardHeader className="relative border-b bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/40 dark:to-transparent">
+            <CardHeader className="border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
@@ -308,8 +307,7 @@ const Dashboard = () => {
 
           {/* Card Propostas */}
           <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-600/5 to-green-400/5"></div>
-            <CardHeader className="relative border-b bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/40 dark:to-transparent">
+            <CardHeader className="border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-400 flex items-center justify-center shadow-lg">
@@ -363,8 +361,7 @@ const Dashboard = () => {
 
           {/* Card Configurações */}
           <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-purple-400/5"></div>
-            <CardHeader className="relative border-b bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-950/40 dark:to-transparent">
+            <CardHeader className="border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-purple-400 flex items-center justify-center shadow-lg">
@@ -463,7 +460,7 @@ const Dashboard = () => {
                             {formatCurrency(orc.totalVenda)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Margem: {orc.dre.margemLiquida.toFixed(1)}%
+                            Margem: {Number(orc.dre?.margemLiquida || 0).toFixed(1)}%
                           </p>
                         </div>
                       </div>
@@ -536,7 +533,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-    </PageContainer>
+      </PageContainer>
   );
 };
 

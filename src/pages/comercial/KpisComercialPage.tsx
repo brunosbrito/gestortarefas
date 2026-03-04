@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback } from 'react';
-import Layout from '@/components/Layout';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,9 +63,9 @@ import {
   ClipboardList,
   Pencil,
 } from 'lucide-react';
-import { useOrcamentos } from '@/hooks/useOrcamentos';
+import { useKpis, useAcoes5S, useCreateAcao5S, useDeleteAcao5S } from '@/hooks/useKpisComercial';
+import { Acao5S } from '@/services/OrcamentoService';
 import { formatCurrency } from '@/lib/currency';
-import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { cn } from '@/lib/utils';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -78,13 +77,6 @@ interface Metas {
   margemBruta: { min: number; max: number };
   margemLiquida: { min: number; max: number };
   acoes5S: number;
-}
-
-interface Acao5S {
-  id: string;
-  data: string;
-  descricao: string;
-  mes: string; // "YYYY-MM"
 }
 
 interface PlanoAcao {
@@ -112,7 +104,6 @@ interface PlanoAcao {
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
 const METAS_KEY = 'kpi_comercial_metas_v1';
-const ACOES_5S_KEY = 'kpi_comercial_5s_v1';
 const PLANOS_KEY = 'kpi_comercial_planos_v1';
 
 const METAS_PADRAO: Metas = {
@@ -151,11 +142,6 @@ function formatMesAno(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function isMesmoMes(isoDate: string | undefined, mesAno: string): boolean {
-  if (!isoDate) return false;
-  return isoDate.startsWith(mesAno);
-}
-
 function mesAnterior(mesAno: string): string {
   const [ano, mes] = mesAno.split('-').map(Number);
   const d = new Date(ano, mes - 2, 1);
@@ -185,18 +171,6 @@ function saveMetas(metas: Metas): void {
   localStorage.setItem(METAS_KEY, JSON.stringify(metas));
 }
 
-function loadAcoes5S(): Acao5S[] {
-  try {
-    const stored = localStorage.getItem(ACOES_5S_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch { /* ignore */ }
-  return [];
-}
-
-function saveAcoes5S(acoes: Acao5S[]): void {
-  localStorage.setItem(ACOES_5S_KEY, JSON.stringify(acoes));
-}
-
 function loadPlanos(): PlanoAcao[] {
   try {
     const stored = localStorage.getItem(PLANOS_KEY);
@@ -211,59 +185,6 @@ function savePlanos(planos: PlanoAcao[]): void {
 
 function gerarId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-// ─── Cálculos de KPIs ────────────────────────────────────────────────────────
-
-interface KpiValores {
-  qtdOrcamentos: number;
-  valorOrcamentos: number;
-  taxaConversao: number | null;
-  margemBruta: number | null;
-  margemLiquida: number | null;
-  acoes5S: number;
-}
-
-function calcularKpis(
-  orcamentos: Orcamento[],
-  acoes5S: Acao5S[],
-  mesAno: string
-): KpiValores {
-  const orcMes = orcamentos.filter((o) => isMesmoMes(o.createdAt, mesAno));
-  const qtdOrcamentos = orcMes.length;
-  const valorOrcamentos = orcMes.reduce((s, o) => s + (o.totalVenda || 0), 0);
-
-  const decididos = orcamentos.filter(
-    (o) =>
-      isMesmoMes(o.updatedAt, mesAno) &&
-      (o.status === 'aprovado' || o.status === 'rejeitado')
-  );
-  const aprovadosMes = decididos.filter((o) => o.status === 'aprovado');
-  const taxaConversao =
-    decididos.length > 0 ? (aprovadosMes.length / decididos.length) * 100 : null;
-
-  const somaReceitaLiquida = aprovadosMes.reduce((s, o) => s + (o.dre?.receitaLiquida || 0), 0);
-  const somaBdiTotal = aprovadosMes.reduce((s, o) => s + (o.bdiTotal || 0), 0);
-  const margemBruta = somaReceitaLiquida > 0 ? (somaBdiTotal / somaReceitaLiquida) * 100 : null;
-
-  const aprovadosComLucro = aprovadosMes.filter(
-    (o) =>
-      o.configuracoesDetalhadas?.bdi?.lucro?.habilitado === true &&
-      (o.configuracoesDetalhadas?.bdi?.lucro?.percentual ?? 0) > 0
-  );
-  let margemLiquida: number | null = null;
-  if (aprovadosComLucro.length > 0) {
-    const somaLucro = aprovadosComLucro.reduce((s, o) => {
-      const pct = o.configuracoesDetalhadas!.bdi!.lucro!.percentual;
-      return s + (o.custoDirectoTotal || 0) * (pct / 100);
-    }, 0);
-    const somaTotalVenda = aprovadosComLucro.reduce((s, o) => s + (o.totalVenda || 0), 0);
-    margemLiquida = somaTotalVenda > 0 ? (somaLucro / somaTotalVenda) * 100 : null;
-  }
-
-  const acoes5SMes = acoes5S.filter((a) => a.mes === mesAno).length;
-
-  return { qtdOrcamentos, valorOrcamentos, taxaConversao, margemBruta, margemLiquida, acoes5S: acoes5SMes };
 }
 
 // ─── Semáforo ─────────────────────────────────────────────────────────────────
@@ -614,7 +535,6 @@ const KpisComercialPage = () => {
   const hoje = new Date();
   const [mesAno, setMesAno] = useState(() => formatMesAno(hoje));
   const [metas, setMetas] = useState<Metas>(loadMetas);
-  const [acoes5S, setAcoes5S] = useState<Acao5S[]>(loadAcoes5S);
   const [planos, setPlanos] = useState<PlanoAcao[]>(loadPlanos);
 
   // Dialogs
@@ -630,31 +550,66 @@ const KpisComercialPage = () => {
   const [planoEditando, setPlanoEditando] = useState<PlanoAcao | null>(null);
   const [planoParaExcluir, setPlanoParaExcluir] = useState<string | null>(null);
 
-  const { data: orcamentos = [], isLoading, error, refetch } = useOrcamentos();
-
-  // ── KPIs ──
-  const kpis = useMemo(() => calcularKpis(orcamentos, acoes5S, mesAno), [orcamentos, acoes5S, mesAno]);
+  // ── Hooks da API ──
+  const { data: kpisData, isLoading: isLoadingKpis, error: errorKpis, refetch: refetchKpis } = useKpis(mesAno);
+  const { data: acoes5SData = [], isLoading: isLoadingAcoes } = useAcoes5S(mesAno);
   const mesAnt = mesAnterior(mesAno);
-  const kpisAnt = useMemo(() => calcularKpis(orcamentos, acoes5S, mesAnt), [orcamentos, acoes5S, mesAnt]);
+  const { data: kpisAntData } = useKpis(mesAnt);
 
-  // ── Gráfico ──
+  // Mutations para ações 5S
+  const { mutate: criarAcao5S, isPending: isCriandoAcao } = useCreateAcao5S({
+    onSuccess: () => {
+      setNovaAcaoDescricao('');
+      setNovaAcaoData(hoje.toISOString().split('T')[0]);
+      setDialogAcaoOpen(false);
+    },
+  });
+
+  const { mutate: deletarAcao5S, isPending: isDeletandoAcao } = useDeleteAcao5S({
+    onSuccess: () => {
+      setAcaoParaExcluir(null);
+    },
+  });
+
+  // ── KPIs com valores padrão ──
+  const kpis = useMemo(() => ({
+    qtdOrcamentos: kpisData?.qtdOrcamentos ?? 0,
+    valorOrcamentos: kpisData?.valorOrcamentos ?? 0,
+    taxaConversao: kpisData?.taxaConversao ?? null,
+    margemBruta: kpisData?.margemBruta ?? null,
+    margemLiquida: kpisData?.margemLiquida ?? null,
+    acoes5S: kpisData?.acoes5S ?? 0,
+  }), [kpisData]);
+
+  const kpisAnt = useMemo(() => ({
+    qtdOrcamentos: kpisAntData?.qtdOrcamentos ?? 0,
+    valorOrcamentos: kpisAntData?.valorOrcamentos ?? 0,
+    taxaConversao: kpisAntData?.taxaConversao ?? null,
+    margemBruta: kpisAntData?.margemBruta ?? null,
+    margemLiquida: kpisAntData?.margemLiquida ?? null,
+    acoes5S: kpisAntData?.acoes5S ?? 0,
+  }), [kpisAntData]);
+
+  // ── Gráfico (usando tendência da API) ──
   const dadosGrafico = useMemo(() => {
+    if (kpisData?.tendencia && kpisData.tendencia.length > 0) {
+      return kpisData.tendencia.map((t) => ({
+        mes: t.label,
+        qtd: t.qtdOrcamentos,
+        valor: t.valorOrcamentos / 1_000_000,
+      }));
+    }
+    // Fallback: dados vazios
     return Array.from({ length: 6 }, (_, i) => {
       const offset = 5 - i;
       const [ano, mes] = mesAno.split('-').map(Number);
       const d = new Date(ano, mes - 1 - offset, 1);
-      const m = formatMesAno(d);
-      const orcMes = orcamentos.filter((o) => isMesmoMes(o.createdAt, m));
-      return {
-        mes: labelMesAno(m),
-        qtd: orcMes.length,
-        valor: orcMes.reduce((s, o) => s + (o.totalVenda || 0), 0) / 1_000_000,
-      };
+      return { mes: labelMesAno(formatMesAno(d)), qtd: 0, valor: 0 };
     });
-  }, [orcamentos, mesAno]);
+  }, [kpisData?.tendencia, mesAno]);
 
   // ── Listas filtradas pelo mês ──
-  const acoes5SMes = useMemo(() => acoes5S.filter((a) => a.mes === mesAno), [acoes5S, mesAno]);
+  const acoes5SMes = useMemo(() => acoes5SData, [acoes5SData]);
   const planosMes = useMemo(() => planos.filter((p) => p.mes === mesAno), [planos, mesAno]);
 
   // Verificar se há plano para cada KPI no mês
@@ -662,6 +617,10 @@ const KpisComercialPage = () => {
     (kpi: string) => planosMes.some((p) => p.kpi === kpi),
     [planosMes]
   );
+
+  // Loading e erro combinados
+  const isLoading = isLoadingKpis || isLoadingAcoes;
+  const error = errorKpis;
 
   // ── Handlers 5S ──
   const handleSalvarMetas = useCallback((novasMetas: Metas) => {
@@ -671,26 +630,15 @@ const KpisComercialPage = () => {
 
   const handleRegistrarAcao = useCallback(() => {
     if (!novaAcaoDescricao.trim()) return;
-    const nova: Acao5S = {
-      id: gerarId(),
+    criarAcao5S({
       data: novaAcaoData,
       descricao: novaAcaoDescricao.trim(),
-      mes: novaAcaoData.slice(0, 7),
-    };
-    const novas = [...acoes5S, nova];
-    setAcoes5S(novas);
-    saveAcoes5S(novas);
-    setNovaAcaoDescricao('');
-    setNovaAcaoData(hoje.toISOString().split('T')[0]);
-    setDialogAcaoOpen(false);
-  }, [acoes5S, novaAcaoData, novaAcaoDescricao, hoje]);
+    });
+  }, [novaAcaoData, novaAcaoDescricao, criarAcao5S]);
 
   const handleExcluirAcao = useCallback((id: string) => {
-    const novas = acoes5S.filter((a) => a.id !== id);
-    setAcoes5S(novas);
-    saveAcoes5S(novas);
-    setAcaoParaExcluir(null);
-  }, [acoes5S]);
+    deletarAcao5S(id);
+  }, [deletarAcao5S]);
 
   // ── Handlers Plano de Ação ──
   const handleAbrirPlano = useCallback((kpi: string, label: string, editando?: PlanoAcao) => {
@@ -754,8 +702,7 @@ const KpisComercialPage = () => {
   const prog = (v: number | null, meta: number) => v === null ? 0 : Math.min((v / meta) * 100, 120);
 
   return (
-    <Layout>
-      <PageContainer loading={isLoading} error={error instanceof Error ? error : null} onRetry={refetch}>
+      <PageContainer loading={isLoading} error={error instanceof Error ? error : null} onRetry={refetchKpis}>
         {/* ── Header ── */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
@@ -1035,7 +982,9 @@ const KpisComercialPage = () => {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogAcaoOpen(false)}>Cancelar</Button>
-              <Button onClick={handleRegistrarAcao} disabled={!novaAcaoDescricao.trim()}>Salvar</Button>
+              <Button onClick={handleRegistrarAcao} disabled={!novaAcaoDescricao.trim() || isCriandoAcao}>
+                {isCriandoAcao ? 'Salvando...' : 'Salvar'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1062,8 +1011,9 @@ const KpisComercialPage = () => {
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={() => acaoParaExcluir && handleExcluirAcao(acaoParaExcluir)}>
-                Excluir
+                onClick={() => acaoParaExcluir && handleExcluirAcao(acaoParaExcluir)}
+                disabled={isDeletandoAcao}>
+                {isDeletandoAcao ? 'Excluindo...' : 'Excluir'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -1089,7 +1039,6 @@ const KpisComercialPage = () => {
           </AlertDialogContent>
         </AlertDialog>
       </PageContainer>
-    </Layout>
   );
 };
 
