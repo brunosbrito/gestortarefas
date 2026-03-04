@@ -14,7 +14,8 @@
       "Bash(grep:*)",
       "Bash(git grep:*)",
       "Bash(findstr:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(git merge:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\bruno\\Desktop\\dev\\gestor tarefas api\\gestor-tarefas-api\\src\\modules\\user",

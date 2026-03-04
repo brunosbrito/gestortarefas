@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import Layout from '@/components/Layout';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,15 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +60,9 @@ import {
   Trash2,
   AlertCircle,
   TrendingDown,
+  HelpCircle,
+  ClipboardList,
+  Pencil,
 } from 'lucide-react';
 import { useOrcamentos } from '@/hooks/useOrcamentos';
 import { formatCurrency } from '@/lib/currency';
@@ -74,10 +87,33 @@ interface Acao5S {
   mes: string; // "YYYY-MM"
 }
 
+interface PlanoAcao {
+  id: string;
+  kpi: string;
+  kpiLabel: string;
+  mes: string;
+  metodologia: '5W2H' | 'PDCA';
+  criadoEm: string;
+  // 5W2H
+  oQue?: string;
+  porQue?: string;
+  quem?: string;
+  quando?: string;
+  onde?: string;
+  como?: string;
+  quantoCusta?: string;
+  // PDCA
+  plan?: string;
+  do?: string;
+  check?: string;
+  act?: string;
+}
+
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
 const METAS_KEY = 'kpi_comercial_metas_v1';
 const ACOES_5S_KEY = 'kpi_comercial_5s_v1';
+const PLANOS_KEY = 'kpi_comercial_planos_v1';
 
 const METAS_PADRAO: Metas = {
   qtdOrcamentos: 10,
@@ -92,6 +128,22 @@ const NOMES_MESES = [
   'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
   'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
 ];
+
+// Textos dos tooltips de cada KPI
+const KPI_TOOLTIPS: Record<string, string> = {
+  qtdOrcamentos:
+    'Conta os orçamentos criados neste mês (filtro: data de criação). Semáforo: Verde ≥ meta · Amarelo ≥ 80% da meta · Vermelho < 80%',
+  valorOrcamentos:
+    'Soma do valor de venda (totalVenda) dos orçamentos criados neste mês. Semáforo: Verde ≥ meta · Amarelo ≥ 80% · Vermelho < 80%',
+  taxaConversao:
+    'Aprovados ÷ (Aprovados + Rejeitados) × 100. Filtro: data da decisão (updatedAt). Exclui rascunhos e em análise — considera apenas orçamentos com decisão final no mês. Semáforo: Verde ≥ meta · Amarelo ≥ 80% · Vermelho < 80%',
+  margemBruta:
+    'Σ BDI ÷ Σ Receita Líquida × 100. Somente orçamentos aprovados neste mês. A receita líquida já inclui o BDI; esta margem representa o percentual comercial antes dos impostos. Semáforo: Verde = dentro do intervalo meta · Amarelo = 80–99% do mínimo · Vermelho < 80%',
+  margemLiquida:
+    'Σ (Custo Direto × % Lucro) ÷ Σ Total Venda × 100. Somente aprovados com o componente Lucro habilitado em Dados Gerais → BDI Detalhado. Semáforo: Verde = dentro do intervalo meta · Amarelo = 80–99% · Vermelho < 80%',
+  acoes5S:
+    'Ações 5S registradas manualmente neste mês. Armazenadas localmente neste dispositivo. Semáforo: Verde ≥ meta · Amarelo ≥ 80% da meta · Vermelho < 80%',
+};
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -125,9 +177,7 @@ function loadMetas(): Metas {
   try {
     const stored = localStorage.getItem(METAS_KEY);
     if (stored) return { ...METAS_PADRAO, ...JSON.parse(stored) };
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
   return METAS_PADRAO;
 }
 
@@ -139,14 +189,24 @@ function loadAcoes5S(): Acao5S[] {
   try {
     const stored = localStorage.getItem(ACOES_5S_KEY);
     if (stored) return JSON.parse(stored);
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
   return [];
 }
 
 function saveAcoes5S(acoes: Acao5S[]): void {
   localStorage.setItem(ACOES_5S_KEY, JSON.stringify(acoes));
+}
+
+function loadPlanos(): PlanoAcao[] {
+  try {
+    const stored = localStorage.getItem(PLANOS_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return [];
+}
+
+function savePlanos(planos: PlanoAcao[]): void {
+  localStorage.setItem(PLANOS_KEY, JSON.stringify(planos));
 }
 
 function gerarId(): string {
@@ -169,12 +229,10 @@ function calcularKpis(
   acoes5S: Acao5S[],
   mesAno: string
 ): KpiValores {
-  // KPI 1 & 2 — baseados em createdAt
   const orcMes = orcamentos.filter((o) => isMesmoMes(o.createdAt, mesAno));
   const qtdOrcamentos = orcMes.length;
   const valorOrcamentos = orcMes.reduce((s, o) => s + (o.totalVenda || 0), 0);
 
-  // KPI 3 — Taxa de Conversão (baseado em updatedAt, apenas decididos)
   const decididos = orcamentos.filter(
     (o) =>
       isMesmoMes(o.updatedAt, mesAno) &&
@@ -182,23 +240,12 @@ function calcularKpis(
   );
   const aprovadosMes = decididos.filter((o) => o.status === 'aprovado');
   const taxaConversao =
-    decididos.length > 0
-      ? (aprovadosMes.length / decididos.length) * 100
-      : null;
+    decididos.length > 0 ? (aprovadosMes.length / decididos.length) * 100 : null;
 
-  // KPI 4 — Margem Bruta (aprovados no mês)
-  const somaReceitaLiquida = aprovadosMes.reduce(
-    (s, o) => s + (o.dre?.receitaLiquida || 0),
-    0
-  );
-  const somaBdiTotal = aprovadosMes.reduce(
-    (s, o) => s + (o.bdiTotal || 0),
-    0
-  );
-  const margemBruta =
-    somaReceitaLiquida > 0 ? (somaBdiTotal / somaReceitaLiquida) * 100 : null;
+  const somaReceitaLiquida = aprovadosMes.reduce((s, o) => s + (o.dre?.receitaLiquida || 0), 0);
+  const somaBdiTotal = aprovadosMes.reduce((s, o) => s + (o.bdiTotal || 0), 0);
+  const margemBruta = somaReceitaLiquida > 0 ? (somaBdiTotal / somaReceitaLiquida) * 100 : null;
 
-  // KPI 5 — Margem Líquida (aprovados com BDI Detalhado configurado)
   const aprovadosComLucro = aprovadosMes.filter(
     (o) =>
       o.configuracoesDetalhadas?.bdi?.lucro?.habilitado === true &&
@@ -210,25 +257,13 @@ function calcularKpis(
       const pct = o.configuracoesDetalhadas!.bdi!.lucro!.percentual;
       return s + (o.custoDirectoTotal || 0) * (pct / 100);
     }, 0);
-    const somaTotalVenda = aprovadosComLucro.reduce(
-      (s, o) => s + (o.totalVenda || 0),
-      0
-    );
-    margemLiquida =
-      somaTotalVenda > 0 ? (somaLucro / somaTotalVenda) * 100 : null;
+    const somaTotalVenda = aprovadosComLucro.reduce((s, o) => s + (o.totalVenda || 0), 0);
+    margemLiquida = somaTotalVenda > 0 ? (somaLucro / somaTotalVenda) * 100 : null;
   }
 
-  // KPI 6 — 5S
   const acoes5SMes = acoes5S.filter((a) => a.mes === mesAno).length;
 
-  return {
-    qtdOrcamentos,
-    valorOrcamentos,
-    taxaConversao,
-    margemBruta,
-    margemLiquida,
-    acoes5S: acoes5SMes,
-  };
+  return { qtdOrcamentos, valorOrcamentos, taxaConversao, margemBruta, margemLiquida, acoes5S: acoes5SMes };
 }
 
 // ─── Semáforo ─────────────────────────────────────────────────────────────────
@@ -242,14 +277,9 @@ function statusSimples(valor: number | null, meta: number): StatusKpi {
   return 'vermelho';
 }
 
-function statusIntervalo(
-  valor: number | null,
-  min: number,
-  max: number
-): StatusKpi {
+function statusIntervalo(valor: number | null, min: number, max: number): StatusKpi {
   if (valor === null) return 'sem_dados';
   if (valor >= min && valor <= max) return 'verde';
-  // Acima do máximo em 20%+ também é alerta
   if (valor > max * 1.2) return 'amarelo';
   if (valor >= min * 0.8) return 'amarelo';
   return 'vermelho';
@@ -293,18 +323,22 @@ function corStatus(status: StatusKpi) {
 interface KpiCardProps {
   icon: React.ComponentType<{ className?: string }>;
   titulo: string;
+  tooltip: string;
   valor: string;
   meta: string;
   status: StatusKpi;
-  progresso: number; // 0-100 para Progress bar
+  progresso: number;
   delta?: { valor: string; positivo: boolean } | null;
   semDados?: boolean;
   avisoSemDados?: string;
+  temPlano?: boolean;
+  onCriarPlano?: () => void;
 }
 
 const KpiCard = ({
   icon: Icon,
   titulo,
+  tooltip,
   valor,
   meta,
   status,
@@ -312,15 +346,29 @@ const KpiCard = ({
   delta,
   semDados,
   avisoSemDados,
+  temPlano,
+  onCriarPlano,
 }: KpiCardProps) => {
   const cor = corStatus(status);
+  const mostrarPlano = (status === 'amarelo' || status === 'vermelho') && !semDados;
+
   return (
     <Card className={cn('border-l-4 transition-all', cor.border, cor.bg)}>
       <CardContent className="pt-4 pb-3">
         <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Icon className="w-5 h-5 text-muted-foreground" />
             <span className="text-sm font-medium text-muted-foreground">{titulo}</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/50 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-xs leading-relaxed">
+                  {tooltip}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', cor.badge)}>
             {cor.label}
@@ -344,11 +392,31 @@ const KpiCard = ({
               </div>
             )}
 
-            <Progress
-              value={Math.min(progresso, 100)}
-              className="mt-2 h-1.5"
-            />
+            <Progress value={Math.min(progresso, 100)} className="mt-2 h-1.5" />
           </>
+        )}
+
+        {mostrarPlano && (
+          <div className="mt-3 pt-2 border-t border-dashed border-current/20 flex items-center justify-between">
+            {temPlano ? (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <ClipboardList className="w-3 h-3" /> Plano registrado
+              </span>
+            ) : (
+              <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> Meta não atingida
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs px-2 gap-1"
+              onClick={onCriarPlano}
+            >
+              <Plus className="w-3 h-3" />
+              {temPlano ? 'Novo Plano' : 'Criar Plano de Ação'}
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -386,82 +454,154 @@ const DialogMetas = ({ open, metas, onSave, onClose }: DialogMetasProps) => {
         <div className="space-y-4 py-2">
           <div className="space-y-1">
             <Label>Qtd Orçamentos / mês</Label>
-            <Input
-              type="number"
-              value={form.qtdOrcamentos}
-              onChange={(e) => setForm({ ...form, qtdOrcamentos: n(e.target.value) })}
-            />
+            <Input type="number" value={form.qtdOrcamentos}
+              onChange={(e) => setForm({ ...form, qtdOrcamentos: n(e.target.value) })} />
           </div>
           <div className="space-y-1">
             <Label>Valor Orçamentos (R$)</Label>
-            <Input
-              type="number"
-              value={form.valorOrcamentos}
-              onChange={(e) => setForm({ ...form, valorOrcamentos: n(e.target.value) })}
-            />
+            <Input type="number" value={form.valorOrcamentos}
+              onChange={(e) => setForm({ ...form, valorOrcamentos: n(e.target.value) })} />
           </div>
           <div className="space-y-1">
             <Label>Taxa de Conversão (%)</Label>
-            <Input
-              type="number"
-              value={form.taxaConversao}
-              onChange={(e) => setForm({ ...form, taxaConversao: n(e.target.value) })}
-            />
+            <Input type="number" value={form.taxaConversao}
+              onChange={(e) => setForm({ ...form, taxaConversao: n(e.target.value) })} />
           </div>
           <div className="space-y-1">
             <Label>Margem Bruta — Mín / Máx (%)</Label>
             <div className="flex gap-2">
-              <Input
-                type="number"
-                placeholder="Mín"
-                value={form.margemBruta.min}
-                onChange={(e) =>
-                  setForm({ ...form, margemBruta: { ...form.margemBruta, min: n(e.target.value) } })
-                }
-              />
-              <Input
-                type="number"
-                placeholder="Máx"
-                value={form.margemBruta.max}
-                onChange={(e) =>
-                  setForm({ ...form, margemBruta: { ...form.margemBruta, max: n(e.target.value) } })
-                }
-              />
+              <Input type="number" placeholder="Mín" value={form.margemBruta.min}
+                onChange={(e) => setForm({ ...form, margemBruta: { ...form.margemBruta, min: n(e.target.value) } })} />
+              <Input type="number" placeholder="Máx" value={form.margemBruta.max}
+                onChange={(e) => setForm({ ...form, margemBruta: { ...form.margemBruta, max: n(e.target.value) } })} />
             </div>
           </div>
           <div className="space-y-1">
             <Label>Margem Líquida — Mín / Máx (%)</Label>
             <div className="flex gap-2">
-              <Input
-                type="number"
-                placeholder="Mín"
-                value={form.margemLiquida.min}
-                onChange={(e) =>
-                  setForm({ ...form, margemLiquida: { ...form.margemLiquida, min: n(e.target.value) } })
-                }
-              />
-              <Input
-                type="number"
-                placeholder="Máx"
-                value={form.margemLiquida.max}
-                onChange={(e) =>
-                  setForm({ ...form, margemLiquida: { ...form.margemLiquida, max: n(e.target.value) } })
-                }
-              />
+              <Input type="number" placeholder="Mín" value={form.margemLiquida.min}
+                onChange={(e) => setForm({ ...form, margemLiquida: { ...form.margemLiquida, min: n(e.target.value) } })} />
+              <Input type="number" placeholder="Máx" value={form.margemLiquida.max}
+                onChange={(e) => setForm({ ...form, margemLiquida: { ...form.margemLiquida, max: n(e.target.value) } })} />
             </div>
           </div>
           <div className="space-y-1">
             <Label>Ações 5S / mês</Label>
-            <Input
-              type="number"
-              value={form.acoes5S}
-              onChange={(e) => setForm({ ...form, acoes5S: n(e.target.value) })}
-            />
+            <Input type="number" value={form.acoes5S}
+              onChange={(e) => setForm({ ...form, acoes5S: n(e.target.value) })} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={() => { onSave(form); onClose(); }}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ─── Dialog Plano de Ação ─────────────────────────────────────────────────────
+
+interface DialogPlanoProps {
+  open: boolean;
+  kpiLabel: string;
+  editando: PlanoAcao | null;
+  onSave: (plano: Omit<PlanoAcao, 'id' | 'criadoEm'>) => void;
+  onClose: () => void;
+}
+
+const CAMPOS_5W2H: { key: keyof PlanoAcao; label: string; placeholder: string }[] = [
+  { key: 'oQue', label: 'O quê? (What)', placeholder: 'O que precisa ser feito?' },
+  { key: 'porQue', label: 'Por quê? (Why)', placeholder: 'Por que esta ação é necessária?' },
+  { key: 'quem', label: 'Quem? (Who)', placeholder: 'Quem é o responsável?' },
+  { key: 'quando', label: 'Quando? (When)', placeholder: 'Qual o prazo para execução?' },
+  { key: 'onde', label: 'Onde? (Where)', placeholder: 'Onde será executado?' },
+  { key: 'como', label: 'Como? (How)', placeholder: 'Como será executado?' },
+  { key: 'quantoCusta', label: 'Quanto custa? (How much)', placeholder: 'Qual o custo estimado?' },
+];
+
+const CAMPOS_PDCA: { key: keyof PlanoAcao; label: string; placeholder: string }[] = [
+  { key: 'plan', label: 'Planejar (Plan)', placeholder: 'O que precisa ser feito? Qual o objetivo?' },
+  { key: 'do', label: 'Executar (Do)', placeholder: 'Quais ações concretas serão realizadas?' },
+  { key: 'check', label: 'Verificar (Check)', placeholder: 'Como medir o resultado?' },
+  { key: 'act', label: 'Agir (Act)', placeholder: 'O que ajustar com base nos resultados?' },
+];
+
+const DialogPlano = ({ open, kpiLabel, editando, onSave, onClose }: DialogPlanoProps) => {
+  const [metodologia, setMetodologia] = useState<'5W2H' | 'PDCA'>(editando?.metodologia ?? '5W2H');
+  const [form, setForm] = useState<Partial<PlanoAcao>>(editando ?? {});
+
+  // Sincronizar quando dialog abre com dados de edição
+  const handleOpen = (val: boolean) => {
+    if (val) {
+      setMetodologia(editando?.metodologia ?? '5W2H');
+      setForm(editando ?? {});
+    } else {
+      onClose();
+    }
+  };
+
+  const f = (key: keyof PlanoAcao) => (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const handleSalvar = () => {
+    onSave({ ...form, metodologia } as Omit<PlanoAcao, 'id' | 'criadoEm'>);
+    onClose();
+  };
+
+  const campos = metodologia === '5W2H' ? CAMPOS_5W2H : CAMPOS_PDCA;
+  const temConteudo = campos.some((c) => !!(form[c.key] as string | undefined)?.trim());
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {editando ? 'Editar Plano' : 'Criar Plano de Ação'} — {kpiLabel}
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Seleção de metodologia */}
+        <div className="py-2">
+          <Label className="mb-2 block text-sm">Metodologia</Label>
+          <RadioGroup
+            value={metodologia}
+            onValueChange={(v) => setMetodologia(v as '5W2H' | 'PDCA')}
+            className="flex gap-6"
+          >
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="5W2H" id="met-5w2h" />
+              <Label htmlFor="met-5w2h" className="cursor-pointer font-medium">5W2H</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="PDCA" id="met-pdca" />
+              <Label htmlFor="met-pdca" className="cursor-pointer font-medium">PDCA</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        {/* Campos da metodologia */}
+        <ScrollArea className="max-h-[55vh] pr-3">
+          <div className="space-y-3 pb-1">
+            {campos.map((campo) => (
+              <div key={String(campo.key)} className="space-y-1">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {campo.label}
+                </Label>
+                <Textarea
+                  placeholder={campo.placeholder}
+                  rows={2}
+                  value={(form[campo.key] as string | undefined) ?? ''}
+                  onChange={f(campo.key)}
+                />
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSalvar} disabled={!temConteudo}>Salvar Plano</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -475,35 +615,29 @@ const KpisComercialPage = () => {
   const [mesAno, setMesAno] = useState(() => formatMesAno(hoje));
   const [metas, setMetas] = useState<Metas>(loadMetas);
   const [acoes5S, setAcoes5S] = useState<Acao5S[]>(loadAcoes5S);
+  const [planos, setPlanos] = useState<PlanoAcao[]>(loadPlanos);
+
+  // Dialogs
   const [dialogMetasOpen, setDialogMetasOpen] = useState(false);
   const [dialogAcaoOpen, setDialogAcaoOpen] = useState(false);
-  const [novaAcaoData, setNovaAcaoData] = useState(
-    hoje.toISOString().split('T')[0]
-  );
+  const [novaAcaoData, setNovaAcaoData] = useState(hoje.toISOString().split('T')[0]);
   const [novaAcaoDescricao, setNovaAcaoDescricao] = useState('');
   const [acaoParaExcluir, setAcaoParaExcluir] = useState<string | null>(null);
 
-  const {
-    data: orcamentos = [],
-    isLoading,
-    error,
-    refetch,
-  } = useOrcamentos();
+  // Plano de Ação
+  const [dialogPlanoOpen, setDialogPlanoOpen] = useState(false);
+  const [planoKpi, setPlanoKpi] = useState<{ kpi: string; label: string }>({ kpi: '', label: '' });
+  const [planoEditando, setPlanoEditando] = useState<PlanoAcao | null>(null);
+  const [planoParaExcluir, setPlanoParaExcluir] = useState<string | null>(null);
 
-  // ── Calcular KPIs do mês atual ──
-  const kpis = useMemo(
-    () => calcularKpis(orcamentos, acoes5S, mesAno),
-    [orcamentos, acoes5S, mesAno]
-  );
+  const { data: orcamentos = [], isLoading, error, refetch } = useOrcamentos();
 
-  // ── Calcular KPIs do mês anterior (para delta) ──
+  // ── KPIs ──
+  const kpis = useMemo(() => calcularKpis(orcamentos, acoes5S, mesAno), [orcamentos, acoes5S, mesAno]);
   const mesAnt = mesAnterior(mesAno);
-  const kpisAnt = useMemo(
-    () => calcularKpis(orcamentos, acoes5S, mesAnt),
-    [orcamentos, acoes5S, mesAnt]
-  );
+  const kpisAnt = useMemo(() => calcularKpis(orcamentos, acoes5S, mesAnt), [orcamentos, acoes5S, mesAnt]);
 
-  // ── Dados do gráfico de tendência (últimos 6 meses) ──
+  // ── Gráfico ──
   const dadosGrafico = useMemo(() => {
     return Array.from({ length: 6 }, (_, i) => {
       const offset = 5 - i;
@@ -519,13 +653,17 @@ const KpisComercialPage = () => {
     });
   }, [orcamentos, mesAno]);
 
-  // ── Ações 5S do mês selecionado ──
-  const acoes5SMes = useMemo(
-    () => acoes5S.filter((a) => a.mes === mesAno),
-    [acoes5S, mesAno]
+  // ── Listas filtradas pelo mês ──
+  const acoes5SMes = useMemo(() => acoes5S.filter((a) => a.mes === mesAno), [acoes5S, mesAno]);
+  const planosMes = useMemo(() => planos.filter((p) => p.mes === mesAno), [planos, mesAno]);
+
+  // Verificar se há plano para cada KPI no mês
+  const temPlanoKpi = useCallback(
+    (kpi: string) => planosMes.some((p) => p.kpi === kpi),
+    [planosMes]
   );
 
-  // ── Handlers ──
+  // ── Handlers 5S ──
   const handleSalvarMetas = useCallback((novasMetas: Metas) => {
     setMetas(novasMetas);
     saveMetas(novasMetas);
@@ -554,7 +692,43 @@ const KpisComercialPage = () => {
     setAcaoParaExcluir(null);
   }, [acoes5S]);
 
-  // ── Deltas formatados ──
+  // ── Handlers Plano de Ação ──
+  const handleAbrirPlano = useCallback((kpi: string, label: string, editando?: PlanoAcao) => {
+    setPlanoKpi({ kpi, label });
+    setPlanoEditando(editando ?? null);
+    setDialogPlanoOpen(true);
+  }, []);
+
+  const handleSalvarPlano = useCallback((dados: Omit<PlanoAcao, 'id' | 'criadoEm'>) => {
+    if (planoEditando) {
+      const atualizados = planos.map((p) =>
+        p.id === planoEditando.id ? { ...planoEditando, ...dados } : p
+      );
+      setPlanos(atualizados);
+      savePlanos(atualizados);
+    } else {
+      const novo: PlanoAcao = {
+        ...dados,
+        id: gerarId(),
+        kpi: planoKpi.kpi,
+        kpiLabel: planoKpi.label,
+        mes: mesAno,
+        criadoEm: new Date().toISOString(),
+      };
+      const novos = [...planos, novo];
+      setPlanos(novos);
+      savePlanos(novos);
+    }
+  }, [planoEditando, planos, planoKpi, mesAno]);
+
+  const handleExcluirPlano = useCallback((id: string) => {
+    const novos = planos.filter((p) => p.id !== id);
+    setPlanos(novos);
+    savePlanos(novos);
+    setPlanoParaExcluir(null);
+  }, [planos]);
+
+  // ── Deltas ──
   function deltaNum(atual: number | null, anterior: number | null, unidade = '') {
     if (atual === null || anterior === null) return null;
     const diff = atual - anterior;
@@ -569,68 +743,36 @@ const KpisComercialPage = () => {
     return { valor: str, positivo };
   }
 
-  // ── Status de cada KPI ──
+  // ── Status ──
   const statusQtd = statusSimples(kpis.qtdOrcamentos, metas.qtdOrcamentos);
   const statusValor = statusSimples(kpis.valorOrcamentos, metas.valorOrcamentos);
-  const statusTaxa =
-    kpis.taxaConversao === null
-      ? 'sem_dados'
-      : statusSimples(kpis.taxaConversao, metas.taxaConversao);
-  const statusMB =
-    kpis.margemBruta === null
-      ? 'sem_dados'
-      : statusIntervalo(kpis.margemBruta, metas.margemBruta.min, metas.margemBruta.max);
-  const statusML =
-    kpis.margemLiquida === null
-      ? 'sem_dados'
-      : statusIntervalo(kpis.margemLiquida, metas.margemLiquida.min, metas.margemLiquida.max);
+  const statusTaxa = kpis.taxaConversao === null ? 'sem_dados' : statusSimples(kpis.taxaConversao, metas.taxaConversao);
+  const statusMB = kpis.margemBruta === null ? 'sem_dados' : statusIntervalo(kpis.margemBruta, metas.margemBruta.min, metas.margemBruta.max);
+  const statusML = kpis.margemLiquida === null ? 'sem_dados' : statusIntervalo(kpis.margemLiquida, metas.margemLiquida.min, metas.margemLiquida.max);
   const status5S = statusSimples(kpis.acoes5S, metas.acoes5S);
 
-  // ── Progresso para barras (simples) ──
-  const prog = (v: number | null, meta: number) =>
-    v === null ? 0 : Math.min((v / meta) * 100, 120);
+  const prog = (v: number | null, meta: number) => v === null ? 0 : Math.min((v / meta) * 100, 120);
 
   return (
-    <PageContainer
-        loading={isLoading}
-        error={error instanceof Error ? error : null}
-        onRetry={refetch}
-      >
+    <Layout>
+      <PageContainer loading={isLoading} error={error instanceof Error ? error : null} onRetry={refetch}>
         {/* ── Header ── */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">KPIs Comercial</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Indicadores de desempenho mensais
-            </p>
+            <p className="text-sm text-muted-foreground mt-0.5">Indicadores de desempenho mensais</p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Navegação de mês */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setMesAno(mesAnterior(mesAno))}
-            >
+            <Button variant="outline" size="icon" onClick={() => setMesAno(mesAnterior(mesAno))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <span className="text-sm font-semibold min-w-[100px] text-center">
-              {NOMES_MESES[parseInt(mesAno.split('-')[1]) - 1]}{' '}
-              {mesAno.split('-')[0]}
+              {NOMES_MESES[parseInt(mesAno.split('-')[1]) - 1]} {mesAno.split('-')[0]}
             </span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setMesAno(proximoMes(mesAno))}
-            >
+            <Button variant="outline" size="icon" onClick={() => setMesAno(proximoMes(mesAno))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-2 gap-1.5"
-              onClick={() => setDialogMetasOpen(true)}
-            >
+            <Button variant="outline" size="sm" className="ml-2 gap-1.5" onClick={() => setDialogMetasOpen(true)}>
               <Settings className="w-4 h-4" />
               Editar Metas
             </Button>
@@ -639,96 +781,86 @@ const KpisComercialPage = () => {
 
         {/* ── Grid de KPIs ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {/* KPI 1 — Qtd Orçamentos */}
           <KpiCard
             icon={FileText}
             titulo="Qtd Orçamentos"
+            tooltip={KPI_TOOLTIPS.qtdOrcamentos}
             valor={String(kpis.qtdOrcamentos)}
             meta={`${metas.qtdOrcamentos} / mês`}
             status={statusQtd}
             progresso={prog(kpis.qtdOrcamentos, metas.qtdOrcamentos)}
             delta={deltaNum(kpis.qtdOrcamentos, kpisAnt.qtdOrcamentos)}
+            temPlano={temPlanoKpi('qtdOrcamentos')}
+            onCriarPlano={() => handleAbrirPlano('qtdOrcamentos', 'Qtd Orçamentos')}
           />
-
-          {/* KPI 2 — Valor */}
           <KpiCard
             icon={DollarSign}
             titulo="Valor Orçado"
+            tooltip={KPI_TOOLTIPS.valorOrcamentos}
             valor={formatCurrency(kpis.valorOrcamentos)}
             meta={formatCurrency(metas.valorOrcamentos)}
             status={statusValor}
             progresso={prog(kpis.valorOrcamentos, metas.valorOrcamentos)}
             delta={deltaNum(kpis.valorOrcamentos, kpisAnt.valorOrcamentos, 'R$')}
+            temPlano={temPlanoKpi('valorOrcamentos')}
+            onCriarPlano={() => handleAbrirPlano('valorOrcamentos', 'Valor Orçado')}
           />
-
-          {/* KPI 3 — Taxa de Conversão */}
           <KpiCard
             icon={ArrowRight}
             titulo="Taxa de Conversão"
+            tooltip={KPI_TOOLTIPS.taxaConversao}
             valor={kpis.taxaConversao !== null ? `${kpis.taxaConversao.toFixed(1)}%` : '—'}
             meta={`${metas.taxaConversao}%`}
             status={statusTaxa as StatusKpi}
             progresso={prog(kpis.taxaConversao, metas.taxaConversao)}
-            delta={
-              kpis.taxaConversao !== null && kpisAnt.taxaConversao !== null
-                ? deltaNum(kpis.taxaConversao, kpisAnt.taxaConversao, '%')
-                : null
-            }
+            delta={kpis.taxaConversao !== null && kpisAnt.taxaConversao !== null
+              ? deltaNum(kpis.taxaConversao, kpisAnt.taxaConversao, '%') : null}
             semDados={kpis.taxaConversao === null}
             avisoSemDados="Sem orçamentos aprovados ou rejeitados neste mês."
+            temPlano={temPlanoKpi('taxaConversao')}
+            onCriarPlano={() => handleAbrirPlano('taxaConversao', 'Taxa de Conversão')}
           />
-
-          {/* KPI 4 — Margem Bruta */}
           <KpiCard
             icon={TrendingUp}
             titulo="Margem Bruta"
+            tooltip={KPI_TOOLTIPS.margemBruta}
             valor={kpis.margemBruta !== null ? `${kpis.margemBruta.toFixed(1)}%` : '—'}
             meta={`${metas.margemBruta.min}% – ${metas.margemBruta.max}%`}
             status={statusMB as StatusKpi}
-            progresso={
-              kpis.margemBruta !== null
-                ? Math.min((kpis.margemBruta / metas.margemBruta.max) * 100, 120)
-                : 0
-            }
-            delta={
-              kpis.margemBruta !== null && kpisAnt.margemBruta !== null
-                ? deltaNum(kpis.margemBruta, kpisAnt.margemBruta, '%')
-                : null
-            }
+            progresso={kpis.margemBruta !== null ? Math.min((kpis.margemBruta / metas.margemBruta.max) * 100, 120) : 0}
+            delta={kpis.margemBruta !== null && kpisAnt.margemBruta !== null
+              ? deltaNum(kpis.margemBruta, kpisAnt.margemBruta, '%') : null}
             semDados={kpis.margemBruta === null}
             avisoSemDados="Sem orçamentos aprovados neste mês."
+            temPlano={temPlanoKpi('margemBruta')}
+            onCriarPlano={() => handleAbrirPlano('margemBruta', 'Margem Bruta')}
           />
-
-          {/* KPI 5 — Margem Líquida */}
           <KpiCard
             icon={Target}
             titulo="Margem Líquida"
+            tooltip={KPI_TOOLTIPS.margemLiquida}
             valor={kpis.margemLiquida !== null ? `${kpis.margemLiquida.toFixed(1)}%` : '—'}
             meta={`${metas.margemLiquida.min}% – ${metas.margemLiquida.max}%`}
             status={statusML as StatusKpi}
-            progresso={
-              kpis.margemLiquida !== null
-                ? Math.min((kpis.margemLiquida / metas.margemLiquida.max) * 100, 120)
-                : 0
-            }
-            delta={
-              kpis.margemLiquida !== null && kpisAnt.margemLiquida !== null
-                ? deltaNum(kpis.margemLiquida, kpisAnt.margemLiquida, '%')
-                : null
-            }
+            progresso={kpis.margemLiquida !== null ? Math.min((kpis.margemLiquida / metas.margemLiquida.max) * 100, 120) : 0}
+            delta={kpis.margemLiquida !== null && kpisAnt.margemLiquida !== null
+              ? deltaNum(kpis.margemLiquida, kpisAnt.margemLiquida, '%') : null}
             semDados={kpis.margemLiquida === null}
             avisoSemDados="Configure o componente Lucro no BDI Detalhado (aba Dados Gerais) para calcular esta margem."
+            temPlano={temPlanoKpi('margemLiquida')}
+            onCriarPlano={() => handleAbrirPlano('margemLiquida', 'Margem Líquida')}
           />
-
-          {/* KPI 6 — 5S */}
           <KpiCard
             icon={CheckSquare}
             titulo="Ações 5S"
+            tooltip={KPI_TOOLTIPS.acoes5S}
             valor={String(kpis.acoes5S)}
             meta={`${metas.acoes5S} / mês`}
             status={status5S}
             progresso={prog(kpis.acoes5S, metas.acoes5S)}
             delta={deltaNum(kpis.acoes5S, kpisAnt.acoes5S)}
+            temPlano={temPlanoKpi('acoes5S')}
+            onCriarPlano={() => handleAbrirPlano('acoes5S', 'Ações 5S')}
           />
         </div>
 
@@ -742,18 +874,10 @@ const KpisComercialPage = () => {
               <ComposedChart data={dadosGrafico} margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-                <YAxis
-                  yAxisId="qtd"
-                  orientation="left"
-                  tick={{ fontSize: 12 }}
-                  label={{ value: 'Qtd', angle: -90, position: 'insideLeft', offset: 12, style: { fontSize: 11 } }}
-                />
-                <YAxis
-                  yAxisId="valor"
-                  orientation="right"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(v) => `R$${v.toFixed(1)}M`}
-                />
+                <YAxis yAxisId="qtd" orientation="left" tick={{ fontSize: 12 }}
+                  label={{ value: 'Qtd', angle: -90, position: 'insideLeft', offset: 12, style: { fontSize: 11 } }} />
+                <YAxis yAxisId="valor" orientation="right" tick={{ fontSize: 12 }}
+                  tickFormatter={(v) => `R$${(v as number).toFixed(1)}M`} />
                 <RechartsTooltip
                   formatter={(value: number, name: string) => {
                     if (name === 'Qtd') return [value, 'Orçamentos'];
@@ -761,84 +885,125 @@ const KpisComercialPage = () => {
                   }}
                 />
                 <Legend />
-                <ReferenceLine
-                  yAxisId="qtd"
-                  y={metas.qtdOrcamentos}
-                  stroke="#f59e0b"
-                  strokeDasharray="4 4"
-                  label={{ value: `Meta ${metas.qtdOrcamentos}`, position: 'right', fontSize: 11 }}
-                />
+                <ReferenceLine yAxisId="qtd" y={metas.qtdOrcamentos} stroke="#f59e0b" strokeDasharray="4 4"
+                  label={{ value: `Meta ${metas.qtdOrcamentos}`, position: 'right', fontSize: 11 }} />
                 <Bar yAxisId="qtd" dataKey="qtd" name="Qtd" fill="#3b82f6" radius={[3, 3, 0, 0]} maxBarSize={48} />
-                <Line
-                  yAxisId="valor"
-                  type="monotone"
-                  dataKey="valor"
-                  name="Valor (M)"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
+                <Line yAxisId="valor" type="monotone" dataKey="valor" name="Valor (M)"
+                  stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* ── Seção 5S ── */}
+        {/* ── Card unificado: 5S + Planos de Ação ── */}
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
-                Ações 5S — {NOMES_MESES[parseInt(mesAno.split('-')[1]) - 1]}/{mesAno.split('-')[0]}
-                <Badge variant="outline" className="ml-2 text-xs">
-                  {acoes5SMes.length} / {metas.acoes5S}
-                </Badge>
-              </CardTitle>
-              <Button
-                size="sm"
-                className="gap-1.5"
-                onClick={() => {
-                  setNovaAcaoData(hoje.toISOString().split('T')[0]);
-                  setNovaAcaoDescricao('');
-                  setDialogAcaoOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4" />
-                Registrar Ação
-              </Button>
-            </div>
+            <CardTitle className="text-base">
+              {NOMES_MESES[parseInt(mesAno.split('-')[1]) - 1]}/{mesAno.split('-')[0]}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {acoes5SMes.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                Nenhuma ação registrada neste mês.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {acoes5SMes
-                  .sort((a, b) => a.data.localeCompare(b.data))
-                  .map((acao) => (
-                    <div
-                      key={acao.id}
-                      className="flex items-center justify-between py-2.5 gap-4"
-                    >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap pt-0.5">
-                          {new Date(acao.data + 'T12:00:00').toLocaleDateString('pt-BR')}
-                        </span>
-                        <p className="text-sm leading-snug truncate">{acao.descricao}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-destructive flex-shrink-0"
-                        onClick={() => setAcaoParaExcluir(acao.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-              </div>
-            )}
+            <Tabs defaultValue="5s">
+              <TabsList className="mb-4">
+                <TabsTrigger value="5s" className="gap-2">
+                  Ações 5S
+                  <Badge variant="outline" className="text-xs">
+                    {acoes5SMes.length}/{metas.acoes5S}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="planos" className="gap-2">
+                  Planos de Ação
+                  {planosMes.length > 0 && (
+                    <Badge variant="outline" className="text-xs">{planosMes.length}</Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              {/* ── Tab 5S ── */}
+              <TabsContent value="5s">
+                <div className="flex justify-end mb-3">
+                  <Button size="sm" className="gap-1.5"
+                    onClick={() => {
+                      setNovaAcaoData(hoje.toISOString().split('T')[0]);
+                      setNovaAcaoDescricao('');
+                      setDialogAcaoOpen(true);
+                    }}>
+                    <Plus className="w-4 h-4" />
+                    Registrar Ação
+                  </Button>
+                </div>
+                {acoes5SMes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    Nenhuma ação registrada neste mês.
+                  </p>
+                ) : (
+                  <div className="divide-y">
+                    {acoes5SMes
+                      .sort((a, b) => a.data.localeCompare(b.data))
+                      .map((acao) => (
+                        <div key={acao.id} className="flex items-center justify-between py-2.5 gap-4">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap pt-0.5">
+                              {new Date(acao.data + 'T12:00:00').toLocaleDateString('pt-BR')}
+                            </span>
+                            <p className="text-sm leading-snug truncate">{acao.descricao}</p>
+                          </div>
+                          <Button variant="ghost" size="icon"
+                            className="text-muted-foreground hover:text-destructive flex-shrink-0"
+                            onClick={() => setAcaoParaExcluir(acao.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* ── Tab Planos de Ação ── */}
+              <TabsContent value="planos">
+                {planosMes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    Nenhum plano de ação registrado neste mês. Crie um a partir dos cards com meta não atingida.
+                  </p>
+                ) : (
+                  <div className="divide-y">
+                    {planosMes
+                      .sort((a, b) => a.criadoEm.localeCompare(b.criadoEm))
+                      .map((plano) => (
+                        <div key={plano.id} className="py-3 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Badge variant="outline" className="text-xs shrink-0">
+                              {plano.metodologia}
+                            </Badge>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium">{plano.kpiLabel}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(plano.criadoEm).toLocaleDateString('pt-BR')}
+                                {' · '}
+                                {plano.metodologia === '5W2H'
+                                  ? [plano.oQue, plano.porQue].filter(Boolean).join(' — ').slice(0, 60)
+                                  : [plano.plan].filter(Boolean).join('').slice(0, 60)}
+                                {((plano.oQue?.length ?? 0) + (plano.plan?.length ?? 0)) > 60 ? '…' : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button variant="ghost" size="icon" className="w-8 h-8"
+                              onClick={() => handleAbrirPlano(plano.kpi, plano.kpiLabel, plano)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon"
+                              className="w-8 h-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => setPlanoParaExcluir(plano.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -859,58 +1024,72 @@ const KpisComercialPage = () => {
             <div className="space-y-3 py-2">
               <div className="space-y-1">
                 <Label>Data</Label>
-                <Input
-                  type="date"
-                  value={novaAcaoData}
-                  onChange={(e) => setNovaAcaoData(e.target.value)}
-                />
+                <Input type="date" value={novaAcaoData}
+                  onChange={(e) => setNovaAcaoData(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label>Descrição</Label>
-                <Textarea
-                  placeholder="Descreva a ação realizada..."
-                  value={novaAcaoDescricao}
-                  onChange={(e) => setNovaAcaoDescricao(e.target.value)}
-                  rows={3}
-                />
+                <Textarea placeholder="Descreva a ação realizada..." value={novaAcaoDescricao}
+                  onChange={(e) => setNovaAcaoDescricao(e.target.value)} rows={3} />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogAcaoOpen(false)}>Cancelar</Button>
-              <Button
-                onClick={handleRegistrarAcao}
-                disabled={!novaAcaoDescricao.trim()}
-              >
-                Salvar
-              </Button>
+              <Button onClick={handleRegistrarAcao} disabled={!novaAcaoDescricao.trim()}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* AlertDialog — Confirmar exclusão de ação 5S */}
-        <AlertDialog
-          open={!!acaoParaExcluir}
-          onOpenChange={(v) => { if (!v) setAcaoParaExcluir(null); }}
-        >
+        {/* Dialog — Plano de Ação */}
+        <DialogPlano
+          open={dialogPlanoOpen}
+          kpiLabel={planoKpi.label}
+          editando={planoEditando}
+          onSave={handleSalvarPlano}
+          onClose={() => setDialogPlanoOpen(false)}
+        />
+
+        {/* AlertDialog — Excluir ação 5S */}
+        <AlertDialog open={!!acaoParaExcluir} onOpenChange={(v) => { if (!v) setAcaoParaExcluir(null); }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Excluir ação 5S?</AlertDialogTitle>
               <AlertDialogDescription>
-                Esta ação será removida permanentemente. Esta operação não pode ser desfeita.
+                Esta ação será removida permanentemente.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={() => acaoParaExcluir && handleExcluirAcao(acaoParaExcluir)}
-              >
+                onClick={() => acaoParaExcluir && handleExcluirAcao(acaoParaExcluir)}>
                 Excluir
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-    </PageContainer>
+
+        {/* AlertDialog — Excluir plano de ação */}
+        <AlertDialog open={!!planoParaExcluir} onOpenChange={(v) => { if (!v) setPlanoParaExcluir(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir plano de ação?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Este plano será removido permanentemente. Esta operação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => planoParaExcluir && handleExcluirPlano(planoParaExcluir)}>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </PageContainer>
+    </Layout>
   );
 };
 
