@@ -20,7 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, FileText, Filter, X, Eye, Copy, Trash2, ArrowUpDown, ChevronRight, Download, Wrench, Package, ArrowLeft } from 'lucide-react';
+import { Plus, FileText, Filter, X, Eye, Copy, Trash2, ArrowUpDown, ChevronRight, Wrench, Package, ArrowLeft } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import OrcamentoService from '@/services/OrcamentoService';
 import { Orcamento } from '@/interfaces/OrcamentoInterface';
 import { formatCurrency, formatPercentage } from '@/lib/currency';
@@ -37,7 +47,9 @@ const OrcamentosListPage = () => {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<string>('todos');
+  const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroViabilidade, setFiltroViabilidade] = useState<string>('todos');
+  const [deletarItem, setDeletarItem] = useState<{ id: string; nome: string } | null>(null);
   const [sortField, setSortField] = useState<SortField>('numero');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -82,22 +94,20 @@ const OrcamentosListPage = () => {
     }
   };
 
-  const handleDeletar = async (id: string, nome: string) => {
-    if (!confirm(`Tem certeza que deseja deletar o orçamento "${nome}"?`)) return;
+  const handleDeletar = (id: string, nome: string) => {
+    setDeletarItem({ id, nome });
+  };
 
+  const handleConfirmarDeletar = async () => {
+    if (!deletarItem) return;
     try {
-      await OrcamentoService.delete(id);
-      toast({
-        title: 'Sucesso',
-        description: 'Orçamento deletado com sucesso',
-      });
+      await OrcamentoService.delete(deletarItem.id);
+      toast({ title: 'Sucesso', description: 'Orçamento deletado com sucesso' });
       carregarOrcamentos();
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao deletar orçamento',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Erro ao deletar orçamento', variant: 'destructive' });
+    } finally {
+      setDeletarItem(null);
     }
   };
 
@@ -118,22 +128,27 @@ const OrcamentosListPage = () => {
   const orcamentosFiltrados = orcamentos.filter(orc => {
     const matchBusca =
       containsNormalized(orc.nome, busca) ||
-      containsNormalized(orc.numero, busca);
+      containsNormalized(orc.numero, busca) ||
+      containsNormalized(orc.clienteNome || '', busca);
 
     const matchTipo =
       filtroTipo === 'todos' ||
       (filtroTipo === 'servico' && orc.tipo === 'servico') ||
       (filtroTipo === 'produto' && orc.tipo === 'produto');
 
-    const status = getStatusViabilidade(orc.dre);
+    const matchStatus =
+      filtroStatus === 'todos' ||
+      (orc.status || 'rascunho') === filtroStatus;
+
+    const dre = orc.dre ?? { lucroLiquido: 0, margemLiquida: 0, receitaLiquida: 0, lucroBruto: 0, margemBruta: 0 };
     const matchViabilidade =
       filtroViabilidade === 'todos' ||
-      (filtroViabilidade === 'prejuizo' && orc.dre.lucroLiquido < 0) ||
-      (filtroViabilidade === 'margem_baixa' && orc.dre.margemLiquida > 0 && orc.dre.margemLiquida < 5) ||
-      (filtroViabilidade === 'aceitavel' && orc.dre.margemLiquida >= 5 && orc.dre.margemLiquida < 15) ||
-      (filtroViabilidade === 'bom' && orc.dre.margemLiquida >= 15);
+      (filtroViabilidade === 'prejuizo' && dre.lucroLiquido < 0) ||
+      (filtroViabilidade === 'margem_baixa' && dre.margemLiquida > 0 && dre.margemLiquida < 5) ||
+      (filtroViabilidade === 'aceitavel' && dre.margemLiquida >= 5 && dre.margemLiquida < 15) ||
+      (filtroViabilidade === 'bom' && dre.margemLiquida >= 15);
 
-    return matchBusca && matchTipo && matchViabilidade;
+    return matchBusca && matchTipo && matchStatus && matchViabilidade;
   });
 
   // Ordenação
@@ -179,6 +194,7 @@ const OrcamentosListPage = () => {
   const limparFiltros = () => {
     setBusca('');
     setFiltroTipo('todos');
+    setFiltroStatus('todos');
     setFiltroViabilidade('todos');
   };
 
@@ -226,11 +242,11 @@ const OrcamentosListPage = () => {
             <h3 className="font-medium">Filtros</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Buscar</label>
               <Input
-                placeholder="Nome ou número do orçamento..."
+                placeholder="Nome, número ou cliente..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
               />
@@ -256,6 +272,22 @@ const OrcamentosListPage = () => {
                       Produto
                     </div>
                   </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Status</label>
+              <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="rascunho">Rascunho</SelectItem>
+                  <SelectItem value="em_analise">Em Análise</SelectItem>
+                  <SelectItem value="aprovado">Aprovado</SelectItem>
+                  <SelectItem value="rejeitado">Rejeitado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -341,10 +373,11 @@ const OrcamentosListPage = () => {
                       onClick={() => handleSort('nome')}
                       className="font-semibold"
                     >
-                      Nome
+                      Nome / Cliente
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
+                  <TableHead className="text-center w-[110px]">Status</TableHead>
                   <TableHead className="text-right">
                     <Button
                       variant="ghost"
@@ -385,13 +418,14 @@ const OrcamentosListPage = () => {
               <TableBody>
                 {orcamentosPaginados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                       Nenhum orçamento encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
                   orcamentosPaginados.map((orc) => {
-                    const status = getStatusViabilidade(orc.dre);
+                    const dreOrc = orc.dre ?? { lucroLiquido: 0, margemLiquida: 0, receitaLiquida: 0, lucroBruto: 0, margemBruta: 0 };
+                    const status = getStatusViabilidade(dreOrc);
                     return (
                       <TableRow key={orc.id} className="hover:bg-muted/50">
                         <TableCell className="font-medium">{orc.numero}</TableCell>
@@ -409,7 +443,17 @@ const OrcamentosListPage = () => {
                             {orc.tipo === 'servico' ? 'Serviço' : 'Produto'}
                           </Badge>
                         </TableCell>
-                        <TableCell>{orc.nome}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{orc.nome}</p>
+                            {orc.clienteNome && (
+                              <p className="text-xs text-muted-foreground">{orc.clienteNome}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <StatusWorkflowBadge status={orc.status || 'rascunho'} />
+                        </TableCell>
                         <TableCell className="text-right font-semibold text-blue-600 dark:text-blue-400">
                           {formatCurrency(orc.totalVenda)}
                         </TableCell>
@@ -417,8 +461,8 @@ const OrcamentosListPage = () => {
                           {formatPercentage(orc.bdiMedio)}
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={orc.dre.margemLiquida < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
-                            {formatPercentage(orc.dre.margemLiquida)}
+                          <span className={dreOrc.margemLiquida < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+                            {formatPercentage(dreOrc.margemLiquida)}
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
@@ -510,8 +554,39 @@ const OrcamentosListPage = () => {
         </CardContent>
       </Card>
       </div>
+
+      {/* Confirmação de Exclusão */}
+      <AlertDialog open={!!deletarItem} onOpenChange={(open) => { if (!open) setDeletarItem(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o orçamento <strong>"{deletarItem?.nome}"</strong>?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmarDeletar} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
+
+const STATUS_WORKFLOW: Record<string, { label: string; color: string }> = {
+  rascunho: { label: 'Rascunho', color: 'bg-gray-100 text-gray-700 border-gray-300' },
+  em_analise: { label: 'Em Análise', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
+  aprovado: { label: 'Aprovado', color: 'bg-green-100 text-green-700 border-green-300' },
+  rejeitado: { label: 'Rejeitado', color: 'bg-red-100 text-red-700 border-red-300' },
+};
+
+function StatusWorkflowBadge({ status }: { status: string }) {
+  const cfg = STATUS_WORKFLOW[status] ?? STATUS_WORKFLOW.rascunho;
+  return <Badge className={`text-xs ${cfg.color}`}>{cfg.label}</Badge>;
+}
 
 export default OrcamentosListPage;

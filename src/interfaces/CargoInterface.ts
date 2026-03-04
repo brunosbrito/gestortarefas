@@ -15,6 +15,28 @@ export type TipoContrato = 'mensalista' | 'horista';
 // Categoria do cargo
 export type CategoriaCargo = 'fabricacao' | 'montagem' | 'ambos';
 
+// Item individual de custo rateado (usado em Uniforme e EPI)
+export interface ItemCustoRateado {
+  descricao: string;
+  quantidade: number;
+  valorUnitario: number;
+}
+
+// Custo composto de itens rateado por período (Uniforme, EPI)
+export interface CustoCompostoRateado {
+  itens: ItemCustoRateado[];
+  periodoMeses: number; // 1, 2, 3, 6, 9, 12 — período de rateio
+}
+
+// Custo admissional rateado por evento e período de vínculo
+export interface CustoAdmissional {
+  valorPorEvento: number; // R$500 produção / R$125 ADM-Engenharia
+  periodoMeses: number;   // Duração média do vínculo (ex: 24 meses)
+  // Eventos calculados automaticamente:
+  //   periodoMeses < 12  → 2 eventos (admissional + demissional)
+  //   periodoMeses >= 12 → 3 eventos (+ periódico)
+}
+
 // Custos diversos detalhados
 export interface CustosDiversos {
   alimentacao: {
@@ -24,10 +46,10 @@ export interface CustosDiversos {
     cestaBasica: number;
   };
   transporte: number;
-  uniforme: number;
-  despesasAdmissionais: number;
-  assistenciaMedica: number;
-  epiEpc: number;
+  uniforme: CustoCompostoRateado;        // Composição de itens ÷ período
+  despesasAdmissionais: CustoAdmissional; // valor/evento × eventos ÷ período
+  assistenciaMedica: number;              // Já é mensal — informar diretamente
+  epiEpc: CustoCompostoRateado;          // Composição de EPIs/EPCs ÷ período
   outros: number;
 }
 
@@ -35,6 +57,7 @@ export interface CustosDiversos {
 export interface Cargo {
   id: string;
   nome: string; // Ex: "SOLDADOR", "CALDEIREIRO"
+  nivel?: string; // Ex: "I", "II", "III", "Junior", "Pleno", "Sênior"
 
   // === CAMPOS PREENCHIDOS PELO USUÁRIO ===
   // A) Salário
@@ -88,6 +111,7 @@ export interface Cargo {
 // DTO para criação de novo cargo
 export interface CreateCargo {
   nome: string;
+  nivel?: string;
   salarioBase: number;
   temPericulosidade: boolean;
   grauInsalubridade: GrauInsalubridade;

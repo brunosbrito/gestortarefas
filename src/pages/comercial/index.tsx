@@ -10,6 +10,7 @@ const OrcamentoDetalhes = lazy(() => import('./orcamentos/[id]'));
 const PropostasList = lazy(() => import('./propostas'));
 const ConfiguracaoSalarial = lazy(() => import('./configuracao/ConfiguracaoSalarial'));
 const TabelaCargos = lazy(() => import('./configuracao/TabelaCargos'));
+const TabelaEpis = lazy(() => import('./configuracao/TabelaEpis'));
 
 // Cadastros - FASE 3
 const TabelaConsumiveis = lazy(() => import('./cadastros/TabelaConsumiveis'));
@@ -23,6 +24,12 @@ const ListaCortePage = lazy(() => import('./orcamentos/lista-corte'));
 
 // Relatórios - FASE 9
 const RelatoriosPage = lazy(() => import('./Relatorios'));
+
+// Assistente IA Comercial
+const AssistenteIAComercial = lazy(() => import('./AssistenteIAComercial'));
+
+// KPIs Comercial
+const KpisComercialPage = lazy(() => import('./KpisComercialPage'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
@@ -55,6 +62,7 @@ const Comercial = () => {
           <Route path="configuracao">
             <Route path="salarial" element={<ConfiguracaoSalarial />} />
             <Route path="cargos" element={<TabelaCargos />} />
+            <Route path="epis" element={<TabelaEpis />} />
           </Route>
 
           {/* Submódulo CADASTROS - Novos (FASE 3) */}
@@ -66,6 +74,12 @@ const Comercial = () => {
 
           {/* Relatórios (FASE 9) */}
           <Route path="relatorios" element={<RelatoriosPage />} />
+
+          {/* Assistente IA Comercial */}
+          <Route path="assistente-ia" element={<AssistenteIAComercial />} />
+
+          {/* KPIs Comercial */}
+          <Route path="kpis" element={<KpisComercialPage />} />
 
           <Route path="*" element={<Navigate to="/comercial" replace />} />
         </Routes>

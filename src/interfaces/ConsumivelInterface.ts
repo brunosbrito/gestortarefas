@@ -6,7 +6,11 @@
 export enum ConsumivelCategoria {
   LIXAS = 'lixas',
   DISCOS = 'discos',
+  ABRASIVOS = 'abrasivos',
   ELETRODOS = 'eletrodos',
+  SOLDA = 'solda',
+  GASES = 'gases',
+  ACESSORIOS = 'acessorios',
   EPI = 'epi',
   FERRAMENTAS = 'ferramentas',
   OUTROS = 'outros',
@@ -21,7 +25,11 @@ export enum GrupoABC {
 export const ConsumivelCategoriaLabels: Record<ConsumivelCategoria, string> = {
   [ConsumivelCategoria.LIXAS]: 'Lixas',
   [ConsumivelCategoria.DISCOS]: 'Discos',
+  [ConsumivelCategoria.ABRASIVOS]: 'Abrasivos',
   [ConsumivelCategoria.ELETRODOS]: 'Eletrodos',
+  [ConsumivelCategoria.SOLDA]: 'Solda',
+  [ConsumivelCategoria.GASES]: 'Gases',
+  [ConsumivelCategoria.ACESSORIOS]: 'Acessórios',
   [ConsumivelCategoria.EPI]: 'EPI',
   [ConsumivelCategoria.FERRAMENTAS]: 'Ferramentas',
   [ConsumivelCategoria.OUTROS]: 'Outros',

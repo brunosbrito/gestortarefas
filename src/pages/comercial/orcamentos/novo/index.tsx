@@ -96,7 +96,7 @@ const NovoOrcamento = () => {
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="container mx-auto px-6 space-y-8">
         {/* Header */}
         <PageHeader
           icon={FileText}
@@ -112,7 +112,7 @@ const NovoOrcamento = () => {
             <div className="max-w-3xl mx-auto space-y-6">
               {/* Informações Básicas */}
               <Card className="border-none shadow-lg">
-                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent dark:from-slate-800/60 dark:to-transparent dark:border-slate-700">
                   <CardTitle>Informações Básicas</CardTitle>
                   <CardDescription>
                     Dados principais do orçamento
@@ -281,7 +281,7 @@ const NovoOrcamento = () => {
 
               {/* Tributos */}
               <Card className="border-none shadow-lg">
-                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent">
+                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-transparent dark:from-slate-800/60 dark:to-transparent dark:border-slate-700">
                   <CardTitle>Configuração de Tributos</CardTitle>
                   <CardDescription>
                     Configure as alíquotas de tributos aplicáveis
@@ -352,7 +352,7 @@ const NovoOrcamento = () => {
               </Card>
 
             {/* Info Card */}
-            <Card className="border-blue-200 bg-blue-50/50">
+            <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30">
               <CardContent className="pt-6">
                 <div className="flex gap-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">

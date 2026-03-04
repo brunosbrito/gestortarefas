@@ -15,6 +15,7 @@ import {
   Bot,
   Boxes,
   ShieldCheck,
+  Shield,
   GanttChartSquare,
   FileText,
   DollarSign,
@@ -31,6 +32,7 @@ import {
   Truck,
   Palette,
   BarChart3,
+  TrendingUp,
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -114,8 +116,13 @@ export const navItems: MenuItem[] = [
         path: '/comercial/dashboard',
       },
       {
+        icon: TrendingUp,
+        label: 'KPIs',
+        path: '/comercial/kpis',
+      },
+      {
         icon: FolderOpen,
-        label: 'CADASTROS',
+        label: 'Cadastros',
         subItems: [
           {
             icon: Package,
@@ -143,6 +150,11 @@ export const navItems: MenuItem[] = [
             path: '/comercial/configuracao/salarial',
           },
           {
+            icon: Shield,
+            label: 'EPI / EPC',
+            path: '/comercial/configuracao/epis',
+          },
+          {
             icon: Box,
             label: 'Consumíveis',
             path: '/comercial/cadastros/consumiveis',
@@ -161,7 +173,7 @@ export const navItems: MenuItem[] = [
       },
       {
         icon: FolderOpen,
-        label: 'ORÇAMENTOS',
+        label: 'Orçamentos',
         subItems: [
           {
             icon: FileText,
@@ -194,6 +206,11 @@ export const navItems: MenuItem[] = [
         icon: FileBarChart,
         label: 'Relatórios',
         path: '/comercial/relatorios',
+      },
+      {
+        icon: Bot,
+        label: 'Assistente IA',
+        path: '/comercial/assistente-ia',
       },
     ],
   },

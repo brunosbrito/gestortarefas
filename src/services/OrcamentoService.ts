@@ -6,7 +6,7 @@ import {
   ComposicaoCustos,
 } from '@/interfaces/OrcamentoInterface';
 import axios from 'axios';
-import { calcularValoresOrcamento, calcularDRE } from '@/lib/calculosOrcamento';
+import { calcularValoresOrcamento, calcularDRE, recalcularTodasComposicoes } from '@/lib/calculosOrcamento';
 import { mockOrcamentosIniciais } from '@/data/mockOrcamentos';
 
 const URL = `${API_URL}/api/orcamentos`;
@@ -99,15 +99,17 @@ let mockIdCounter = counters.id;
 let mockServicoCounter = counters.servico;
 let mockProdutoCounter = counters.produto;
 
-// Configuração das 8 composições padrão com seus BDIs específicos
+// Configuração das composições padrão com seus BDIs específicos
 const DEFAULT_COMPOSICOES = [
   { tipo: 'mobilizacao', nome: 'Mobilização', bdiPercentual: 10 },
   { tipo: 'desmobilizacao', nome: 'Desmobilização', bdiPercentual: 10 },
-  { tipo: 'mo_fabricacao', nome: 'MO Fabricação', bdiPercentual: 15 },
-  { tipo: 'mo_montagem', nome: 'MO Montagem', bdiPercentual: 15 },
+  { tipo: 'mo_fabricacao', nome: 'MO Fabricação', bdiPercentual: 25 },
+  { tipo: 'mo_montagem', nome: 'MO Montagem', bdiPercentual: 25 },
+  { tipo: 'mo_terceirizados', nome: 'MO Terceirizada', bdiPercentual: 20 },
   { tipo: 'jato_pintura', nome: 'Jato/Pintura', bdiPercentual: 12 },
-  { tipo: 'ferramentas', nome: 'Ferramentas', bdiPercentual: 8 },
-  { tipo: 'consumiveis', nome: 'Consumíveis', bdiPercentual: 8 },
+  { tipo: 'ferramentas', nome: 'Ferramentas Manuais', bdiPercentual: 15 },
+  { tipo: 'ferramentas_eletricas', nome: 'Ferramentas Elétricas', bdiPercentual: 15 },
+  { tipo: 'consumiveis', nome: 'Consumíveis', bdiPercentual: 10 },
   { tipo: 'materiais', nome: 'Materiais', bdiPercentual: 25 },
 ] as const;
 
@@ -213,9 +215,19 @@ class OrcamentoService {
     if (USE_MOCK) {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      // Recarregar do localStorage para garantir dados atualizados
+      // Recarregar do localStorage e recalcular valores derivados
       const dados = loadMockData();
-      return [...dados];
+      return dados.map((orc) => {
+        try {
+          const composicoes = recalcularTodasComposicoes(orc.composicoes || []);
+          const orcRecalc = { ...orc, composicoes };
+          const valores = calcularValoresOrcamento(orcRecalc);
+          const dre = calcularDRE(orcRecalc);
+          return { ...orcRecalc, ...valores, dre };
+        } catch {
+          return orc;
+        }
+      });
     }
 
     try {
@@ -244,14 +256,17 @@ class OrcamentoService {
 
       // Recalcular valores antes de retornar
       try {
-        const valores = calcularValoresOrcamento(orcamento);
+        const composicoes = recalcularTodasComposicoes(orcamento.composicoes || []);
+        const orcRecalc = { ...orcamento, composicoes };
+
+        const valores = calcularValoresOrcamento(orcRecalc);
         console.log('📊 Valores calculados:', valores);
 
-        const dre = calcularDRE(orcamento);
+        const dre = calcularDRE(orcRecalc);
         console.log('💰 DRE calculado:', dre);
 
         const resultado = {
-          ...orcamento,
+          ...orcRecalc,
           ...valores,
           dre,
         };
@@ -283,11 +298,19 @@ class OrcamentoService {
         throw new Error('Orçamento não encontrado');
       }
 
-      mockOrcamentos[index] = {
+      // Merge dos dados recebidos com o orçamento existente
+      const merged = {
         ...mockOrcamentos[index],
         ...data,
         updatedAt: new Date().toISOString(),
       };
+
+      // Recalcular todas as composições antes de salvar (custoDirecto, bdi.valor, subtotal)
+      if (merged.composicoes && merged.composicoes.length > 0) {
+        merged.composicoes = recalcularTodasComposicoes(merged.composicoes);
+      }
+
+      mockOrcamentos[index] = merged;
 
       // CRITICAL: Salvar no localStorage
       saveMockData(mockOrcamentos);
@@ -344,8 +367,14 @@ class OrcamentoService {
         tributos: original.tributos,
       });
 
-      clonado.composicoes = JSON.parse(JSON.stringify(original.composicoes));
+      try {
+        clonado.composicoes = JSON.parse(JSON.stringify(original.composicoes));
+      } catch {
+        // Se falhar a clonagem das composições, mantém as composições padrão geradas
+        console.warn('⚠️ Falha ao clonar composições, usando composições padrão');
+      }
       mockOrcamentos.push(clonado);
+      saveMockData(mockOrcamentos);
       return clonado;
     }
 

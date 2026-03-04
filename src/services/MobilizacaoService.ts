@@ -1,9 +1,8 @@
 /**
  * Service para gerenciamento de Mobilização e Desmobilização
+ * Persistência via localStorage (mock até backend estar disponível)
  */
 
-import axios from 'axios';
-import API_URL from '@/config';
 import {
   ItemMobilizacaoInterface,
   ItemMobilizacaoCreateDTO,
@@ -11,91 +10,112 @@ import {
   ItemMobilizacaoFiltros,
 } from '@/interfaces/MobilizacaoInterface';
 
-class MobilizacaoService {
-  private baseURL = `${API_URL}/mobilizacao`;
+const STORAGE_KEY = 'comercial_mobilizacao';
 
+// ==========================================
+// Helpers de persistência
+// ==========================================
+
+function lerStorage(): ItemMobilizacaoInterface[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function salvarStorage(items: ItemMobilizacaoInterface[]): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function proximoId(items: ItemMobilizacaoInterface[]): number {
+  return items.length > 0 ? Math.max(...items.map((i) => i.id)) + 1 : 1;
+}
+
+// ==========================================
+// Service
+// ==========================================
+
+class MobilizacaoService {
   /**
    * Lista todos os itens (com filtros opcionais)
    */
   async getAll(filtros?: ItemMobilizacaoFiltros): Promise<ItemMobilizacaoInterface[]> {
-    try {
-      const params = new URLSearchParams();
-      if (filtros?.busca) params.append('busca', filtros.busca);
-      if (filtros?.tipo) params.append('tipo', filtros.tipo);
-      if (filtros?.categoria) params.append('categoria', filtros.categoria);
-      if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
+    let resultado = lerStorage();
 
-      const response = await axios.get(`${this.baseURL}?${params}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao listar itens de mobilização:', error);
-      throw error;
+    if (filtros?.busca) {
+      const b = filtros.busca.toLowerCase();
+      resultado = resultado.filter(
+        (c) => c.codigo.toLowerCase().includes(b) || c.descricao.toLowerCase().includes(b)
+      );
     }
+    if (filtros?.tipo) {
+      resultado = resultado.filter((c) => c.tipo === filtros.tipo);
+    }
+    if (filtros?.categoria) {
+      resultado = resultado.filter((c) => c.categoria === filtros.categoria);
+    }
+    if (filtros?.ativo !== undefined) {
+      resultado = resultado.filter((c) => c.ativo === filtros.ativo);
+    }
+
+    return resultado;
   }
 
   /**
    * Busca item por ID
    */
   async getById(id: number): Promise<ItemMobilizacaoInterface> {
-    try {
-      const response = await axios.get(`${this.baseURL}/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar item de mobilização:', error);
-      throw error;
-    }
+    const item = lerStorage().find((c) => c.id === id);
+    if (!item) throw new Error(`Item de mobilização #${id} não encontrado`);
+    return item;
   }
 
   /**
    * Cria novo item
    */
   async create(data: ItemMobilizacaoCreateDTO): Promise<ItemMobilizacaoInterface> {
-    try {
-      const response = await axios.post(this.baseURL, data);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar item de mobilização:', error);
-      throw error;
-    }
+    const items = lerStorage();
+    const novo: ItemMobilizacaoInterface = {
+      ...data,
+      id: proximoId(items),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    salvarStorage([...items, novo]);
+    return novo;
   }
 
   /**
    * Atualiza item existente
    */
   async update(data: ItemMobilizacaoUpdateDTO): Promise<ItemMobilizacaoInterface> {
-    try {
-      const { id, ...updateData } = data;
-      const response = await axios.put(`${this.baseURL}/${id}`, updateData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar item de mobilização:', error);
-      throw error;
-    }
+    const items = lerStorage();
+    const idx = items.findIndex((c) => c.id === data.id);
+    if (idx === -1) throw new Error(`Item de mobilização #${data.id} não encontrado`);
+    const { id, ...campos } = data;
+    const atualizado: ItemMobilizacaoInterface = {
+      ...items[idx],
+      ...campos,
+      updatedAt: new Date(),
+    };
+    items[idx] = atualizado;
+    salvarStorage(items);
+    return atualizado;
   }
 
   /**
    * Exclui item
    */
   async delete(id: number): Promise<void> {
-    try {
-      await axios.delete(`${this.baseURL}/${id}`);
-    } catch (error) {
-      console.error('Erro ao excluir item de mobilização:', error);
-      throw error;
-    }
+    salvarStorage(lerStorage().filter((c) => c.id !== id));
   }
 
   /**
    * Ativa/desativa item
    */
   async toggleAtivo(id: number, ativo: boolean): Promise<ItemMobilizacaoInterface> {
-    try {
-      const response = await axios.patch(`${this.baseURL}/${id}/toggle-ativo`, { ativo });
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao alterar status do item:', error);
-      throw error;
-    }
+    return this.update({ id, ativo });
   }
 }
 

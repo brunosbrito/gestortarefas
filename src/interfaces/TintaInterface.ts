@@ -1,4 +1,4 @@
-// Interface para Catálogo de Tintas (Primer, Acabamento)
+// Interface para Catálogo de Tintas (Primer, Acabamento, Solvente)
 export interface TintaInterface {
   id?: number;
   codigo: string;
@@ -16,11 +16,13 @@ export interface TintaInterface {
 export enum TipoTinta {
   PRIMER = 'primer',
   ACABAMENTO = 'acabamento',
+  SOLVENTE = 'solvente',
 }
 
 export const TipoTintaLabels: Record<TipoTinta, string> = {
   [TipoTinta.PRIMER]: 'Primer (Fundo)',
   [TipoTinta.ACABAMENTO]: 'Acabamento',
+  [TipoTinta.SOLVENTE]: 'Solvente / Diluente',
 };
 
 // DTO para criação/edição
