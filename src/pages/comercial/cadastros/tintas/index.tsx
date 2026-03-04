@@ -28,8 +28,6 @@ import {
   TipoTintaLabels,
 } from '@/interfaces/TintaInterface';
 import { formatCurrency } from '@/lib/currency';
-import Layout from '@/components/Layout';
-import { mockTintas } from '@/data/mockTintas';
 import FormularioTinta from '@/components/gerenciamento/tintas/FormularioTinta';
 import {
   AlertDialog,
@@ -74,20 +72,13 @@ const TabelaTintas = () => {
   const carregarTintas = async () => {
     try {
       setLoading(true);
-
-      // USANDO DADOS MOCKADOS (remover quando backend estiver pronto)
-      // Carregar tintas mockadas + tintas cadastradas localmente
-      const tintasLocais = JSON.parse(localStorage.getItem('tintas_locais') || '[]');
-      setTintas([...mockTintas, ...tintasLocais]);
-
-      // VERSÃO COM API (descomentar quando backend estiver pronto)
-      // const data = await TintaService.listar({ ativo: true });
-      // setTintas(data);
+      const data = await TintaService.listar({ ativo: true });
+      setTintas(data);
     } catch (error) {
       console.error('Erro ao carregar tintas:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar as tintas',
+        description: 'Não foi possível carregar as tintas. Verifique se o backend está rodando.',
         variant: 'destructive',
       });
     } finally {
@@ -95,23 +86,26 @@ const TabelaTintas = () => {
     }
   };
 
-  const handleSalvarTinta = (novaTinta?: TintaInterface) => {
+  const handleSalvarTinta = async (novaTinta?: TintaInterface) => {
     if (!novaTinta) return;
 
-    // MOCK: Salvar no localStorage
-    const tintasLocais = JSON.parse(localStorage.getItem('tintas_locais') || '[]');
-
-    const index = tintasLocais.findIndex((t: TintaInterface) => t.id === novaTinta.id);
-    if (index >= 0) {
-      // Atualizar tinta existente
-      tintasLocais[index] = novaTinta;
-    } else {
-      // Adicionar nova tinta
-      tintasLocais.push(novaTinta);
+    try {
+      if (novaTinta.id) {
+        await TintaService.atualizar(novaTinta.id, novaTinta);
+        toast({ title: 'Sucesso', description: 'Tinta atualizada com sucesso' });
+      } else {
+        await TintaService.criar(novaTinta);
+        toast({ title: 'Sucesso', description: 'Tinta criada com sucesso' });
+      }
+      carregarTintas();
+    } catch (error) {
+      console.error('Erro ao salvar tinta:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar a tinta',
+        variant: 'destructive',
+      });
     }
-
-    localStorage.setItem('tintas_locais', JSON.stringify(tintasLocais));
-    carregarTintas();
   };
 
   const aplicarFiltros = () => {
@@ -136,28 +130,8 @@ const TabelaTintas = () => {
   const handleDeletar = async () => {
     if (!tintaParaDeletar?.id) return;
 
-    // Verificar se é uma tinta mockada (ID numérico pequeno, 1-10)
-    const isMockada = tintaParaDeletar.id && tintaParaDeletar.id <= 10;
-
-    if (isMockada) {
-      toast({
-        title: 'Aviso',
-        description: 'Tintas de demonstração não podem ser deletadas',
-        variant: 'destructive',
-      });
-      setTintaParaDeletar(null);
-      return;
-    }
-
     try {
-      // MOCK: Remover do localStorage
-      const tintasLocais = JSON.parse(localStorage.getItem('tintas_locais') || '[]');
-      const novasTintas = tintasLocais.filter((t: TintaInterface) => t.id !== tintaParaDeletar.id);
-      localStorage.setItem('tintas_locais', JSON.stringify(novasTintas));
-
-      // Quando backend estiver pronto, descomentar:
-      // await TintaService.excluir(tintaParaDeletar.id);
-
+      await TintaService.excluir(tintaParaDeletar.id);
       toast({
         title: 'Sucesso',
         description: 'Tinta deletada com sucesso',
@@ -190,19 +164,16 @@ const TabelaTintas = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -282,61 +253,47 @@ const TabelaTintas = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    tintasFiltradas.map((tinta) => {
-                      const isMockada = tinta.id && tinta.id <= 10;
-                      return (
-                        <TableRow key={tinta.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {tinta.codigo}
-                              {isMockada && (
-                                <Badge variant="outline" className="text-xs">DEMO</Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate">{tinta.descricao}</TableCell>
-                          <TableCell>
-                            <Badge className={getTipoColor(tinta.tipo)}>
-                              {TipoTintaLabels[tinta.tipo]}
-                            </Badge>
-                          </TableCell>
+                    tintasFiltradas.map((tinta) => (
+                      <TableRow key={tinta.id}>
+                        <TableCell className="font-medium">{tinta.codigo}</TableCell>
+                        <TableCell className="max-w-xs truncate">{tinta.descricao}</TableCell>
+                        <TableCell>
+                          <Badge className={getTipoColor(tinta.tipo)}>
+                            {TipoTintaLabels[tinta.tipo]}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{tinta.solidosVolume}%</TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(tinta.precoLitro)}/lt
                         </TableCell>
                         <TableCell>{tinta.fornecedor}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setTintaParaVisualizar(tinta)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              {!isMockada && (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => { setTintaSelecionada(tinta); setDialogAberto(true); }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setTintaParaDeletar(tinta)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-600" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setTintaParaVisualizar(tinta)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => { setTintaSelecionada(tinta); setDialogAberto(true); }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setTintaParaDeletar(tinta)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </TableComponent>
@@ -420,8 +377,7 @@ const TabelaTintas = () => {
           tinta={tintaSelecionada}
           onSuccess={handleSalvarTinta}
         />
-      </div>
-    </Layout>
+    </div>
   );
 };
 

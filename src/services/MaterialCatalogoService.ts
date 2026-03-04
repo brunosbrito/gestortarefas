@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/lib/axios';
 import API_URL from '@/config';
 import type {
   MaterialCatalogoInterface,
@@ -68,7 +68,7 @@ class MaterialCatalogoService {
       if (filtros?.fornecedor) params.append('fornecedor', filtros.fornecedor);
       if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
 
-      const response = await axios.get<MaterialCatalogoInterface[]>(
+      const response = await api.get<MaterialCatalogoInterface[]>(
         `${this.baseURL}${params.toString() ? `?${params.toString()}` : ''}`
       );
       return response.data;
@@ -95,7 +95,7 @@ class MaterialCatalogoService {
     }
 
     try {
-      const response = await axios.get<MaterialCatalogoInterface>(`${this.baseURL}/${id}`);
+      const response = await api.get<MaterialCatalogoInterface>(`${this.baseURL}/${id}`);
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -132,7 +132,7 @@ class MaterialCatalogoService {
     }
 
     try {
-      const response = await axios.post<MaterialCatalogoInterface>(this.baseURL, data);
+      const response = await api.post<MaterialCatalogoInterface>(this.baseURL, data);
       return response.data;
     } catch (error: any) {
       // Se API não disponível (404), ativar localStorage
@@ -164,7 +164,7 @@ class MaterialCatalogoService {
     }
 
     try {
-      const response = await axios.put<MaterialCatalogoInterface>(`${this.baseURL}/${id}`, data);
+      const response = await api.put<MaterialCatalogoInterface>(`${this.baseURL}/${id}`, data);
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -187,7 +187,7 @@ class MaterialCatalogoService {
     }
 
     try {
-      await axios.delete(`${this.baseURL}/${id}`);
+      await api.delete(`${this.baseURL}/${id}`);
     } catch (error: any) {
       if (error.response?.status === 404) {
         this.useLocalStorage = true;
@@ -225,7 +225,7 @@ class MaterialCatalogoService {
   // Buscar materiais por categoria
   async buscarPorCategoria(categoria: string): Promise<MaterialCatalogoInterface[]> {
     try {
-      const response = await axios.get<MaterialCatalogoInterface[]>(
+      const response = await api.get<MaterialCatalogoInterface[]>(
         `${this.baseURL}/categoria/${categoria}`
       );
       return response.data;
@@ -238,7 +238,7 @@ class MaterialCatalogoService {
   // Buscar materiais por fornecedor
   async buscarPorFornecedor(fornecedor: string): Promise<MaterialCatalogoInterface[]> {
     try {
-      const response = await axios.get<MaterialCatalogoInterface[]>(
+      const response = await api.get<MaterialCatalogoInterface[]>(
         `${this.baseURL}/fornecedor/${fornecedor}`
       );
       return response.data;

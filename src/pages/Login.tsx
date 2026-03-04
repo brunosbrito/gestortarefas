@@ -14,11 +14,15 @@ const Login = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   // Pré-preencher email se "Lembrar de mim" estava ativo
   const [email, setEmail] = useState(() => localStorage.getItem('userEmail') || '');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(() => localStorage.getItem('userPassword') || '');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   // Pré-marcar checkbox se "Lembrar de mim" estava ativo
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('rememberMe') === 'true');
+  // Verifica se há senha salva
+  const [senhaSalva, setSenhaSalva] = useState(() => {
+    return !!localStorage.getItem('userPassword') && localStorage.getItem('rememberMe') === 'true';
+  });
 
   useEffect(() => {
     const checkAuth = async () => {

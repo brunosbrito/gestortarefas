@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -35,29 +34,27 @@ function GenericListPage<T>({
   const navigate = useNavigate();
 
   return (
-    <Layout>
-      <div className="space-y-6 min-h-0 pb-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate(backUrl)}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                {icon}
-                {title}
-              </h1>
-              <p className="text-muted-foreground mt-1">{subtitle}</p>
-            </div>
+    <div className="space-y-6 min-h-0 pb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate(backUrl)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+              {icon}
+              {title}
+            </h1>
+            <p className="text-muted-foreground mt-1">{subtitle}</p>
           </div>
         </div>
-
-        {/* Conteúdo customizado (filtros + tabela) */}
-        {children}
       </div>
-    </Layout>
+
+      {/* Conteúdo customizado (filtros + tabela) */}
+      {children}
+    </div>
   );
 }
 

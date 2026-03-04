@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -210,7 +209,7 @@ const OrcamentosListPage = () => {
   }
 
   return (
-    <Layout>
+    <>
       <div className="space-y-6 min-h-screen pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -573,7 +572,7 @@ const OrcamentosListPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Layout>
+    </>
   );
 };
 

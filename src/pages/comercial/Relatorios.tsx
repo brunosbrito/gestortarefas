@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import Layout from '@/components/Layout';
 import { useToast } from '@/hooks/use-toast';
 
 const RelatoriosPage = () => {
@@ -136,8 +135,7 @@ const RelatoriosPage = () => {
   ];
 
   return (
-    <Layout>
-      <div className="w-full px-4 py-4 space-y-4">
+    <div className="w-full px-4 py-4 space-y-4">
         {/* Header */}
         <Card>
           <CardHeader>
@@ -330,8 +328,7 @@ const RelatoriosPage = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </Layout>
+    </div>
   );
 };
 

@@ -22,7 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import Layout from '@/components/Layout';
 import ListaCorteImportService from '@/services/ListaCorteImportService';
 import CutOptimizerService from '@/services/CutOptimizerService';
 import ListaCortePdfService from '@/services/ListaCortePdfService';
@@ -152,7 +151,7 @@ const ListaCortePage = () => {
 
       toast({
         title: 'Lista de corte gerada com sucesso!',
-        description: `Otimização: ${economia.barrasEconomizadas} barras economizadas (${economia.percentualEconomia.toFixed(1)}%)`,
+        description: `Otimização: ${economia.barrasEconomizadas} barras economizadas (${Number(economia.percentualEconomia || 0).toFixed(1)}%)`,
       });
     } catch (error: any) {
       toast({
@@ -228,7 +227,6 @@ const ListaCortePage = () => {
   };
 
   return (
-    <Layout>
       <div className="w-full px-4 py-4 space-y-4">
         {/* Header */}
         <Card>
@@ -434,7 +432,7 @@ const ListaCortePage = () => {
                           {peca.quantidade}
                         </TableCell>
                         <TableCell className="text-right">
-                          {peca.peso.toFixed(2)}
+                          {Number(peca.peso || 0).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -505,7 +503,7 @@ const ListaCortePage = () => {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-2xl font-bold text-orange-600">
-                      {listaGerada.aproveitamentoGeral.toFixed(1)}%
+                      {Number(listaGerada.aproveitamentoGeral || 0).toFixed(1)}%
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Aproveitamento
@@ -515,7 +513,7 @@ const ListaCortePage = () => {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-2xl font-bold text-purple-600">
-                      {listaGerada.pesoTotal.toFixed(1)} kg
+                      {Number(listaGerada.pesoTotal || 0).toFixed(1)} kg
                     </div>
                     <div className="text-sm text-muted-foreground">Peso Total</div>
                   </CardContent>
@@ -568,18 +566,18 @@ const ListaCortePage = () => {
                             {peca.comprimento}mm
                           </TableCell>
                           <TableCell className="border-r text-right">
-                            {peca.peso.toFixed(2)}kg
+                            {Number(peca.peso || 0).toFixed(2)}kg
                           </TableCell>
                           <TableCell className="border-r text-right">
                             {idx === barra.pecas.length - 1 ? (
                               <span
                                 className={
-                                  barra.sobra > 500
+                                  Number(barra.sobra || 0) > 500
                                     ? 'text-red-600 font-bold'
                                     : 'text-green-600'
                                 }
                               >
-                                {(barra.sobra / 1000).toFixed(2)}m
+                                {(Number(barra.sobra || 0) / 1000).toFixed(2)}m
                               </span>
                             ) : (
                               '-'
@@ -608,7 +606,6 @@ const ListaCortePage = () => {
           </Card>
         )}
       </div>
-    </Layout>
   );
 };
 

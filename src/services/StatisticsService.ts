@@ -1,12 +1,10 @@
 import api from '@/lib/axios';
-
 import API_URL from '@/config';
-import axios from 'axios';
 import { parseTimeToHours } from '@/utils/timeHelpers';
 
 export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: number | null, includeInProgress: boolean = true) => {
   try {
-    const response = await axios.get(`${API_URL}/activities`);
+    const response = await api.get(`${API_URL}/activities`);
     // Incluir atividades concluídas E em andamento por padrão (novo comportamento para PCP)
     let activities = includeInProgress
       ? response.data.filter((x: any) =>
@@ -100,7 +98,7 @@ export const dataMacroTask = async (obraId?: number | null, serviceOrderId?: num
 
 export const dataProcess = async (obraId?: number | null, serviceOrderId?: number | null, includeInProgress: boolean = true) => {
   try {
-    const response = await axios.get(`${API_URL}/activities`);
+    const response = await api.get(`${API_URL}/activities`);
     // Incluir atividades concluídas E em andamento por padrão (novo comportamento para PCP)
     let activities = includeInProgress
       ? response.data.filter((x: any) =>
@@ -194,7 +192,7 @@ export const dataProcess = async (obraId?: number | null, serviceOrderId?: numbe
 
 export const dataCollaborators = async (obraId?: number | null, serviceOrderId?: number | null, includeInProgress: boolean = true) => {
   try {
-    const response = await axios.get(`${API_URL}/activities`);
+    const response = await api.get(`${API_URL}/activities`);
     // Incluir atividades concluídas E em andamento por padrão (novo comportamento para PCP)
     let activities = includeInProgress
       ? response.data.filter((x: any) =>

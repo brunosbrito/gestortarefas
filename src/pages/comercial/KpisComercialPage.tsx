@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback } from 'react';
-import Layout from '@/components/Layout';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -592,8 +591,7 @@ const KpisComercialPage = () => {
     v === null ? 0 : Math.min((v / meta) * 100, 120);
 
   return (
-    <Layout>
-      <PageContainer
+    <PageContainer
         loading={isLoading}
         error={error instanceof Error ? error : null}
         onRetry={refetch}
@@ -912,8 +910,7 @@ const KpisComercialPage = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </PageContainer>
-    </Layout>
+    </PageContainer>
   );
 };
 

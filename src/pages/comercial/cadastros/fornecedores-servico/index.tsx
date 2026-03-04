@@ -29,7 +29,6 @@ import {
   CategoriaFornecedorColors,
 } from '@/interfaces/FornecedorServicoInterface';
 import { formatCurrency } from '@/lib/currency';
-import Layout from '@/components/Layout';
 import { mockFornecedores } from '@/data/mockTintas';
 import {
   AlertDialog,
@@ -181,20 +180,17 @@ const TabelaFornecedoresServico = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="container mx-auto p-6 space-y-6">
-        <Card>
+    <div className="container mx-auto p-6 space-y-6">
+      <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -424,8 +420,7 @@ const TabelaFornecedoresServico = () => {
           fornecedor={fornecedorSelecionado}
           onSuccess={handleSalvarFornecedor}
         />
-      </div>
-    </Layout>
+    </div>
   );
 };
 

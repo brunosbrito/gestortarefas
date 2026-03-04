@@ -46,7 +46,6 @@ import {
   MaterialCategoriaGrupos,
 } from '@/interfaces/MaterialCatalogoInterface';
 import { formatCurrency } from '@/lib/currency';
-import Layout from '@/components/Layout';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -298,20 +297,17 @@ const TabelaMateriais = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="w-full px-4 py-4 space-y-4">
-        {/* Header */}
+    <div className="w-full px-4 py-4 space-y-4">
+      {/* Header */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -525,11 +521,11 @@ const TabelaMateriais = () => {
                           {formatCurrency(material.precoUnitario)}
                         </TableCell>
                         <TableCell className="border-r text-right font-mono text-xs py-2">
-                          {material.pesoNominal ? material.pesoNominal.toFixed(2) : '-'}
+                          {material.pesoNominal ? Number(material.pesoNominal).toFixed(2) : '-'}
                         </TableCell>
                         <TableCell className="border-r text-right font-mono text-green-600 font-medium text-xs py-2">
                           {material.areaM2PorMetroLinear
-                            ? material.areaM2PorMetroLinear.toFixed(2)
+                            ? Number(material.areaM2PorMetroLinear).toFixed(2)
                             : '-'}
                         </TableCell>
                         <TableCell className="text-right">
@@ -682,14 +678,14 @@ const TabelaMateriais = () => {
                   {materialParaVisualizar.perimetroM != null && (
                     <div>
                       <Label className="text-muted-foreground">Perímetro (Pintura)</Label>
-                      <p className="font-medium">{materialParaVisualizar.perimetroM.toFixed(3)} m</p>
+                      <p className="font-medium">{Number(materialParaVisualizar.perimetroM).toFixed(3)} m</p>
                     </div>
                   )}
                   {materialParaVisualizar.areaM2PorMetroLinear != null && (
                     <div>
                       <Label className="text-muted-foreground">Área para Pintura</Label>
                       <p className="font-medium text-lg text-green-600">
-                        {materialParaVisualizar.areaM2PorMetroLinear.toFixed(4)} m²/m
+                        {Number(materialParaVisualizar.areaM2PorMetroLinear).toFixed(4)} m²/m
                       </p>
                     </div>
                   )}
@@ -716,8 +712,7 @@ const TabelaMateriais = () => {
           material={materialSelecionado}
           onSalvar={() => { setDialogAberto(false); carregarMateriais(); }}
         />
-      </div>
-    </Layout>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
   Plus,
@@ -127,8 +126,7 @@ const NaoConformidades = () => {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-construction-800">
             RNC - Registro de Não Conformidade
@@ -367,7 +365,6 @@ const NaoConformidades = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
   );
 };
 

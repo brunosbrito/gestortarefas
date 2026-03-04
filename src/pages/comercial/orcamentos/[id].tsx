@@ -8,7 +8,6 @@ import {
   Trash2,
   Bot,
 } from 'lucide-react';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -129,32 +128,28 @@ export default function OrcamentoDetalhes() {
 
   if (isLoading) {
     return (
-      <Layout>
         <div className="flex items-center justify-center h-screen">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             <p className="text-sm text-muted-foreground">Carregando orçamento...</p>
           </div>
         </div>
-      </Layout>
     );
   }
 
   if (!orcamento) {
     return (
-      <Layout>
         <div className="container mx-auto p-6">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4">Orçamento não encontrado</h2>
             <Button onClick={handleVoltar}>Voltar para lista</Button>
           </div>
         </div>
-      </Layout>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -271,6 +266,6 @@ export default function OrcamentoDetalhes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Layout>
+    </>
   );
 }

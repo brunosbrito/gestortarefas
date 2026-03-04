@@ -174,12 +174,12 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
             {orcamento.pesoTotalProjeto ? (
               <div>
                 <Label className="text-muted-foreground">Peso Total</Label>
-                <p className="font-medium mt-0.5">{orcamento.pesoTotalProjeto.toFixed(2)} kg</p>
+                <p className="font-medium mt-0.5">{Number(orcamento.pesoTotalProjeto).toFixed(2)} kg</p>
               </div>
             ) : orcamento.areaTotalM2 ? (
               <div>
                 <Label className="text-muted-foreground">Área Total</Label>
-                <p className="font-medium mt-0.5">{orcamento.areaTotalM2.toFixed(2)} m²</p>
+                <p className="font-medium mt-0.5">{Number(orcamento.areaTotalM2).toFixed(2)} m²</p>
               </div>
             ) : null}
           </div>
@@ -319,7 +319,7 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
                       </TableCell>
                       <TableCell className="text-right font-semibold text-sm">{formatCurrency(comp.subtotal)}</TableCell>
                       <TableCell className="text-right text-sm text-muted-foreground">
-                        {comp.percentualDoTotal.toFixed(1)}%
+                        {Number(comp.percentualDoTotal || 0).toFixed(1)}%
                       </TableCell>
                     </TableRow>
                   ))}

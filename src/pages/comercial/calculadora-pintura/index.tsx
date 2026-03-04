@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import Layout from '@/components/Layout';
 import TintaService from '@/services/TintaService';
 import FornecedorServicoService from '@/services/FornecedorServicoService';
 import ComposicaoPinturaService from '@/services/ComposicaoPinturaService';
@@ -182,7 +181,6 @@ const CalculadoraPintura = () => {
   const tintasAcabamento = tintas.filter((t) => t.tipo === TipoTinta.ACABAMENTO);
 
   return (
-    <Layout>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-2">
@@ -518,7 +516,6 @@ const CalculadoraPintura = () => {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 };
 

@@ -1,8 +1,10 @@
 /**
  * Service para gerenciamento de Mobilização e Desmobilização
- * Persistência via localStorage (mock até backend estar disponível)
+ * Integrado com API backend
  */
 
+import api from '@/lib/axios';
+import API_URL from '@/config';
 import {
   ItemMobilizacaoInterface,
   ItemMobilizacaoCreateDTO,
@@ -10,113 +12,100 @@ import {
   ItemMobilizacaoFiltros,
 } from '@/interfaces/MobilizacaoInterface';
 
-const STORAGE_KEY = 'comercial_mobilizacao';
+class MobilizacaoServiceClass {
+  private readonly baseUrl = `${API_URL}/mobilizacao`;
 
-// ==========================================
-// Helpers de persistência
-// ==========================================
-
-function lerStorage(): ItemMobilizacaoInterface[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function salvarStorage(items: ItemMobilizacaoInterface[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
-
-function proximoId(items: ItemMobilizacaoInterface[]): number {
-  return items.length > 0 ? Math.max(...items.map((i) => i.id)) + 1 : 1;
-}
-
-// ==========================================
-// Service
-// ==========================================
-
-class MobilizacaoService {
   /**
    * Lista todos os itens (com filtros opcionais)
    */
   async getAll(filtros?: ItemMobilizacaoFiltros): Promise<ItemMobilizacaoInterface[]> {
-    let resultado = lerStorage();
+    const params = new URLSearchParams();
 
-    if (filtros?.busca) {
-      const b = filtros.busca.toLowerCase();
-      resultado = resultado.filter(
-        (c) => c.codigo.toLowerCase().includes(b) || c.descricao.toLowerCase().includes(b)
-      );
-    }
-    if (filtros?.tipo) {
-      resultado = resultado.filter((c) => c.tipo === filtros.tipo);
-    }
-    if (filtros?.categoria) {
-      resultado = resultado.filter((c) => c.categoria === filtros.categoria);
-    }
-    if (filtros?.ativo !== undefined) {
-      resultado = resultado.filter((c) => c.ativo === filtros.ativo);
-    }
+    if (filtros?.busca) params.append('busca', filtros.busca);
+    if (filtros?.tipo) params.append('tipo', filtros.tipo);
+    if (filtros?.categoria) params.append('categoria', filtros.categoria);
+    if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
 
-    return resultado;
+    const url = params.toString() ? `${this.baseUrl}?${params}` : this.baseUrl;
+    const response = await api.get<any[]>(url);
+
+    return this.mapItemsResponse(response.data);
+  }
+
+  /**
+   * Lista apenas itens ativos
+   */
+  async getAtivos(): Promise<ItemMobilizacaoInterface[]> {
+    const response = await api.get<any[]>(`${this.baseUrl}/ativos`);
+    return this.mapItemsResponse(response.data);
   }
 
   /**
    * Busca item por ID
    */
   async getById(id: number): Promise<ItemMobilizacaoInterface> {
-    const item = lerStorage().find((c) => c.id === id);
-    if (!item) throw new Error(`Item de mobilização #${id} não encontrado`);
-    return item;
+    const response = await api.get<any>(`${this.baseUrl}/${id}`);
+    return this.mapItemResponse(response.data);
   }
 
   /**
    * Cria novo item
    */
   async create(data: ItemMobilizacaoCreateDTO): Promise<ItemMobilizacaoInterface> {
-    const items = lerStorage();
-    const novo: ItemMobilizacaoInterface = {
-      ...data,
-      id: proximoId(items),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    salvarStorage([...items, novo]);
-    return novo;
+    const response = await api.post<any>(this.baseUrl, data);
+    return this.mapItemResponse(response.data);
   }
 
   /**
    * Atualiza item existente
    */
   async update(data: ItemMobilizacaoUpdateDTO): Promise<ItemMobilizacaoInterface> {
-    const items = lerStorage();
-    const idx = items.findIndex((c) => c.id === data.id);
-    if (idx === -1) throw new Error(`Item de mobilização #${data.id} não encontrado`);
-    const { id, ...campos } = data;
-    const atualizado: ItemMobilizacaoInterface = {
-      ...items[idx],
-      ...campos,
-      updatedAt: new Date(),
-    };
-    items[idx] = atualizado;
-    salvarStorage(items);
-    return atualizado;
+    const { id, ...updateData } = data;
+    const response = await api.put<any>(`${this.baseUrl}/${id}`, updateData);
+    return this.mapItemResponse(response.data);
   }
 
   /**
    * Exclui item
    */
   async delete(id: number): Promise<void> {
-    salvarStorage(lerStorage().filter((c) => c.id !== id));
+    await api.delete(`${this.baseUrl}/${id}`);
   }
 
   /**
    * Ativa/desativa item
    */
-  async toggleAtivo(id: number, ativo: boolean): Promise<ItemMobilizacaoInterface> {
-    return this.update({ id, ativo });
+  async toggleAtivo(id: number): Promise<ItemMobilizacaoInterface> {
+    const response = await api.patch<any>(`${this.baseUrl}/${id}/toggle-ativo`);
+    return this.mapItemResponse(response.data);
+  }
+
+  /**
+   * Popula itens iniciais (seed)
+   */
+  async seed(): Promise<{ message: string; total: number }> {
+    const response = await api.post<{ message: string; total: number }>(
+      `${this.baseUrl}/seed`
+    );
+    return response.data;
+  }
+
+  // ==========================================
+  // HELPERS
+  // ==========================================
+
+  private mapItemResponse(item: any): ItemMobilizacaoInterface {
+    return {
+      ...item,
+      precoUnitario: Number(item.precoUnitario),
+      createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+    };
+  }
+
+  private mapItemsResponse(items: any[]): ItemMobilizacaoInterface[] {
+    return items.map((i) => this.mapItemResponse(i));
   }
 }
 
-export default new MobilizacaoService();
+export default new MobilizacaoServiceClass();

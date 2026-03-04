@@ -5,9 +5,9 @@ import {
   UpdateItemCatalogo,
 } from '@/interfaces/CatalogoItensInterface';
 import { normalizarDescricao } from '@/lib/textUtils';
-import axios from 'axios';
+import api from '@/lib/axios';
 
-const URL = `${API_URL}/api/catalogo-itens`;
+const URL = `${API_URL}/catalogo-itens`;
 
 // MOCK DATA
 const USE_MOCK = true;
@@ -116,7 +116,7 @@ class CatalogoItensService {
     }
 
     try {
-      const response = await axios.get(URL);
+      const response = await api.get(URL);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar catálogo:', error);
@@ -135,7 +135,7 @@ class CatalogoItensService {
     }
 
     try {
-      const response = await axios.get(`${URL}/subcategoria/${subcategoria}`);
+      const response = await api.get(`${URL}/subcategoria/${subcategoria}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar itens por subcategoria:', error);
@@ -155,7 +155,7 @@ class CatalogoItensService {
     }
 
     try {
-      const response = await axios.get(`${URL}/${id}`);
+      const response = await api.get(`${URL}/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar item:', error);
@@ -188,7 +188,7 @@ class CatalogoItensService {
     }
 
     try {
-      const response = await axios.post(URL, data);
+      const response = await api.post(URL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar item:', error);
@@ -225,7 +225,7 @@ class CatalogoItensService {
     }
 
     try {
-      const response = await axios.put(`${URL}/${data.id}`, data);
+      const response = await api.put(`${URL}/${data.id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
@@ -247,7 +247,7 @@ class CatalogoItensService {
     }
 
     try {
-      await axios.delete(`${URL}/${id}`);
+      await api.delete(`${URL}/${id}`);
     } catch (error) {
       console.error('Erro ao deletar item:', error);
       throw error;
@@ -271,7 +271,7 @@ class CatalogoItensService {
     }
 
     try {
-      const response = await axios.get(`${URL}/search`, { params: { q: query } });
+      const response = await api.get(`${URL}/search`, { params: { q: query } });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar itens:', error);

@@ -1,4 +1,3 @@
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -137,8 +136,7 @@ const Obras = ({ type = 'Obra' }: ObrasProps) => {
   const Icon = getIconByType();
 
   return (
-    <Layout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-construction-800">
             {getTitleByType()}
@@ -246,8 +244,7 @@ const Obras = ({ type = 'Obra' }: ObrasProps) => {
             )}
           </DialogContent>
         </Dialog>
-      </div>
-    </Layout>
+    </div>
   );
 };
 

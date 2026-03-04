@@ -5,11 +5,11 @@ import {
   UpdateOrcamento,
   ComposicaoCustos,
 } from '@/interfaces/OrcamentoInterface';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { calcularValoresOrcamento, calcularDRE, recalcularTodasComposicoes } from '@/lib/calculosOrcamento';
 import { mockOrcamentosIniciais } from '@/data/mockOrcamentos';
 
-const URL = `${API_URL}/api/orcamentos`;
+const URL = `${API_URL}/orcamentos`;
 
 // MOCK DATA - Controlado por variável de ambiente
 // Para ativar: definir VITE_USE_MOCK_DATA=true no arquivo .env.local
@@ -203,7 +203,7 @@ class OrcamentoService {
     }
 
     try {
-      const response = await axios.post(URL, data);
+      const response = await api.post(URL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar orçamento:', error);
@@ -231,7 +231,7 @@ class OrcamentoService {
     }
 
     try {
-      const response = await axios.get(URL);
+      const response = await api.get(URL);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar orçamentos:', error);
@@ -281,7 +281,7 @@ class OrcamentoService {
     }
 
     try {
-      const response = await axios.get(`${URL}/${id}`);
+      const response = await api.get(`${URL}/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar orçamento:', error);
@@ -319,7 +319,7 @@ class OrcamentoService {
     }
 
     try {
-      const response = await axios.put(`${URL}/${id}`, data);
+      const response = await api.put(`${URL}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar orçamento:', error);
@@ -341,7 +341,7 @@ class OrcamentoService {
     }
 
     try {
-      await axios.delete(`${URL}/${id}`);
+      await api.delete(`${URL}/${id}`);
     } catch (error) {
       console.error('Erro ao deletar orçamento:', error);
       throw error;
@@ -379,7 +379,7 @@ class OrcamentoService {
     }
 
     try {
-      const response = await axios.post(`${URL}/${id}/clonar`);
+      const response = await api.post(`${URL}/${id}/clonar`);
       return response.data;
     } catch (error) {
       console.error('Erro ao clonar orçamento:', error);
@@ -389,7 +389,7 @@ class OrcamentoService {
 
   async calcular(id: string): Promise<Orcamento> {
     try {
-      const response = await axios.get(`${URL}/${id}/calcular`);
+      const response = await api.get(`${URL}/${id}/calcular`);
       return response.data;
     } catch (error) {
       console.error('Erro ao calcular orçamento:', error);
@@ -399,7 +399,7 @@ class OrcamentoService {
 
   async getProximoNumero(): Promise<string> {
     try {
-      const response = await axios.get(`${URL}/numero/proximo`);
+      const response = await api.get(`${URL}/numero/proximo`);
       return response.data.numero;
     } catch (error) {
       console.error('Erro ao obter próximo número:', error);
@@ -409,7 +409,7 @@ class OrcamentoService {
 
   async getByCliente(cnpj: string): Promise<Orcamento[]> {
     try {
-      const response = await axios.get(`${URL}/cliente/${cnpj}`);
+      const response = await api.get(`${URL}/cliente/${cnpj}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar orçamentos do cliente:', error);
@@ -419,7 +419,7 @@ class OrcamentoService {
 
   async getAnaliseABC(id: string): Promise<any> {
     try {
-      const response = await axios.get(`${URL}/${id}/analise-abc`);
+      const response = await api.get(`${URL}/${id}/analise-abc`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar análise ABC:', error);
@@ -429,7 +429,7 @@ class OrcamentoService {
 
   async getDRE(id: string): Promise<any> {
     try {
-      const response = await axios.get(`${URL}/${id}/dre`);
+      const response = await api.get(`${URL}/${id}/dre`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar DRE:', error);

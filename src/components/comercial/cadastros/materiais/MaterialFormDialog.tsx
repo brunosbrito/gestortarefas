@@ -105,9 +105,9 @@ const MaterialFormDialog = ({
         setCategoria(material.categoria);
         setFornecedor(material.fornecedor);
         setUnidade(material.unidade);
-        setPrecoKg(material.precoKg?.toFixed(2) || '');
-        setPesoNominal(material.pesoNominal?.toFixed(2) || '');
-        setPrecoUnitario(material.precoUnitario.toFixed(2));
+        setPrecoKg(material.precoKg ? Number(material.precoKg).toFixed(2) : '');
+        setPesoNominal(material.pesoNominal ? Number(material.pesoNominal).toFixed(2) : '');
+        setPrecoUnitario(Number(material.precoUnitario || 0).toFixed(2));
         setObservacoes(material.observacoes || '');
 
         // Dimensões

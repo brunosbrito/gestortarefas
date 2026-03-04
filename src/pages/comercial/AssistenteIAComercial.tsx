@@ -6,7 +6,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import Layout from '@/components/Layout';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useUser } from '@/components/layout/useUser';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -562,8 +561,7 @@ function AssistenteIAComercial() {
   // ============================================
 
   return (
-    <Layout>
-      <PageContainer loading={pageLoading} error={pageError} onRetry={() => window.location.reload()}>
+    <PageContainer loading={pageLoading} error={pageError} onRetry={() => window.location.reload()}>
         <div className="h-[calc(100vh-8rem)] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
@@ -1243,8 +1241,7 @@ function AssistenteIAComercial() {
             </TabsContent>
           </Tabs>
         </div>
-      </PageContainer>
-    </Layout>
+    </PageContainer>
   );
 }
 

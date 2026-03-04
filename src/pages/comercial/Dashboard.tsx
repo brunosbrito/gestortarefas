@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,8 +71,7 @@ const Dashboard = () => {
   }), [orcamentos, propostas]);
 
   return (
-    <Layout>
-      <PageContainer
+    <PageContainer
         loading={loading}
         error={error}
         onRetry={handleRetry}
@@ -538,8 +536,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-      </PageContainer>
-    </Layout>
+    </PageContainer>
   );
 };
 

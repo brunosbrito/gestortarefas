@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/lib/axios';
 import API_URL from '@/config';
 import type {
   TintaInterface,
@@ -20,7 +20,7 @@ class TintaService {
       if (filtros?.fornecedor) params.append('fornecedor', filtros.fornecedor);
       if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
 
-      const response = await axios.get<TintaInterface[]>(
+      const response = await api.get<TintaInterface[]>(
         `${this.baseURL}${params.toString() ? `?${params.toString()}` : ''}`
       );
       return response.data;
@@ -33,7 +33,7 @@ class TintaService {
   // Buscar tinta por ID
   async buscarPorId(id: number): Promise<TintaInterface> {
     try {
-      const response = await axios.get<TintaInterface>(`${this.baseURL}/${id}`);
+      const response = await api.get<TintaInterface>(`${this.baseURL}/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar tinta ${id}:`, error);
@@ -44,7 +44,7 @@ class TintaService {
   // Criar nova tinta
   async criar(data: TintaCreateDTO): Promise<TintaInterface> {
     try {
-      const response = await axios.post<TintaInterface>(this.baseURL, data);
+      const response = await api.post<TintaInterface>(this.baseURL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar tinta:', error);
@@ -55,7 +55,7 @@ class TintaService {
   // Atualizar tinta existente
   async atualizar(id: number, data: TintaUpdateDTO): Promise<TintaInterface> {
     try {
-      const response = await axios.put<TintaInterface>(`${this.baseURL}/${id}`, data);
+      const response = await api.put<TintaInterface>(`${this.baseURL}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar tinta ${id}:`, error);
@@ -66,7 +66,7 @@ class TintaService {
   // Excluir tinta
   async excluir(id: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseURL}/${id}`);
+      await api.delete(`${this.baseURL}/${id}`);
     } catch (error) {
       console.error(`Erro ao excluir tinta ${id}:`, error);
       throw error;
@@ -76,7 +76,7 @@ class TintaService {
   // Buscar tintas por tipo
   async buscarPorTipo(tipo: string): Promise<TintaInterface[]> {
     try {
-      const response = await axios.get<TintaInterface[]>(
+      const response = await api.get<TintaInterface[]>(
         `${this.baseURL}/tipo/${tipo}`
       );
       return response.data;
@@ -89,7 +89,7 @@ class TintaService {
   // Buscar tintas por fornecedor
   async buscarPorFornecedor(fornecedor: string): Promise<TintaInterface[]> {
     try {
-      const response = await axios.get<TintaInterface[]>(
+      const response = await api.get<TintaInterface[]>(
         `${this.baseURL}/fornecedor/${fornecedor}`
       );
       return response.data;

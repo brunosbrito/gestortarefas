@@ -9,9 +9,9 @@ import {
   UpdateItemProposta,
   ItemProposta,
 } from '@/interfaces/PropostaInterface';
-import axios from 'axios';
+import api from '@/lib/axios';
 
-const URL = `${API_URL}/api/propostas`;
+const URL = `${API_URL}/propostas`;
 
 // MOCK DATA - Controlado por variável de ambiente
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA === 'true';
@@ -26,7 +26,7 @@ class PropostaService {
     }
 
     try {
-      const response = await axios.get(URL, { params: filtros });
+      const response = await api.get(URL, { params: filtros });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar propostas:', error);
@@ -36,7 +36,7 @@ class PropostaService {
 
   async getById(id: string): Promise<Proposta> {
     try {
-      const response = await axios.get(`${URL}/${id}`);
+      const response = await api.get(`${URL}/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar proposta:', error);
@@ -46,7 +46,7 @@ class PropostaService {
 
   async create(data: CreateProposta): Promise<Proposta> {
     try {
-      const response = await axios.post(URL, data);
+      const response = await api.post(URL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar proposta:', error);
@@ -56,7 +56,7 @@ class PropostaService {
 
   async update(id: string, data: Partial<UpdateProposta>): Promise<Proposta> {
     try {
-      const response = await axios.put(`${URL}/${id}`, data);
+      const response = await api.put(`${URL}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar proposta:', error);
@@ -66,7 +66,7 @@ class PropostaService {
 
   async delete(id: string): Promise<void> {
     try {
-      await axios.delete(`${URL}/${id}`);
+      await api.delete(`${URL}/${id}`);
     } catch (error) {
       console.error('Erro ao deletar proposta:', error);
       throw error;
@@ -75,7 +75,7 @@ class PropostaService {
 
   async updateStatus(data: AtualizarStatusProposta): Promise<Proposta> {
     try {
-      const response = await axios.patch(`${URL}/${data.propostaId}/status`, data);
+      const response = await api.patch(`${URL}/${data.propostaId}/status`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
@@ -85,7 +85,7 @@ class PropostaService {
 
   async clonar(id: string): Promise<Proposta> {
     try {
-      const response = await axios.post(`${URL}/${id}/clonar`);
+      const response = await api.post(`${URL}/${id}/clonar`);
       return response.data;
     } catch (error) {
       console.error('Erro ao clonar proposta:', error);
@@ -95,7 +95,7 @@ class PropostaService {
 
   async exportarPDF(id: string): Promise<Blob> {
     try {
-      const response = await axios.get(`${URL}/${id}/pdf`, {
+      const response = await api.get(`${URL}/${id}/pdf`, {
         responseType: 'blob',
       });
       return response.data;
@@ -107,7 +107,7 @@ class PropostaService {
 
   async getProximoNumero(): Promise<string> {
     try {
-      const response = await axios.get(`${URL}/numero/proximo`);
+      const response = await api.get(`${URL}/numero/proximo`);
       return response.data.numero;
     } catch (error) {
       console.error('Erro ao obter próximo número:', error);
@@ -117,7 +117,7 @@ class PropostaService {
 
   async vincularOrcamento(propostaId: string, orcamentoId: string): Promise<Proposta> {
     try {
-      const response = await axios.post(`${URL}/${propostaId}/vincular-orcamento`, { orcamentoId });
+      const response = await api.post(`${URL}/${propostaId}/vincular-orcamento`, { orcamentoId });
       return response.data;
     } catch (error) {
       console.error('Erro ao vincular orçamento:', error);
@@ -127,7 +127,7 @@ class PropostaService {
 
   async getByCliente(cnpj: string): Promise<Proposta[]> {
     try {
-      const response = await axios.get(`${URL}/cliente/${cnpj}`);
+      const response = await api.get(`${URL}/cliente/${cnpj}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar propostas do cliente:', error);
@@ -138,7 +138,7 @@ class PropostaService {
   // Itens de Proposta
   async createItem(data: CreateItemProposta): Promise<ItemProposta> {
     try {
-      const response = await axios.post(`${URL}/${data.propostaId}/itens`, data);
+      const response = await api.post(`${URL}/${data.propostaId}/itens`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar item:', error);
@@ -148,7 +148,7 @@ class PropostaService {
 
   async updateItem(propostaId: string, itemId: string, data: Partial<UpdateItemProposta>): Promise<ItemProposta> {
     try {
-      const response = await axios.put(`${URL}/${propostaId}/itens/${itemId}`, data);
+      const response = await api.put(`${URL}/${propostaId}/itens/${itemId}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
@@ -158,7 +158,7 @@ class PropostaService {
 
   async deleteItem(propostaId: string, itemId: string): Promise<void> {
     try {
-      await axios.delete(`${URL}/${propostaId}/itens/${itemId}`);
+      await api.delete(`${URL}/${propostaId}/itens/${itemId}`);
     } catch (error) {
       console.error('Erro ao deletar item:', error);
       throw error;

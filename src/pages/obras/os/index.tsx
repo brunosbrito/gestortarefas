@@ -1,5 +1,4 @@
 
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -121,8 +120,7 @@ const OrdensServico = () => {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-construction-800">
             Ordens de Serviço
@@ -286,7 +284,6 @@ const OrdensServico = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </Layout>
   );
 };
 

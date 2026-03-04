@@ -5,7 +5,7 @@ import {
   UpdateItemComposicao,
   ItemCSV,
 } from '@/interfaces/OrcamentoInterface';
-import axios from 'axios';
+import api from '@/lib/axios';
 import OrcamentoService from './OrcamentoService';
 import {
   calcularSubtotalItem,
@@ -16,7 +16,7 @@ import {
   calcularEncargos,
 } from '@/lib/calculosOrcamento';
 
-const URL = `${API_URL}/api`;
+const URL = API_URL;
 
 // MOCK DATA
 const USE_MOCK = true;
@@ -25,7 +25,7 @@ let mockIdCounter = 1;
 class ItemComposicaoService {
   async getByComposicao(composicaoId: string): Promise<ItemComposicao[]> {
     try {
-      const response = await axios.get(`${URL}/composicoes/${composicaoId}/itens`);
+      const response = await api.get(`${URL}/composicoes/${composicaoId}/itens`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar itens da composição:', error);
@@ -104,7 +104,7 @@ class ItemComposicaoService {
     }
 
     try {
-      const response = await axios.post(`${URL}/composicoes/${data.composicaoId}/itens`, data);
+      const response = await api.post(`${URL}/composicoes/${data.composicaoId}/itens`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar item:', error);
@@ -114,7 +114,7 @@ class ItemComposicaoService {
 
   async importarCSV(composicaoId: string, itens: ItemCSV[]): Promise<ItemComposicao[]> {
     try {
-      const response = await axios.post(`${URL}/composicoes/${composicaoId}/itens/csv`, { itens });
+      const response = await api.post(`${URL}/composicoes/${composicaoId}/itens/csv`, { itens });
       return response.data;
     } catch (error) {
       console.error('Erro ao importar CSV:', error);
@@ -181,7 +181,7 @@ class ItemComposicaoService {
     }
 
     try {
-      const response = await axios.put(`${URL}/itens-composicao/${data.id}`, data);
+      const response = await api.put(`${URL}/itens-composicao/${data.id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
@@ -233,7 +233,7 @@ class ItemComposicaoService {
     }
 
     try {
-      await axios.delete(`${URL}/itens-composicao/${id}`);
+      await api.delete(`${URL}/itens-composicao/${id}`);
     } catch (error) {
       console.error('Erro ao deletar item:', error);
       throw error;
@@ -242,7 +242,7 @@ class ItemComposicaoService {
 
   async calcularABC(itemId: string): Promise<ItemComposicao> {
     try {
-      const response = await axios.post(`${URL}/itens-composicao/${itemId}/calcular-abc`);
+      const response = await api.post(`${URL}/itens-composicao/${itemId}/calcular-abc`);
       return response.data;
     } catch (error) {
       console.error('Erro ao calcular ABC:', error);

@@ -2,8 +2,11 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 
-// Login carregado imediatamente (página inicial)
+// Login carregado imediatamente (página inicial - sem layout)
 import Login from './pages/Login';
+
+// Layout wrapper com Outlet para rotas aninhadas (sidebar persiste)
+const LayoutWrapper = lazy(() => import('./components/LayoutWrapper'));
 
 // Lazy loading para todas as outras páginas (code splitting)
 const Dashboard = lazy(() => import('./pages/Index'));
@@ -52,48 +55,56 @@ function App() {
     <Router basename="/">
       <Suspense fallback={<PageLoader />}>
         <Routes>
+          {/* Login - sem layout (sidebar) */}
           <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/atividade" element={<Atividade />} />
-          <Route path="/atividade/:activityId" element={<AtividadeDetalhe />} />
-          <Route path="/assistente-ia" element={<AssistenteIA />} />
-          <Route path="/programacao" element={<Atividade />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/obras" element={<Obras />} />
-          <Route path="/fabricas" element={<Fabricas />} />
-          <Route path="/mineradoras" element={<Mineradoras />} />
-          <Route path="/nao-conformidades" element={<NaoConformidades />} />
-          {/* Rotas de Cronograma desabilitadas nesta branch */}
-          {/* <Route path="/cronograma" element={<DashboardCronogramas />} /> */}
-          {/* <Route path="/cronograma/:id/gantt" element={<GanttView />} /> */}
-          {/* <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} /> */}
-          <Route path="/comercial/*" element={<Comercial />} />
-          <Route path="/obras/:projectId/os" element={<OrdensServico />} />
-          <Route
-            path="/obras/:projectId/os/:serviceOrderId/atividades"
-            element={<Atividades />}
-          />
-          <Route path="/ponto" element={<RegistroPonto />} />
-          <Route
-            path="/gerenciamento/colaboradores"
-            element={<Colaboradores />}
-          />
-          <Route path="/gerenciamento/tarefas-macro" element={<TarefasMacro />} />
-          <Route path="/gerenciamento/processos" element={<Processos />} />
-          <Route path="/gerenciamento/valor-por-cargo" element={<ValorPorCargo />} />
 
-          {/* Redirects de rotas antigas para novas */}
-          <Route path="/gerenciamento/materiais" element={<Navigate to="/comercial/cadastros/materiais" replace />} />
-          <Route path="/gerenciamento/tintas" element={<Navigate to="/comercial/cadastros/tintas" replace />} />
-          <Route path="/gerenciamento/fornecedores-servico" element={<Navigate to="/comercial/cadastros/fornecedores-servico" replace />} />
+          {/* Rotas protegidas com layout (sidebar persiste na navegação) */}
+          <Route element={<LayoutWrapper />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/atividade" element={<Atividade />} />
+            <Route path="/atividade/:activityId" element={<AtividadeDetalhe />} />
+            <Route path="/assistente-ia" element={<AssistenteIA />} />
+            <Route path="/programacao" element={<Atividade />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/obras" element={<Obras />} />
+            <Route path="/fabricas" element={<Fabricas />} />
+            <Route path="/mineradoras" element={<Mineradoras />} />
+            <Route path="/nao-conformidades" element={<NaoConformidades />} />
 
-          {/* Novas rotas do módulo Comercial > Cadastros */}
-          <Route path="/comercial/cadastros/materiais" element={<TabelaMateriais />} />
-          <Route path="/comercial/cadastros/tintas" element={<TabelaTintas />} />
-          <Route path="/comercial/cadastros/fornecedores-servico" element={<TabelaFornecedoresServico />} />
-          <Route path="/comercial/calculadora-pintura" element={<CalculadoraPintura />} />
-          <Route path="/comercial/configuracao/cargos" element={<TabelaCargos />} />
-          <Route path="/comercial/configuracao/salarial" element={<ConfiguracaoSalarial />} />
+            {/* Rotas de Cronograma desabilitadas nesta branch */}
+            {/* <Route path="/cronograma" element={<DashboardCronogramas />} /> */}
+            {/* <Route path="/cronograma/:id/gantt" element={<GanttView />} /> */}
+            {/* <Route path="/cronograma/test-vanilla" element={<GanttTestVanilla />} /> */}
+
+            {/* Módulo Comercial */}
+            <Route path="/comercial/*" element={<Comercial />} />
+
+            {/* OS e Atividades de Obra */}
+            <Route path="/obras/:projectId/os" element={<OrdensServico />} />
+            <Route path="/obras/:projectId/os/:serviceOrderId/atividades" element={<Atividades />} />
+
+            {/* Ponto */}
+            <Route path="/ponto" element={<RegistroPonto />} />
+
+            {/* Gerenciamento */}
+            <Route path="/gerenciamento/colaboradores" element={<Colaboradores />} />
+            <Route path="/gerenciamento/tarefas-macro" element={<TarefasMacro />} />
+            <Route path="/gerenciamento/processos" element={<Processos />} />
+            <Route path="/gerenciamento/valor-por-cargo" element={<ValorPorCargo />} />
+
+            {/* Redirects de rotas antigas para novas */}
+            <Route path="/gerenciamento/materiais" element={<Navigate to="/comercial/cadastros/materiais" replace />} />
+            <Route path="/gerenciamento/tintas" element={<Navigate to="/comercial/cadastros/tintas" replace />} />
+            <Route path="/gerenciamento/fornecedores-servico" element={<Navigate to="/comercial/cadastros/fornecedores-servico" replace />} />
+
+            {/* Rotas diretas do módulo Comercial > Cadastros */}
+            <Route path="/comercial/cadastros/materiais" element={<TabelaMateriais />} />
+            <Route path="/comercial/cadastros/tintas" element={<TabelaTintas />} />
+            <Route path="/comercial/cadastros/fornecedores-servico" element={<TabelaFornecedoresServico />} />
+            <Route path="/comercial/calculadora-pintura" element={<CalculadoraPintura />} />
+            <Route path="/comercial/configuracao/cargos" element={<TabelaCargos />} />
+            <Route path="/comercial/configuracao/salarial" element={<ConfiguracaoSalarial />} />
+          </Route>
         </Routes>
       </Suspense>
       <Toaster />

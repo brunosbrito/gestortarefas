@@ -15,7 +15,6 @@ import {
   FileText,
   Loader2,
 } from 'lucide-react';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -170,35 +169,31 @@ const AtividadeDetalhe = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
-              Carregando atividade...
-            </p>
-          </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Carregando atividade...
+          </p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   if (error || !atividade) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="w-full max-w-md mx-4">
-            <CardContent className="pt-6 text-center">
-              <p className="text-destructive mb-4">
-                {error || 'Atividade não encontrada'}
-              </p>
-              <Button onClick={() => navigate('/dashboard')}>
-                Voltar ao Dashboard
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-6 text-center">
+            <p className="text-destructive mb-4">
+              {error || 'Atividade não encontrada'}
+            </p>
+            <Button onClick={() => navigate('/dashboard')}>
+              Voltar ao Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -207,8 +202,7 @@ const AtividadeDetalhe = () => {
   const statusActions = getAvailableStatusActions();
 
   return (
-    <Layout>
-      <div className="min-h-full">
+    <div className="min-h-full">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#003366] to-[#004d99] text-white p-4 md:p-6">
           <div className="w-full">
@@ -504,7 +498,6 @@ const AtividadeDetalhe = () => {
           onSuccess={fetchAtividade}
         />
       </div>
-    </Layout>
   );
 };
 

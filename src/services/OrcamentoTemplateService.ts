@@ -2,7 +2,7 @@
  * Service para gerenciamento de Templates de Orçamento
  */
 
-import axios from 'axios';
+import api from '@/lib/axios';
 import API_URL from '@/config';
 import {
   OrcamentoTemplateInterface,
@@ -26,7 +26,7 @@ class OrcamentoTemplateService {
       if (categoria) params.append('categoria', categoria);
       if (ativo !== undefined) params.append('ativo', String(ativo));
 
-      const response = await axios.get(`${this.baseURL}?${params}`);
+      const response = await api.get(`${this.baseURL}?${params}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao listar templates:', error);
@@ -39,7 +39,7 @@ class OrcamentoTemplateService {
    */
   async getById(id: number): Promise<OrcamentoTemplateInterface> {
     try {
-      const response = await axios.get(`${this.baseURL}/${id}`);
+      const response = await api.get(`${this.baseURL}/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar template:', error);
@@ -52,7 +52,7 @@ class OrcamentoTemplateService {
    */
   async create(data: OrcamentoTemplateCreateDTO): Promise<OrcamentoTemplateInterface> {
     try {
-      const response = await axios.post(this.baseURL, data);
+      const response = await api.post(this.baseURL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar template:', error);
@@ -66,7 +66,7 @@ class OrcamentoTemplateService {
   async update(data: OrcamentoTemplateUpdateDTO): Promise<OrcamentoTemplateInterface> {
     try {
       const { id, ...updateData } = data;
-      const response = await axios.put(`${this.baseURL}/${id}`, updateData);
+      const response = await api.put(`${this.baseURL}/${id}`, updateData);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar template:', error);
@@ -79,7 +79,7 @@ class OrcamentoTemplateService {
    */
   async delete(id: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseURL}/${id}`);
+      await api.delete(`${this.baseURL}/${id}`);
     } catch (error) {
       console.error('Erro ao excluir template:', error);
       throw error;
@@ -92,7 +92,7 @@ class OrcamentoTemplateService {
    */
   async usarTemplate(data: UsarTemplateDTO): Promise<Orcamento> {
     try {
-      const response = await axios.post(`${this.baseURL}/${data.templateId}/usar`, data);
+      const response = await api.post(`${this.baseURL}/${data.templateId}/usar`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao usar template:', error);
@@ -106,7 +106,7 @@ class OrcamentoTemplateService {
    */
   async criarTemplateDeOrcamento(data: CriarTemplateDeOrcamentoDTO): Promise<OrcamentoTemplateInterface> {
     try {
-      const response = await axios.post(`${API_URL}/orcamentos/${data.orcamentoId}/criar-template`, data);
+      const response = await api.post(`${API_URL}/orcamentos/${data.orcamentoId}/criar-template`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar template de orçamento:', error);
@@ -119,7 +119,7 @@ class OrcamentoTemplateService {
    */
   async duplicar(id: number, novoNome: string): Promise<OrcamentoTemplateInterface> {
     try {
-      const response = await axios.post(`${this.baseURL}/${id}/duplicar`, { novoNome });
+      const response = await api.post(`${this.baseURL}/${id}/duplicar`, { novoNome });
       return response.data;
     } catch (error) {
       console.error('Erro ao duplicar template:', error);
@@ -132,7 +132,7 @@ class OrcamentoTemplateService {
    */
   async toggleAtivo(id: number, ativo: boolean): Promise<OrcamentoTemplateInterface> {
     try {
-      const response = await axios.patch(`${this.baseURL}/${id}/toggle-ativo`, { ativo });
+      const response = await api.patch(`${this.baseURL}/${id}/toggle-ativo`, { ativo });
       return response.data;
     } catch (error) {
       console.error('Erro ao alterar status do template:', error);

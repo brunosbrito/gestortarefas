@@ -1,3 +1,5 @@
+import api from '@/lib/axios';
+import API_URL from '@/config';
 import * as XLSX from 'xlsx';
 import {
   EpiCatalogo,
@@ -6,131 +8,102 @@ import {
   EPI_TEMPLATE_HEADERS,
 } from '@/interfaces/EpiInterface';
 
-const STORAGE_KEY = 'gestortarefas_mock_epis';
-
+/**
+ * Serviço para gerenciar EPIs / EPCs
+ * Integrado com API backend
+ */
 class EpiServiceClass {
+  private readonly baseUrl = `${API_URL}/epis`;
+
   // ==========================================
-  // CRUD
+  // CRUD - API
   // ==========================================
 
   async list(): Promise<EpiCatalogo[]> {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    const items = JSON.parse(stored);
-    return items.map((e: any) => ({
-      ...e,
-      criadoEm: new Date(e.criadoEm),
-      atualizadoEm: new Date(e.atualizadoEm),
-    }));
+    const response = await api.get<any[]>(this.baseUrl);
+    return this.mapEpisResponse(response.data);
   }
 
   async listAtivos(): Promise<EpiCatalogo[]> {
-    const all = await this.list();
-    return all.filter((e) => e.ativo);
+    const response = await api.get<any[]>(`${this.baseUrl}/ativos`);
+    return this.mapEpisResponse(response.data);
   }
 
   async getById(id: string): Promise<EpiCatalogo | null> {
-    const all = await this.list();
-    return all.find((e) => e.id === id) || null;
+    try {
+      const response = await api.get<any>(`${this.baseUrl}/${id}`);
+      return this.mapEpiResponse(response.data);
+    } catch (error) {
+      return null;
+    }
   }
 
   async create(data: CreateEpiCatalogo): Promise<EpiCatalogo> {
-    const all = await this.list();
-    const novo: EpiCatalogo = {
-      id: `epi-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      descricao: data.descricao.trim(),
-      nomeResumido: data.nomeResumido?.trim() || undefined,
-      unidade: data.unidade,
-      ca: data.ca.trim(),
-      fabricante: data.fabricante?.trim() || undefined,
-      valorReferencia: data.valorReferencia,
-      ativo: true,
-      criadoEm: new Date(),
-      atualizadoEm: new Date(),
-    };
-    all.push(novo);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-    return novo;
+    const response = await api.post<any>(this.baseUrl, data);
+    return this.mapEpiResponse(response.data);
   }
 
   async update(data: UpdateEpiCatalogo): Promise<EpiCatalogo> {
-    const all = await this.list();
-    const idx = all.findIndex((e) => e.id === data.id);
-    if (idx === -1) throw new Error('EPI não encontrado');
-    const updated: EpiCatalogo = {
-      ...all[idx],
-      descricao: data.descricao?.trim() ?? all[idx].descricao,
-      nomeResumido: data.nomeResumido !== undefined
-        ? (data.nomeResumido.trim() || undefined)
-        : all[idx].nomeResumido,
-      unidade: data.unidade ?? all[idx].unidade,
-      ca: data.ca?.trim() ?? all[idx].ca,
-      fabricante: data.fabricante?.trim() ?? all[idx].fabricante,
-      valorReferencia: data.valorReferencia ?? all[idx].valorReferencia,
-      atualizadoEm: new Date(),
-    };
-    all[idx] = updated;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-    return updated;
+    const { id, ...updateData } = data;
+    const response = await api.put<any>(`${this.baseUrl}/${id}`, updateData);
+    return this.mapEpiResponse(response.data);
   }
 
   async toggleAtivo(id: string): Promise<void> {
-    const all = await this.list();
-    const idx = all.findIndex((e) => e.id === id);
-    if (idx === -1) throw new Error('EPI não encontrado');
-    all[idx].ativo = !all[idx].ativo;
-    all[idx].atualizadoEm = new Date();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    await api.patch(`${this.baseUrl}/${id}/toggle-ativo`);
   }
 
   async deletePermanente(id: string): Promise<void> {
-    const all = await this.list();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all.filter((e) => e.id !== id)));
+    await api.delete(`${this.baseUrl}/${id}`);
+  }
+
+  async seed(): Promise<{ message: string; total: number }> {
+    const response = await api.post<{ message: string; total: number }>(
+      `${this.baseUrl}/seed`
+    );
+    return response.data;
   }
 
   /**
    * Reajusta os valores de referência em lote.
-   * tipo 'percentual': aplica índice percentual (ex: 10 = +10%, -5 = -5%)
-   * tipo 'fixo': soma/subtrai valor fixo (ex: 5.00 = +R$5,00)
-   * escopo: 'todos' ou 'ativos'
-   * Retorna o número de itens atualizados.
    */
   async reajustarPrecos(
     tipo: 'percentual' | 'fixo',
     valor: number,
     escopo: 'todos' | 'ativos'
   ): Promise<number> {
-    const all = await this.list();
-    let count = 0;
-    const updated = all.map((e) => {
-      if (escopo === 'ativos' && !e.ativo) return e;
-      const novoValor =
-        tipo === 'percentual'
-          ? e.valorReferencia * (1 + valor / 100)
-          : e.valorReferencia + valor;
-      count++;
-      return {
-        ...e,
-        valorReferencia: Math.max(0, Math.round(novoValor * 100) / 100),
-        atualizadoEm: new Date(),
-      };
+    const response = await api.post<number>(`${this.baseUrl}/reajustar`, {
+      tipo,
+      valor,
+      escopo,
     });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return count;
+    return response.data;
+  }
+
+  // ==========================================
+  // HELPERS - MAPEAR RESPOSTA DA API
+  // ==========================================
+
+  private mapEpiResponse(epi: any): EpiCatalogo {
+    return {
+      ...epi,
+      valorReferencia: Number(epi.valorReferencia),
+      criadoEm: new Date(epi.createdAt || epi.criadoEm),
+      atualizadoEm: new Date(epi.updatedAt || epi.atualizadoEm),
+    };
+  }
+
+  private mapEpisResponse(epis: any[]): EpiCatalogo[] {
+    return epis.map((e) => this.mapEpiResponse(e));
   }
 
   // ==========================================
   // EXPORTAR MODELO (.xlsx)
   // ==========================================
 
-  /**
-   * Baixa uma planilha modelo vazia para preenchimento de EPIs.
-   * Se passar EPIs existentes, a planilha virá pré-preenchida.
-   */
   exportarModelo(epis: EpiCatalogo[] = []): void {
     const wb = XLSX.utils.book_new();
 
-    // Linha de exemplo (comentada) + dados existentes
     const linhas: any[] = [
       {
         'Descrição': 'LUVA DE VAQUETA MISTA CANO CURTO',
@@ -150,16 +123,14 @@ class EpiServiceClass {
 
     const ws = XLSX.utils.json_to_sheet(linhas, { header: [...EPI_TEMPLATE_HEADERS] });
 
-    // Largura das colunas
     ws['!cols'] = [
-      { wch: 60 }, // Descrição
-      { wch: 10 }, // Unidade
-      { wch: 12 }, // CA
-      { wch: 30 }, // Fabricante
-      { wch: 22 }, // Valor
+      { wch: 60 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 30 },
+      { wch: 22 },
     ];
 
-    // Aba de unidades válidas como referência
     const wsUnidades = XLSX.utils.aoa_to_sheet([
       ['Unidades válidas'],
       ['un'],
@@ -180,10 +151,6 @@ class EpiServiceClass {
   // IMPORTAR DE ARQUIVO .xlsx / .csv
   // ==========================================
 
-  /**
-   * Lê um File (.xlsx ou .csv) e retorna uma lista de EPIs para pré-visualização.
-   * Não persiste — o componente decide o que fazer com os dados.
-   */
   async lerArquivo(
     file: File
   ): Promise<{ validos: CreateEpiCatalogo[]; erros: string[] }> {
@@ -196,7 +163,7 @@ class EpiServiceClass {
     const erros: string[] = [];
 
     rows.forEach((row, i) => {
-      const linhaN = i + 2; // +2 porque linha 1 = cabeçalho
+      const linhaN = i + 2;
 
       const descricao = String(row['Descrição'] || row['Descricao'] || row['descricao'] || '').trim();
       const unidade = String(row['Unidade'] || row['unidade'] || 'un').trim();
@@ -226,22 +193,15 @@ class EpiServiceClass {
     return { validos, erros };
   }
 
-  /**
-   * Persiste uma lista de EPIs importados.
-   * Modo 'substituir': apaga todos existentes antes.
-   * Modo 'acrescentar': adiciona aos existentes (padrão).
-   */
   async importar(
     dados: CreateEpiCatalogo[],
     modo: 'acrescentar' | 'substituir' = 'acrescentar'
   ): Promise<number> {
-    if (modo === 'substituir') {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    for (const d of dados) {
-      await this.create(d);
-    }
-    return dados.length;
+    const response = await api.post<number>(`${this.baseUrl}/importar`, {
+      dados,
+      substituir: modo === 'substituir',
+    });
+    return response.data;
   }
 }
 

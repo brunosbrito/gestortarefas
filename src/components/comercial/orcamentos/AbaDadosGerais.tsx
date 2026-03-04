@@ -434,7 +434,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
               <div>
                 <Label className="text-sm">ISS</Label>
                 <p className="text-2xl font-bold text-blue-600 font-mono mt-1">
-                  {((orcamento.configuracoes?.tributos.iss || 0.03) * 100).toFixed(2)}%
+                  {(Number(orcamento.configuracoes?.tributos.iss || 0.03) * 100).toFixed(2)}%
                 </p>
               </div>
               <div>
@@ -461,7 +461,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
               <div>
                 <Label className="text-sm">Total de Tributos</Label>
                 <p className="text-2xl font-bold text-orange-600 mt-1">
-                  {(((orcamento.configuracoes?.tributos.iss || 0.03) + (faixaInfo.aliquota / 100)) * 100).toFixed(2)}%
+                  {((Number(orcamento.configuracoes?.tributos.iss || 0.03) + (faixaInfo.aliquota / 100)) * 100).toFixed(2)}%
                 </p>
               </div>
             </div>

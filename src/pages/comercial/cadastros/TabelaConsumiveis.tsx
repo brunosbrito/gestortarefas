@@ -50,7 +50,6 @@ import {
   ConsumivelCategoriaLabels,
 } from '@/interfaces/ConsumivelInterface';
 import { formatCurrency } from '@/lib/currency';
-import Layout from '@/components/Layout';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -367,20 +366,17 @@ const TabelaConsumiveis = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="w-full px-4 py-4 space-y-4">
-        {/* Header */}
+    <div className="w-full px-4 py-4 space-y-4">
+      {/* Header */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1038,8 +1034,7 @@ const TabelaConsumiveis = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
-    </Layout>
+    </div>
   );
 };
 

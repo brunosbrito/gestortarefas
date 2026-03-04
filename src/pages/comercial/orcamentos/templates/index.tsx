@@ -14,7 +14,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import Layout from '@/components/Layout';
 import OrcamentoTemplateService from '@/services/OrcamentoTemplateService';
 import {
   OrcamentoTemplateInterface,
@@ -165,18 +164,16 @@ const TemplatesPage = () => {
 
   if (loading) {
     return (
-      <Layout>
         <div className="container mx-auto p-6">
           <div className="flex items-center justify-center py-12">
             <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
           </div>
         </div>
-      </Layout>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="w-full px-4 py-4 space-y-4">
         {/* Header */}
         <Card>
@@ -316,7 +313,7 @@ const TemplatesPage = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </Layout>
+    </>
   );
 };
 

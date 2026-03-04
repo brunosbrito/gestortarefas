@@ -1,9 +1,11 @@
 /**
  * Service para gerenciamento de Consumíveis
- * Persistência via localStorage (mock até backend estar disponível)
+ * Integrado com API backend
  */
 
+import api from '@/lib/axios';
 import * as XLSX from 'xlsx';
+import API_URL from '@/config';
 import {
   ConsumivelInterface,
   ConsumivelCreateDTO,
@@ -12,8 +14,6 @@ import {
   ConsumivelCategoria,
   GrupoABC,
 } from '@/interfaces/ConsumivelInterface';
-
-const STORAGE_KEY = 'comercial_consumiveis';
 
 const TEMPLATE_HEADERS = [
   'Código',
@@ -26,117 +26,91 @@ const TEMPLATE_HEADERS = [
   'Observações',
 ] as const;
 
-// ==========================================
-// Helpers de persistência
-// ==========================================
-
-function lerStorage(): ConsumivelInterface[] {
-  try {
-    const items: ConsumivelInterface[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    // Migração: gases devem usar unidade 'cil'
-    let houveMudanca = false;
-    const migrados = items.map((item) => {
-      if (item.categoria === ConsumivelCategoria.GASES && item.unidade !== 'cil') {
-        houveMudanca = true;
-        return { ...item, unidade: 'cil' };
-      }
-      return item;
-    });
-    if (houveMudanca) salvarStorage(migrados);
-    return migrados;
-  } catch {
-    return [];
-  }
-}
-
-function salvarStorage(items: ConsumivelInterface[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
-
-function proximoId(items: ConsumivelInterface[]): number {
-  return items.length > 0 ? Math.max(...items.map((i) => i.id)) + 1 : 1;
-}
-
-// ==========================================
-// Service
-// ==========================================
-
 class ConsumivelService {
+  private baseURL = `${API_URL}/consumiveis`;
+
   /**
    * Lista todos os consumíveis (com filtros opcionais)
    */
   async getAll(filtros?: ConsumivelFiltros): Promise<ConsumivelInterface[]> {
-    let resultado = lerStorage();
+    try {
+      const params = new URLSearchParams();
 
-    if (filtros?.busca) {
-      const b = filtros.busca.toLowerCase();
-      resultado = resultado.filter(
-        (c) => c.codigo.toLowerCase().includes(b) || c.descricao.toLowerCase().includes(b)
+      if (filtros?.busca) params.append('busca', filtros.busca);
+      if (filtros?.categoria) params.append('categoria', filtros.categoria);
+      if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
+
+      const response = await api.get<ConsumivelInterface[]>(
+        `${this.baseURL}${params.toString() ? `?${params.toString()}` : ''}`
       );
-    }
-    if (filtros?.categoria) {
-      resultado = resultado.filter((c) => c.categoria === filtros.categoria);
-    }
-    if (filtros?.fornecedor) {
-      resultado = resultado.filter((c) => c.fornecedor === filtros.fornecedor);
-    }
-    if (filtros?.grupoABC) {
-      resultado = resultado.filter((c) => c.grupoABC === filtros.grupoABC);
-    }
-    if (filtros?.ativo !== undefined) {
-      resultado = resultado.filter((c) => c.ativo === filtros.ativo);
-    }
 
-    return resultado;
+      let resultado = response.data;
+
+      // Filtros adicionais no frontend (caso backend não suporte todos)
+      if (filtros?.fornecedor) {
+        resultado = resultado.filter((c) => c.fornecedor === filtros.fornecedor);
+      }
+      if (filtros?.grupoABC) {
+        resultado = resultado.filter((c) => c.grupoABC === filtros.grupoABC);
+      }
+
+      return resultado;
+    } catch (error) {
+      console.error('Erro ao listar consumíveis:', error);
+      throw error;
+    }
   }
 
   /**
    * Busca consumível por ID
    */
   async getById(id: number): Promise<ConsumivelInterface> {
-    const item = lerStorage().find((c) => c.id === id);
-    if (!item) throw new Error(`Consumível #${id} não encontrado`);
-    return item;
+    try {
+      const response = await api.get<ConsumivelInterface>(`${this.baseURL}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao buscar consumível ${id}:`, error);
+      throw error;
+    }
   }
 
   /**
    * Cria novo consumível
    */
   async create(data: ConsumivelCreateDTO): Promise<ConsumivelInterface> {
-    const items = lerStorage();
-    const novo: ConsumivelInterface = {
-      ...data,
-      id: proximoId(items),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    salvarStorage([...items, novo]);
-    return novo;
+    try {
+      const response = await api.post<ConsumivelInterface>(this.baseURL, data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar consumível:', error);
+      throw error;
+    }
   }
 
   /**
    * Atualiza consumível existente
    */
   async update(data: ConsumivelUpdateDTO): Promise<ConsumivelInterface> {
-    const items = lerStorage();
-    const idx = items.findIndex((c) => c.id === data.id);
-    if (idx === -1) throw new Error(`Consumível #${data.id} não encontrado`);
-    const { id, ...campos } = data;
-    const atualizado: ConsumivelInterface = {
-      ...items[idx],
-      ...campos,
-      updatedAt: new Date(),
-    };
-    items[idx] = atualizado;
-    salvarStorage(items);
-    return atualizado;
+    try {
+      const { id, ...campos } = data;
+      const response = await api.put<ConsumivelInterface>(`${this.baseURL}/${id}`, campos);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao atualizar consumível ${data.id}:`, error);
+      throw error;
+    }
   }
 
   /**
    * Exclui consumível
    */
   async delete(id: number): Promise<void> {
-    salvarStorage(lerStorage().filter((c) => c.id !== id));
+    try {
+      await api.delete(`${this.baseURL}/${id}`);
+    } catch (error) {
+      console.error(`Erro ao excluir consumível ${id}:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -279,7 +253,11 @@ class ConsumivelService {
     modo: 'acrescentar' | 'substituir' = 'acrescentar'
   ): Promise<number> {
     if (modo === 'substituir') {
-      salvarStorage([]);
+      // Deletar todos os consumíveis existentes
+      const existentes = await this.getAll();
+      for (const c of existentes) {
+        await this.delete(c.id);
+      }
     }
     for (const d of dados) {
       await this.create(d);

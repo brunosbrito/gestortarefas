@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -103,17 +102,14 @@ const RegistroPonto = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-lg text-gray-600">Carregando registros...</p>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-lg text-gray-600">Carregando registros...</p>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-construction-800">
@@ -214,7 +210,6 @@ const RegistroPonto = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
   );
 };
 

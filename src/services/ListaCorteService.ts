@@ -3,7 +3,7 @@
  * Gerencia listas de corte, extrai peças de orçamentos
  */
 
-import axios from 'axios';
+import api from '@/lib/axios';
 import API_URL from '@/config';
 import {
   ListaCorteInterface,
@@ -19,7 +19,7 @@ class ListaCorteService {
    * Busca todas as listas de corte com filtros opcionais
    */
   async getAll(filtros?: ListaCorteFiltros): Promise<ListaCorteInterface[]> {
-    const response = await axios.get(this.baseURL, { params: filtros });
+    const response = await api.get(this.baseURL, { params: filtros });
     return response.data;
   }
 
@@ -27,7 +27,7 @@ class ListaCorteService {
    * Busca uma lista de corte por ID
    */
   async getById(id: number): Promise<ListaCorteInterface> {
-    const response = await axios.get(`${this.baseURL}/${id}`);
+    const response = await api.get(`${this.baseURL}/${id}`);
     return response.data;
   }
 
@@ -35,7 +35,7 @@ class ListaCorteService {
    * Cria nova lista de corte
    */
   async create(data: ListaCorteCreateDTO): Promise<ListaCorteInterface> {
-    const response = await axios.post(this.baseURL, data);
+    const response = await api.post(this.baseURL, data);
     return response.data;
   }
 
@@ -43,14 +43,14 @@ class ListaCorteService {
    * Deleta uma lista de corte
    */
   async delete(id: number): Promise<void> {
-    await axios.delete(`${this.baseURL}/${id}`);
+    await api.delete(`${this.baseURL}/${id}`);
   }
 
   /**
    * Extrai peças de um orçamento para gerar lista de corte
    */
   async extrairPecasDoOrcamento(orcamentoId: number): Promise<PecaCorte[]> {
-    const response = await axios.get(
+    const response = await api.get(
       `${API_URL}/orcamentos/${orcamentoId}/pecas-corte`
     );
     return response.data;
@@ -90,7 +90,7 @@ class ListaCorteService {
    * Exporta lista de corte para Excel
    */
   async exportarExcel(listaId: number): Promise<Blob> {
-    const response = await axios.get(`${this.baseURL}/${listaId}/export/excel`, {
+    const response = await api.get(`${this.baseURL}/${listaId}/export/excel`, {
       responseType: 'blob',
     });
     return response.data;
@@ -100,7 +100,7 @@ class ListaCorteService {
    * Exporta lista de corte para PDF
    */
   async exportarPDF(listaId: number): Promise<Blob> {
-    const response = await axios.get(`${this.baseURL}/${listaId}/export/pdf`, {
+    const response = await api.get(`${this.baseURL}/${listaId}/export/pdf`, {
       responseType: 'blob',
     });
     return response.data;

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/lib/axios';
 import API_URL from '@/config';
 import type {
   FornecedorServicoInterface,
@@ -18,7 +18,7 @@ class FornecedorServicoService {
       if (filtros?.busca) params.append('busca', filtros.busca);
       if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
 
-      const response = await axios.get<FornecedorServicoInterface[]>(
+      const response = await api.get<FornecedorServicoInterface[]>(
         `${this.baseURL}${params.toString() ? `?${params.toString()}` : ''}`
       );
       return response.data;
@@ -31,7 +31,7 @@ class FornecedorServicoService {
   // Buscar fornecedor por ID
   async buscarPorId(id: number): Promise<FornecedorServicoInterface> {
     try {
-      const response = await axios.get<FornecedorServicoInterface>(`${this.baseURL}/${id}`);
+      const response = await api.get<FornecedorServicoInterface>(`${this.baseURL}/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar fornecedor ${id}:`, error);
@@ -42,7 +42,7 @@ class FornecedorServicoService {
   // Criar novo fornecedor
   async criar(data: FornecedorServicoCreateDTO): Promise<FornecedorServicoInterface> {
     try {
-      const response = await axios.post<FornecedorServicoInterface>(this.baseURL, data);
+      const response = await api.post<FornecedorServicoInterface>(this.baseURL, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar fornecedor:', error);
@@ -53,7 +53,7 @@ class FornecedorServicoService {
   // Atualizar fornecedor existente
   async atualizar(id: number, data: FornecedorServicoUpdateDTO): Promise<FornecedorServicoInterface> {
     try {
-      const response = await axios.put<FornecedorServicoInterface>(`${this.baseURL}/${id}`, data);
+      const response = await api.put<FornecedorServicoInterface>(`${this.baseURL}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar fornecedor ${id}:`, error);
@@ -64,7 +64,7 @@ class FornecedorServicoService {
   // Excluir fornecedor
   async excluir(id: number): Promise<void> {
     try {
-      await axios.delete(`${this.baseURL}/${id}`);
+      await api.delete(`${this.baseURL}/${id}`);
     } catch (error) {
       console.error(`Erro ao excluir fornecedor ${id}:`, error);
       throw error;

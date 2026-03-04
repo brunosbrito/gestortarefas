@@ -1,4 +1,3 @@
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -146,8 +145,7 @@ const Atividades = () => {
   };
 
   return (
-    <Layout>
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-construction-800">
@@ -214,7 +212,6 @@ const Atividades = () => {
           onSuccess={getByServiceOrderId}
         />
       </div>
-    </Layout>
   );
 };
 

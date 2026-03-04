@@ -4,7 +4,7 @@ import {
   CreateComposicao,
   UpdateComposicao,
 } from '@/interfaces/OrcamentoInterface';
-import axios from 'axios';
+import api from '@/lib/axios';
 import OrcamentoService from './OrcamentoService';
 import {
   calcularCustoDirectoComposicao,
@@ -12,7 +12,7 @@ import {
   calcularSubtotalComposicao,
 } from '@/lib/calculosOrcamento';
 
-const URL = `${API_URL}/api`;
+const URL = API_URL;
 
 // MOCK DATA
 const USE_MOCK = true;
@@ -21,7 +21,7 @@ let mockIdCounter = 1;
 class ComposicaoService {
   async getByOrcamento(orcamentoId: string): Promise<ComposicaoCustos[]> {
     try {
-      const response = await axios.get(`${URL}/orcamentos/${orcamentoId}/composicoes`);
+      const response = await api.get(`${URL}/orcamentos/${orcamentoId}/composicoes`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar composições:', error);
@@ -65,7 +65,7 @@ class ComposicaoService {
     }
 
     try {
-      const response = await axios.post(`${URL}/orcamentos/${data.orcamentoId}/composicoes`, data);
+      const response = await api.post(`${URL}/orcamentos/${data.orcamentoId}/composicoes`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar composição:', error);
@@ -75,7 +75,7 @@ class ComposicaoService {
 
   async getById(id: string): Promise<ComposicaoCustos> {
     try {
-      const response = await axios.get(`${URL}/composicoes/${id}`);
+      const response = await api.get(`${URL}/composicoes/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar composição:', error);
@@ -126,7 +126,7 @@ class ComposicaoService {
     }
 
     try {
-      const response = await axios.put(`${URL}/composicoes/${data.id}`, data);
+      const response = await api.put(`${URL}/composicoes/${data.id}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar composição:', error);
@@ -162,7 +162,7 @@ class ComposicaoService {
     }
 
     try {
-      await axios.delete(`${URL}/composicoes/${id}`);
+      await api.delete(`${URL}/composicoes/${id}`);
     } catch (error) {
       console.error('Erro ao deletar composição:', error);
       throw error;
@@ -171,7 +171,7 @@ class ComposicaoService {
 
   async updateBDI(id: string, percentual: number): Promise<ComposicaoCustos> {
     try {
-      const response = await axios.patch(`${URL}/composicoes/${id}/bdi`, { percentual });
+      const response = await api.patch(`${URL}/composicoes/${id}/bdi`, { percentual });
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar BDI:', error);

@@ -12,7 +12,7 @@ import {
   PI_APPROX,
 } from '@/interfaces/MaterialPinturaInterface';
 import API_URL from '@/config';
-import axios from 'axios';
+import api from '@/lib/axios';
 
 class MaterialPinturaService {
   /**
@@ -227,7 +227,7 @@ class MaterialPinturaService {
       if (filtros?.busca) params.append('busca', filtros.busca);
       if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
 
-      const response = await axios.get(`${API_URL}/materiais-pintura?${params}`);
+      const response = await api.get(`${API_URL}/materiais-pintura?${params}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao listar materiais de pintura:', error);
@@ -240,7 +240,7 @@ class MaterialPinturaService {
    */
   async buscarPorId(id: number): Promise<MaterialPinturaInterface> {
     try {
-      const response = await axios.get(`${API_URL}/materiais-pintura/${id}`);
+      const response = await api.get(`${API_URL}/materiais-pintura/${id}`);
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar material de pintura:', error);
@@ -270,7 +270,7 @@ class MaterialPinturaService {
         ativo: true,
       };
 
-      const response = await axios.post(`${API_URL}/materiais-pintura`, payload);
+      const response = await api.post(`${API_URL}/materiais-pintura`, payload);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar material de pintura:', error);
@@ -293,7 +293,7 @@ class MaterialPinturaService {
         updates.areaM2PorMetroLinear = areaM2PorMetroLinear;
       }
 
-      const response = await axios.put(`${API_URL}/materiais-pintura/${id}`, updates);
+      const response = await api.put(`${API_URL}/materiais-pintura/${id}`, updates);
       return response.data;
     } catch (error) {
       console.error('Erro ao atualizar material de pintura:', error);
@@ -306,7 +306,7 @@ class MaterialPinturaService {
    */
   async excluir(id: number): Promise<void> {
     try {
-      await axios.delete(`${API_URL}/materiais-pintura/${id}`);
+      await api.delete(`${API_URL}/materiais-pintura/${id}`);
     } catch (error) {
       console.error('Erro ao excluir material de pintura:', error);
       throw error;
@@ -318,7 +318,7 @@ class MaterialPinturaService {
    */
   async toggleAtivo(id: number, ativo: boolean): Promise<MaterialPinturaInterface> {
     try {
-      const response = await axios.patch(`${API_URL}/materiais-pintura/${id}/toggle-ativo`, { ativo });
+      const response = await api.patch(`${API_URL}/materiais-pintura/${id}/toggle-ativo`, { ativo });
       return response.data;
     } catch (error) {
       console.error('Erro ao alterar status do material:', error);

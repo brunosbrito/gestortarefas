@@ -171,7 +171,7 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
           <CardContent className="pt-4">
             <Label className="text-muted-foreground text-xs">BDI Total</Label>
             <p className="text-xl font-bold text-purple-600 mt-1">{formatCurrency(valores.bdiTotal)}</p>
-            <p className="text-xs text-muted-foreground">Médio: {valores.bdiMedio.toFixed(1)}%</p>
+            <p className="text-xs text-muted-foreground">Médio: {Number(valores.bdiMedio || 0).toFixed(1)}%</p>
           </CardContent>
         </Card>
         <Card>
@@ -188,7 +188,7 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
                 dre.margemLiquida < 0 ? 'text-red-600' : 'text-green-600'
               }`}
             >
-              {dre.margemLiquida.toFixed(1)}%
+              {Number(dre.margemLiquida || 0).toFixed(1)}%
             </p>
           </CardContent>
         </Card>
@@ -227,9 +227,9 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
                     </div>
                     <div className="text-right">
                       <p className="font-bold">{formatCurrency(comp.subtotal)}</p>
-                      {valores.subtotal > 0 && (
+                      {Number(valores.subtotal || 0) > 0 && (
                         <p className="text-xs text-muted-foreground">
-                          {((comp.subtotal / valores.subtotal) * 100).toFixed(1)}% do total
+                          {((Number(comp.subtotal || 0) / Number(valores.subtotal)) * 100).toFixed(1)}% do total
                         </p>
                       )}
                     </div>
@@ -282,9 +282,9 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
                     </div>
                     <div className="text-right">
                       <p className="font-bold">{formatCurrency(comp.subtotal)}</p>
-                      {valores.subtotal > 0 && (
+                      {Number(valores.subtotal || 0) > 0 && (
                         <p className="text-xs text-muted-foreground">
-                          {((comp.subtotal / valores.subtotal) * 100).toFixed(1)}% do total
+                          {((Number(comp.subtotal || 0) / Number(valores.subtotal)) * 100).toFixed(1)}% do total
                         </p>
                       )}
                     </div>
@@ -331,9 +331,9 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
             </div>
             <div className="flex justify-between items-center">
               <Label className="text-muted-foreground">
-                Tributos ({orcamento.tributos?.aliquotaSimples?.toFixed(1) ?? 0}%
+                Tributos ({Number(orcamento.tributos?.aliquotaSimples || 0).toFixed(1)}%
                 {orcamento.tributos?.temISS
-                  ? ` + ISS ${orcamento.tributos.aliquotaISS?.toFixed(1)}%`
+                  ? ` + ISS ${Number(orcamento.tributos?.aliquotaISS || 0).toFixed(1)}%`
                   : ''}
                 )
               </Label>
@@ -386,20 +386,20 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
                 {formatCurrency(dre.lucroBruto)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Margem: {dre.margemBruta.toFixed(1)}%
+                Margem: {Number(dre.margemBruta || 0).toFixed(1)}%
               </p>
             </div>
             <div>
               <Label className="text-muted-foreground">Lucro Líquido</Label>
               <p
                 className={`text-2xl font-bold mt-1 ${
-                  dre.lucroLiquido < 0 ? 'text-red-600' : 'text-green-600'
+                  Number(dre.lucroLiquido || 0) < 0 ? 'text-red-600' : 'text-green-600'
                 }`}
               >
                 {formatCurrency(dre.lucroLiquido)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Margem: {dre.margemLiquida.toFixed(1)}%
+                Margem: {Number(dre.margemLiquida || 0).toFixed(1)}%
               </p>
             </div>
           </div>
@@ -411,30 +411,30 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Margem Bruta</span>
-                <span className="font-bold">{dre.margemBruta.toFixed(1)}%</span>
+                <span className="font-bold">{Number(dre.margemBruta || 0).toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
                   className="bg-blue-500 h-2 rounded-full transition-all"
-                  style={{ width: `${Math.max(0, Math.min(dre.margemBruta, 100))}%` }}
+                  style={{ width: `${Math.max(0, Math.min(Number(dre.margemBruta || 0), 100))}%` }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Margem Líquida</span>
-                <span className="font-bold">{dre.margemLiquida.toFixed(1)}%</span>
+                <span className="font-bold">{Number(dre.margemLiquida || 0).toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all ${
-                    dre.margemLiquida < 0
+                    Number(dre.margemLiquida || 0) < 0
                       ? 'bg-red-500'
-                      : dre.margemLiquida < 5
+                      : Number(dre.margemLiquida || 0) < 5
                       ? 'bg-yellow-500'
                       : 'bg-green-500'
                   }`}
-                  style={{ width: `${Math.max(0, Math.min(dre.margemLiquida, 100))}%` }}
+                  style={{ width: `${Math.max(0, Math.min(Number(dre.margemLiquida || 0), 100))}%` }}
                 />
               </div>
             </div>
@@ -480,7 +480,7 @@ export default function AbaQQP({ orcamento, onNavigateToAba }: AbaQQPProps) {
               <div>
                 <p className="font-semibold">Orçamento Viável</p>
                 <p className="text-sm text-muted-foreground">
-                  Margem líquida de {dre.margemLiquida.toFixed(1)}% dentro dos parâmetros ideais.
+                  Margem líquida de {Number(dre.margemLiquida || 0).toFixed(1)}% dentro dos parâmetros ideais.
                 </p>
               </div>
             </div>

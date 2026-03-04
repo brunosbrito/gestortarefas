@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Layout from '@/components/Layout';
 import { AtividadesTableContent } from '@/components/atividade/AtividadesTableContent';
 import { AtividadeFiltrosComponent, GanttGroupBy } from '@/components/atividade/AtividadeFiltros';
 import { GanttChart } from '@/components/gantt';
@@ -24,8 +23,7 @@ const Atividade = () => {
   } = useAtividadeData();
 
   return (
-    <Layout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
           <ClipboardList className="w-8 h-8 text-primary" />
@@ -87,8 +85,7 @@ const Atividade = () => {
             )}
           </TabsContent>
         </Tabs>
-      </div>
-    </Layout>
+    </div>
   );
 };
 

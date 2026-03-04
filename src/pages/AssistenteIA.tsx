@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { openaiService } from '@/services/OpenAIService';
 import { toast } from '@/hooks/use-toast';
-import Layout from '@/components/Layout';
 import { useUser } from '@/components/layout/useUser';
 
 export interface ChatMessage {
@@ -157,8 +156,7 @@ function AssistenteIA() {
   const isConfigured = apiKey && assistantId;
 
   return (
-    <Layout>
-      <div className="h-[calc(100vh-8rem)] flex flex-col max-w-6xl mx-auto">
+    <div className="h-[calc(100vh-8rem)] flex flex-col max-w-6xl mx-auto">
         {/* Header fixo */}
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -328,7 +326,6 @@ function AssistenteIA() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
   );
 }
 

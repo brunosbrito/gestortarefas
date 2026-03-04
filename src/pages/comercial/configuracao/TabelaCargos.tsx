@@ -36,7 +36,6 @@ import { formatCurrency, formatPercentage } from '@/lib/currency';
 import CargoFormDialog from './CargoFormDialog';
 import CriarVariacoesDialog from './CriarVariacoesDialog';
 import PopularCargosButton from './PopularCargosButton';
-import Layout from '@/components/Layout';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -239,19 +238,16 @@ const TabelaCargos = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -856,7 +852,6 @@ const TabelaCargos = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </Layout>
   );
 };
 
