@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Package, Plus, Scissors, Edit2, Save, X, Trash2, Upload, Download,
-  TrendingUp, Check, Edit, AlertCircle, ArrowUp, ArrowDown,
+  TrendingUp, Check, Edit, AlertCircle, ArrowUp, ArrowDown, Database,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,10 +23,11 @@ import { normalizarDescricao } from '@/lib/textUtils';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import OrcamentoService from '@/services/OrcamentoService';
-import { getTodosOsMateriais } from '@/data/catalogoMateriais';
-import { MaterialCategoria } from '@/interfaces/MaterialCatalogoInterface';
+import MaterialCatalogoService from '@/services/MaterialCatalogoService';
+import { MaterialCatalogoInterface, MaterialCategoria } from '@/interfaces/MaterialCatalogoInterface';
 import { useTableSort, SortableTableHeader } from '@/components/tables/SortableTableHeader';
 import ExportarComposicaoButton from './ExportarComposicaoButton';
+import SelecionarCatalogoDialog, { CatalogoItemGenerico } from './SelecionarCatalogoDialog';
 
 interface AbaMateriaisProps {
   orcamento: Orcamento;
@@ -106,8 +107,21 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
   const [importDados, setImportDados] = useState<RowMaterial[]>([]);
   const [importErros, setImportErros] = useState<string[]>([]);
 
-  // Catálogo local (dado estático, sempre disponível sem API)
-  const catalogoLocal = useMemo(() => getTodosOsMateriais(), []);
+  // Catálogo carregado da API
+  const [catalogoLocal, setCatalogoLocal] = useState<MaterialCatalogoInterface[]>([]);
+
+  const carregarCatalogo = useCallback(async () => {
+    try {
+      const data = await MaterialCatalogoService.listar({ ativo: true });
+      setCatalogoLocal(data);
+    } catch (error) {
+      console.error('Erro ao carregar catálogo:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarCatalogo();
+  }, [carregarCatalogo]);
 
   // Reajuste
   const [reajusteDialogAberto, setReajusteDialogAberto] = useState(false);
@@ -126,7 +140,9 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
     setRows(composicaoMateriais.itens.map(parseItemMaterial));
   }, [composicaoMateriais]);
 
-  // ---- lookup catálogo por código ----
+  // ---- dialog catálogo ----
+  const [dialogCatalogoAberto, setDialogCatalogoAberto] = useState(false);
+
   const getNormaMaterial = (categoria: MaterialCategoria): string => {
     switch (categoria) {
       case MaterialCategoria.PARAFUSO_A307: return 'ASTM A 307';
@@ -140,55 +156,67 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
     }
   };
 
-  const handleCodigoBlur = (localId: string, codigo: string) => {
-    if (!codigo.trim()) return;
-    const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '').replace(',', '.');
-    const match = catalogoLocal.find((m) => normalize(m.codigo) === normalize(codigo));
-    if (!match) return;
-    const isMetro = match.unidade === 'm' || match.unidade === 'ml';
-    setRows((prev) =>
-      prev.map((r) => {
-        if (r._localId !== localId) return r;
-        return {
-          ...r,
-          descricao: r.descricao || match.descricao,
-          material: r.material || getNormaMaterial(match.categoria),
-          unidade: match.unidade || r.unidade,
-          peso: (r.peso === '' || Number(r.peso) === 0) ? (match.pesoNominal ?? '') : r.peso,
-          valorUnitario: (r.valorUnitario === '' || Number(r.valorUnitario) === 0)
-            ? (isMetro ? (match.precoKg ?? match.precoUnitario) : match.precoUnitario)
-            : r.valorUnitario,
-        };
-      })
-    );
-  };
+  const catalogoParaDialog: CatalogoItemGenerico[] = useMemo(() =>
+    catalogoLocal.map((m) => {
+      const isMetro = m.unidade === 'm' || m.unidade === 'ml';
+      return {
+        id: m.id ?? m.codigo,
+        codigo: m.codigo,
+        descricao: m.descricao,
+        unidade: m.unidade,
+        valorUnitario: isMetro ? (m.precoKg ?? m.precoUnitario) : m.precoUnitario,
+        categoria: m.categoria,
+        material: getNormaMaterial(m.categoria),
+        peso: m.pesoNominal,
+      };
+    }),
+    [catalogoLocal]
+  );
 
-  const handleDescricaoBlur = (localId: string, descricao: string) => {
-    if (!descricao.trim()) return;
-    const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-    const match = catalogoLocal.find((m) => normalize(m.descricao) === normalize(descricao));
-    if (!match) return;
-    const isMetro = match.unidade === 'm' || match.unidade === 'ml';
-    setRows((prev) =>
-      prev.map((r) => {
-        if (r._localId !== localId) return r;
-        return {
-          ...r,
-          codigo: r.codigo || match.codigo,
-          material: r.material || getNormaMaterial(match.categoria),
-          unidade: match.unidade || r.unidade,
-          peso: (r.peso === '' || Number(r.peso) === 0) ? (match.pesoNominal ?? '') : r.peso,
-          valorUnitario: (r.valorUnitario === '' || Number(r.valorUnitario) === 0)
-            ? (isMetro ? (match.precoKg ?? match.precoUnitario) : match.precoUnitario)
-            : r.valorUnitario,
-        };
-      })
-    );
+  const categoriasUnicas = useMemo(() =>
+    [...new Set(catalogoLocal.map((m) => m.categoria))].sort(),
+    [catalogoLocal]
+  );
+
+  const handleAdicionarDoCatalogo = (items: CatalogoItemGenerico[]) => {
+    const novasLinhas: RowMaterial[] = items.map((item) => ({
+      _localId: `cat-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      codigo: item.codigo,
+      descricao: item.descricao,
+      material: item.material || '',
+      quantidade: '',
+      unidade: item.unidade,
+      peso: item.peso ?? '',
+      valorUnitario: item.valorUnitario,
+    }));
+    setRows((prev) => [...prev, ...novasLinhas]);
   };
 
   // ---- field handlers ----
   const handleField = <K extends keyof RowMaterial>(localId: string, field: K, value: RowMaterial[K]) =>
     setRows((prev) => prev.map((r) => (r._localId === localId ? { ...r, [field]: value } : r)));
+
+  const handleCodigoBlur = (localId: string, codigo: string) => {
+    if (!codigo.trim() || !catalogoLocal.length) return;
+    const norm = codigo.trim().toLowerCase();
+    const found = catalogoLocal.find((m) => m.codigo.toLowerCase() === norm);
+    if (found) {
+      const isMetro = found.unidade === 'm' || found.unidade === 'ml';
+      setRows((prev) => prev.map((r) =>
+        r._localId === localId
+          ? {
+              ...r,
+              codigo: found.codigo,
+              descricao: found.descricao,
+              unidade: found.unidade,
+              valorUnitario: isMetro ? (found.precoKg ?? found.precoUnitario) : found.precoUnitario,
+              material: getNormaMaterial(found.categoria),
+              peso: found.pesoNominal ?? '',
+            }
+          : r,
+      ));
+    }
+  };
 
   const handleAddRow = () => setRows((prev) => [...prev, newRowMaterial()]);
   const handleRemoveRow = (localId: string) => setRows((prev) => prev.filter((r) => r._localId !== localId));
@@ -515,17 +543,6 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
   // ==========================================
   const renderEdit = () => (
     <div className="border rounded-lg overflow-x-auto">
-      {/* Datalists para autocomplete nativo */}
-      <datalist id="mat-catalogo-codigos">
-        {catalogoLocal.map((m) => (
-          <option key={m.codigo} value={m.codigo}>{m.descricao}</option>
-        ))}
-      </datalist>
-      <datalist id="mat-catalogo-descricoes">
-        {catalogoLocal.map((m, i) => (
-          <option key={i} value={m.descricao} />
-        ))}
-      </datalist>
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
@@ -555,8 +572,6 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
                   onBlur={(e) => handleCodigoBlur(r._localId, e.target.value)}
                   placeholder="MAT-001"
                   disabled={salvando}
-                  title="Digite o código e saia do campo para buscar no catálogo"
-                  list="mat-catalogo-codigos"
                 />
               </TableCell>
 
@@ -566,10 +581,8 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
                   className="h-8 text-sm"
                   value={r.descricao}
                   onChange={(e) => handleField(r._localId, 'descricao', e.target.value)}
-                  onBlur={(e) => handleDescricaoBlur(r._localId, e.target.value)}
                   placeholder="Descrição..."
                   disabled={salvando}
-                  list="mat-catalogo-descricoes"
                 />
               </TableCell>
 
@@ -753,6 +766,16 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
 
               {editMode && (
                 <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDialogCatalogoAberto(true)}
+                    disabled={salvando}
+                    title="Selecionar materiais do catálogo"
+                  >
+                    <Database className="mr-2 h-4 w-4" />
+                    Adicionar do Catálogo
+                  </Button>
                   <Button size="sm" variant="outline" onClick={handleAddRow} disabled={salvando}>
                     <Plus className="mr-2 h-4 w-4" />
                     Linha
@@ -940,6 +963,16 @@ export default function AbaMateriais({ orcamento, onUpdate }: AbaMateriaisProps)
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Catálogo */}
+      <SelecionarCatalogoDialog
+        open={dialogCatalogoAberto}
+        onOpenChange={setDialogCatalogoAberto}
+        items={catalogoParaDialog}
+        onSelecionar={handleAdicionarDoCatalogo}
+        titulo="Catálogo de Materiais"
+        categorias={categoriasUnicas}
+      />
 
       {/* Dialog Reajuste */}
       <Dialog open={reajusteDialogAberto} onOpenChange={setReajusteDialogAberto}>

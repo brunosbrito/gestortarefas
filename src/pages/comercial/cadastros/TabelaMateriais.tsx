@@ -324,21 +324,6 @@ const TabelaMateriais = () => {
                   <Download className="h-4 w-4 mr-2" />
                   Exportar
                 </Button>
-                {/* Botão temporário: Limpar localStorage */}
-                {materiais.length > 0 && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      localStorage.removeItem('materiais-catalogo-local');
-                      window.location.reload();
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Limpar Todos
-                  </Button>
-                )}
-                {/* Botão temporário sempre visível para repopular com IDs corretos */}
                 <PopularMateriaisButton onComplete={carregarMateriais} />
                 <Button onClick={() => { setMaterialSelecionado(null); setDialogAberto(true); }}>
                   <Plus className="h-4 w-4 mr-2" />

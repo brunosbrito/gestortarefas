@@ -19,9 +19,10 @@ export interface Orcamento {
   // Composições de custos (core do orçamento)
   composicoes: ComposicaoCustos[];
 
-  // Configurações gerais (BDI, Tributos, Encargos)
+  // Configurações gerais (BDI, Lucro, Tributos, Encargos)
   configuracoes: {
     bdi: number;                     // Padrão: 0.25 (25%) - TOTAL CALCULADO
+    lucro: number;                   // Padrão: 0.20 (20%) - Lucro separado do BDI
     tributos: {
       iss: number;                   // Padrão: 0.03 (3%)
       simples: number;               // Padrão: 0.118 (11.8%)
@@ -33,12 +34,12 @@ export interface Orcamento {
   // Configurações detalhadas (opcional - para checkboxes e componentes individuais)
   configuracoesDetalhadas?: {
     bdi: {
-      lucro: { percentual: number; habilitado: boolean; };
       admCentral: { percentual: number; habilitado: boolean; };
       admLocal: { percentual: number; habilitado: boolean; };
       seguro: { percentual: number; habilitado: boolean; };
       despesasGerais: { percentual: number; habilitado: boolean; };
     };
+    lucro: { percentual: number; habilitado: boolean; };
     faixaSimples: number;            // Faixa atual (1-6)
     encargos: {
       grupoA: { fgts: { percentual: number; habilitado: boolean; }; };
@@ -92,6 +93,8 @@ export interface Orcamento {
   custoDirectoTotal: number;
   bdiTotal: number;
   subtotal: number;                  // custoDirecto + BDI
+  lucroTotal: number;                // Lucro sobre subtotal (separado do BDI)
+  precoBase: number;                 // subtotal + lucro
   tributosTotal: number;
   totalVenda: number;
 
@@ -120,7 +123,7 @@ export interface ComposicaoCustos {
   orcamentoId: string;
   nome: string;                      // "Mobilização Padrão", "MO Fabricação"
   tipo: 'mobilizacao' | 'desmobilizacao' | 'mo_fabricacao' | 'mo_montagem' | 'mo_terceirizados' |
-        'jato_pintura' | 'ferramentas' | 'ferramentas_eletricas' | 'consumiveis' | 'materiais';
+        'jato_pintura' | 'tintas' | 'ferramentas' | 'ferramentas_eletricas' | 'consumiveis' | 'materiais';
 
   // Itens da composição (materiais, mão de obra, etc.)
   itens: ItemComposicao[];

@@ -1,24 +1,14 @@
-import { useState } from 'react';
-import { Truck, ClipboardList, Database, Plus } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Truck, Database, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Orcamento, ComposicaoCustos, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import { TipoMobilizacao } from '@/interfaces/MobilizacaoInterface';
 import OrcamentoService from '@/services/OrcamentoService';
 import MobilizacaoService from '@/services/MobilizacaoService';
 import ComposicaoGenericaTable from './ComposicaoGenericaTable';
 import MobilizacaoFormDialog from '@/components/comercial/cadastros/mobilizacao/MobilizacaoFormDialog';
-import { templateMobDesmob, TemplateMobDesmobItem } from '@/data/mockMobDesmobDefault';
+import SelecionarCatalogoDialog, { CatalogoItemGenerico } from './SelecionarCatalogoDialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface AbaMobDesmobProps {
@@ -27,29 +17,6 @@ interface AbaMobDesmobProps {
 }
 
 type TipoCard = 'mobilizacao' | 'desmobilizacao';
-type AcaoCarregamento = 'template' | 'catalogo';
-
-interface EstadoCarregamento {
-  tipo: TipoCard;
-  acao: AcaoCarregamento;
-}
-
-const buildItensTemplate = (
-  composicaoId: string,
-  template: TemplateMobDesmobItem[]
-): ItemComposicao[] =>
-  template.map((item, index) => ({
-    id: `tmpl-${composicaoId}-${index}-${Date.now()}`,
-    composicaoId,
-    descricao: item.descricao,
-    quantidade: item.quantidade,
-    unidade: item.unidade,
-    valorUnitario: item.valorUnitario,
-    subtotal: Math.round(item.quantidade * item.valorUnitario * 100) / 100,
-    percentual: 0,
-    tipoItem: 'outros' as const,
-    ordem: index + 1,
-  }));
 
 export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps) {
   const { toast } = useToast();
@@ -57,13 +24,41 @@ export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps)
   const composicaoMobilizacao = orcamento.composicoes.find((c) => c.tipo === 'mobilizacao');
   const composicaoDesmobilizacao = orcamento.composicoes.find((c) => c.tipo === 'desmobilizacao');
 
-  // Estado unificado para confirmação e carregamento
-  const [confirmando, setConfirmando] = useState<EstadoCarregamento | null>(null);
-  const [carregando, setCarregando] = useState<EstadoCarregamento | null>(null);
-
-  // Formulário inline de cadastro
   const [novoFormAberto, setNovoFormAberto] = useState(false);
   const [tipoNovoForm, setTipoNovoForm] = useState<TipoMobilizacao>(TipoMobilizacao.MOBILIZACAO);
+
+  const [dialogAberto, setDialogAberto] = useState(false);
+  const [dialogTipo, setDialogTipo] = useState<TipoCard>('mobilizacao');
+  const [catalogoMob, setCatalogoMob] = useState<CatalogoItemGenerico[]>([]);
+  const [catalogoDesmob, setCatalogoDesmob] = useState<CatalogoItemGenerico[]>([]);
+  const [carregandoCatalogo, setCarregandoCatalogo] = useState(false);
+
+  const carregarCatalogo = useCallback(async () => {
+    try {
+      setCarregandoCatalogo(true);
+      const [mob, desmob] = await Promise.all([
+        MobilizacaoService.getAll({ ativo: true, tipo: TipoMobilizacao.MOBILIZACAO }),
+        MobilizacaoService.getAll({ ativo: true, tipo: TipoMobilizacao.DESMOBILIZACAO }),
+      ]);
+      const mapItem = (item: any): CatalogoItemGenerico => ({
+        id: item.id,
+        codigo: item.codigo,
+        descricao: item.descricao,
+        unidade: item.unidade,
+        valorUnitario: item.precoUnitario,
+      });
+      setCatalogoMob(mob.map(mapItem));
+      setCatalogoDesmob(desmob.map(mapItem));
+    } catch {
+      console.error('Erro ao carregar catálogo de mobilização');
+    } finally {
+      setCarregandoCatalogo(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarCatalogo();
+  }, [carregarCatalogo]);
 
   const getComposicao = (tipo: TipoCard) =>
     tipo === 'mobilizacao' ? composicaoMobilizacao : composicaoDesmobilizacao;
@@ -79,78 +74,9 @@ export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps)
     onUpdate();
   };
 
-  // Solicita carregamento — exibe AlertDialog se o grid já tem itens
-  const solicitarCarregamento = (tipo: TipoCard, acao: AcaoCarregamento) => {
-    const composicao = getComposicao(tipo);
-    if ((composicao?.itens.length ?? 0) > 0) {
-      setConfirmando({ tipo, acao });
-    } else {
-      executarCarregamento(tipo, acao);
-    }
-  };
-
-  const executarCarregamento = async (tipo: TipoCard, acao: AcaoCarregamento) => {
-    const composicao = getComposicao(tipo);
-    if (!composicao) return;
-
-    const nomeAba = tipo === 'mobilizacao' ? 'Mobilização' : 'Desmobilização';
-
-    try {
-      setCarregando({ tipo, acao });
-
-      let novosItens: ItemComposicao[];
-
-      if (acao === 'template') {
-        novosItens = buildItensTemplate(composicao.id, templateMobDesmob);
-        toast({
-          title: 'Template carregado',
-          description: `${novosItens.length} itens carregados em ${nomeAba}`,
-        });
-      } else {
-        // Carregar do catálogo (MobilizacaoService — localStorage)
-        const tipoEnum =
-          tipo === 'mobilizacao' ? TipoMobilizacao.MOBILIZACAO : TipoMobilizacao.DESMOBILIZACAO;
-        const catalogo = await MobilizacaoService.getAll({ ativo: true, tipo: tipoEnum });
-
-        if (catalogo.length === 0) {
-          toast({
-            title: 'Catálogo vazio',
-            description: `Nenhum item de ${nomeAba} ativo encontrado. Cadastre itens no catálogo primeiro.`,
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        novosItens = catalogo.map((item, index) => ({
-          id: `cat-${composicao.id}-${item.id}-${Date.now()}`,
-          composicaoId: composicao.id,
-          codigo: item.codigo,
-          descricao: item.descricao,
-          quantidade: 1,
-          unidade: item.unidade,
-          valorUnitario: item.precoUnitario,
-          subtotal: item.precoUnitario,
-          percentual: 0,
-          tipoItem: 'outros' as const,
-          ordem: index + 1,
-        }));
-
-        toast({
-          title: 'Catálogo carregado',
-          description: `${novosItens.length} itens carregados em ${nomeAba}`,
-        });
-      }
-
-      await handleAtualizarComposicao({ ...composicao, itens: novosItens });
-    } catch {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os itens',
-        variant: 'destructive',
-      });
-    } finally {
-      setCarregando(null);
-    }
+  const abrirDialog = (tipo: TipoCard) => {
+    setDialogTipo(tipo);
+    setDialogAberto(true);
   };
 
   const abrirNovoForm = (tipo: TipoCard) => {
@@ -160,10 +86,46 @@ export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps)
     setNovoFormAberto(true);
   };
 
-  const isCarregando = (tipo: TipoCard, acao: AcaoCarregamento) =>
-    carregando?.tipo === tipo && carregando?.acao === acao;
+  const handleAdicionarDoCatalogo = async (items: CatalogoItemGenerico[]) => {
+    const composicao = getComposicao(dialogTipo);
+    if (!composicao) return;
 
-  // Reutilizável: botões do header de cada card
+    const nomeAba = dialogTipo === 'mobilizacao' ? 'Mobilização' : 'Desmobilização';
+
+    try {
+      const itensExistentes = composicao.itens;
+      const novosItens: ItemComposicao[] = items.map((item, index) => ({
+        id: `cat-${composicao.id}-${item.id}-${Date.now()}-${index}`,
+        composicaoId: composicao.id,
+        codigo: item.codigo,
+        descricao: item.descricao,
+        quantidade: 1,
+        unidade: item.unidade,
+        valorUnitario: item.valorUnitario,
+        subtotal: item.valorUnitario,
+        percentual: 0,
+        tipoItem: 'outros' as const,
+        ordem: itensExistentes.length + index + 1,
+      }));
+
+      await handleAtualizarComposicao({
+        ...composicao,
+        itens: [...itensExistentes, ...novosItens],
+      });
+
+      toast({
+        title: 'Itens adicionados',
+        description: `${novosItens.length} item(s) adicionado(s) em ${nomeAba}`,
+      });
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível adicionar os itens',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const BotoesCard = ({ tipo }: { tipo: TipoCard }) => (
     <div className="flex gap-2">
       <Button
@@ -178,29 +140,18 @@ export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps)
       <Button
         size="sm"
         variant="outline"
-        onClick={() => solicitarCarregamento(tipo, 'catalogo')}
-        disabled={!!carregando}
-        title="Carregar itens do catálogo de Mobilização/Desmobilização"
+        onClick={() => abrirDialog(tipo)}
+        disabled={!getComposicao(tipo)}
+        title="Selecionar itens do catálogo para adicionar"
       >
         <Database className="mr-2 h-4 w-4" />
-        {isCarregando(tipo, 'catalogo') ? 'Carregando...' : 'Carregar Catálogo'}
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => solicitarCarregamento(tipo, 'template')}
-        disabled={!!carregando || !getComposicao(tipo)}
-        title="Pré-carregar itens padrão da empresa"
-      >
-        <ClipboardList className="mr-2 h-4 w-4" />
-        {isCarregando(tipo, 'template') ? 'Carregando...' : 'Carregar Template'}
+        Adicionar do Catálogo
       </Button>
     </div>
   );
 
   return (
     <div className="space-y-6">
-      {/* Mobilização */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -221,11 +172,11 @@ export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps)
             quantidadeInteira
             mostrarQtdPeriodo
             labelQuantidade="Qtd Equip."
+            catalogoItems={catalogoMob}
           />
         </CardContent>
       </Card>
 
-      {/* Desmobilização */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -246,37 +197,20 @@ export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps)
             quantidadeInteira
             mostrarQtdPeriodo
             labelQuantidade="Qtd Equip."
+            catalogoItems={catalogoDesmob}
           />
         </CardContent>
       </Card>
 
-      {/* AlertDialog — confirmação de substituição */}
-      <AlertDialog open={!!confirmando} onOpenChange={() => setConfirmando(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Substituir itens existentes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              O grid já possui itens cadastrados. Carregar o{' '}
-              <strong>{confirmando?.acao === 'template' ? 'template' : 'catálogo'}</strong> irá{' '}
-              <strong>substituir todos os itens atuais</strong>. Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-amber-600 hover:bg-amber-700"
-              onClick={() => {
-                if (confirmando) executarCarregamento(confirmando.tipo, confirmando.acao);
-                setConfirmando(null);
-              }}
-            >
-              Substituir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SelecionarCatalogoDialog
+        open={dialogAberto}
+        onOpenChange={setDialogAberto}
+        items={dialogTipo === 'mobilizacao' ? catalogoMob : catalogoDesmob}
+        onSelecionar={handleAdicionarDoCatalogo}
+        titulo={`Catálogo de ${dialogTipo === 'mobilizacao' ? 'Mobilização' : 'Desmobilização'}`}
+        carregando={carregandoCatalogo}
+      />
 
-      {/* Formulário inline de cadastro no catálogo */}
       <MobilizacaoFormDialog
         open={novoFormAberto}
         onOpenChange={setNovoFormAberto}
@@ -285,8 +219,9 @@ export default function AbaMobDesmob({ orcamento, onUpdate }: AbaMobDesmobProps)
         onSalvar={() => {
           toast({
             title: 'Item cadastrado',
-            description: 'Item adicionado ao catálogo. Use "Carregar Catálogo" para incluí-lo neste orçamento.',
+            description: 'Item adicionado ao catálogo.',
           });
+          carregarCatalogo();
         }}
       />
     </div>

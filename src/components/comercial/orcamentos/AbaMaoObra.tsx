@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Users, Wrench, Plus, Save, X, Trash2, Edit2, UserPlus, Check, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,17 +14,18 @@ import {
 } from '@/components/ui/select';
 import { Orcamento, ComposicaoCustos, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import {
-  FornecedorServicoInterface,
-  CategoriaFornecedorLabels,
-  CategoriaFornecedorColors,
+  FornecedorInterface,
+  TipoFornecedorLabels,
+  TipoFornecedorColors,
+  getNomeFornecedor,
 } from '@/interfaces/FornecedorServicoInterface';
 import OrcamentoService from '@/services/OrcamentoService';
+import FornecedorService from '@/services/FornecedorServicoService';
 import AbaMaoObraGrid from './AbaMaoObraGrid';
 import { formatCurrency } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
 import ExportarComposicaoButton from './ExportarComposicaoButton';
 import ExportarAbaCompletaButton from './ExportarAbaCompletaButton';
-import { mockFornecedores } from '@/data/mockTintas';
 import FormularioFornecedor from '@/components/gerenciamento/fornecedores/FormularioFornecedor';
 
 // ---- tipos locais ----
@@ -96,23 +97,28 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
 
   // Cadastrar novo fornecedor inline
   const [formFornecedorAberto, setFormFornecedorAberto] = useState(false);
-  const [catalogoKey, setCatalogoKey] = useState(0); // força re-render do catálogo
+
+  // Catálogo de fornecedores (API)
+  const [catalogoFornecedores, setCatalogoFornecedores] = useState<FornecedorInterface[]>([]);
+
+  const carregarFornecedores = useCallback(async () => {
+    try {
+      const data = await FornecedorService.listar({ ativo: true });
+      setCatalogoFornecedores(data);
+    } catch (error) {
+      console.error('Erro ao carregar fornecedores:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarFornecedores();
+  }, [carregarFornecedores]);
 
   // Sync rows quando composição muda
   useEffect(() => {
     if (!moTerceirizados) { setRows([]); return; }
     setRows(moTerceirizados.itens.map(parseTerceirizadoItem));
   }, [moTerceirizados]);
-
-  // Catálogo de fornecedores
-  const catalogoFornecedores = useMemo((): FornecedorServicoInterface[] => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem('fornecedores_locais') || '[]');
-      const locais = Array.isArray(parsed) ? parsed as FornecedorServicoInterface[] : [];
-      return [...mockFornecedores, ...locais.filter((f) => f.ativo !== false)];
-    } catch { return [...mockFornecedores]; }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [catalogoKey]);
 
   const handleAtualizarComposicao = async (composicaoAtualizada: ComposicaoCustos) => {
     const updatedOrcamento = {
@@ -143,21 +149,20 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
     const forn = catalogoFornecedores.find((f) => String(f.id) === fornecedorId);
     setRows((prev) => prev.map((r) =>
       r._localId === localId
-        ? { ...r, fornecedorId, fornecedorNome: forn?.nome || '' }
+        ? { ...r, fornecedorId, fornecedorNome: forn ? getNomeFornecedor(forn) : '' }
         : r
     ));
   };
 
-  const handleNovoFornecedorSalvo = (novo?: FornecedorServicoInterface) => {
-    setCatalogoKey((k) => k + 1); // força recarga do catálogo
+  const handleNovoFornecedorSalvo = (novo?: FornecedorInterface) => {
+    carregarFornecedores();
     if (novo) {
-      // Se há linha em edição sem fornecedor, auto-seleciona o novo
       setRows((prev) => {
         const semFornecedor = prev.find((r) => !r.fornecedorId);
         if (!semFornecedor) return prev;
         return prev.map((r) =>
           r._localId === semFornecedor._localId
-            ? { ...r, fornecedorId: String(novo.id), fornecedorNome: novo.nome }
+            ? { ...r, fornecedorId: String(novo.id), fornecedorNome: getNomeFornecedor(novo) }
             : r
         );
       });
@@ -201,7 +206,6 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
 
   // ---- save ----
   const handleSave = async () => {
-    // Retrocompatibilidade: cria a composição se não existir no orçamento
     const composicaoBase: ComposicaoCustos = moTerceirizados ?? {
       id: `comp-${orcamento.id}-terceirizados`,
       orcamentoId: orcamento.id,
@@ -251,7 +255,6 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
 
       const composicaoAtualizada = { ...composicaoBase, itens: novosItens };
 
-      // Se a composição já existia: atualiza no lugar. Se não: append ao final.
       const novasComposicoes = moTerceirizados
         ? orcamento.composicoes.map((c) => c.id === composicaoBase.id ? composicaoAtualizada : c)
         : [...orcamento.composicoes, composicaoAtualizada];
@@ -271,6 +274,9 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
 
   // ---- totais ----
   const totalSubtotal = rows.reduce((acc, r) => acc + calcSubtotalTerceirizado(r), 0);
+  const bdiPercentualTerc = moTerceirizados?.bdi?.percentual ?? 0;
+  const bdiValorTerc = Math.round(totalSubtotal * (bdiPercentualTerc / 100) * 100) / 100;
+  const totalComBDITerc = Math.round((totalSubtotal + bdiValorTerc) * 100) / 100;
 
   // ---- render terceirizados view ----
   const renderView = () => {
@@ -362,14 +368,10 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
                     {catalogoFornecedores.map((f) => (
                       <SelectItem key={f.id} value={String(f.id)} className="text-xs">
                         <div className="flex items-center gap-1">
-                          <span>{f.nome}</span>
-                          <div className="flex gap-1">
-                            {(f.categorias || []).slice(0, 2).map((cat) => (
-                              <span key={cat} className={`text-xs px-1 rounded ${CategoriaFornecedorColors[cat]}`}>
-                                {CategoriaFornecedorLabels[cat]}
-                              </span>
-                            ))}
-                          </div>
+                          <span>{getNomeFornecedor(f)}</span>
+                          <span className={`text-xs px-1 rounded ${TipoFornecedorColors[f.tipo]}`}>
+                            {TipoFornecedorLabels[f.tipo]}
+                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -665,16 +667,16 @@ export default function AbaMaoObra({ orcamento, onUpdate }: AbaMaoObraProps) {
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-xl font-bold text-blue-600">
-                        {formatCurrency(moTerceirizados?.bdi?.valor ?? 0)}
+                        {formatCurrency(bdiValorTerc)}
                       </p>
-                      <span className="text-sm text-muted-foreground">({moTerceirizados?.bdi?.percentual ?? 20}%)</span>
+                      <span className="text-sm text-muted-foreground">({bdiPercentualTerc}%)</span>
                     </div>
                   )}
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Total c/ BDI</Label>
                   <p className="text-xl font-bold text-amber-600">
-                    {formatCurrency(moTerceirizados?.subtotal ?? totalSubtotal)}
+                    {formatCurrency(totalComBDITerc)}
                   </p>
                 </div>
               </div>

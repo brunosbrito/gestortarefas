@@ -162,13 +162,8 @@ export const navItems: MenuItem[] = [
           },
           {
             icon: Truck,
-            label: 'Mobilização',
+            label: 'Mob / Desmob',
             path: '/comercial/cadastros/mobilizacao',
-          },
-          {
-            icon: Truck,
-            label: 'Desmobilização',
-            path: '/comercial/cadastros/desmobilizacao',
           },
         ],
       },

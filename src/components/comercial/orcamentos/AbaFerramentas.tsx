@@ -1,56 +1,42 @@
-import { useState } from 'react';
-import { Wrench, Zap, ClipboardList } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Wrench, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Orcamento, ComposicaoCustos, ItemComposicao } from '@/interfaces/OrcamentoInterface';
+import { Orcamento, ComposicaoCustos } from '@/interfaces/OrcamentoInterface';
 import OrcamentoService from '@/services/OrcamentoService';
+import FerramentaService from '@/services/FerramentaService';
 import ComposicaoGenericaTable from './ComposicaoGenericaTable';
-import {
-  templateFerramentasManuais,
-  templateFerramentasEletricas,
-  TemplateItemFerramentas,
-} from '@/data/mockFerramentasDefault';
-import { useToast } from '@/hooks/use-toast';
 
 interface AbaFerramentasProps {
   orcamento: Orcamento;
   onUpdate: () => void;
 }
 
-const buildItens = (
-  composicaoId: string,
-  template: TemplateItemFerramentas[]
-): ItemComposicao[] =>
-  template.map((item, index) => ({
-    id: `tmpl-${composicaoId}-${index}-${Date.now()}`,
-    composicaoId,
-    descricao: item.descricao,
-    quantidade: item.quantidade,
-    unidade: item.unidade,
-    valorUnitario: item.valorUnitario,
-    subtotal: Math.round(item.quantidade * item.valorUnitario * 100) / 100,
-    percentual: 0,
-    tipoItem: 'ferramenta' as const,
-    ordem: index + 1,
-  }));
-
 export default function AbaFerramentas({ orcamento, onUpdate }: AbaFerramentasProps) {
-  const { toast } = useToast();
+  const [catalogoFerramentas, setCatalogoFerramentas] = useState<{ codigo: string; descricao: string; unidade: string; valorUnitario: number }[]>([]);
+
+  const carregarCatalogo = useCallback(async () => {
+    try {
+      const ferramentas = await FerramentaService.listar({ ativo: true });
+      setCatalogoFerramentas(
+        ferramentas.map((f: any) => ({
+          codigo: f.codigo,
+          descricao: f.descricao,
+          unidade: 'Mês',
+          valorUnitario: f.custoMensal || 0,
+        }))
+      );
+    } catch {
+      console.error('Erro ao carregar catálogo de ferramentas');
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarCatalogo();
+  }, [carregarCatalogo]);
 
   const composicaoManuais = orcamento.composicoes.find((c) => c.tipo === 'ferramentas');
   const composicaoEletricas = orcamento.composicoes.find((c) => c.tipo === 'ferramentas_eletricas');
 
-  // Retrocompatibilidade: cria composição elétrica on-the-fly se não existir
   const composicaoEletricasOuPadrao: ComposicaoCustos = composicaoEletricas ?? {
     id: `comp-${orcamento.id}-ferreletrica`,
     orcamentoId: orcamento.id,
@@ -64,11 +50,6 @@ export default function AbaFerramentas({ orcamento, onUpdate }: AbaFerramentasPr
     ordem: orcamento.composicoes.length + 1,
   };
 
-  // Confirmação antes de substituir itens existentes
-  const [confirmando, setConfirmando] = useState<'manuais' | 'eletricas' | null>(null);
-  const [carregando, setCarregando] = useState<'manuais' | 'eletricas' | null>(null);
-
-  // ---- handlers de atualização ----
   const handleAtualizarManuais = async (composicaoAtualizada: ComposicaoCustos) => {
     const updatedOrcamento = {
       ...orcamento,
@@ -90,71 +71,14 @@ export default function AbaFerramentas({ orcamento, onUpdate }: AbaFerramentasPr
     onUpdate();
   };
 
-  // ---- handlers de template ----
-  const solicitarTemplateManuais = () => {
-    if ((composicaoManuais?.itens.length ?? 0) > 0) {
-      setConfirmando('manuais');
-    } else {
-      aplicarTemplateManuais();
-    }
-  };
-
-  const solicitarTemplateEletricas = () => {
-    if ((composicaoEletricasOuPadrao.itens.length) > 0) {
-      setConfirmando('eletricas');
-    } else {
-      aplicarTemplateEletricas();
-    }
-  };
-
-  const aplicarTemplateManuais = async () => {
-    if (!composicaoManuais) return;
-    try {
-      setCarregando('manuais');
-      const novosItens = buildItens(composicaoManuais.id, templateFerramentasManuais);
-      await handleAtualizarManuais({ ...composicaoManuais, itens: novosItens });
-      toast({ title: 'Template carregado', description: `${novosItens.length} itens carregados em Ferramentas Manuais` });
-    } catch {
-      toast({ title: 'Erro', description: 'Não foi possível carregar o template', variant: 'destructive' });
-    } finally {
-      setCarregando(null);
-    }
-  };
-
-  const aplicarTemplateEletricas = async () => {
-    try {
-      setCarregando('eletricas');
-      const novosItens = buildItens(composicaoEletricasOuPadrao.id, templateFerramentasEletricas);
-      await handleAtualizarEletricas({ ...composicaoEletricasOuPadrao, itens: novosItens });
-      toast({ title: 'Template carregado', description: `${novosItens.length} itens carregados em Ferramentas Elétricas` });
-    } catch {
-      toast({ title: 'Erro', description: 'Não foi possível carregar o template', variant: 'destructive' });
-    } finally {
-      setCarregando(null);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Ferramentas Manuais */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Ferramentas Manuais
-            </CardTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={solicitarTemplateManuais}
-              disabled={carregando === 'manuais' || !composicaoManuais}
-              title="Pré-carregar itens padrão da empresa"
-            >
-              <ClipboardList className="mr-2 h-4 w-4" />
-              {carregando === 'manuais' ? 'Carregando...' : 'Carregar Template'}
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Wrench className="h-5 w-5" />
+            Ferramentas Manuais
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ComposicaoGenericaTable
@@ -168,29 +92,17 @@ export default function AbaFerramentas({ orcamento, onUpdate }: AbaFerramentasPr
             quantidadeInteira
             mostrarQtdPeriodo
             labelQuantidade="Qtd Equip."
+            catalogoItems={catalogoFerramentas}
           />
         </CardContent>
       </Card>
 
-      {/* Ferramentas Elétricas / Equipamentos */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-500" />
-              Ferramentas Elétricas / Equipamentos
-            </CardTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={solicitarTemplateEletricas}
-              disabled={carregando === 'eletricas'}
-              title="Pré-carregar itens padrão da empresa"
-            >
-              <ClipboardList className="mr-2 h-4 w-4" />
-              {carregando === 'eletricas' ? 'Carregando...' : 'Carregar Template'}
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-yellow-500" />
+            Ferramentas Elétricas / Equipamentos
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ComposicaoGenericaTable
@@ -204,36 +116,10 @@ export default function AbaFerramentas({ orcamento, onUpdate }: AbaFerramentasPr
             quantidadeInteira
             mostrarQtdPeriodo
             labelQuantidade="Qtd Equip."
+            catalogoItems={catalogoFerramentas}
           />
         </CardContent>
       </Card>
-
-      {/* AlertDialog — confirmação de substituição */}
-      <AlertDialog open={!!confirmando} onOpenChange={() => setConfirmando(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Substituir itens existentes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              O grid já possui itens cadastrados. Carregar o template irá{' '}
-              <strong>substituir todos os itens atuais</strong> pelos valores padrão.
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-amber-600 hover:bg-amber-700"
-              onClick={() => {
-                if (confirmando === 'manuais') aplicarTemplateManuais();
-                else if (confirmando === 'eletricas') aplicarTemplateEletricas();
-                setConfirmando(null);
-              }}
-            >
-              Substituir pelo Template
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

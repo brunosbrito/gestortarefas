@@ -15,24 +15,27 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import TintaService from '@/services/TintaService';
-import FornecedorServicoService from '@/services/FornecedorServicoService';
+import FornecedorService from '@/services/FornecedorServicoService';
 import ComposicaoPinturaService from '@/services/ComposicaoPinturaService';
 import { TintaInterface, TipoTinta } from '@/interfaces/TintaInterface';
-import { FornecedorServicoInterface } from '@/interfaces/FornecedorServicoInterface';
+import {
+  FornecedorInterface,
+  TipoFornecedor,
+  getNomeFornecedor,
+} from '@/interfaces/FornecedorServicoInterface';
 import {
   ComposicaoPinturaInterface,
   TipoGeometria,
   TipoGeometriaLabels,
 } from '@/interfaces/ComposicaoPinturaInterface';
 import { formatCurrency } from '@/lib/currency';
-import { mockTintas, mockFornecedores } from '@/data/mockTintas';
 
 const CalculadoraPintura = () => {
   const { toast } = useToast();
 
   // Listas
   const [tintas, setTintas] = useState<TintaInterface[]>([]);
-  const [fornecedores, setFornecedores] = useState<FornecedorServicoInterface[]>([]);
+  const [fornecedores, setFornecedores] = useState<FornecedorInterface[]>([]);
 
   // Inputs
   const [pesoKg, setPesoKg] = useState('');
@@ -56,6 +59,8 @@ const CalculadoraPintura = () => {
   // Thinner e Fornecedor
   const [thinnerPreco, setThinnerPreco] = useState('15.00');
   const [fornecedorId, setFornecedorId] = useState('');
+  const [valorJateamentoM2, setValorJateamentoM2] = useState('');
+  const [valorPinturaM2, setValorPinturaM2] = useState('');
 
   // Resultado
   const [resultado, setResultado] = useState<ComposicaoPinturaInterface | null>(null);
@@ -66,21 +71,13 @@ const CalculadoraPintura = () => {
 
   const carregarDados = async () => {
     try {
-      // USANDO DADOS MOCKADOS (remover quando backend estiver pronto)
-      // Carregar tintas mockadas + tintas cadastradas localmente
-      const tintasLocais = JSON.parse(localStorage.getItem('tintas_locais') || '[]');
-      const fornecedoresLocais = JSON.parse(localStorage.getItem('fornecedores_locais') || '[]');
+      // Tintas: carregar da API
+      const tintasData = await TintaService.listar({ ativo: true });
+      setTintas(tintasData);
 
-      setTintas([...mockTintas, ...tintasLocais]);
-      setFornecedores([...mockFornecedores, ...fornecedoresLocais]);
-
-      // VERSÃO COM API (descomentar quando backend estiver pronto)
-      // const [tintasData, fornecedoresData] = await Promise.all([
-      //   TintaService.listar({ ativo: true }),
-      //   FornecedorServicoService.listar({ ativo: true }),
-      // ]);
-      // setTintas(tintasData);
-      // setFornecedores(fornecedoresData);
+      // Fornecedores: usar API
+      const fornecedoresData = await FornecedorService.listar({ tipo: TipoFornecedor.SERVICO, ativo: true });
+      setFornecedores(fornecedoresData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast({
@@ -112,7 +109,6 @@ const CalculadoraPintura = () => {
         return;
       }
 
-      // USANDO DADOS MOCKADOS (remover quando backend estiver pronto)
       const primerTinta = usarPrimer && primerId
         ? tintas.find(t => t.id === Number(primerId))
         : undefined;
@@ -120,21 +116,6 @@ const CalculadoraPintura = () => {
       const acabamentoTinta = usarAcabamento && acabamentoId
         ? tintas.find(t => t.id === Number(acabamentoId))
         : undefined;
-
-      const fornecedor = fornecedorId && fornecedorId !== ''
-        ? fornecedores.find(f => f.id === Number(fornecedorId))
-        : undefined;
-
-      // VERSÃO COM API (descomentar quando backend estiver pronto)
-      // const primerTinta = usarPrimer && primerId
-      //   ? await TintaService.buscarPorId(Number(primerId))
-      //   : undefined;
-      // const acabamentoTinta = usarAcabamento && acabamentoId
-      //   ? await TintaService.buscarPorId(Number(acabamentoId))
-      //   : undefined;
-      // const fornecedor = fornecedorId && fornecedorId !== ''
-      //   ? await FornecedorServicoService.buscarPorId(Number(fornecedorId))
-      //   : undefined;
 
       // Montar input
       const input = {
@@ -153,12 +134,20 @@ const CalculadoraPintura = () => {
         fornecedorServicoId: fornecedorId ? Number(fornecedorId) : undefined,
       };
 
+      // Montar dados de MO com valores manuais
+      const dadosMO = fornecedorId && (valorJateamentoM2 || valorPinturaM2)
+        ? {
+            valorJateamentoM2: parseFloat(valorJateamentoM2) || 0,
+            valorPinturaM2: parseFloat(valorPinturaM2) || 0,
+          }
+        : undefined;
+
       // Calcular
       const resultadoCalculo = ComposicaoPinturaService.calcularComposicao(
         input,
         primerTinta,
         acabamentoTinta,
-        fornecedor
+        dadosMO
       );
 
       setResultado(resultadoCalculo);
@@ -266,7 +255,7 @@ const CalculadoraPintura = () => {
                   </Select>
                   {tipoGeometria !== 'chapa_plana' && (
                     <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                      ⚠️ Para perfis/estruturas, o cálculo de área é aproximado
+                      Para perfis/estruturas, o cálculo de área é aproximado
                     </p>
                   )}
                 </div>
@@ -410,13 +399,37 @@ const CalculadoraPintura = () => {
                       <SelectContent>
                         {fornecedores.map((f) => (
                           <SelectItem key={f.id} value={String(f.id)}>
-                            {f.nome}
+                            {getNomeFornecedor(f)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+                {fornecedorId && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Valor Jateamento (R$/m²)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={valorJateamentoM2}
+                        onChange={(e) => setValorJateamentoM2(e.target.value)}
+                        placeholder="Ex: 35.00"
+                      />
+                    </div>
+                    <div>
+                      <Label>Valor Pintura (R$/m²)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={valorPinturaM2}
+                        onChange={(e) => setValorPinturaM2(e.target.value)}
+                        placeholder="Ex: 42.00"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Button onClick={handleCalcular} className="w-full" size="lg">
@@ -450,32 +463,32 @@ const CalculadoraPintura = () => {
                     <h3 className="font-semibold text-sm">MATERIAIS</h3>
                     {resultado.primer && (
                       <div className="flex justify-between text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">
-                        <span>• Primer: {resultado.primer.litrosNecessarios.toFixed(1)} lt</span>
+                        <span>Primer: {resultado.primer.litrosNecessarios.toFixed(1)} lt</span>
                         <span className="font-medium">{formatCurrency(resultado.primer.custoTotal)}</span>
                       </div>
                     )}
                     {resultado.acabamento && (
                       <div className="flex justify-between text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">
-                        <span>• Acabamento: {resultado.acabamento.litrosNecessarios.toFixed(1)} lt</span>
+                        <span>Acabamento: {resultado.acabamento.litrosNecessarios.toFixed(1)} lt</span>
                         <span className="font-medium">{formatCurrency(resultado.acabamento.custoTotal)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">
-                      <span>• Thinner: {resultado.thinner.litros.toFixed(1)} lt (80%)</span>
+                      <span>Thinner: {resultado.thinner.litros.toFixed(1)} lt (80%)</span>
                       <span className="font-medium">{formatCurrency(resultado.thinner.custoTotal)}</span>
                     </div>
                   </div>
 
                   {/* Mão de Obra */}
-                  {resultado.fornecedorServico && (
+                  {resultado.custoTotalMO > 0 && (
                     <div className="space-y-2">
                       <h3 className="font-semibold text-sm">MÃO DE OBRA</h3>
                       <div className="flex justify-between text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">
-                        <span>• Jateamento: {resultado.areaM2.toFixed(2)} m²</span>
+                        <span>Jateamento: {resultado.areaM2.toFixed(2)} m²</span>
                         <span className="font-medium">{formatCurrency(resultado.custoJateamento)}</span>
                       </div>
                       <div className="flex justify-between text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">
-                        <span>• Pintura: {resultado.areaM2.toFixed(2)} m²</span>
+                        <span>Pintura: {resultado.areaM2.toFixed(2)} m²</span>
                         <span className="font-medium">{formatCurrency(resultado.custoPintura)}</span>
                       </div>
                     </div>

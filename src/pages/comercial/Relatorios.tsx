@@ -14,6 +14,7 @@ import {
   Printer,
   Filter,
   RefreshCw,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import RelatorioComercialService from '@/services/RelatorioComercialService';
 
 const RelatoriosPage = () => {
   const navigate = useNavigate();
@@ -36,12 +38,54 @@ const RelatoriosPage = () => {
   const [periodo, setPeriodo] = useState('mes_atual');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
+  const [loading, setLoading] = useState<string | null>(null);
 
-  const handleGerarRelatorio = (tipo: string) => {
-    toast({
-      title: 'Gerando relatório...',
-      description: `Relatório de ${tipo} será gerado em breve`,
-    });
+  const executar = async (id: string, fn: () => Promise<void>) => {
+    setLoading(id);
+    try {
+      await fn();
+      toast({ title: 'Relatório gerado com sucesso!' });
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao gerar relatório',
+        description: err?.message || 'Verifique se há dados cadastrados',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  // Mapeamento de ações para cada relatório
+  const handleAcao = (relatorioId: string, acaoIdx: number) => {
+    switch (relatorioId) {
+      case 'materiais':
+        if (acaoIdx === 0) executar('materiais-pdf', () => RelatorioComercialService.gerarCatalogoMateriaisPDF());
+        else if (acaoIdx === 1) executar('materiais-excel', () => RelatorioComercialService.gerarCatalogoMateriaisExcel());
+        else if (acaoIdx === 2) executar('materiais-resumo', () => RelatorioComercialService.gerarCatalogoMateriaisPDFResumido());
+        break;
+      case 'tintas':
+        if (acaoIdx === 0) executar('tintas-pdf', () => RelatorioComercialService.gerarEspecificacoesTintasPDF());
+        else if (acaoIdx === 1) executar('tintas-excel', () => RelatorioComercialService.gerarEspecificacoesTintasExcel());
+        break;
+      case 'lista-corte':
+        if (acaoIdx === 0) navigate('/comercial/orcamentos/lista-corte');
+        else navigate('/comercial/orcamentos/lista-corte');
+        break;
+      case 'orcamentos':
+        if (acaoIdx === 0) executar('orc-pdf', () => RelatorioComercialService.gerarAnaliseOrcamentosPDF());
+        else if (acaoIdx === 1) executar('orc-excel', () => RelatorioComercialService.gerarAnaliseOrcamentosExcel());
+        break;
+      case 'financeiro':
+        if (acaoIdx === 0) executar('fin-pdf', () => RelatorioComercialService.gerarResumoFinanceiroPDF());
+        else if (acaoIdx === 1) executar('fin-pdf2', () => RelatorioComercialService.gerarResumoFinanceiroPDF());
+        else if (acaoIdx === 2) executar('fin-excel', () => RelatorioComercialService.gerarResumoFinanceiroExcel());
+        break;
+      case 'consumiveis':
+        if (acaoIdx === 0) executar('abc-pdf', () => RelatorioComercialService.gerarCurvaABCPDF());
+        else if (acaoIdx === 1) executar('abc-excel', () => RelatorioComercialService.gerarCurvaABCExcel());
+        break;
+    }
   };
 
   const relatorios = [
@@ -50,7 +94,6 @@ const RelatoriosPage = () => {
       titulo: 'Catálogo de Materiais',
       descricao: 'Listagem completa de materiais cadastrados com preços e fornecedores',
       icon: Package,
-      color: 'blue',
       bgColor: 'bg-blue-50 dark:bg-blue-950/40',
       iconColor: 'text-blue-600 dark:text-blue-400',
       borderColor: 'border-blue-200 dark:border-blue-800',
@@ -65,7 +108,6 @@ const RelatoriosPage = () => {
       titulo: 'Especificações de Tintas',
       descricao: 'Catálogo de tintas com rendimentos, preços e especificações técnicas',
       icon: Palette,
-      color: 'purple',
       bgColor: 'bg-purple-50 dark:bg-purple-950/40',
       iconColor: 'text-purple-600 dark:text-purple-400',
       borderColor: 'border-purple-200 dark:border-purple-800',
@@ -79,7 +121,6 @@ const RelatoriosPage = () => {
       titulo: 'Lista de Corte',
       descricao: 'Mapas de corte otimizados por orçamento ou período',
       icon: Scissors,
-      color: 'indigo',
       bgColor: 'bg-indigo-50 dark:bg-indigo-950/40',
       iconColor: 'text-indigo-600 dark:text-indigo-400',
       borderColor: 'border-indigo-200 dark:border-indigo-800',
@@ -94,7 +135,6 @@ const RelatoriosPage = () => {
       titulo: 'Análise de Orçamentos',
       descricao: 'Comparação entre orçamentos com métricas de DRE e margem',
       icon: TrendingUp,
-      color: 'green',
       bgColor: 'bg-green-50 dark:bg-green-950/40',
       iconColor: 'text-green-600 dark:text-green-400',
       borderColor: 'border-green-200 dark:border-green-800',
@@ -108,7 +148,6 @@ const RelatoriosPage = () => {
       titulo: 'Resumo Financeiro',
       descricao: 'Análise de propostas aprovadas, em análise e valores totais',
       icon: DollarSign,
-      color: 'emerald',
       bgColor: 'bg-emerald-50 dark:bg-emerald-950/40',
       iconColor: 'text-emerald-600 dark:text-emerald-400',
       borderColor: 'border-emerald-200 dark:border-emerald-800',
@@ -123,7 +162,6 @@ const RelatoriosPage = () => {
       titulo: 'Curva ABC Consumíveis',
       descricao: 'Análise ABC de consumíveis com valores e percentuais',
       icon: FileBarChart,
-      color: 'orange',
       bgColor: 'bg-orange-50 dark:bg-orange-950/40',
       iconColor: 'text-orange-600 dark:text-orange-400',
       borderColor: 'border-orange-200 dark:border-orange-800',
@@ -240,15 +278,14 @@ const RelatoriosPage = () => {
                       key={idx}
                       variant="outline"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (relatorio.link && idx === 0) {
-                          navigate(relatorio.link);
-                        } else {
-                          handleGerarRelatorio(relatorio.titulo);
-                        }
-                      }}
+                      disabled={loading !== null}
+                      onClick={() => handleAcao(relatorio.id, idx)}
                     >
-                      <acao.icon className="h-4 w-4 mr-2" />
+                      {loading && loading.startsWith(relatorio.id) ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <acao.icon className="h-4 w-4 mr-2" />
+                      )}
                       {acao.label}
                     </Button>
                   ))}
@@ -268,17 +305,14 @@ const RelatoriosPage = () => {
               <Button
                 variant="outline"
                 className="justify-start"
-                onClick={() => handleGerarRelatorio('Todos os Relatórios')}
+                disabled={loading !== null}
+                onClick={() => executar('resumo-exec', () => RelatorioComercialService.gerarResumoExecutivo())}
               >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar Tudo (ZIP)
-              </Button>
-              <Button
-                variant="outline"
-                className="justify-start"
-                onClick={() => handleGerarRelatorio('Resumo Executivo')}
-              >
-                <FileText className="h-4 w-4 mr-2" />
+                {loading === 'resumo-exec' ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4 mr-2" />
+                )}
                 Resumo Executivo
               </Button>
               <Button
@@ -312,17 +346,17 @@ const RelatoriosPage = () => {
                 <h4 className="font-semibold text-foreground mb-2">Formatos Disponíveis</h4>
                 <ul className="space-y-1">
                   <li>• <strong>PDF:</strong> Formato profissional GMX com bordas e rodapé</li>
-                  <li>• <strong>Excel:</strong> Planilhas editáveis com fórmulas</li>
+                  <li>• <strong>Excel:</strong> Planilhas editáveis com dados completos</li>
                   <li>• <strong>Impressão:</strong> Otimizada para papel A4</li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-semibold text-foreground mb-2">Recursos</h4>
                 <ul className="space-y-1">
-                  <li>• Filtros por período personalizáveis</li>
+                  <li>• Catálogo de materiais com preços e fornecedores</li>
                   <li>• Análises comparativas entre orçamentos</li>
                   <li>• Curva ABC automática de consumíveis</li>
-                  <li>• Exportação em lote (ZIP)</li>
+                  <li>• Resumo executivo consolidado</li>
                 </ul>
               </div>
             </div>

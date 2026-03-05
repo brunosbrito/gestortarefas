@@ -211,7 +211,7 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
       </Card>
 
       {/* --- KPIs --- */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-2 mb-1">
@@ -238,6 +238,16 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
             </div>
             <p className="text-2xl font-bold text-purple-600">{formatCurrency(valores.bdiTotal)}</p>
             <p className="text-xs text-muted-foreground">Médio: {formatPercentage(valores.bdiMedio)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <Label className="text-muted-foreground text-xs">Lucro</Label>
+            </div>
+            <p className="text-2xl font-bold text-green-600">{formatCurrency(valores.lucroTotal)}</p>
+            <p className="text-xs text-muted-foreground">{formatPercentage(valores.lucroPercentual)} s/ subtotal</p>
           </CardContent>
         </Card>
         <Card>
@@ -344,6 +354,12 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
                 <WaterfallRow label="Custo Direto Total" value={valores.custoDirectoTotal} />
                 <WaterfallRow label={`+ BDI Médio (${formatPercentage(valores.bdiMedio)})`} value={valores.bdiTotal} accent="blue" />
                 <WaterfallRow label="= Subtotal" value={valores.subtotal} bold />
+                {valores.lucroTotal > 0 && (
+                  <WaterfallRow label={`+ Lucro (${formatPercentage(valores.lucroPercentual)})`} value={valores.lucroTotal} accent="green" />
+                )}
+                {valores.lucroTotal > 0 && (
+                  <WaterfallRow label="= Preço Base" value={valores.precoBase} bold />
+                )}
                 <WaterfallRow
                   label={`+ Tributos (${formatPercentage(
                     orcamento.tributos
@@ -376,15 +392,15 @@ export default function AbaResumo({ orcamento, onUpdate }: AbaResumoProps) {
             <CardContent>
               <div className="space-y-2">
                 <DRERow label="Receita Bruta" value={valores.totalVenda} />
-                <DRERow label="(−) Tributos" value={-valores.tributosTotal} negative />
-                <DRERow label="= Receita Líquida" value={dre.receitaLiquida} bold />
-                <DRERow label="(−) Custo Direto" value={-valores.custoDirectoTotal} negative />
+                <DRERow label="(-) Tributos" value={-valores.tributosTotal} negative />
+                <DRERow label="= Receita Liquida" value={dre.receitaLiquida} bold />
+                <DRERow label="(-) Custo Direto" value={-valores.custoDirectoTotal} negative />
                 <DRERow label="= Lucro Bruto" value={dre.lucroBruto} bold
-                  extra={`${formatPercentage(dre.margemBruta)} s/ rec. líq.`} />
-                <DRERow label="(−) BDI" value={-valores.bdiTotal} negative />
+                  extra={`${formatPercentage(dre.margemBruta)} s/ rec. liq.`} />
+                <DRERow label="(-) BDI (Desp. Indiretas)" value={-valores.bdiTotal} negative />
                 <div className="border-t-2 pt-2">
                   <DRERow
-                    label="= Lucro Líquido"
+                    label="= Lucro Liquido"
                     value={dre.lucroLiquido}
                     bold
                     highlight={dre.lucroLiquido >= 0}
@@ -432,7 +448,7 @@ function WaterfallRow({
   value: number;
   bold?: boolean;
   highlight?: boolean;
-  accent?: 'blue' | 'orange';
+  accent?: 'blue' | 'orange' | 'green';
 }) {
   const valueClass = highlight
     ? 'text-blue-600'
@@ -440,6 +456,8 @@ function WaterfallRow({
     ? 'text-blue-600'
     : accent === 'orange'
     ? 'text-orange-500'
+    : accent === 'green'
+    ? 'text-emerald-600'
     : '';
 
   return (

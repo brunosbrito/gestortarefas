@@ -109,6 +109,9 @@ export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
   custoDirectoTotal: number;
   bdiTotal: number;
   subtotal: number;
+  lucroPercentual: number;
+  lucroTotal: number;
+  precoBase: number;
   tributosTotal: number;
   totalVenda: number;
   bdiMedio: number;
@@ -125,14 +128,22 @@ export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
   // Subtotal (custo direto + BDI)
   const subtotal = custoDirectoTotal + bdiTotal;
 
-  // Tributos
+  // Lucro (separado do BDI, aplicado sobre subtotal)
+  const lucroConfig = orcamento.configuracoesDetalhadas?.lucro;
+  const lucroPercentual = lucroConfig?.habilitado && lucroConfig.percentual > 0
+    ? lucroConfig.percentual
+    : 0;
+  const lucroTotal = subtotal * (lucroPercentual / 100);
+  const precoBase = subtotal + lucroTotal;
+
+  // Tributos (sobre preço base)
   const tributos = orcamento.tributos || { temISS: false, aliquotaISS: 0, aliquotaSimples: 11.8 };
   const aliquotaISS = tributos.temISS ? tributos.aliquotaISS : 0;
   const aliquotaTotal = aliquotaISS + tributos.aliquotaSimples;
-  const tributosTotal = subtotal * (aliquotaTotal / 100);
+  const tributosTotal = precoBase * (aliquotaTotal / 100);
 
   // Total de venda
-  const totalVenda = subtotal + tributosTotal;
+  const totalVenda = precoBase + tributosTotal;
 
   // BDI médio
   const bdiMedio = custoDirectoTotal > 0 ? (bdiTotal / custoDirectoTotal) * 100 : 0;
@@ -146,6 +157,9 @@ export const calcularValoresOrcamento = (orcamento: Partial<Orcamento>): {
     custoDirectoTotal,
     bdiTotal,
     subtotal,
+    lucroPercentual,
+    lucroTotal,
+    precoBase,
     tributosTotal,
     totalVenda,
     bdiMedio,
@@ -165,7 +179,7 @@ export const calcularDRE = (orcamento: Partial<Orcamento>): {
 } => {
   const valores = calcularValoresOrcamento(orcamento);
 
-  // Receita líquida = Total venda - Tributos
+  // Receita líquida = Total venda - Tributos (= preço base)
   const receitaLiquida = valores.totalVenda - valores.tributosTotal;
 
   // Lucro bruto = Receita líquida - Custos diretos
@@ -174,8 +188,8 @@ export const calcularDRE = (orcamento: Partial<Orcamento>): {
   // Margem bruta = (Lucro bruto / Receita líquida) * 100
   const margemBruta = receitaLiquida > 0 ? (lucroBruto / receitaLiquida) * 100 : 0;
 
-  // Lucro líquido = Lucro bruto - BDI
-  const lucroLiquido = lucroBruto - valores.bdiTotal;
+  // Lucro líquido = lucroTotal (valor do lucro separado)
+  const lucroLiquido = valores.lucroTotal;
 
   // Margem líquida = (Lucro líquido / Total venda) * 100
   const margemLiquida = valores.totalVenda > 0 ? (lucroLiquido / valores.totalVenda) * 100 : 0;

@@ -82,6 +82,8 @@ interface ComposicaoGenericaTableProps {
   mostrarQtdPeriodo?: boolean;
   /** Rótulo da coluna de quantidade quando mostrarQtdPeriodo=true (padrão: "Qtd") */
   labelQuantidade?: string;
+  /** Itens do catálogo para auto-lookup ao digitar código */
+  catalogoItems?: { codigo: string; descricao: string; unidade: string; valorUnitario: number }[];
 }
 
 export default function ComposicaoGenericaTable({
@@ -95,6 +97,7 @@ export default function ComposicaoGenericaTable({
   quantidadeInteira = false,
   mostrarQtdPeriodo = false,
   labelQuantidade,
+  catalogoItems,
 }: ComposicaoGenericaTableProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,6 +140,19 @@ export default function ComposicaoGenericaTable({
   // ---- field handlers ----
   const handleField = <K extends keyof RowGenerico>(localId: string, field: K, value: RowGenerico[K]) =>
     setRows((prev) => prev.map((r) => (r._localId === localId ? { ...r, [field]: value } : r)));
+
+  const handleCodigoBlur = (localId: string, codigo: string) => {
+    if (!codigo.trim() || !catalogoItems?.length) return;
+    const norm = codigo.trim().toLowerCase();
+    const found = catalogoItems.find((c) => c.codigo.toLowerCase() === norm);
+    if (found) {
+      setRows((prev) => prev.map((r) =>
+        r._localId === localId
+          ? { ...r, codigo: found.codigo, descricao: found.descricao, unidade: found.unidade, valorUnitario: found.valorUnitario }
+          : r,
+      ));
+    }
+  };
 
   const handleAddRow = () => setRows((prev) => [...prev, newRowGenerico(defaultUnidade)]);
   const handleRemoveRow = (localId: string) => setRows((prev) => prev.filter((r) => r._localId !== localId));
@@ -340,6 +356,9 @@ export default function ComposicaoGenericaTable({
 
   // ---- totais ----
   const totalSubtotal = rows.reduce((acc, r) => acc + calcSubtotalRow(r), 0);
+  const bdiPercentualLocal = composicao?.bdi?.percentual ?? 0;
+  const bdiValorLocal = Math.round(totalSubtotal * (bdiPercentualLocal / 100) * 100) / 100;
+  const subtotalComBDI = Math.round((totalSubtotal + bdiValorLocal) * 100) / 100;
 
   // ---- sort (view mode) ----
   const rowsComSubtotal = useMemo(
@@ -479,6 +498,7 @@ export default function ComposicaoGenericaTable({
                   className="h-8 text-sm font-mono"
                   value={r.codigo}
                   onChange={(e) => handleField(r._localId, 'codigo', e.target.value)}
+                  onBlur={(e) => handleCodigoBlur(r._localId, e.target.value)}
                   placeholder="Código..."
                   disabled={salvando}
                 />
@@ -762,9 +782,9 @@ export default function ComposicaoGenericaTable({
               ) : (
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-xl font-bold text-blue-600">
-                    {formatCurrency(composicao?.bdi?.valor ?? 0)}
+                    {formatCurrency(bdiValorLocal)}
                   </p>
-                  <span className="text-sm text-muted-foreground">({composicao?.bdi?.percentual ?? 0}%)</span>
+                  <span className="text-sm text-muted-foreground">({bdiPercentualLocal}%)</span>
                 </div>
               )}
             </div>
@@ -772,7 +792,7 @@ export default function ComposicaoGenericaTable({
             <div>
               <Label className="text-muted-foreground">Subtotal</Label>
               <p className="text-xl font-bold text-green-600">
-                {formatCurrency(composicao?.subtotal ?? totalSubtotal)}
+                {formatCurrency(subtotalComBDI)}
               </p>
             </div>
           </div>

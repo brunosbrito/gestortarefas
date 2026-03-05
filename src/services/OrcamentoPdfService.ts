@@ -206,23 +206,31 @@ class OrcamentoPdfService {
     doc.text('TOTALIZADORES', 10, yPosition);
     yPosition += 8;
 
+    const lucroPercentual = orcamento.configuracoesDetalhadas?.lucro?.percentual ?? 0;
+    const precoBase = orcamento.precoBase ?? orcamento.subtotal;
+
     const totalizadoresData = [
       ['Custo Direto Total', this.formatCurrency(orcamento.custoDirectoTotal)],
       ['BDI Total', this.formatCurrency(orcamento.bdiTotal)],
       ['Subtotal', this.formatCurrency(orcamento.subtotal)],
       ['', ''],
+      ...(orcamento.lucroTotal > 0 ? [
+        [`Lucro (${lucroPercentual.toFixed(1)}%)`, this.formatCurrency(orcamento.lucroTotal)],
+        ['Preço Base', this.formatCurrency(precoBase)],
+        ['', ''],
+      ] : []),
       ['Tributos:', ''],
       [
         `  ISS (${orcamento.tributos.temISS ? orcamento.tributos.aliquotaISS : 0}%)`,
         this.formatCurrency(
           orcamento.tributos.temISS
-            ? orcamento.subtotal * (orcamento.tributos.aliquotaISS / 100)
+            ? precoBase * (orcamento.tributos.aliquotaISS / 100)
             : 0
         ),
       ],
       [
         `  Simples Nacional (${orcamento.tributos.aliquotaSimples}%)`,
-        this.formatCurrency(orcamento.subtotal * (orcamento.tributos.aliquotaSimples / 100)),
+        this.formatCurrency(precoBase * (orcamento.tributos.aliquotaSimples / 100)),
       ],
       ['Tributos Total', this.formatCurrency(orcamento.tributosTotal)],
     ];
@@ -305,12 +313,14 @@ class OrcamentoPdfService {
     yPosition += 6;
 
     const dreData = [
+      ['Receita Bruta', this.formatCurrency(orcamento.totalVenda)],
+      ['  (-) Tributos', this.formatCurrency(orcamento.tributosTotal)],
       ['Receita Líquida', this.formatCurrency(orcamento.dre.receitaLiquida)],
       ['  (-) Custos Diretos', this.formatCurrency(orcamento.custoDirectoTotal)],
       ['Lucro Bruto', this.formatCurrency(orcamento.dre.lucroBruto)],
       ['Margem Bruta', `${orcamento.dre.margemBruta.toFixed(2)}%`],
       ['', ''],
-      ['  (-) BDI', this.formatCurrency(orcamento.bdiTotal)],
+      ['  (-) BDI (Desp. Indiretas)', this.formatCurrency(orcamento.bdiTotal)],
       ['Lucro Líquido', this.formatCurrency(orcamento.dre.lucroLiquido)],
       ['Margem Líquida', `${orcamento.dre.margemLiquida.toFixed(2)}%`],
     ];

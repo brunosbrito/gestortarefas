@@ -131,7 +131,7 @@ const KPI_TOOLTIPS: Record<string, string> = {
   margemBruta:
     'Σ BDI ÷ Σ Receita Líquida × 100. Somente orçamentos aprovados neste mês. A receita líquida já inclui o BDI; esta margem representa o percentual comercial antes dos impostos. Semáforo: Verde = dentro do intervalo meta · Amarelo = 80–99% do mínimo · Vermelho < 80%',
   margemLiquida:
-    'Σ (Custo Direto × % Lucro) ÷ Σ Total Venda × 100. Somente aprovados com o componente Lucro habilitado em Dados Gerais → BDI Detalhado. Semáforo: Verde = dentro do intervalo meta · Amarelo = 80–99% · Vermelho < 80%',
+    'Σ Lucro Total ÷ Σ Total Venda × 100. Somente aprovados com Lucro habilitado em Dados Gerais. Semáforo: Verde = dentro do intervalo meta · Amarelo = 80–99% · Vermelho < 80%',
   acoes5S:
     'Ações 5S registradas manualmente neste mês. Armazenadas localmente neste dispositivo. Semáforo: Verde ≥ meta · Amarelo ≥ 80% da meta · Vermelho < 80%',
 };
@@ -793,7 +793,7 @@ const KpisComercialPage = () => {
             delta={kpis.margemLiquida !== null && kpisAnt.margemLiquida !== null
               ? deltaNum(kpis.margemLiquida, kpisAnt.margemLiquida, '%') : null}
             semDados={kpis.margemLiquida === null}
-            avisoSemDados="Configure o componente Lucro no BDI Detalhado (aba Dados Gerais) para calcular esta margem."
+            avisoSemDados="Configure o Lucro na aba Dados Gerais para calcular esta margem."
             temPlano={temPlanoKpi('margemLiquida')}
             onCriarPlano={() => handleAbrirPlano('margemLiquida', 'Margem Líquida')}
           />

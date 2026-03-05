@@ -38,6 +38,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import TemplateFormDialog from './TemplateFormDialog';
+import UsarTemplateDialog from './UsarTemplateDialog';
 
 const TemplatesPage = () => {
   const navigate = useNavigate();
@@ -47,6 +49,12 @@ const TemplatesPage = () => {
   const [templates, setTemplates] = useState<OrcamentoTemplateInterface[]>([]);
   const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todos');
   const [templateParaDeletar, setTemplateParaDeletar] = useState<OrcamentoTemplateInterface | null>(null);
+
+  // Dialog states
+  const [formDialogAberto, setFormDialogAberto] = useState(false);
+  const [templateEditando, setTemplateEditando] = useState<OrcamentoTemplateInterface | null>(null);
+  const [usarDialogAberto, setUsarDialogAberto] = useState(false);
+  const [templateSelecionado, setTemplateSelecionado] = useState<OrcamentoTemplateInterface | null>(null);
 
   useEffect(() => {
     carregarTemplates();
@@ -70,37 +78,19 @@ const TemplatesPage = () => {
     }
   };
 
-  const handleUsarTemplate = async (template: OrcamentoTemplateInterface) => {
-    try {
-      // TODO: Abrir dialog para coletar dados do novo orçamento
-      const novoOrcamento = await OrcamentoTemplateService.usarTemplate({
-        templateId: template.id,
-        nomeOrcamento: `Novo Orçamento - ${template.nome}`,
-        tipo: 'servico',
-      });
-
-      toast({
-        title: 'Sucesso',
-        description: 'Orçamento criado a partir do template',
-      });
-
-      navigate(`/comercial/orcamentos/${novoOrcamento.id}`);
-    } catch (error) {
-      console.error('Erro ao usar template:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível criar orçamento do template',
-        variant: 'destructive',
-      });
-    }
+  const handleNovoTemplate = () => {
+    setTemplateEditando(null);
+    setFormDialogAberto(true);
   };
 
   const handleEditarTemplate = (template: OrcamentoTemplateInterface) => {
-    // TODO: Abrir dialog para editar template
-    toast({
-      title: 'Em desenvolvimento',
-      description: 'Funcionalidade de edição em breve',
-    });
+    setTemplateEditando(template);
+    setFormDialogAberto(true);
+  };
+
+  const handleUsarTemplate = (template: OrcamentoTemplateInterface) => {
+    setTemplateSelecionado(template);
+    setUsarDialogAberto(true);
   };
 
   const handleDuplicarTemplate = async (template: OrcamentoTemplateInterface) => {
@@ -193,7 +183,7 @@ const TemplatesPage = () => {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Atualizar
                 </Button>
-                <Button onClick={() => toast({ title: 'Em desenvolvimento', description: 'Funcionalidade em breve' })}>
+                <Button onClick={handleNovoTemplate}>
                   <Plus className="h-4 w-4 mr-2" />
                   Novo Template
                 </Button>
@@ -211,7 +201,7 @@ const TemplatesPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todas as Categorias</SelectItem>
-                    {Object.entries(TemplateCategoriaEnum).map(([key, value]) => (
+                    {Object.entries(TemplateCategoriaEnum).map(([, value]) => (
                       <SelectItem key={value} value={value}>
                         {TemplateCategoriaLabels[value]}
                       </SelectItem>
@@ -235,7 +225,7 @@ const TemplatesPage = () => {
               <CardContent className="py-12 text-center">
                 <FileStack className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Nenhum template encontrado</p>
-                <Button className="mt-4" onClick={() => toast({ title: 'Em desenvolvimento' })}>
+                <Button className="mt-4" onClick={handleNovoTemplate}>
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Primeiro Template
                 </Button>
@@ -268,6 +258,19 @@ const TemplatesPage = () => {
                         BDI {(template.configuracoes.bdi * 100).toFixed(0)}%
                       </span>
                     </div>
+                    {(() => {
+                      const totalItens = template.composicoesTemplate.reduce(
+                        (sum, c) => sum + (c.itens?.length || 0), 0
+                      );
+                      return totalItens > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            {totalItens} itens pré-definidos
+                          </span>
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
                 </CardContent>
                 <CardFooter className="flex gap-2">
@@ -313,6 +316,21 @@ const TemplatesPage = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+
+      {/* Dialogs */}
+      <TemplateFormDialog
+        open={formDialogAberto}
+        onOpenChange={setFormDialogAberto}
+        template={templateEditando}
+        onSalvar={carregarTemplates}
+      />
+
+      <UsarTemplateDialog
+        open={usarDialogAberto}
+        onOpenChange={setUsarDialogAberto}
+        template={templateSelecionado}
+        onCriado={(orcamentoId) => navigate(`/comercial/orcamentos/${orcamentoId}`)}
+      />
     </>
   );
 };

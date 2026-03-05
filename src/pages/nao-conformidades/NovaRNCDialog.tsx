@@ -46,7 +46,7 @@ export function NovaRNCDialog({ open, onOpenChange, rncParaEditar, onSaveSuccess
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {rncParaEditar ? 'Editar RNC' : 'Nova RNC'}

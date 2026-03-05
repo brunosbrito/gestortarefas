@@ -399,6 +399,7 @@ const OrcamentosListPage = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
+                  <TableHead className="text-right">Lucro</TableHead>
                   <TableHead className="text-center">
                     <Button
                       variant="ghost"
@@ -417,7 +418,7 @@ const OrcamentosListPage = () => {
               <TableBody>
                 {orcamentosPaginados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                       Nenhum orçamento encontrado
                     </TableCell>
                   </TableRow>
@@ -458,6 +459,9 @@ const OrcamentosListPage = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           {formatPercentage(orc.bdiMedio)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-green-600">
+                          {formatCurrency(orc.lucroTotal ?? 0)}
                         </TableCell>
                         <TableCell className="text-center">
                           <span className={dreOrc.margemLiquida < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>

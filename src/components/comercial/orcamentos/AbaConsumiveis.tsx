@@ -1,22 +1,13 @@
-import { useState } from 'react';
-import { Box, ClipboardList, Plus } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Box, Database, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Orcamento, ComposicaoCustos, ItemComposicao } from '@/interfaces/OrcamentoInterface';
 import OrcamentoService from '@/services/OrcamentoService';
 import ComposicaoGenericaTable from './ComposicaoGenericaTable';
 import ConsumivelService from '@/services/ConsumivelService';
 import ConsumivelFormDialog from '@/components/comercial/cadastros/consumiveis/ConsumivelFormDialog';
+import SelecionarCatalogoDialog, { CatalogoItemGenerico } from './SelecionarCatalogoDialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface AbaConsumiveisProps {
@@ -29,9 +20,34 @@ export default function AbaConsumiveis({ orcamento, onUpdate }: AbaConsumiveisPr
 
   const composicaoConsumiveis = orcamento.composicoes.find((c) => c.tipo === 'consumiveis');
 
-  const [confirmando, setConfirmando] = useState(false);
-  const [carregando, setCarregando] = useState(false);
   const [novoFormAberto, setNovoFormAberto] = useState(false);
+  const [dialogAberto, setDialogAberto] = useState(false);
+  const [catalogoItems, setCatalogoItems] = useState<CatalogoItemGenerico[]>([]);
+  const [carregandoCatalogo, setCarregandoCatalogo] = useState(false);
+
+  const carregarCatalogo = useCallback(async () => {
+    try {
+      setCarregandoCatalogo(true);
+      const catalogo = await ConsumivelService.getAll({ ativo: true });
+      setCatalogoItems(
+        catalogo.map((c) => ({
+          id: c.id,
+          codigo: c.codigo,
+          descricao: c.descricao,
+          unidade: c.unidade,
+          valorUnitario: c.precoUnitario,
+        }))
+      );
+    } catch {
+      console.error('Erro ao carregar catálogo de consumíveis');
+    } finally {
+      setCarregandoCatalogo(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarCatalogo();
+  }, [carregarCatalogo]);
 
   const handleAtualizarComposicao = async (composicaoAtualizada: ComposicaoCustos) => {
     const updatedOrcamento = {
@@ -44,49 +60,33 @@ export default function AbaConsumiveis({ orcamento, onUpdate }: AbaConsumiveisPr
     onUpdate();
   };
 
-  const solicitarCarregarCatalogo = () => {
-    if ((composicaoConsumiveis?.itens.length ?? 0) > 0) {
-      setConfirmando(true);
-    } else {
-      carregarCatalogo();
-    }
-  };
-
-  const carregarCatalogo = async () => {
+  const handleAdicionarDoCatalogo = async (items: CatalogoItemGenerico[]) => {
     if (!composicaoConsumiveis) return;
     try {
-      setCarregando(true);
-      const catalogo = await ConsumivelService.getAll({ ativo: true });
-      if (catalogo.length === 0) {
-        toast({
-          title: 'Catálogo vazio',
-          description: 'Nenhum consumível ativo encontrado. Cadastre itens no catálogo primeiro.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      const novosItens: ItemComposicao[] = catalogo.map((c, index) => ({
-        id: `cat-${composicaoConsumiveis.id}-${c.id}-${Date.now()}`,
+      const itensExistentes = composicaoConsumiveis.itens;
+      const novosItens: ItemComposicao[] = items.map((c, index) => ({
+        id: `cat-${composicaoConsumiveis.id}-${c.id}-${Date.now()}-${index}`,
         composicaoId: composicaoConsumiveis.id,
         codigo: c.codigo,
         descricao: c.descricao,
         quantidade: 1,
         unidade: c.unidade,
-        valorUnitario: c.precoUnitario,
-        subtotal: c.precoUnitario,
+        valorUnitario: c.valorUnitario,
+        subtotal: c.valorUnitario,
         percentual: 0,
         tipoItem: 'consumivel' as const,
-        ordem: index + 1,
+        ordem: itensExistentes.length + index + 1,
       }));
-      await handleAtualizarComposicao({ ...composicaoConsumiveis, itens: novosItens });
+      await handleAtualizarComposicao({
+        ...composicaoConsumiveis,
+        itens: [...itensExistentes, ...novosItens],
+      });
       toast({
-        title: 'Catálogo carregado',
-        description: `${novosItens.length} itens carregados do catálogo de consumíveis`,
+        title: 'Itens adicionados',
+        description: `${novosItens.length} consumível(is) adicionado(s) ao orçamento`,
       });
     } catch {
-      toast({ title: 'Erro', description: 'Não foi possível carregar o catálogo', variant: 'destructive' });
-    } finally {
-      setCarregando(false);
+      toast({ title: 'Erro', description: 'Não foi possível adicionar os itens', variant: 'destructive' });
     }
   };
 
@@ -112,12 +112,12 @@ export default function AbaConsumiveis({ orcamento, onUpdate }: AbaConsumiveisPr
               <Button
                 size="sm"
                 variant="outline"
-                onClick={solicitarCarregarCatalogo}
-                disabled={carregando}
-                title="Carregar todos os consumíveis ativos do catálogo"
+                onClick={() => setDialogAberto(true)}
+                disabled={!composicaoConsumiveis}
+                title="Selecionar consumíveis do catálogo para adicionar"
               >
-                <ClipboardList className="mr-2 h-4 w-4" />
-                {carregando ? 'Carregando...' : 'Carregar Catálogo'}
+                <Database className="mr-2 h-4 w-4" />
+                Adicionar do Catálogo
               </Button>
             </div>
           </div>
@@ -128,37 +128,20 @@ export default function AbaConsumiveis({ orcamento, onUpdate }: AbaConsumiveisPr
             tipo="Consumíveis"
             tipoItemPadrao="consumivel"
             onUpdate={handleAtualizarComposicao}
+            catalogoItems={catalogoItems}
           />
         </CardContent>
       </Card>
 
-      {/* AlertDialog — confirmação de substituição */}
-      <AlertDialog open={confirmando} onOpenChange={setConfirmando}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Substituir itens existentes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              O grid já possui itens cadastrados. Carregar o catálogo irá{' '}
-              <strong>substituir todos os itens atuais</strong> pelos consumíveis ativos.
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-amber-600 hover:bg-amber-700"
-              onClick={() => {
-                carregarCatalogo();
-                setConfirmando(false);
-              }}
-            >
-              Substituir pelo Catálogo
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SelecionarCatalogoDialog
+        open={dialogAberto}
+        onOpenChange={setDialogAberto}
+        items={catalogoItems}
+        onSelecionar={handleAdicionarDoCatalogo}
+        titulo="Catálogo de Consumíveis"
+        carregando={carregandoCatalogo}
+      />
 
-      {/* Formulário inline para cadastrar novo consumível no catálogo */}
       <ConsumivelFormDialog
         open={novoFormAberto}
         onOpenChange={setNovoFormAberto}
@@ -166,8 +149,9 @@ export default function AbaConsumiveis({ orcamento, onUpdate }: AbaConsumiveisPr
         onSalvar={() => {
           toast({
             title: 'Consumível cadastrado',
-            description: 'Item adicionado ao catálogo. Use "Carregar Catálogo" para incluí-lo neste orçamento.',
+            description: 'Item adicionado ao catálogo.',
           });
+          carregarCatalogo();
         }}
       />
     </>

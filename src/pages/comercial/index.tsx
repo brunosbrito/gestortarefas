@@ -69,7 +69,6 @@ const Comercial = () => {
           <Route path="cadastros">
             <Route path="consumiveis" element={<TabelaConsumiveis />} />
             <Route path="mobilizacao" element={<TabelaMobilizacao />} />
-            <Route path="desmobilizacao" element={<TabelaMobilizacao />} />
           </Route>
 
           {/* Relatórios (FASE 9) */}

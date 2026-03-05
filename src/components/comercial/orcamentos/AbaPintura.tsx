@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import {
   Paintbrush, Info, Edit2, Save, X, Trash2, Upload, Download, TrendingUp, Check, Edit,
   AlertCircle, ArrowUp, ArrowDown, Plus, Droplets,
@@ -29,9 +29,10 @@ import { TintaInterface, TipoTinta, TipoTintaLabels } from '@/interfaces/TintaIn
 import { formatCurrency } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
 import OrcamentoService from '@/services/OrcamentoService';
-import { getTodosOsMateriais } from '@/data/catalogoMateriais';
+import MaterialCatalogoService from '@/services/MaterialCatalogoService';
+import TintaService from '@/services/TintaService';
+import { MaterialCatalogoInterface } from '@/interfaces/MaterialCatalogoInterface';
 import { calcAreaM2PorUnidade } from '@/lib/calcAreaPintura';
-import { mockTintas } from '@/data/mockTintas';
 
 // ---- tipos locais ----
 interface RowPintura {
@@ -208,20 +209,37 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
   const [reajusteValor, setReajusteValor] = useState(0);
   const [reajustando, setReajustando] = useState(false);
 
-  // Catálogo estático de materiais (sem API)
-  const catalogoLocal = useMemo(() => getTodosOsMateriais(), []);
+  // Catálogo de materiais carregado da API
+  const [catalogoLocal, setCatalogoLocal] = useState<MaterialCatalogoInterface[]>([]);
 
-  // Catálogo de tintas: mock + localStorage
-  const catalogoTintas = useMemo((): TintaInterface[] => {
+  const carregarCatalogo = useCallback(async () => {
     try {
-      const parsed = JSON.parse(localStorage.getItem('tintas_locais') || '[]');
-      const locais = Array.isArray(parsed) ? parsed as TintaInterface[] : [];
-      const ativas = locais.filter((t) => t.ativo !== false);
-      return [...mockTintas, ...ativas];
-    } catch {
-      return [...mockTintas];
+      const data = await MaterialCatalogoService.listar({ ativo: true });
+      setCatalogoLocal(data);
+    } catch (error) {
+      console.error('Erro ao carregar catálogo:', error);
     }
   }, []);
+
+  useEffect(() => {
+    carregarCatalogo();
+  }, [carregarCatalogo]);
+
+  // Catálogo de tintas carregado da API
+  const [catalogoTintas, setCatalogoTintas] = useState<TintaInterface[]>([]);
+
+  const carregarTintas = useCallback(async () => {
+    try {
+      const data = await TintaService.listar({ ativo: true });
+      setCatalogoTintas(data);
+    } catch (error) {
+      console.error('Erro ao carregar tintas:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarTintas();
+  }, [carregarTintas]);
 
   const tintasPrimer = catalogoTintas.filter((t) => t.tipo === TipoTinta.PRIMER);
   const tintasAcabamento = catalogoTintas.filter((t) => t.tipo === TipoTinta.ACABAMENTO);
@@ -711,6 +729,9 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
 
   // ---- totais ----
   const totalSubtotal = rows.reduce((acc, r) => acc + calcSubtotalRow(r), 0);
+  const bdiPercentualPintura = composicaoPintura?.bdi?.percentual ?? 0;
+  const bdiValorPintura = Math.round(totalSubtotal * (bdiPercentualPintura / 100) * 100) / 100;
+  const subtotalComBDIPintura = Math.round((totalSubtotal + bdiValorPintura) * 100) / 100;
 
   // Base de litros de tinta (primer + acabamento) para cálculo de solventes
   const litrosTintaBase = useMemo(() =>
@@ -1277,6 +1298,43 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
         </CardContent>
       </Card>
 
+      {/* Exportar Aba Completa (Jateamento + Tintas) */}
+      <div className="flex justify-end">
+        <ExportarAbaCompletaButton
+          tituloAba="Pintura"
+          secoes={[
+            {
+              titulo: 'Jateamento e Pintura',
+              rows: rowsComSubtotal.map((r) => ({
+                codigo: r.codigo,
+                descricao: r.descricao,
+                quantidade: r.quantidade,
+                unidade: r.unidade,
+                valorUnitario: r.valorUnitario,
+                subtotal: r._subtotal,
+              })),
+              bdi: { percentual: composicaoPintura?.bdi?.percentual ?? 0, valor: composicaoPintura?.bdi?.valor ?? 0 },
+            },
+            {
+              titulo: 'Tintas e Solventes',
+              rows: tintaRowsComSubtotal.map((r) => ({
+                codigo: r.tintaCodigo,
+                descricao: r.tipo
+                  ? `${r.descricao} (${TipoTintaLabels[r.tipo as TipoTinta] ?? r.tipo})`
+                  : r.descricao,
+                quantidade: r._litros,
+                unidade: 'L',
+                valorUnitario: Number(r.precoLitro) || 0,
+                subtotal: r._subtotal,
+              })),
+              bdi: { percentual: composicaoTintasOuPadrao.bdi?.percentual ?? 12, valor: composicaoTintasOuPadrao.bdi?.valor ?? 0 },
+              labelQuantidade: 'Litros',
+              labelUnidade: 'Unid.',
+            },
+          ]}
+        />
+      </div>
+
       {/* Card de Itens de Jateamento e Pintura */}
       <Card>
         <CardHeader>
@@ -1285,53 +1343,6 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
             <div className="flex gap-2 flex-wrap">
               {!editMode && (
                 <>
-                  <ExportarAbaCompletaButton
-                    tituloAba="Pintura"
-                    secoes={[
-                      {
-                        titulo: 'Jateamento e Pintura',
-                        rows: rowsComSubtotal.map((r) => ({
-                          codigo: r.codigo,
-                          descricao: r.descricao,
-                          quantidade: r.quantidade,
-                          unidade: r.unidade,
-                          valorUnitario: r.valorUnitario,
-                          subtotal: r._subtotal,
-                        })),
-                        bdi: { percentual: composicaoPintura?.bdi?.percentual ?? 0, valor: composicaoPintura?.bdi?.valor ?? 0 },
-                      },
-                      {
-                        titulo: 'Tintas e Solventes',
-                        rows: tintaRowsComSubtotal.map((r) => ({
-                          codigo: r.tintaCodigo,
-                          descricao: r.tipo
-                            ? `${r.descricao} (${TipoTintaLabels[r.tipo as TipoTinta] ?? r.tipo})`
-                            : r.descricao,
-                          quantidade: r._litros,
-                          unidade: 'L',
-                          valorUnitario: Number(r.precoLitro) || 0,
-                          subtotal: r._subtotal,
-                        })),
-                        bdi: { percentual: composicaoTintasOuPadrao.bdi?.percentual ?? 12, valor: composicaoTintasOuPadrao.bdi?.valor ?? 0 },
-                        labelQuantidade: 'Litros',
-                        labelUnidade: 'Unid.',
-                      },
-                    ]}
-                  />
-                  {rows.length > 0 && (
-                    <ExportarComposicaoButton
-                      titulo="Jateamento e Pintura"
-                      rows={rowsComSubtotal.map((r) => ({
-                        codigo: r.codigo,
-                        descricao: r.descricao,
-                        quantidade: r.quantidade,
-                        unidade: r.unidade,
-                        valorUnitario: r.valorUnitario,
-                        subtotal: r._subtotal,
-                      }))}
-                      bdi={{ percentual: composicaoPintura?.bdi?.percentual ?? 0, valor: composicaoPintura?.bdi?.valor ?? 0 }}
-                    />
-                  )}
                   <Button size="sm" variant="outline" onClick={handleBaixarModelo} title="Baixar planilha modelo">
                     <Download className="mr-2 h-4 w-4" />
                     Modelo
@@ -1446,10 +1457,10 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-xl font-bold text-blue-600">
-                        {formatCurrency(composicaoPintura?.bdi?.valor ?? 0)}
+                        {formatCurrency(bdiValorPintura)}
                       </p>
                       <span className="text-sm text-muted-foreground">
-                        ({composicaoPintura?.bdi?.percentual ?? 0}%)
+                        ({bdiPercentualPintura}%)
                       </span>
                     </div>
                   )}
@@ -1457,7 +1468,7 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
                 <div>
                   <Label className="text-muted-foreground">Subtotal</Label>
                   <p className="text-xl font-bold text-green-600">
-                    {formatCurrency(composicaoPintura?.subtotal ?? totalSubtotal)}
+                    {formatCurrency(subtotalComBDIPintura)}
                   </p>
                 </div>
               </div>
@@ -1476,28 +1487,10 @@ export default function AbaPintura({ orcamento, onUpdate }: AbaPinturaProps) {
             </CardTitle>
             <div className="flex gap-2 flex-wrap">
               {!tintaEditMode && tintaRows.length > 0 && (
-                <>
-                  <ExportarComposicaoButton
-                    titulo="Tintas e Solventes"
-                    rows={tintaRowsComSubtotal.map((r) => ({
-                      codigo: r.tintaCodigo,
-                      descricao: r.tipo
-                        ? `${r.descricao} (${TipoTintaLabels[r.tipo as TipoTinta] ?? r.tipo})`
-                        : r.descricao,
-                      quantidade: r._litros,
-                      unidade: 'L',
-                      valorUnitario: Number(r.precoLitro) || 0,
-                      subtotal: r._subtotal,
-                    }))}
-                    bdi={{ percentual: composicaoTintasOuPadrao.bdi?.percentual ?? 12, valor: composicaoTintasOuPadrao.bdi?.valor ?? 0 }}
-                    labelQuantidade="Litros"
-                    labelUnidade="Unid."
-                  />
-                  <Button size="sm" variant="outline" onClick={() => setTintaEditMode(true)}>
-                    <Edit2 className="mr-2 h-4 w-4" />
-                    Editar Tintas
-                  </Button>
-                </>
+                <Button size="sm" variant="outline" onClick={() => setTintaEditMode(true)}>
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Editar Tintas
+                </Button>
               )}
               {tintaEditMode && (
                 <>

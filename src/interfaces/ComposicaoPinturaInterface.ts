@@ -1,6 +1,4 @@
 import { TintaInterface } from './TintaInterface';
-import { FornecedorServicoInterface } from './FornecedorServicoInterface';
-
 // Interface para Composição de Pintura (resultado do cálculo)
 export interface ComposicaoPinturaInterface {
   id?: number;
@@ -24,8 +22,8 @@ export interface ComposicaoPinturaInterface {
     custoTotal: number;
   };
 
-  // Fornecedor de serviço
-  fornecedorServico?: FornecedorServicoInterface;
+  // Fornecedor de serviço (referência opcional)
+  fornecedorServico?: any;
 
   // Custos de MO
   custoJateamento: number;

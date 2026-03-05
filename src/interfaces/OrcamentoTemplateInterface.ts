@@ -12,6 +12,7 @@ export interface OrcamentoTemplateInterface {
   // Configurações padrão
   configuracoes: {
     bdi: number; // Padrão: 0.25 (25%)
+    lucro: number; // Padrão: 0.20 (20%) - Lucro separado do BDI
     tributos: {
       iss: number; // Padrão: 0.03 (3%)
       simples: number; // Padrão: 0.118 (11.8%)
@@ -20,7 +21,7 @@ export interface OrcamentoTemplateInterface {
     encargos: number; // Padrão: 0.58724 (58.724%)
   };
 
-  // Estrutura de composições (sem itens específicos)
+  // Estrutura de composições com itens pré-definidos
   composicoesTemplate: ComposicaoTemplate[];
 
   // Metadata
@@ -31,13 +32,31 @@ export interface OrcamentoTemplateInterface {
   createdBy?: number;
 }
 
+export interface ItemTemplate {
+  codigo: string;
+  descricao: string;
+  quantidade: number;
+  unidade: string;
+  valorUnitario: number;
+  tipoItem: string;
+  material?: string;
+  especificacao?: string;
+  peso?: number;
+  cargo?: string;
+  tipoCalculo?: string;
+  encargos?: { percentual: number; valor: number };
+  ordem: number;
+}
+
 export interface ComposicaoTemplate {
   tipo: 'mobilizacao' | 'desmobilizacao' | 'mo_fabricacao' | 'mo_montagem' |
-        'jato_pintura' | 'ferramentas' | 'consumiveis' | 'materiais';
-  descricao: string; // Ex: "Mobilização Padrão", "MO Fabricação"
-  bdiPercentual: number; // BDI específico desta composição
-  enabled: boolean; // Se esta composição está habilitada no template
+        'mo_terceirizados' | 'jato_pintura' | 'ferramentas' | 'ferramentas_eletricas' |
+        'consumiveis' | 'materiais';
+  descricao: string;
+  bdiPercentual: number;
+  enabled: boolean;
   ordem: number;
+  itens?: ItemTemplate[];
 }
 
 export enum TemplateCategoriaEnum {

@@ -7,7 +7,11 @@ import {
   CalculoPinturaInputDTO,
 } from '@/interfaces/ComposicaoPinturaInterface';
 import { TintaInterface } from '@/interfaces/TintaInterface';
-import { FornecedorServicoInterface } from '@/interfaces/FornecedorServicoInterface';
+
+interface DadosMaoDeObra {
+  valorJateamentoM2: number;
+  valorPinturaM2: number;
+}
 
 /**
  * Service para cálculos de composição de pintura
@@ -15,36 +19,18 @@ import { FornecedorServicoInterface } from '@/interfaces/FornecedorServicoInterf
 class ComposicaoPinturaService {
   /**
    * Calcula a área (m²) a partir do peso e espessura
-   *
-   * FÓRMULA CORRETA:
-   * Para CHAPA PLANA:
-   *   Volume (m³) = Peso (kg) / Densidade (kg/m³)
-   *   Área (m²) = Volume (m³) / Espessura (m)
-   *   Área (m²) = Peso (kg) / (7.85 × Espessura (mm))
-   *
-   * Para PERFIS e ESTRUTURAS COMPLEXAS:
-   *   Usa área específica aproximada (m²/ton) baseada em geometria típica
-   *   Área (m²) = Peso (kg) × AreaEspecifica (m²/ton) / 1000
-   *
-   * Referências:
-   * - https://www.crifer.com.br/chapas-de-aco-como-fazer-o-calculo-de-peso/
-   * - https://www.soloarquitectura.com/foros/threads/calcular-m2-pintura-con-kg-de-acero.40888/
    */
   calcularArea(pesoKg: number, espessuraMm: number, tipoGeometria: TipoGeometria): number {
     let area: number;
 
     if (tipoGeometria === TipoGeometria.CHAPA_PLANA) {
-      // Cálculo direto usando densidade do aço
-      // Área = Peso / (Densidade × Espessura)
       area = pesoKg / (DENSIDADE_ACO * espessuraMm);
     } else {
-      // Para perfis e estruturas complexas, usa área específica aproximada
-      // Conversão: kg → ton, então × m²/ton
       const areaEspecifica = AreaEspecificaM2PorTon[tipoGeometria];
       area = (pesoKg / 1000) * areaEspecifica;
     }
 
-    return Math.round(area * 100) / 100; // 2 casas decimais
+    return Math.round(area * 100) / 100;
   }
 
   /**
@@ -57,20 +43,11 @@ class ComposicaoPinturaService {
     numeroDemaos: number,
     fatorPerdaPercentual: number
   ): CamadaPintura {
-    // Espessura total considerando número de demãos
     const espessuraTotalMicrons = espessuraMicrons * numeroDemaos;
-
-    // RT = SV × 10 / EFS
     const rendimentoTeoricoM2L = (tinta.solidosVolume * 10) / espessuraTotalMicrons;
-
-    // RP = RT - (RT × FP%)
     const perdaDecimal = fatorPerdaPercentual / 100;
     const rendimentoPraticoM2L = rendimentoTeoricoM2L - rendimentoTeoricoM2L * perdaDecimal;
-
-    // Litros = Área / RP
     const litrosNecessarios = areaM2 / rendimentoPraticoM2L;
-
-    // Custo = Litros × Preço/Litro
     const custoTotal = litrosNecessarios * tinta.precoLitro;
 
     return {
@@ -112,7 +89,7 @@ class ComposicaoPinturaService {
     input: CalculoPinturaInputDTO,
     primerTinta?: TintaInterface,
     acabamentoTinta?: TintaInterface,
-    fornecedor?: FornecedorServicoInterface
+    dadosMO?: DadosMaoDeObra
   ): ComposicaoPinturaInterface {
     // 1. Calcular área
     const areaM2 = this.calcularArea(
@@ -156,12 +133,12 @@ class ComposicaoPinturaService {
     );
 
     // 4. Calcular custos de MO
-    const custoJateamento = fornecedor
-      ? areaM2 * fornecedor.valorJateamentoM2
+    const custoJateamento = dadosMO
+      ? areaM2 * dadosMO.valorJateamentoM2
       : 0;
 
-    const custoPintura = fornecedor
-      ? areaM2 * fornecedor.valorPinturaM2
+    const custoPintura = dadosMO
+      ? areaM2 * dadosMO.valorPinturaM2
       : 0;
 
     // 5. Calcular totais
@@ -185,7 +162,7 @@ class ComposicaoPinturaService {
       primer,
       acabamento,
       thinner,
-      fornecedorServico: fornecedor,
+      fornecedorServico: dadosMO ? {} as any : undefined,
       custoJateamento: Math.round(custoJateamento * 100) / 100,
       custoPintura: Math.round(custoPintura * 100) / 100,
       custoTotalMateriais: Math.round(custoTotalMateriais * 100) / 100,

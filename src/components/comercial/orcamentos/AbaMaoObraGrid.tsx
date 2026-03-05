@@ -261,6 +261,9 @@ export default function AbaMaoObraGrid({
   const totalHH = rows.reduce((acc, r) => acc + calcHH(r), 0);
   const totalSubtotal = rows.reduce((acc, r) => acc + calcSubtotal(r), 0);
   const totalProfissionais = rows.reduce((acc, r) => acc + (Number(r.qtdPessoas) || 0), 0);
+  const bdiPercentual = composicao?.bdi?.percentual ?? 0;
+  const bdiValor = Math.round(totalSubtotal * (bdiPercentual / 100) * 100) / 100;
+  const totalComBDI = Math.round((totalSubtotal + bdiValor) * 100) / 100;
 
   // ==========================================
   // VIEW MODE
@@ -667,16 +670,16 @@ export default function AbaMaoObraGrid({
               ) : (
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-xl font-bold text-blue-600">
-                    {formatCurrency(composicao?.bdi?.valor ?? 0)}
+                    {formatCurrency(bdiValor)}
                   </p>
-                  <span className="text-sm text-muted-foreground">({composicao?.bdi?.percentual ?? 0}%)</span>
+                  <span className="text-sm text-muted-foreground">({bdiPercentual}%)</span>
                 </div>
               )}
             </div>
             <div>
               <Label className="text-muted-foreground">Total c/ BDI</Label>
               <p className="text-xl font-bold text-amber-600">
-                {formatCurrency(composicao?.subtotal ?? totalSubtotal)}
+                {formatCurrency(totalComBDI)}
               </p>
             </div>
           </div>

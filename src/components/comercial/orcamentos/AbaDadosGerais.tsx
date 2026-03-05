@@ -48,21 +48,23 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
   ];
 
   // Determinar faixa atual
-  const aliquotaAtual = ((orcamento.configuracoes?.tributos.simples || 0.118) * 100);
+  const aliquotaAtual = ((orcamento.configuracoes?.tributos?.simples || 0.118) * 100);
   const faixaAtual = faixasSimples.find(f => Math.abs(f.aliquota - aliquotaAtual) < 0.5) || faixasSimples[3];
   const [faixaSelecionada, setFaixaSelecionada] = useState(faixaAtual.faixa);
 
   const faixaInfo = faixasSimples.find(f => f.faixa === faixaSelecionada) || faixaAtual;
   const proximaFaixa = faixasSimples.find(f => f.faixa === faixaSelecionada + 1);
 
-  // BDI detalhado com checkboxes e inputs editáveis
+  // BDI detalhado com checkboxes e inputs editáveis (SEM lucro - agora é separado)
   const [bdiDetalhado, setBdiDetalhado] = useState({
-    lucro: { nome: 'Lucro', percentual: 20, habilitado: true },
     admCentral: { nome: 'Administração Central', percentual: 3, habilitado: true },
     admLocal: { nome: 'Administração Local', percentual: 0, habilitado: false },
     seguro: { nome: 'Seguro', percentual: 0, habilitado: false },
     despesasGerais: { nome: 'Despesas Gerais', percentual: 2, habilitado: true },
   });
+
+  // Lucro separado do BDI (global único)
+  const [lucro, setLucro] = useState({ percentual: 20, habilitado: true });
 
   const handleToggleBDI = (key: keyof typeof bdiDetalhado) => {
     setBdiDetalhado(prev => ({
@@ -87,14 +89,15 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
   // Inicializar estados com dados salvos (se existirem)
   useEffect(() => {
     if (orcamento.configuracoesDetalhadas?.bdi) {
-      // Fazer merge dos dados salvos com os padrões (para retrocompatibilidade)
       setBdiDetalhado(prev => ({
-        lucro: orcamento.configuracoesDetalhadas.bdi.lucro || prev.lucro,
-        admCentral: orcamento.configuracoesDetalhadas.bdi.admCentral || prev.admCentral,
-        admLocal: orcamento.configuracoesDetalhadas.bdi.admLocal || prev.admLocal,
-        seguro: orcamento.configuracoesDetalhadas.bdi.seguro || prev.seguro,
-        despesasGerais: orcamento.configuracoesDetalhadas.bdi.despesasGerais || prev.despesasGerais,
+        admCentral: orcamento.configuracoesDetalhadas!.bdi.admCentral || prev.admCentral,
+        admLocal: orcamento.configuracoesDetalhadas!.bdi.admLocal || prev.admLocal,
+        seguro: orcamento.configuracoesDetalhadas!.bdi.seguro || prev.seguro,
+        despesasGerais: orcamento.configuracoesDetalhadas!.bdi.despesasGerais || prev.despesasGerais,
       }));
+    }
+    if (orcamento.configuracoesDetalhadas?.lucro) {
+      setLucro(orcamento.configuracoesDetalhadas.lucro);
     }
     if (orcamento.configuracoesDetalhadas?.faixaSimples) {
       setFaixaSelecionada(orcamento.configuracoesDetalhadas.faixaSimples);
@@ -165,19 +168,26 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
       const configuracoesAtualizadas = {
         ...orcamento,
         configuracoes: {
-          bdi: totalBDI / 100,  // Converter para decimal
+          bdi: totalBDI / 100,  // Converter para decimal (SEM lucro)
+          lucro: lucro.percentual / 100,  // Lucro separado
           tributos: {
-            iss: (orcamento.configuracoes?.tributos.iss || 0.03),
+            iss: (orcamento.configuracoes?.tributos?.iss || 0.03),
             simples: faixaInfo.aliquota / 100,  // Converter para decimal
-            total: ((orcamento.configuracoes?.tributos.iss || 0.03) + (faixaInfo.aliquota / 100)),
+            total: ((orcamento.configuracoes?.tributos?.iss || 0.03) + (faixaInfo.aliquota / 100)),
           },
           encargos: totalEncargos / 100,  // Converter para decimal
         },
         configuracoesDetalhadas: {
           bdi: bdiDetalhado,
+          lucro,
           faixaSimples: faixaSelecionada,
           encargos: encargosComponentes,
         },
+        // Atualizar BDI de todas as composições com o BDI global
+        composicoes: orcamento.composicoes.map(c => ({
+          ...c,
+          bdi: { ...c.bdi, percentual: totalBDI },
+        })),
       };
 
       await OrcamentoService.update(orcamento.id, configuracoesAtualizadas);
@@ -269,37 +279,6 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
               </div>
 
               <CollapsibleContent className="mt-4 space-y-2">
-                {/* Lucro */}
-                <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiDetalhado.lucro.habilitado ? 'opacity-50' : ''}`}>
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id="bdi-lucro"
-                      checked={bdiDetalhado.lucro.habilitado}
-                      onCheckedChange={() => handleToggleBDI('lucro')}
-                      disabled={salvando}
-                    />
-                    <label
-                      htmlFor="bdi-lucro"
-                      className={`text-sm font-medium cursor-pointer flex-1 ${!bdiDetalhado.lucro.habilitado ? 'line-through' : ''}`}
-                    >
-                      💰 {bdiDetalhado.lucro.nome}
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        value={bdiDetalhado.lucro.percentual}
-                        onChange={(e) => handleChangeBDIPercentual('lucro', e.target.value)}
-                        disabled={!bdiDetalhado.lucro.habilitado || salvando}
-                        className={`w-20 h-8 text-right font-mono font-bold ${!bdiDetalhado.lucro.habilitado ? 'line-through' : ''}`}
-                      />
-                      <span className="text-sm font-bold">%</span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Administração Central */}
                 <div className={`p-3 bg-muted/50 rounded-lg transition-opacity ${!bdiDetalhado.admCentral.habilitado ? 'opacity-50' : ''}`}>
                   <div className="flex items-center gap-3">
@@ -427,6 +406,42 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
             </div>
           </Collapsible>
 
+          {/* Lucro (Separado do BDI) */}
+          <div className="pt-4 border-t">
+            <Label className="text-base font-semibold mb-3 block">Lucro</Label>
+            <div className={`p-4 rounded-lg transition-opacity ${lucro.habilitado ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200' : 'bg-muted/50 opacity-60'}`}>
+              <div className="flex items-center gap-4">
+                <Checkbox
+                  id="lucro-habilitado"
+                  checked={lucro.habilitado}
+                  onCheckedChange={() => setLucro(prev => ({ ...prev, habilitado: !prev.habilitado }))}
+                  disabled={salvando}
+                />
+                <label htmlFor="lucro-habilitado" className="text-sm font-medium cursor-pointer flex-1">
+                  Aplicar lucro sobre o subtotal (Custo Direto + BDI)
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={lucro.percentual}
+                    onChange={(e) => setLucro(prev => ({ ...prev, percentual: parseFloat(e.target.value) || 0 }))}
+                    disabled={!lucro.habilitado || salvando}
+                    className="w-24 h-10 text-right font-mono font-bold text-lg"
+                  />
+                  <span className="text-lg font-bold">%</span>
+                </div>
+              </div>
+              {lucro.habilitado && (
+                <p className="text-xs text-muted-foreground mt-2 ml-10">
+                  Lucro de {lucro.percentual}% aplicado sobre o subtotal (Custo Direto + BDI de {totalBDI.toFixed(1)}%)
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Tributos */}
           <div className="pt-4 border-t">
             <Label className="text-base font-semibold mb-3 block">Tributos</Label>
@@ -434,7 +449,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
               <div>
                 <Label className="text-sm">ISS</Label>
                 <p className="text-2xl font-bold text-blue-600 font-mono mt-1">
-                  {(Number(orcamento.configuracoes?.tributos.iss || 0.03) * 100).toFixed(2)}%
+                  {(Number(orcamento.configuracoes?.tributos?.iss || 0.03) * 100).toFixed(2)}%
                 </p>
               </div>
               <div>
@@ -461,7 +476,7 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
               <div>
                 <Label className="text-sm">Total de Tributos</Label>
                 <p className="text-2xl font-bold text-orange-600 mt-1">
-                  {((Number(orcamento.configuracoes?.tributos.iss || 0.03) + (faixaInfo.aliquota / 100)) * 100).toFixed(2)}%
+                  {((Number(orcamento.configuracoes?.tributos?.iss || 0.03) + (faixaInfo.aliquota / 100)) * 100).toFixed(2)}%
                 </p>
               </div>
             </div>
@@ -662,22 +677,30 @@ export default function AbaDadosGerais({ orcamento, onUpdate }: AbaDadosGeraisPr
           <CardTitle>Resumo Geral</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div>
-              <Label className="text-muted-foreground">Custo Direto Total</Label>
-              <p className="text-2xl font-bold">{formatCurrency(orcamento.custoDirectoTotal)}</p>
+              <Label className="text-xs text-muted-foreground">Custo Direto</Label>
+              <p className="text-lg font-bold">{formatCurrency(orcamento.custoDirectoTotal)}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground">BDI Total</Label>
-              <p className="text-2xl font-bold text-blue-600">{formatCurrency(orcamento.bdiTotal)}</p>
+              <Label className="text-xs text-muted-foreground">BDI</Label>
+              <p className="text-lg font-bold text-blue-600">{formatCurrency(orcamento.bdiTotal)}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground">Tributos</Label>
-              <p className="text-2xl font-bold text-orange-600">{formatCurrency(orcamento.tributosTotal)}</p>
+              <Label className="text-xs text-muted-foreground">Subtotal</Label>
+              <p className="text-lg font-bold">{formatCurrency(orcamento.subtotal)}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground">Total de Venda</Label>
-              <p className="text-3xl font-bold text-green-600">{formatCurrency(orcamento.totalVenda)}</p>
+              <Label className="text-xs text-muted-foreground">Lucro ({lucro.habilitado ? `${lucro.percentual}%` : 'desab.'})</Label>
+              <p className="text-lg font-bold text-emerald-600">{formatCurrency(orcamento.lucroTotal || 0)}</p>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Tributos</Label>
+              <p className="text-lg font-bold text-orange-600">{formatCurrency(orcamento.tributosTotal)}</p>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Total de Venda</Label>
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(orcamento.totalVenda)}</p>
             </div>
           </div>
         </CardContent>

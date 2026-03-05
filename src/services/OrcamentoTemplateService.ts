@@ -106,7 +106,7 @@ class OrcamentoTemplateService {
    */
   async criarTemplateDeOrcamento(data: CriarTemplateDeOrcamentoDTO): Promise<OrcamentoTemplateInterface> {
     try {
-      const response = await api.post(`${API_URL}/orcamentos/${data.orcamentoId}/criar-template`, data);
+      const response = await api.post(`${this.baseURL}/from-orcamento/${data.orcamentoId}`, data);
       return response.data;
     } catch (error) {
       console.error('Erro ao criar template de orçamento:', error);

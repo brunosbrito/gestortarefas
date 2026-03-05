@@ -39,11 +39,11 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
       </CardHeader>
       <CardContent className="pt-6">
         <div className="space-y-4 font-mono text-sm">
-          {/* Valor Total dos Produtos */}
+          {/* Receita Bruta (Total de Venda) */}
           <div className="flex justify-between items-center py-2 border-b">
-            <span className="font-medium">Valor total dos produtos/serviços</span>
+            <span className="font-medium">Receita Bruta (Total de Venda)</span>
             <span className="font-bold text-blue-600">
-              {formatCurrency(valores.subtotal)}
+              {formatCurrency(valores.totalVenda)}
             </span>
           </div>
 
@@ -55,9 +55,9 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
             </span>
           </div>
 
-          {/* Receita Líquida */}
+          {/* Receita Liquida */}
           <div className="flex justify-between items-center py-3 bg-blue-50 px-3 rounded-lg">
-            <span className="font-semibold">(=) Receita líquida</span>
+            <span className="font-semibold">(=) Receita liquida</span>
             <span className="font-bold text-blue-700">
               {formatCurrency(dre.receitaLiquida)}
             </span>
@@ -140,7 +140,7 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
             )}
           </div>
 
-          {/* Lucro Líquido */}
+          {/* Lucro Liquido */}
           <div className={`flex justify-between items-center py-4 px-3 rounded-lg border-2 ${
             isNegativo
               ? 'bg-red-50 border-red-200'
@@ -149,7 +149,7 @@ const DREViewer = ({ orcamento }: DREViewerProps) => {
               : 'bg-green-50 border-green-200'
           }`}>
             <div>
-              <div className="font-bold text-lg">(=) Lucro líquido</div>
+              <div className="font-bold text-lg">(=) Lucro liquido</div>
               <div className="text-xs text-muted-foreground mt-1">
                 Margem sobre o total: {formatPercentage(dre.margemLiquida)}
               </div>

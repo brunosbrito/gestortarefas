@@ -21,15 +21,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import FornecedorServicoService from '@/services/FornecedorServicoService';
+import FornecedorService from '@/services/FornecedorServicoService';
 import {
-  FornecedorServicoInterface,
-  CategoriaFornecedor,
-  CategoriaFornecedorLabels,
-  CategoriaFornecedorColors,
+  FornecedorInterface,
+  TipoFornecedor,
+  TipoFornecedorLabels,
+  TipoFornecedorColors,
+  getNomeFornecedor,
 } from '@/interfaces/FornecedorServicoInterface';
-import { formatCurrency } from '@/lib/currency';
-import { mockFornecedores } from '@/data/mockTintas';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,16 +51,16 @@ import FormularioFornecedor from '@/components/gerenciamento/fornecedores/Formul
 const TabelaFornecedoresServico = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [fornecedores, setFornecedores] = useState<FornecedorServicoInterface[]>([]);
-  const [fornecedoresFiltrados, setFornecedoresFiltrados] = useState<FornecedorServicoInterface[]>([]);
-  const [fornecedorSelecionado, setFornecedorSelecionado] = useState<FornecedorServicoInterface | null>(null);
+  const [fornecedores, setFornecedores] = useState<FornecedorInterface[]>([]);
+  const [fornecedoresFiltrados, setFornecedoresFiltrados] = useState<FornecedorInterface[]>([]);
+  const [fornecedorSelecionado, setFornecedorSelecionado] = useState<FornecedorInterface | null>(null);
   const [dialogAberto, setDialogAberto] = useState(false);
-  const [fornecedorParaDeletar, setFornecedorParaDeletar] = useState<FornecedorServicoInterface | null>(null);
-  const [fornecedorParaVisualizar, setFornecedorParaVisualizar] = useState<FornecedorServicoInterface | null>(null);
+  const [fornecedorParaDeletar, setFornecedorParaDeletar] = useState<FornecedorInterface | null>(null);
+  const [fornecedorParaVisualizar, setFornecedorParaVisualizar] = useState<FornecedorInterface | null>(null);
 
   // Filtros
   const [busca, setBusca] = useState('');
-  const [categoriaFiltro, setCategoriaFiltro] = useState<string>('todas');
+  const [tipoFiltro, setTipoFiltro] = useState<string>('todos');
 
   useEffect(() => {
     carregarFornecedores();
@@ -69,20 +68,13 @@ const TabelaFornecedoresServico = () => {
 
   useEffect(() => {
     aplicarFiltros();
-  }, [busca, categoriaFiltro, fornecedores]);
+  }, [busca, tipoFiltro, fornecedores]);
 
   const carregarFornecedores = async () => {
     try {
       setLoading(true);
-
-      // USANDO DADOS MOCKADOS (remover quando backend estiver pronto)
-      // Carregar fornecedores mockados + fornecedores cadastrados localmente
-      const fornecedoresLocais = JSON.parse(localStorage.getItem('fornecedores_locais') || '[]');
-      setFornecedores([...mockFornecedores, ...fornecedoresLocais]);
-
-      // VERSÃO COM API (descomentar quando backend estiver pronto)
-      // const data = await FornecedorServicoService.listar({ ativo: true });
-      // setFornecedores(data);
+      const data = await FornecedorService.listar();
+      setFornecedores(data);
     } catch (error) {
       console.error('Erro ao carregar fornecedores:', error);
       toast({
@@ -95,22 +87,7 @@ const TabelaFornecedoresServico = () => {
     }
   };
 
-  const handleSalvarFornecedor = (novoFornecedor?: FornecedorServicoInterface) => {
-    if (!novoFornecedor) return;
-
-    // MOCK: Salvar no localStorage
-    const fornecedoresLocais = JSON.parse(localStorage.getItem('fornecedores_locais') || '[]');
-
-    const index = fornecedoresLocais.findIndex((f: FornecedorServicoInterface) => f.id === novoFornecedor.id);
-    if (index >= 0) {
-      // Atualizar fornecedor existente
-      fornecedoresLocais[index] = novoFornecedor;
-    } else {
-      // Adicionar novo fornecedor
-      fornecedoresLocais.push(novoFornecedor);
-    }
-
-    localStorage.setItem('fornecedores_locais', JSON.stringify(fornecedoresLocais));
+  const handleSalvarFornecedor = () => {
     carregarFornecedores();
   };
 
@@ -121,16 +98,16 @@ const TabelaFornecedoresServico = () => {
       const buscaLower = busca.toLowerCase();
       resultado = resultado.filter(
         (f) =>
-          f.nome.toLowerCase().includes(buscaLower) ||
-          (f.contato && f.contato.toLowerCase().includes(buscaLower)) ||
+          getNomeFornecedor(f).toLowerCase().includes(buscaLower) ||
+          f.razaoSocial.toLowerCase().includes(buscaLower) ||
+          (f.cnpj && f.cnpj.includes(busca)) ||
+          (f.contatoNome && f.contatoNome.toLowerCase().includes(buscaLower)) ||
           (f.email && f.email.toLowerCase().includes(buscaLower))
       );
     }
 
-    if (categoriaFiltro !== 'todas') {
-      resultado = resultado.filter(
-        (f) => (f.categorias || []).includes(categoriaFiltro as CategoriaFornecedor)
-      );
+    if (tipoFiltro !== 'todos') {
+      resultado = resultado.filter((f) => f.tipo === tipoFiltro);
     }
 
     setFornecedoresFiltrados(resultado);
@@ -139,27 +116,8 @@ const TabelaFornecedoresServico = () => {
   const handleDeletar = async () => {
     if (!fornecedorParaDeletar?.id) return;
 
-    // Verificar se é um fornecedor mockado (ID numérico pequeno, 1-10)
-    const isMockado = fornecedorParaDeletar.id && fornecedorParaDeletar.id <= 10;
-
-    if (isMockado) {
-      toast({
-        title: 'Aviso',
-        description: 'Fornecedores de demonstração não podem ser deletados',
-        variant: 'destructive',
-      });
-      setFornecedorParaDeletar(null);
-      return;
-    }
-
     try {
-      // MOCK: Remover do localStorage
-      const fornecedoresLocais = JSON.parse(localStorage.getItem('fornecedores_locais') || '[]');
-      const novosFornecedores = fornecedoresLocais.filter((f: FornecedorServicoInterface) => f.id !== fornecedorParaDeletar.id);
-      localStorage.setItem('fornecedores_locais', JSON.stringify(novosFornecedores));
-
-      // Quando backend estiver pronto:
-      // await FornecedorServicoService.excluir(fornecedorParaDeletar.id);
+      await FornecedorService.excluir(fornecedorParaDeletar.id);
 
       toast({
         title: 'Sucesso',
@@ -195,7 +153,7 @@ const TabelaFornecedoresServico = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Factory className="h-6 w-6 text-blue-600" />
-                <CardTitle>Fornecedores de Serviço</CardTitle>
+                <CardTitle>Fornecedores</CardTitle>
               </div>
               <div className="flex gap-2">
                 <Button onClick={() => { setFornecedorSelecionado(null); setDialogAberto(true); }}>
@@ -213,7 +171,7 @@ const TabelaFornecedoresServico = () => {
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Nome, contato ou email..."
+                    placeholder="Nome, CNPJ, contato ou email..."
                     value={busca}
                     onChange={(e) => setBusca(e.target.value)}
                     className="pl-8"
@@ -221,21 +179,21 @@ const TabelaFornecedoresServico = () => {
                 </div>
               </div>
               <div>
-                <Label>Categoria</Label>
-                <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
+                <Label>Tipo</Label>
+                <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todas">Todas</SelectItem>
-                    {(Object.keys(CategoriaFornecedorLabels) as CategoriaFornecedor[]).map((cat) => (
-                      <SelectItem key={cat} value={cat}>{CategoriaFornecedorLabels[cat]}</SelectItem>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {(Object.keys(TipoFornecedorLabels) as TipoFornecedor[]).map((t) => (
+                      <SelectItem key={t} value={t}>{TipoFornecedorLabels[t]}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-end">
-                <Button variant="outline" onClick={() => { setBusca(''); setCategoriaFiltro('todas'); }}>
+                <Button variant="outline" onClick={() => { setBusca(''); setTipoFiltro('todos'); }}>
                   Limpar Filtros
                 </Button>
               </div>
@@ -247,7 +205,8 @@ const TabelaFornecedoresServico = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Categorias</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>CNPJ</TableHead>
                     <TableHead>Contato</TableHead>
                     <TableHead>Telefone</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -261,64 +220,51 @@ const TabelaFornecedoresServico = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    fornecedoresFiltrados.map((fornecedor) => {
-                      const isMockado = fornecedor.id && fornecedor.id <= 10;
-                      return (
-                        <TableRow key={fornecedor.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {fornecedor.nome}
-                              {isMockado && (
-                                <Badge variant="outline" className="text-xs">DEMO</Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {(fornecedor.categorias || []).map((cat) => (
-                                <Badge key={cat} className={`text-xs ${CategoriaFornecedorColors[cat]}`}>
-                                  {CategoriaFornecedorLabels[cat]}
-                                </Badge>
-                              ))}
-                              {(fornecedor.categorias || []).length === 0 && (
-                                <span className="text-muted-foreground text-xs">—</span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{fornecedor.contato || '-'}</TableCell>
-                          <TableCell>{fornecedor.telefone || '-'}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setFornecedorParaVisualizar(fornecedor)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              {!isMockado && (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => { setFornecedorSelecionado(fornecedor); setDialogAberto(true); }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setFornecedorParaDeletar(fornecedor)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-600" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                    fornecedoresFiltrados.map((fornecedor) => (
+                      <TableRow key={fornecedor.id}>
+                        <TableCell className="font-medium">
+                          <div>
+                            <span>{getNomeFornecedor(fornecedor)}</span>
+                            {fornecedor.nomeFantasia && fornecedor.nomeFantasia !== fornecedor.razaoSocial && (
+                              <p className="text-xs text-muted-foreground">{fornecedor.razaoSocial}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`text-xs ${TipoFornecedorColors[fornecedor.tipo]}`}>
+                            {TipoFornecedorLabels[fornecedor.tipo]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">{fornecedor.cnpj || '-'}</TableCell>
+                        <TableCell>{fornecedor.contatoNome || '-'}</TableCell>
+                        <TableCell>{fornecedor.telefone || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFornecedorParaVisualizar(fornecedor)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => { setFornecedorSelecionado(fornecedor); setDialogAberto(true); }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFornecedorParaDeletar(fornecedor)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </TableComponent>
@@ -336,7 +282,7 @@ const TabelaFornecedoresServico = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
               <AlertDialogDescription>
-                Tem certeza que deseja excluir o fornecedor <strong>{fornecedorParaDeletar?.nome}</strong>?
+                Tem certeza que deseja excluir o fornecedor <strong>{fornecedorParaDeletar ? getNomeFornecedor(fornecedorParaDeletar) : ''}</strong>?
                 Esta ação não pode ser desfeita.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -354,19 +300,31 @@ const TabelaFornecedoresServico = () => {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Detalhes do Fornecedor</DialogTitle>
-              <DialogDescription>Informações completas do fornecedor de serviço</DialogDescription>
+              <DialogDescription>Informações completas do fornecedor</DialogDescription>
             </DialogHeader>
             {fornecedorParaVisualizar && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Nome</Label>
-                    <p className="font-medium">{fornecedorParaVisualizar.nome}</p>
+                    <Label className="text-muted-foreground">Nome Fantasia</Label>
+                    <p className="font-medium">{fornecedorParaVisualizar.nomeFantasia || '-'}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Contato</Label>
-                    <p className="font-medium">{fornecedorParaVisualizar.contato || '-'}</p>
+                    <Label className="text-muted-foreground">Razão Social</Label>
+                    <p className="font-medium">{fornecedorParaVisualizar.razaoSocial}</p>
                   </div>
+                  <div>
+                    <Label className="text-muted-foreground">CNPJ</Label>
+                    <p className="font-medium">{fornecedorParaVisualizar.cnpj}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Tipo</Label>
+                    <Badge className={`text-xs ${TipoFornecedorColors[fornecedorParaVisualizar.tipo]}`}>
+                      {TipoFornecedorLabels[fornecedorParaVisualizar.tipo]}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Telefone</Label>
                     <p className="font-medium">{fornecedorParaVisualizar.telefone || '-'}</p>
@@ -375,33 +333,36 @@ const TabelaFornecedoresServico = () => {
                     <Label className="text-muted-foreground">Email</Label>
                     <p className="font-medium">{fornecedorParaVisualizar.email || '-'}</p>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Categorias</Label>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {(fornecedorParaVisualizar.categorias || []).map((cat) => (
-                      <Badge key={cat} className={`text-xs ${CategoriaFornecedorColors[cat]}`}>
-                        {CategoriaFornecedorLabels[cat]}
-                      </Badge>
-                    ))}
+                  <div>
+                    <Label className="text-muted-foreground">Contato</Label>
+                    <p className="font-medium">{fornecedorParaVisualizar.contatoNome || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Tel. Contato</Label>
+                    <p className="font-medium">{fornecedorParaVisualizar.contatoTelefone || '-'}</p>
                   </div>
                 </div>
-                {(fornecedorParaVisualizar.categorias || []).includes('jateamento_pintura') && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-muted-foreground">Valor Jateamento</Label>
-                      <p className="font-medium text-lg text-blue-600">
-                        {formatCurrency(fornecedorParaVisualizar.valorJateamentoM2)}/m²
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Valor Pintura</Label>
-                      <p className="font-medium text-lg text-green-600">
-                        {formatCurrency(fornecedorParaVisualizar.valorPinturaM2)}/m²
-                      </p>
-                    </div>
+                {(fornecedorParaVisualizar.endereco || fornecedorParaVisualizar.cidade) && (
+                  <div>
+                    <Label className="text-muted-foreground">Endereço</Label>
+                    <p className="font-medium">
+                      {[fornecedorParaVisualizar.endereco, fornecedorParaVisualizar.cidade, fornecedorParaVisualizar.uf]
+                        .filter(Boolean)
+                        .join(', ')}
+                      {fornecedorParaVisualizar.cep && ` - CEP: ${fornecedorParaVisualizar.cep}`}
+                    </p>
                   </div>
                 )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Condição de Pagamento</Label>
+                    <p className="font-medium">{fornecedorParaVisualizar.condicaoPagamento || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Prazo de Entrega</Label>
+                    <p className="font-medium">{fornecedorParaVisualizar.prazoEntregaDias ?? 30} dias</p>
+                  </div>
+                </div>
                 {fornecedorParaVisualizar.observacoes && (
                   <div>
                     <Label className="text-muted-foreground">Observações</Label>

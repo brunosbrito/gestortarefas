@@ -1,75 +1,50 @@
 import api from '@/lib/axios';
-import API_URL from '@/config';
 import type {
-  FornecedorServicoInterface,
-  FornecedorServicoCreateDTO,
-  FornecedorServicoUpdateDTO,
-  FornecedorServicoFiltros,
+  FornecedorInterface,
+  CreateFornecedorDTO,
+  UpdateFornecedorDTO,
+  FornecedorFiltros,
 } from '@/interfaces/FornecedorServicoInterface';
 
-class FornecedorServicoService {
-  private baseURL = `${API_URL}/fornecedores-servico`;
+class FornecedorService {
+  private baseURL = '/fornecedores';
 
-  // Listar todos os fornecedores (com filtros opcionais)
-  async listar(filtros?: FornecedorServicoFiltros): Promise<FornecedorServicoInterface[]> {
-    try {
-      const params = new URLSearchParams();
+  async listar(filtros?: FornecedorFiltros): Promise<FornecedorInterface[]> {
+    const params = new URLSearchParams();
 
-      if (filtros?.busca) params.append('busca', filtros.busca);
-      if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
+    if (filtros?.busca) params.append('busca', filtros.busca);
+    if (filtros?.tipo) params.append('tipo', filtros.tipo);
+    if (filtros?.ativo !== undefined) params.append('ativo', String(filtros.ativo));
 
-      const response = await api.get<FornecedorServicoInterface[]>(
-        `${this.baseURL}${params.toString() ? `?${params.toString()}` : ''}`
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao listar fornecedores de serviço:', error);
-      throw error;
-    }
+    const response = await api.get<FornecedorInterface[]>(
+      `${this.baseURL}${params.toString() ? `?${params.toString()}` : ''}`
+    );
+    return response.data;
   }
 
-  // Buscar fornecedor por ID
-  async buscarPorId(id: number): Promise<FornecedorServicoInterface> {
-    try {
-      const response = await api.get<FornecedorServicoInterface>(`${this.baseURL}/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error(`Erro ao buscar fornecedor ${id}:`, error);
-      throw error;
-    }
+  async buscarPorId(id: number): Promise<FornecedorInterface> {
+    const response = await api.get<FornecedorInterface>(`${this.baseURL}/${id}`);
+    return response.data;
   }
 
-  // Criar novo fornecedor
-  async criar(data: FornecedorServicoCreateDTO): Promise<FornecedorServicoInterface> {
-    try {
-      const response = await api.post<FornecedorServicoInterface>(this.baseURL, data);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar fornecedor:', error);
-      throw error;
-    }
+  async buscarPorTipo(tipo: string): Promise<FornecedorInterface[]> {
+    const response = await api.get<FornecedorInterface[]>(`${this.baseURL}/tipo/${tipo}`);
+    return response.data;
   }
 
-  // Atualizar fornecedor existente
-  async atualizar(id: number, data: FornecedorServicoUpdateDTO): Promise<FornecedorServicoInterface> {
-    try {
-      const response = await api.put<FornecedorServicoInterface>(`${this.baseURL}/${id}`, data);
-      return response.data;
-    } catch (error) {
-      console.error(`Erro ao atualizar fornecedor ${id}:`, error);
-      throw error;
-    }
+  async criar(data: CreateFornecedorDTO): Promise<FornecedorInterface> {
+    const response = await api.post<FornecedorInterface>(this.baseURL, data);
+    return response.data;
   }
 
-  // Excluir fornecedor
+  async atualizar(id: number, data: UpdateFornecedorDTO): Promise<FornecedorInterface> {
+    const response = await api.put<FornecedorInterface>(`${this.baseURL}/${id}`, data);
+    return response.data;
+  }
+
   async excluir(id: number): Promise<void> {
-    try {
-      await api.delete(`${this.baseURL}/${id}`);
-    } catch (error) {
-      console.error(`Erro ao excluir fornecedor ${id}:`, error);
-      throw error;
-    }
+    await api.delete(`${this.baseURL}/${id}`);
   }
 }
 
-export default new FornecedorServicoService();
+export default new FornecedorService();
