@@ -22,11 +22,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Bot, Send, Settings, Loader2, Upload, FileText, BarChart2,
-  Trash2, Download, Plus, AlertTriangle, Copy, X, RefreshCw,
+  Trash2, Download, Plus, AlertTriangle, Copy, X, RefreshCw, Paperclip,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import OrcamentoService from '@/services/OrcamentoService';
-import { openAIComercialService, ItemMaterial, StoredChatMessage } from '@/services/OpenAIComercialService';
+import { openAIComercialService, ItemMaterial, StoredChatMessage, ImageAnexo } from '@/services/OpenAIComercialService';
 import { pdfImportService } from '@/services/PdfImportService';
 import { dxfImportService } from '@/services/DxfImportService';
 import { formatCurrency } from '@/lib/currency';
@@ -41,6 +41,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  imagens?: ImageAnexo[];
 }
 
 type ExtractionStatus = 'idle' | 'extracting' | 'structuring' | 'validating' | 'done' | 'error';
@@ -102,6 +103,10 @@ function AssistenteIAComercial() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputChatRef = useRef<HTMLInputElement>(null);
+
+  // Imagens anexadas ao chat
+  const [imagensAnexadas, setImagensAnexadas] = useState<ImageAnexo[]>([]);
 
   // ============================================
   // EFFECT 1: dados que não dependem de user
@@ -227,7 +232,7 @@ function AssistenteIAComercial() {
 
   const sendMessage = async (msg?: string, contextoOverride?: string) => {
     const text = (msg ?? inputMessage).trim();
-    if (!text || isLoading) return;
+    if ((!text && imagensAnexadas.length === 0) || isLoading) return;
 
     if (!apiKey) {
       toast({
@@ -239,19 +244,28 @@ function AssistenteIAComercial() {
       return;
     }
 
+    const imagensParaEnviar = [...imagensAnexadas];
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: text,
+      content: text || '(imagem anexada)',
       timestamp: new Date(),
+      imagens: imagensParaEnviar.length > 0 ? imagensParaEnviar : undefined,
     };
     setMessages(prev => [...prev, userMsg]);
     if (!msg) setInputMessage('');
+    setImagensAnexadas([]);
     setIsLoading(true);
 
     try {
       const contexto = contextoOverride ?? buildContexto();
-      const response = await openAIComercialService.sendMessage(text, apiKey, userId, contexto);
+      const response = await openAIComercialService.sendMessage(
+        text || 'Analise esta imagem/documento.',
+        apiKey,
+        userId,
+        contexto,
+        imagensParaEnviar.length > 0 ? imagensParaEnviar : undefined
+      );
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -282,7 +296,55 @@ function AssistenteIAComercial() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      if (inputMessage.trim() || imagensAnexadas.length > 0) sendMessage();
+    }
+  };
+
+  const handleAnexarArquivosChat = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const MAX_IMAGENS = 4;
+    const novas: ImageAnexo[] = [];
+
+    for (const file of Array.from(files)) {
+      if (imagensAnexadas.length + novas.length >= MAX_IMAGENS) {
+        toast({ title: `Máximo de ${MAX_IMAGENS} imagens por mensagem.`, variant: 'destructive' });
+        break;
+      }
+
+      const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+      const isImagem = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+
+      if (isPdf) {
+        try {
+          const paginas = Math.min(3, MAX_IMAGENS - imagensAnexadas.length - novas.length);
+          const pageNums = Array.from({ length: paginas }, (_, i) => i + 1);
+          const base64s = await pdfImportService.renderMultiplePagesToBase64(file, pageNums);
+          base64s.forEach((b64, i) => {
+            novas.push({ base64: b64, mimeType: 'image/jpeg', nome: `${file.name} (pág. ${i + 1})` });
+          });
+        } catch {
+          toast({ title: `Erro ao processar PDF: ${file.name}`, variant: 'destructive' });
+        }
+      } else if (isImagem) {
+        const mimeType = file.type as ImageAnexo['mimeType'];
+        const b64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const result = e.target?.result as string;
+            // Remover prefixo data:...;base64,
+            resolve(result.split(',')[1]);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        novas.push({ base64: b64, mimeType, nome: file.name });
+      } else {
+        toast({ title: `Formato não suportado: ${file.name}. Use PNG, JPG, WEBP ou PDF.`, variant: 'destructive' });
+      }
+    }
+
+    if (novas.length > 0) {
+      setImagensAnexadas(prev => [...prev, ...novas]);
     }
   };
 
@@ -744,7 +806,24 @@ function AssistenteIAComercial() {
                                 </Button>
                               </>
                             ) : (
-                              <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+                              <>
+                                {msg.content !== '(imagem anexada)' && (
+                                  <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+                                )}
+                                {msg.imagens && msg.imagens.length > 0 && (
+                                  <div className={`flex flex-wrap gap-1 ${msg.content !== '(imagem anexada)' ? 'mt-2' : ''}`}>
+                                    {msg.imagens.map((img, i) => (
+                                      <img
+                                        key={i}
+                                        src={`data:${img.mimeType};base64,${img.base64}`}
+                                        alt={img.nome}
+                                        title={img.nome}
+                                        className="max-h-36 max-w-[200px] rounded border border-white/20 object-contain bg-black/10"
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </>
                             )}
                             <p className="text-xs opacity-60 mt-1">
                               {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -770,22 +849,65 @@ function AssistenteIAComercial() {
                   </ScrollArea>
 
                   {/* Input */}
-                  <div className="border-t p-3 flex gap-2 flex-shrink-0 bg-card">
-                    <Textarea
-                      value={inputMessage}
-                      onChange={e => setInputMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Pergunte sobre custos, BDI, margens, materiais..."
-                      className="min-h-[52px] max-h-28 resize-none"
-                      disabled={isLoading}
-                    />
-                    <Button
-                      onClick={() => sendMessage()}
-                      disabled={isLoading || !inputMessage.trim()}
-                      className="self-end flex-shrink-0"
-                    >
-                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    </Button>
+                  <div className="border-t p-3 flex-shrink-0 bg-card space-y-2">
+                    {/* Thumbnails das imagens anexadas */}
+                    {imagensAnexadas.length > 0 && (
+                      <div className="flex flex-wrap gap-2 px-1">
+                        {imagensAnexadas.map((img, i) => (
+                          <div key={i} className="relative group">
+                            <img
+                              src={`data:${img.mimeType};base64,${img.base64}`}
+                              alt={img.nome}
+                              title={img.nome}
+                              className="w-14 h-14 object-cover rounded border border-border"
+                            />
+                            <button
+                              className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => setImagensAnexadas(prev => prev.filter((_, idx) => idx !== i))}
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      {/* Botão de anexo */}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="self-end flex-shrink-0"
+                        disabled={isLoading || imagensAnexadas.length >= 4}
+                        onClick={() => fileInputChatRef.current?.click()}
+                        title="Anexar imagem ou PDF (máx 4)"
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </Button>
+                      <input
+                        ref={fileInputChatRef}
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        multiple
+                        className="hidden"
+                        onChange={e => handleAnexarArquivosChat(e.target.files)}
+                        onClick={e => { (e.target as HTMLInputElement).value = ''; }}
+                      />
+                      <Textarea
+                        value={inputMessage}
+                        onChange={e => setInputMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Pergunte sobre custos, BDI, margens, materiais... ou anexe uma imagem/PDF"
+                        className="min-h-[52px] max-h-28 resize-none"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        onClick={() => sendMessage()}
+                        disabled={isLoading || (!inputMessage.trim() && imagensAnexadas.length === 0)}
+                        className="self-end flex-shrink-0"
+                      >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

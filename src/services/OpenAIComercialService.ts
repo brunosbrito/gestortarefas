@@ -19,6 +19,12 @@ export interface StoredChatMessage {
   timestamp: string; // ISO string — converter com new Date() ao exibir
 }
 
+export interface ImageAnexo {
+  base64: string;       // sem prefixo data:...
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
+  nome: string;
+}
+
 const SYSTEM_PROMPT = `Você é um assistente especializado em orçamentos industriais e estruturais da empresa GMX Soluções Industriais.
 Você tem acesso aos dados dos orçamentos do sistema (fornecidos como contexto em cada mensagem).
 Suas competências:
@@ -80,7 +86,8 @@ class OpenAIComercialService {
     message: string,
     apiKey: string,
     userId: string,
-    orcamentoContexto?: string
+    orcamentoContexto?: string,
+    imagens?: ImageAnexo[]
   ): Promise<string> {
     // ⚠ Dois tracks: API recebe contexto completo, localStorage salva apenas o texto original
     const contextualizedMessage = orcamentoContexto
@@ -88,10 +95,26 @@ class OpenAIComercialService {
       : message;
 
     const history = this.getUserHistory(userId).slice(-MAX_HISTORY);
+
+    // Se há imagens, content é array misto (texto + image_url); senão, string simples
+    const userContent =
+      imagens && imagens.length > 0
+        ? [
+            { type: 'text' as const, text: contextualizedMessage },
+            ...imagens.slice(0, 4).map((img) => ({
+              type: 'image_url' as const,
+              image_url: {
+                url: `data:${img.mimeType};base64,${img.base64}`,
+                detail: 'high' as const,
+              },
+            })),
+          ]
+        : contextualizedMessage;
+
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...history.map(h => ({ role: h.role, content: h.content })),
-      { role: 'user', content: contextualizedMessage },
+      { role: 'user', content: userContent },
     ];
 
     try {
