@@ -22,11 +22,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Bot, Send, Settings, Loader2, Upload, FileText, BarChart2,
-  Trash2, Download, Plus, AlertTriangle, Copy, X, RefreshCw, Paperclip,
+  Trash2, Download, Plus, AlertTriangle, Copy, X, RefreshCw, Paperclip, Sheet,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import OrcamentoService from '@/services/OrcamentoService';
-import { openAIComercialService, ItemMaterial, StoredChatMessage, ImageAnexo } from '@/services/OpenAIComercialService';
+import { openAIComercialService, ItemMaterial, StoredChatMessage, ImageAnexo, TextoAnexo } from '@/services/OpenAIComercialService';
+import mammoth from 'mammoth';
 import { pdfImportService } from '@/services/PdfImportService';
 import { dxfImportService } from '@/services/DxfImportService';
 import { formatCurrency } from '@/lib/currency';
@@ -42,6 +43,7 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   imagens?: ImageAnexo[];
+  textos?: TextoAnexo[];
 }
 
 type ExtractionStatus = 'idle' | 'extracting' | 'structuring' | 'validating' | 'done' | 'error';
@@ -105,8 +107,9 @@ function AssistenteIAComercial() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputChatRef = useRef<HTMLInputElement>(null);
 
-  // Imagens anexadas ao chat
+  // Imagens e arquivos de texto anexados ao chat
   const [imagensAnexadas, setImagensAnexadas] = useState<ImageAnexo[]>([]);
+  const [textosAnexados, setTextosAnexados] = useState<TextoAnexo[]>([]);
 
   // ============================================
   // EFFECT 1: dados que não dependem de user
@@ -245,26 +248,37 @@ function AssistenteIAComercial() {
     }
 
     const imagensParaEnviar = [...imagensAnexadas];
+    const textosParaEnviar = [...textosAnexados];
+    const temAnexo = imagensParaEnviar.length > 0 || textosParaEnviar.length > 0;
+    const labelAnexo = temAnexo && !text
+      ? textosParaEnviar.length > 0
+        ? `(arquivo anexado: ${textosParaEnviar.map(t => t.nome).join(', ')})`
+        : '(imagem anexada)'
+      : '';
+
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: text || '(imagem anexada)',
+      content: text || labelAnexo,
       timestamp: new Date(),
       imagens: imagensParaEnviar.length > 0 ? imagensParaEnviar : undefined,
+      textos: textosParaEnviar.length > 0 ? textosParaEnviar : undefined,
     };
     setMessages(prev => [...prev, userMsg]);
     if (!msg) setInputMessage('');
     setImagensAnexadas([]);
+    setTextosAnexados([]);
     setIsLoading(true);
 
     try {
       const contexto = contextoOverride ?? buildContexto();
       const response = await openAIComercialService.sendMessage(
-        text || 'Analise esta imagem/documento.',
+        text || 'Analise este arquivo.',
         apiKey,
         userId,
         contexto,
-        imagensParaEnviar.length > 0 ? imagensParaEnviar : undefined
+        imagensParaEnviar.length > 0 ? imagensParaEnviar : undefined,
+        textosParaEnviar.length > 0 ? textosParaEnviar : undefined
       );
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -296,56 +310,83 @@ function AssistenteIAComercial() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (inputMessage.trim() || imagensAnexadas.length > 0) sendMessage();
+      if (inputMessage.trim() || imagensAnexadas.length > 0 || textosAnexados.length > 0) sendMessage();
     }
   };
 
   const handleAnexarArquivosChat = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const MAX_IMAGENS = 4;
-    const novas: ImageAnexo[] = [];
+    const MAX_TEXTO_CHARS = 12_000;
+    const novasImagens: ImageAnexo[] = [];
+    const novosTextos: TextoAnexo[] = [];
 
     for (const file of Array.from(files)) {
-      if (imagensAnexadas.length + novas.length >= MAX_IMAGENS) {
-        toast({ title: `Máximo de ${MAX_IMAGENS} imagens por mensagem.`, variant: 'destructive' });
-        break;
-      }
-
-      const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
-      const isImagem = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+      const isPdf = file.type === 'application/pdf' || ext === 'pdf';
+      const isImagem = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+        || ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
+      const isExcel = ['xls', 'xlsx', 'xlsm'].includes(ext);
+      const isWord = ['docx', 'doc'].includes(ext);
 
       if (isPdf) {
+        if (imagensAnexadas.length + novasImagens.length >= MAX_IMAGENS) {
+          toast({ title: `Máximo de ${MAX_IMAGENS} imagens/PDFs por mensagem.`, variant: 'destructive' });
+          break;
+        }
         try {
-          const paginas = Math.min(3, MAX_IMAGENS - imagensAnexadas.length - novas.length);
+          const paginas = Math.min(3, MAX_IMAGENS - imagensAnexadas.length - novasImagens.length);
           const pageNums = Array.from({ length: paginas }, (_, i) => i + 1);
           const base64s = await pdfImportService.renderMultiplePagesToBase64(file, pageNums);
           base64s.forEach((b64, i) => {
-            novas.push({ base64: b64, mimeType: 'image/jpeg', nome: `${file.name} (pág. ${i + 1})` });
+            novasImagens.push({ base64: b64, mimeType: 'image/jpeg', nome: `${file.name} (pág. ${i + 1})` });
           });
         } catch {
           toast({ title: `Erro ao processar PDF: ${file.name}`, variant: 'destructive' });
         }
       } else if (isImagem) {
-        const mimeType = file.type as ImageAnexo['mimeType'];
+        if (imagensAnexadas.length + novasImagens.length >= MAX_IMAGENS) {
+          toast({ title: `Máximo de ${MAX_IMAGENS} imagens/PDFs por mensagem.`, variant: 'destructive' });
+          break;
+        }
+        const mimeType = file.type as ImageAnexo['mimeType'] || 'image/jpeg';
         const b64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = (e) => {
-            const result = e.target?.result as string;
-            // Remover prefixo data:...;base64,
-            resolve(result.split(',')[1]);
-          };
+          reader.onload = (e) => resolve((e.target?.result as string).split(',')[1]);
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-        novas.push({ base64: b64, mimeType, nome: file.name });
+        novasImagens.push({ base64: b64, mimeType, nome: file.name });
+      } else if (isExcel) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          const linhas: string[] = [];
+          for (const sheetName of workbook.SheetNames) {
+            const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+            if (csv.trim()) linhas.push(`--- Planilha: ${sheetName} ---\n${csv}`);
+          }
+          const conteudo = linhas.join('\n\n').slice(0, MAX_TEXTO_CHARS);
+          novosTextos.push({ tipo: 'excel', nome: file.name, conteudo });
+        } catch {
+          toast({ title: `Erro ao processar planilha: ${file.name}`, variant: 'destructive' });
+        }
+      } else if (isWord) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          const conteudo = result.value.slice(0, MAX_TEXTO_CHARS);
+          novosTextos.push({ tipo: 'word', nome: file.name, conteudo });
+        } catch {
+          toast({ title: `Erro ao processar documento: ${file.name}. Certifique-se que é .docx.`, variant: 'destructive' });
+        }
       } else {
-        toast({ title: `Formato não suportado: ${file.name}. Use PNG, JPG, WEBP ou PDF.`, variant: 'destructive' });
+        toast({ title: `Formato não suportado: ${file.name}.`, description: 'Use PNG, JPG, PDF, XLS, XLSX ou DOCX.', variant: 'destructive' });
       }
     }
 
-    if (novas.length > 0) {
-      setImagensAnexadas(prev => [...prev, ...novas]);
-    }
+    if (novasImagens.length > 0) setImagensAnexadas(prev => [...prev, ...novasImagens]);
+    if (novosTextos.length > 0) setTextosAnexados(prev => [...prev, ...novosTextos]);
   };
 
   const handleLimparHistorico = () => {
@@ -823,6 +864,19 @@ function AssistenteIAComercial() {
                                     ))}
                                   </div>
                                 )}
+                                {msg.textos && msg.textos.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {msg.textos.map((txt, i) => (
+                                      <span key={i} className="inline-flex items-center gap-1 bg-white/10 rounded px-2 py-0.5 text-xs">
+                                        {txt.tipo === 'excel'
+                                          ? <Sheet className="w-3 h-3" />
+                                          : <FileText className="w-3 h-3" />
+                                        }
+                                        {txt.nome}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
                               </>
                             )}
                             <p className="text-xs opacity-60 mt-1">
@@ -850,11 +904,12 @@ function AssistenteIAComercial() {
 
                   {/* Input */}
                   <div className="border-t p-3 flex-shrink-0 bg-card space-y-2">
-                    {/* Thumbnails das imagens anexadas */}
-                    {imagensAnexadas.length > 0 && (
+                    {/* Pré-visualização de anexos */}
+                    {(imagensAnexadas.length > 0 || textosAnexados.length > 0) && (
                       <div className="flex flex-wrap gap-2 px-1">
+                        {/* Thumbnails de imagens */}
                         {imagensAnexadas.map((img, i) => (
-                          <div key={i} className="relative group">
+                          <div key={`img-${i}`} className="relative group">
                             <img
                               src={`data:${img.mimeType};base64,${img.base64}`}
                               alt={img.nome}
@@ -869,6 +924,22 @@ function AssistenteIAComercial() {
                             </button>
                           </div>
                         ))}
+                        {/* Chips de arquivos de texto (Excel/Word) */}
+                        {textosAnexados.map((txt, i) => (
+                          <div key={`txt-${i}`} className="relative group flex items-center gap-1.5 bg-muted border border-border rounded px-2 py-1 text-xs max-w-[180px]">
+                            {txt.tipo === 'excel'
+                              ? <Sheet className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                              : <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                            }
+                            <span className="truncate" title={txt.nome}>{txt.nome}</span>
+                            <button
+                              className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+                              onClick={() => setTextosAnexados(prev => prev.filter((_, idx) => idx !== i))}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                     <div className="flex gap-2">
@@ -877,16 +948,16 @@ function AssistenteIAComercial() {
                         variant="outline"
                         size="icon"
                         className="self-end flex-shrink-0"
-                        disabled={isLoading || imagensAnexadas.length >= 4}
+                        disabled={isLoading}
                         onClick={() => fileInputChatRef.current?.click()}
-                        title="Anexar imagem ou PDF (máx 4)"
+                        title="Anexar imagem, PDF, Excel ou Word"
                       >
                         <Paperclip className="w-4 h-4" />
                       </Button>
                       <input
                         ref={fileInputChatRef}
                         type="file"
-                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp,.xls,.xlsx,.xlsm,.docx,.doc"
                         multiple
                         className="hidden"
                         onChange={e => handleAnexarArquivosChat(e.target.files)}
@@ -896,13 +967,13 @@ function AssistenteIAComercial() {
                         value={inputMessage}
                         onChange={e => setInputMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Pergunte sobre custos, BDI, margens, materiais... ou anexe uma imagem/PDF"
+                        placeholder="Pergunte sobre custos, BDI, margens... ou anexe imagem, PDF, Excel, Word"
                         className="min-h-[52px] max-h-28 resize-none"
                         disabled={isLoading}
                       />
                       <Button
                         onClick={() => sendMessage()}
-                        disabled={isLoading || (!inputMessage.trim() && imagensAnexadas.length === 0)}
+                        disabled={isLoading || (!inputMessage.trim() && imagensAnexadas.length === 0 && textosAnexados.length === 0)}
                         className="self-end flex-shrink-0"
                       >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

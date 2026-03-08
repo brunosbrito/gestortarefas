@@ -25,6 +25,12 @@ export interface ImageAnexo {
   nome: string;
 }
 
+export interface TextoAnexo {
+  tipo: 'excel' | 'word';
+  nome: string;
+  conteudo: string; // texto extraído do arquivo (truncado a 12.000 chars)
+}
+
 const SYSTEM_PROMPT = `Você é um assistente especializado em orçamentos industriais e estruturais da empresa GMX Soluções Industriais.
 Você tem acesso aos dados dos orçamentos do sistema (fornecidos como contexto em cada mensagem).
 Suas competências:
@@ -87,12 +93,20 @@ class OpenAIComercialService {
     apiKey: string,
     userId: string,
     orcamentoContexto?: string,
-    imagens?: ImageAnexo[]
+    imagens?: ImageAnexo[],
+    textos?: TextoAnexo[]
   ): Promise<string> {
     // ⚠ Dois tracks: API recebe contexto completo, localStorage salva apenas o texto original
+    // Textos extraídos (Excel/Word) são anexados ao contexto da mensagem
+    const textosConteudo = textos && textos.length > 0
+      ? '\n\n' + textos.map(t =>
+          `--- Arquivo: ${t.nome} (${t.tipo === 'excel' ? 'Planilha Excel' : 'Documento Word'}) ---\n${t.conteudo}`
+        ).join('\n\n')
+      : '';
+
     const contextualizedMessage = orcamentoContexto
-      ? `Contexto do sistema:\n${orcamentoContexto}\n\n---\nMensagem do usuário: ${message}`
-      : message;
+      ? `Contexto do sistema:\n${orcamentoContexto}\n\n---\nMensagem do usuário: ${message}${textosConteudo}`
+      : `${message}${textosConteudo}`;
 
     const history = this.getUserHistory(userId).slice(-MAX_HISTORY);
 
